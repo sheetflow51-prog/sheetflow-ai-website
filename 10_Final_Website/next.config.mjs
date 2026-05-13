@@ -4,6 +4,12 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   productionBrowserSourceMaps: false,
+  // ESLint is run as a separate CI gate (npm run lint).
+  // Disabling during build avoids double-running and prevents
+  // the build from failing on lint warnings in Vercel's build pipeline.
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'prod.spline.design' },
@@ -18,23 +24,12 @@ const nextConfig = {
       exclude: /node_modules/,
       use: ['raw-loader'],
     });
-    // `@splinetool/react-spline` is ESM-only and its `exports` field
-    // declares only `types` + `import` (no `default`/`require`/`node`).
-    // Next 15's webpack resolver, in some passes, evaluates conditions
-    // that exclude `import` and the resolution errors with
-    // "Package path . is not exported". Explicitly admitting `import`
-    // (plus `default` as a defensive fallback) makes the resolver
-    // accept the ESM entry without changing how the package is consumed.
     config.resolve = config.resolve ?? {};
     config.resolve.conditionNames = Array.from(
       new Set([...(config.resolve.conditionNames ?? []), 'import', 'default']),
     );
     return config;
   },
-  // Route the Spline packages through Next's loader chain so the
-  // ESM-only sources are normalised for both server and client bundles.
-  // Combined with `ssr: false` on the dynamic import in SplineScene.tsx,
-  // runtime behaviour is unchanged: still lazy, still client-only.
   transpilePackages: ['@splinetool/react-spline', '@splinetool/runtime'],
   experimental: {
     optimizePackageImports: [
@@ -71,7 +66,6 @@ const withBundleAnalyzerMaybe = async (cfg) => {
     const mod = await import('@next/bundle-analyzer');
     return mod.default({ enabled: true })(cfg);
   } catch {
-    // analyzer not installed — silently no-op so devs without it can still build
     return cfg;
   }
 };
