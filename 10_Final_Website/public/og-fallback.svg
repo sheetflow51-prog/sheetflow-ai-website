@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="a1" cx="28%" cy="32%" r="58%">
+      <stop offset="0%" stop-color="#5B6CFF" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#5B6CFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="a2" cx="78%" cy="72%" r="52%">
+      <stop offset="0%" stop-color="#9A6CFF" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#9A6CFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="vignette" cx="50%" cy="50%" r="70%">
+      <stop offset="40%" stop-color="transparent"/>
+      <stop offset="100%" stop-color="#070711" stop-opacity="0.7"/>
+    </radialGradient>
+    <linearGradient id="hl" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.52"/>
+    </linearGradient>
+    <linearGradient id="ag" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#818CF8"/>
+      <stop offset="50%" stop-color="#A78BFA"/>
+      <stop offset="100%" stop-color="#6CC8FF"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="#070711"/>
+  <rect width="1200" height="630" fill="url(#a1)"/>
+  <rect width="1200" height="630" fill="url(#a2)"/>
+
+  <!-- Brackets -->
+  <path d="M 48 48 L 48 86 M 48 48 L 86 48" stroke="#818CF8" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.65"/>
+  <path d="M 1152 48 L 1152 86 M 1152 48 L 1114 48" stroke="#818CF8" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.65"/>
+  <path d="M 48 582 L 48 544 M 48 582 L 86 582" stroke="#818CF8" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.65"/>
+  <path d="M 1152 582 L 1152 544 M 1152 582 L 1114 582" stroke="#818CF8" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.65"/>
+
+  <!-- Geometric accent -->
+  <g transform="translate(920, 315)" opacity="0.13">
+    <polygon points="0,-200 173,-100 173,100 0,200 -173,100 -173,-100" stroke="#818CF8" stroke-width="0.8" fill="none"/>
+    <ellipse cx="0" cy="0" rx="230" ry="42" stroke="#5B6CFF" stroke-width="0.6" fill="none"/>
+    <ellipse cx="0" cy="0" rx="290" ry="54" stroke="#5B6CFF" stroke-width="0.4" fill="none"/>
+  </g>
+
+  <!-- Logo -->
+  <circle cx="96" cy="96" r="26" stroke="#818CF8" stroke-width="1" fill="none" opacity="0.5"/>
+  <line x1="78" y1="89" x2="114" y2="89" stroke="#818CF8" stroke-width="2" stroke-linecap="round"/>
+  <line x1="78" y1="96" x2="114" y2="96" stroke="#818CF8" stroke-width="2" stroke-linecap="round"/>
+  <line x1="78" y1="103" x2="114" y2="103" stroke="#818CF8" stroke-width="2" stroke-linecap="round"/>
+  <text x="132" y="102" font-family="system-ui, -apple-system, sans-serif" font-size="17" font-weight="600" letter-spacing="-0.3" fill="#FFFFFF" opacity="0.88">SheetFlow<tspan fill="#818CF8">.</tspan>AI</text>
+
+  <!-- Headline -->
+  <text x="96" y="288" font-family="system-ui, -apple-system, sans-serif" font-size="66" font-weight="700" letter-spacing="-2" fill="url(#hl)">Your data,</text>
+  <text x="96" y="368" font-family="system-ui, -apple-system, sans-serif" font-size="66" font-weight="700" letter-spacing="-2" fill="url(#ag)">finally alive.</text>
+
+  <!-- Sub -->
+  <text x="96" y="432" font-family="system-ui, -apple-system, sans-serif" font-size="21" fill="#FFFFFF" opacity="0.48">The intelligence layer for your spreadsheets.</text>
+
+  <!-- Live indicator -->
+  <circle cx="96" cy="536" r="4" fill="#10B981"/>
+  <text x="112" y="541" font-family="ui-monospace, monospace" font-size="12" letter-spacing="0.12em" fill="#FFFFFF" opacity="0.4">OPERATIONAL · LIVE</text>
+
+  <rect width="1200" height="630" fill="url(#vignette)"/>
+</svg>

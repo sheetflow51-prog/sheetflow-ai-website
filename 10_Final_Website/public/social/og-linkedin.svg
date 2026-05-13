@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="627" viewBox="0 0 1200 627">
+  <defs>
+    <radialGradient id="aurora1" cx="25%" cy="35%" r="55%">
+      <stop offset="0%" stop-color="#5B6CFF" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#5B6CFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="aurora2" cx="80%" cy="75%" r="50%">
+      <stop offset="0%" stop-color="#9A6CFF" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#9A6CFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="aurora3" cx="50%" cy="100%" r="60%">
+      <stop offset="0%" stop-color="#6CC8FF" stop-opacity="0.07"/>
+      <stop offset="100%" stop-color="#6CC8FF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feBlend in="SourceGraphic" mode="overlay" result="blend"/>
+      <feComposite in="blend" in2="SourceGraphic"/>
+    </filter>
+    <linearGradient id="headline-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.55"/>
+    </linearGradient>
+    <linearGradient id="accent-grad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#818CF8"/>
+      <stop offset="50%" stop-color="#A78BFA"/>
+      <stop offset="100%" stop-color="#6CC8FF"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Void base -->
+  <rect width="1200" height="627" fill="#070711"/>
+
+  <!-- Aurora atmosphere -->
+  <rect width="1200" height="627" fill="url(#aurora1)"/>
+  <rect width="1200" height="627" fill="url(#aurora2)"/>
+  <rect width="1200" height="627" fill="url(#aurora3)"/>
+
+  <!-- Film grain overlay -->
+  <rect width="1200" height="627" fill="transparent" filter="url(#grain)" opacity="0.035"/>
+
+  <!-- Corner brackets — signature brand motif -->
+  <!-- Top-left -->
+  <path d="M 48 48 L 48 84 M 48 48 L 84 48" stroke="#818CF8" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.7"/>
+  <!-- Top-right -->
+  <path d="M 1152 48 L 1152 84 M 1152 48 L 1116 48" stroke="#818CF8" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.7"/>
+  <!-- Bottom-left -->
+  <path d="M 48 579 L 48 543 M 48 579 L 84 579" stroke="#818CF8" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.7"/>
+  <!-- Bottom-right -->
+  <path d="M 1152 579 L 1152 543 M 1152 579 L 1116 579" stroke="#818CF8" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.7"/>
+
+  <!-- Logo mark — 3 horizontal lines in a circle -->
+  <circle cx="100" cy="100" r="24" stroke="#818CF8" stroke-width="1" fill="none" opacity="0.5"/>
+  <line x1="84" y1="94" x2="116" y2="94" stroke="#818CF8" stroke-width="2" stroke-linecap="round"/>
+  <line x1="84" y1="100" x2="116" y2="100" stroke="#818CF8" stroke-width="2" stroke-linecap="round"/>
+  <line x1="84" y1="106" x2="116" y2="106" stroke="#818CF8" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Wordmark -->
+  <text x="136" y="107" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" letter-spacing="-0.3" fill="#FFFFFF" opacity="0.9">SheetFlow<tspan fill="#818CF8">.</tspan>AI</text>
+
+  <!-- Main headline -->
+  <text x="100" y="300" font-family="system-ui, -apple-system, sans-serif" font-size="58" font-weight="700" letter-spacing="-1.5" fill="url(#headline-grad)">Your data,</text>
+  <text x="100" y="375" font-family="system-ui, -apple-system, sans-serif" font-size="58" font-weight="700" letter-spacing="-1.5" fill="url(#accent-grad)">finally alive.</text>
+
+  <!-- Sub copy -->
+  <text x="100" y="440" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="400" fill="#FFFFFF" opacity="0.5" letter-spacing="-0.2">The intelligence layer for your spreadsheets.</text>
+
+  <!-- Live indicator -->
+  <circle cx="100" cy="540" r="4" fill="#10B981"/>
+  <text x="116" y="545" font-family="ui-monospace, monospace" font-size="12" fill="#FFFFFF" opacity="0.45" letter-spacing="0.12em">OPERATIONAL INTELLIGENCE · LIVE</text>
+
+  <!-- Right side geometric accent — icosahedron wireframe hint -->
+  <g opacity="0.12" transform="translate(850, 313)">
+    <!-- Simplified icosahedron outline suggestion -->
+    <polygon points="0,-180 154,-90 154,90 0,180 -154,90 -154,-90" stroke="#818CF8" stroke-width="0.8" fill="none"/>
+    <polygon points="0,-108 93,-54 93,54 0,108 -93,54 -93,-54" stroke="#818CF8" stroke-width="0.8" fill="none"/>
+    <line x1="0" y1="-180" x2="0" y2="-108" stroke="#818CF8" stroke-width="0.5"/>
+    <line x1="154" y1="-90" x2="93" y2="-54" stroke="#818CF8" stroke-width="0.5"/>
+    <line x1="154" y1="90" x2="93" y2="54" stroke="#818CF8" stroke-width="0.5"/>
+    <line x1="0" y1="180" x2="0" y2="108" stroke="#818CF8" stroke-width="0.5"/>
+    <line x1="-154" y1="90" x2="-93" y2="54" stroke="#818CF8" stroke-width="0.5"/>
+    <line x1="-154" y1="-90" x2="-93" y2="-54" stroke="#818CF8" stroke-width="0.5"/>
+    <!-- Orbital ring -->
+    <ellipse cx="0" cy="0" rx="200" ry="36" stroke="#5B6CFF" stroke-width="0.6" fill="none"/>
+    <ellipse cx="0" cy="0" rx="260" ry="48" stroke="#5B6CFF" stroke-width="0.4" fill="none"/>
+  </g>
+
+  <!-- Vignette -->
+  <radialGradient id="vignette" cx="50%" cy="50%" r="70%">
+    <stop offset="40%" stop-color="transparent"/>
+    <stop offset="100%" stop-color="#070711" stop-opacity="0.7"/>
+  </radialGradient>
+  <rect width="1200" height="627" fill="url(#vignette)"/>
+</svg>

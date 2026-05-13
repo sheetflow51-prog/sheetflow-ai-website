@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+  <defs>
+    <radialGradient id="a1" cx="30%" cy="25%" r="60%">
+      <stop offset="0%" stop-color="#5B6CFF" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#5B6CFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="a2" cx="75%" cy="80%" r="55%">
+      <stop offset="0%" stop-color="#9A6CFF" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#9A6CFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="vignette" cx="50%" cy="50%" r="70%">
+      <stop offset="35%" stop-color="transparent"/>
+      <stop offset="100%" stop-color="#070711" stop-opacity="0.75"/>
+    </radialGradient>
+    <linearGradient id="hl" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.5"/>
+    </linearGradient>
+    <linearGradient id="ag" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#818CF8"/>
+      <stop offset="50%" stop-color="#A78BFA"/>
+      <stop offset="100%" stop-color="#6CC8FF"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1080" height="1080" fill="#070711"/>
+  <rect width="1080" height="1080" fill="url(#a1)"/>
+  <rect width="1080" height="1080" fill="url(#a2)"/>
+
+  <!-- Brackets -->
+  <path d="M 52 52 L 52 100 M 52 52 L 100 52" stroke="#818CF8" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+  <path d="M 1028 52 L 1028 100 M 1028 52 L 980 52" stroke="#818CF8" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+  <path d="M 52 1028 L 52 980 M 52 1028 L 100 1028" stroke="#818CF8" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+  <path d="M 1028 1028 L 1028 980 M 1028 1028 L 980 1028" stroke="#818CF8" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+
+  <!-- Central geometric — icosahedron suggestion -->
+  <g transform="translate(540, 460)" opacity="0.18">
+    <polygon points="0,-220 190,-110 190,110 0,220 -190,110 -190,-110" stroke="#818CF8" stroke-width="0.8" fill="none"/>
+    <polygon points="0,-132 114,-66 114,66 0,132 -114,66 -114,-66" stroke="#818CF8" stroke-width="0.8" fill="none"/>
+    <ellipse cx="0" cy="0" rx="250" ry="46" stroke="#5B6CFF" stroke-width="0.7" fill="none"/>
+    <ellipse cx="0" cy="0" rx="320" ry="60" stroke="#5B6CFF" stroke-width="0.5" fill="none"/>
+    <ellipse cx="0" cy="0" rx="400" ry="76" stroke="#5B6CFF" stroke-width="0.4" fill="none"/>
+  </g>
+
+  <!-- Indigo glow at center -->
+  <radialGradient id="glow" cx="50%" cy="43%" r="30%">
+    <stop offset="0%" stop-color="#5B6CFF" stop-opacity="0.35"/>
+    <stop offset="100%" stop-color="#5B6CFF" stop-opacity="0"/>
+  </radialGradient>
+  <rect width="1080" height="1080" fill="url(#glow)"/>
+
+  <!-- Logo -->
+  <circle cx="540" cy="120" r="28" stroke="#818CF8" stroke-width="1" fill="none" opacity="0.5"/>
+  <line x1="520" y1="113" x2="560" y2="113" stroke="#818CF8" stroke-width="2" stroke-linecap="round"/>
+  <line x1="520" y1="120" x2="560" y2="120" stroke="#818CF8" stroke-width="2" stroke-linecap="round"/>
+  <line x1="520" y1="127" x2="560" y2="127" stroke="#818CF8" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Headline -->
+  <text x="540" y="790" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="700" letter-spacing="-2" fill="url(#hl)">Your data,</text>
+  <text x="540" y="876" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="700" letter-spacing="-2" fill="url(#ag)">finally alive.</text>
+
+  <!-- Wordmark bottom -->
+  <text x="540" y="970" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" letter-spacing="0.15em" fill="#FFFFFF" opacity="0.35">SHEETFLOW.AI · OPERATIONAL INTELLIGENCE</text>
+
+  <rect width="1080" height="1080" fill="url(#vignette)"/>
+</svg>

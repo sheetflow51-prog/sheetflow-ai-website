@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920">
+  <defs>
+    <radialGradient id="a1" cx="40%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#5B6CFF" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#5B6CFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="a2" cx="70%" cy="75%" r="60%">
+      <stop offset="0%" stop-color="#9A6CFF" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#9A6CFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="a3" cx="20%" cy="85%" r="50%">
+      <stop offset="0%" stop-color="#6CC8FF" stop-opacity="0.09"/>
+      <stop offset="100%" stop-color="#6CC8FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="35%">
+      <stop offset="0%" stop-color="#5B6CFF" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#5B6CFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="vignette" cx="50%" cy="50%" r="80%">
+      <stop offset="30%" stop-color="transparent"/>
+      <stop offset="100%" stop-color="#070711" stop-opacity="0.8"/>
+    </radialGradient>
+    <linearGradient id="hl" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.5"/>
+    </linearGradient>
+    <linearGradient id="ag" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#818CF8"/>
+      <stop offset="50%" stop-color="#A78BFA"/>
+      <stop offset="100%" stop-color="#6CC8FF"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1080" height="1920" fill="#070711"/>
+  <rect width="1080" height="1920" fill="url(#a1)"/>
+  <rect width="1080" height="1920" fill="url(#a2)"/>
+  <rect width="1080" height="1920" fill="url(#a3)"/>
+
+  <!-- Brackets -->
+  <path d="M 56 56 L 56 108 M 56 56 L 108 56" stroke="#818CF8" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.65"/>
+  <path d="M 1024 56 L 1024 108 M 1024 56 L 972 56" stroke="#818CF8" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.65"/>
+  <path d="M 56 1864 L 56 1812 M 56 1864 L 108 1864" stroke="#818CF8" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.65"/>
+  <path d="M 1024 1864 L 1024 1812 M 1024 1864 L 972 1864" stroke="#818CF8" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.65"/>
+
+  <!-- Central geometric at mid-height -->
+  <g transform="translate(540, 960)" opacity="0.15">
+    <polygon points="0,-280 243,-140 243,140 0,280 -243,140 -243,-140" stroke="#818CF8" stroke-width="0.8" fill="none"/>
+    <polygon points="0,-168 146,-84 146,84 0,168 -146,84 -146,-84" stroke="#818CF8" stroke-width="0.8" fill="none"/>
+    <ellipse cx="0" cy="0" rx="320" ry="56" stroke="#5B6CFF" stroke-width="0.7" fill="none"/>
+    <ellipse cx="0" cy="0" rx="410" ry="72" stroke="#5B6CFF" stroke-width="0.5" fill="none"/>
+    <ellipse cx="0" cy="0" rx="510" ry="92" stroke="#5B6CFF" stroke-width="0.35" fill="none"/>
+  </g>
+
+  <!-- Glow at center -->
+  <rect y="600" width="1080" height="720" fill="url(#glow)"/>
+
+  <!-- Logo mark -->
+  <circle cx="540" cy="220" r="34" stroke="#818CF8" stroke-width="1" fill="none" opacity="0.5"/>
+  <line x1="516" y1="212" x2="564" y2="212" stroke="#818CF8" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="516" y1="220" x2="564" y2="220" stroke="#818CF8" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="516" y1="228" x2="564" y2="228" stroke="#818CF8" stroke-width="2.2" stroke-linecap="round"/>
+
+  <!-- Wordmark -->
+  <text x="540" y="295" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="600" letter-spacing="-0.3" fill="#FFFFFF" opacity="0.85">SheetFlow.AI</text>
+
+  <!-- Headline - lower third style -->
+  <text x="540" y="1520" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="80" font-weight="700" letter-spacing="-2.5" fill="url(#hl)">Your data,</text>
+  <text x="540" y="1618" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="80" font-weight="700" letter-spacing="-2.5" fill="url(#ag)">finally alive.</text>
+
+  <!-- Sub -->
+  <text x="540" y="1700" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="26" font-weight="400" fill="#FFFFFF" opacity="0.45">Operational intelligence for spreadsheets.</text>
+
+  <!-- Live dot -->
+  <circle cx="484" cy="1790" r="5" fill="#10B981"/>
+  <text x="500" y="1795" font-family="ui-monospace, monospace" font-size="14" letter-spacing="0.12em" fill="#FFFFFF" opacity="0.4">LIVE · sheetflow.ai</text>
+
+  <rect width="1080" height="1920" fill="url(#vignette)"/>
+</svg>
