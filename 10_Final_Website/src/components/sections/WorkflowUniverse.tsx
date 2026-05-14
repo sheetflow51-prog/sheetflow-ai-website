@@ -16,13 +16,13 @@ interface Node {
 }
 
 const NODES: Node[] = [
-  { id: 's1', label: 'Sales Pipeline', sub: 'Google Sheets · 12 cols', x: 8, y: 22, Icon: FileSpreadsheet, type: 'source' },
-  { id: 's2', label: 'Inventory Tracker', sub: 'Excel · live sync', x: 8, y: 70, Icon: Database, type: 'source' },
-  { id: 'p1', label: 'Anomaly Detection', sub: '4σ threshold · auto', x: 38, y: 30, Icon: Activity, type: 'process' },
-  { id: 'p2', label: 'Forecast Model', sub: '90-day rolling', x: 38, y: 62, Icon: GitBranch, type: 'process' },
-  { id: 'p3', label: 'Intelligence Core', sub: 'SheetFlow.AI', x: 60, y: 46, Icon: Sparkles, type: 'process' },
-  { id: 'o1', label: 'Slack Signal', sub: '#ops · #revenue', x: 86, y: 22, Icon: Bell, type: 'alert' },
-  { id: 'o2', label: 'Weekly Report', sub: 'Mon · 8:00 AM', x: 86, y: 70, Icon: FileSpreadsheet, type: 'output' },
+  { id: 's1', label: 'Sales Pipeline',    sub: 'Google Sheets · 12 cols', x: 13, y: 22, Icon: FileSpreadsheet, type: 'source' },
+  { id: 's2', label: 'Inventory Tracker', sub: 'Excel · live sync',        x: 13, y: 72, Icon: Database,        type: 'source' },
+  { id: 'p1', label: 'Anomaly Detection', sub: '4σ threshold · auto', x: 38, y: 28, Icon: Activity,        type: 'process' },
+  { id: 'p2', label: 'Forecast Model',    sub: '90-day rolling',                x: 38, y: 66, Icon: GitBranch,       type: 'process' },
+  { id: 'p3', label: 'Intelligence Core', sub: 'SheetFlow.AI',                  x: 62, y: 46, Icon: Sparkles,        type: 'process' },
+  { id: 'o1', label: 'Slack Signal',      sub: '#ops · #revenue',          x: 87, y: 22, Icon: Bell,            type: 'alert' },
+  { id: 'o2', label: 'Weekly Report',     sub: 'Mon · 8:00 AM',            x: 87, y: 72, Icon: FileSpreadsheet, type: 'output' },
 ];
 
 const EDGES: [string, string][] = [
@@ -37,17 +37,16 @@ const EDGES: [string, string][] = [
 ];
 
 const NODE_COLOR: Record<Node['type'], string> = {
-  source: '#A5B4FC',
+  source:  '#A5B4FC',
   process: '#818CF8',
-  output: '#34D399',
-  alert: '#FBBF24',
+  output:  '#34D399',
+  alert:   '#FBBF24',
 };
 
 export function WorkflowUniverse() {
   const nodeMap = Object.fromEntries(NODES.map((n) => [n.id, n]));
   const sectionRef = useRef<HTMLElement>(null);
 
-  // Scroll-driven intensity. 0 = entering view, 1 = fully active mid-section.
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ['start end', 'end start'],
@@ -56,13 +55,12 @@ export function WorkflowUniverse() {
     useTransform(scrollYProgress, [0.15, 0.5, 0.85], [0, 1, 0.6]),
     { stiffness: 100, damping: 30, mass: 0.8 },
   );
-  const coreScale = useTransform(intensity, [0, 1], [1, 1.25]);
-  const coreGlow = useTransform(intensity, [0, 1], [0.25, 0.7]);
+  const coreScale   = useTransform(intensity, [0, 1], [1, 1.25]);
+  const coreGlow    = useTransform(intensity, [0, 1], [0.25, 0.7]);
   const veilOpacity = useTransform(intensity, [0, 0.5, 1], [0, 0.45, 0.7]);
 
   return (
     <section ref={sectionRef} id="workflow" className="section relative">
-      {/* Scroll-driven environmental veil — section gets darker + more focused as you reach its core */}
       <motion.div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
@@ -93,7 +91,7 @@ export function WorkflowUniverse() {
           viewport={{ once: true, margin: '-15%' }}
           transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
         >
-          {/* Edges (SVG layer) */}
+          {/* SVG edge layer */}
           <svg
             className="absolute inset-0 h-full w-full"
             viewBox="0 0 100 50"
@@ -101,34 +99,38 @@ export function WorkflowUniverse() {
             aria-hidden="true"
           >
             <defs>
-              <linearGradient id="edgeGrad" x1="0" y1="0" x2="100%" y2="0">
-                <stop offset="0%" stopColor="#818CF8" stopOpacity="0.1" />
-                <stop offset="50%" stopColor="#818CF8" stopOpacity="0.7" />
-                <stop offset="100%" stopColor="#A78BFA" stopOpacity="0.1" />
+              <linearGradient id="edgeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%"   stopColor="#818CF8" stopOpacity="0.08" />
+                <stop offset="50%"  stopColor="#818CF8" stopOpacity="0.65" />
+                <stop offset="100%" stopColor="#A78BFA" stopOpacity="0.08" />
               </linearGradient>
             </defs>
+
             {EDGES.map(([a, b], i) => {
               const A = nodeMap[a];
               const B = nodeMap[b];
-              const x1 = A.x;
+              // Connect right-edge of source to left-edge of target.
+              // HW = half node-box width in SVG x-units (~150px / 1152px max-w ~= 6.5 units).
+              const HW = 6.5;
+              const x1 = A.x + HW;
               const y1 = A.y / 2;
-              const x2 = B.x;
+              const x2 = B.x - HW;
               const y2 = B.y / 2;
-              const cx = (x1 + x2) / 2;
-              const path = `M ${x1} ${y1} Q ${cx} ${y1} ${cx} ${(y1 + y2) / 2} T ${x2} ${y2}`;
+              // Cubic-bezier S-curve: horizontal tangent at both endpoints = clean flow lines.
+              const pull = Math.max((x2 - x1) * 0.45, 6);
+              const path = `M ${x1} ${y1} C ${x1 + pull} ${y1} ${x2 - pull} ${y2} ${x2} ${y2}`;
               return (
                 <g key={i}>
                   <motion.path
                     d={path}
                     stroke="url(#edgeGrad)"
-                    strokeWidth="0.25"
+                    strokeWidth="0.28"
                     fill="none"
                     initial={{ pathLength: 0, opacity: 0 }}
                     whileInView={{ pathLength: 1, opacity: 1 }}
                     viewport={{ once: true }}
                     transition={{ duration: 1.2, delay: 0.4 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
                   />
-                  {/* Flowing data packet — uses SVG native animateMotion */}
                   <circle r="0.45" fill="#A5B4FC" opacity="0.85">
                     <animateMotion
                       dur="2.4s"
@@ -142,7 +144,7 @@ export function WorkflowUniverse() {
             })}
           </svg>
 
-          {/* Nodes */}
+          {/* Node boxes */}
           {NODES.map((n, i) => {
             const Icon = n.Icon;
             return (
@@ -170,7 +172,7 @@ export function WorkflowUniverse() {
                       className="flex h-7 w-7 items-center justify-center rounded-md"
                       style={{
                         background: `linear-gradient(135deg, ${NODE_COLOR[n.type]}33, ${NODE_COLOR[n.type]}11)`,
-                        border: `1px solid ${NODE_COLOR[n.type]}55`,
+                        border:     `1px solid ${NODE_COLOR[n.type]}55`,
                       }}
                     >
                       <Icon className="h-3.5 w-3.5" style={{ color: NODE_COLOR[n.type] }} strokeWidth={2.2} />
@@ -184,9 +186,9 @@ export function WorkflowUniverse() {
                     className="pointer-events-none absolute inset-0 -m-4 rounded-2xl"
                     style={{
                       background: 'radial-gradient(circle, rgba(99,102,241,0.45), transparent 70%)',
-                      filter: 'blur(12px)',
+                      filter:  'blur(12px)',
                       opacity: coreGlow,
-                      scale: coreScale,
+                      scale:   coreScale,
                     }}
                   />
                 )}
