@@ -1,5 +1,3 @@
-import path from 'path';
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -26,18 +24,6 @@ const nextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 30,
   },
   webpack: (config) => {
-    // Force a single React instance across all packages to prevent
-    // "Cannot read properties of undefined (reading 'ReactCurrentBatchConfig')"
-    // errors caused by @react-three/fiber or other packages bundling their own
-    // React copy and ending up with two separate React instances at runtime.
-    config.resolve = config.resolve ?? {};
-    config.resolve.alias = {
-      ...(config.resolve.alias ?? {}),
-      react: path.resolve('./node_modules/react'),
-      'react-dom': path.resolve('./node_modules/react-dom'),
-      'react/jsx-runtime': path.resolve('./node_modules/react/jsx-runtime'),
-      'react/jsx-dev-runtime': path.resolve('./node_modules/react/jsx-dev-runtime'),
-    };
     config.module.rules.push({
       test: /\.(glsl|vs|fs|vert|frag)$/,
       exclude: /node_modules/,
@@ -48,6 +34,7 @@ const nextConfig = {
     // Explicitly admitting `import` (plus `default` as a defensive fallback)
     // makes the resolver accept the ESM entry without changing how the package
     // is consumed.
+    config.resolve = config.resolve ?? {};
     config.resolve.conditionNames = Array.from(
       new Set([...(config.resolve.conditionNames ?? []), 'import', 'default']),
     );
