@@ -4,12 +4,14 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   productionBrowserSourceMaps: false,
-  // ESLint is run as a separate CI gate (npm run lint).
-  // Disabling during build avoids double-running and prevents
-  // the build from failing on lint warnings in Vercel's build pipeline.
+  // ESLint runs as a separate CI gate — not during the build pipeline.
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Next.js 16 enables Turbopack by default for production builds.
+  // Declaring an empty turbopack config acknowledges this and prevents
+  // the hard error caused by having a webpack config with no turbopack config.
+  turbopack: {},
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'prod.spline.design' },
