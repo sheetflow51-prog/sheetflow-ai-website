@@ -17,12 +17,12 @@ interface Node {
 
 const NODES: Node[] = [
   { id: 's1', label: 'Sales Pipeline',    sub: 'Google Sheets · 12 cols', x: 13, y: 22, Icon: FileSpreadsheet, type: 'source' },
-  { id: 's2', label: 'Inventory Tracker', sub: 'Excel · live sync',        x: 13, y: 72, Icon: Database,        type: 'source' },
-  { id: 'p1', label: 'Anomaly Detection', sub: '4σ threshold · auto', x: 38, y: 28, Icon: Activity,        type: 'process' },
-  { id: 'p2', label: 'Forecast Model',    sub: '90-day rolling',                x: 38, y: 66, Icon: GitBranch,       type: 'process' },
-  { id: 'p3', label: 'Intelligence Core', sub: 'SheetFlow.AI',                  x: 62, y: 46, Icon: Sparkles,        type: 'process' },
-  { id: 'o1', label: 'Slack Signal',      sub: '#ops · #revenue',          x: 87, y: 22, Icon: Bell,            type: 'alert' },
-  { id: 'o2', label: 'Weekly Report',     sub: 'Mon · 8:00 AM',            x: 87, y: 72, Icon: FileSpreadsheet, type: 'output' },
+  { id: 's2', label: 'Inventory Tracker', sub: 'Excel · live sync',       x: 13, y: 72, Icon: Database,        type: 'source' },
+  { id: 'p1', label: 'Anomaly Detection', sub: '4σ threshold · auto',     x: 38, y: 28, Icon: Activity,        type: 'process' },
+  { id: 'p2', label: 'Forecast Model',    sub: '90-day rolling',          x: 38, y: 66, Icon: GitBranch,       type: 'process' },
+  { id: 'p3', label: 'Intelligence Core', sub: 'SheetFlow.AI',            x: 62, y: 46, Icon: Sparkles,        type: 'process' },
+  { id: 'o1', label: 'Slack Signal',      sub: '#ops · #revenue',         x: 87, y: 22, Icon: Bell,            type: 'alert' },
+  { id: 'o2', label: 'Weekly Report',     sub: 'Mon · 8:00 AM',           x: 87, y: 72, Icon: FileSpreadsheet, type: 'output' },
 ];
 
 const EDGES: [string, string][] = [
@@ -84,8 +84,11 @@ export function WorkflowUniverse() {
           className="mx-auto items-center text-center"
         />
 
+        {/* Mobile: horizontal scroll wrapper so nodes never crowd or clip.
+            scroll-fade-edge masks the right edge to hint at more content. */}
+        <div className="scrollbar-none scroll-fade-edge mt-14 overflow-x-auto overflow-y-visible -mx-6 px-6 md:mt-20 md:mx-0 md:px-0 md:overflow-visible">
         <motion.div
-          className="relative mx-auto mt-20 aspect-[16/8] w-full max-w-6xl rounded-3xl border border-white/[0.06] bg-surface-1/40 p-8 backdrop-blur-xl"
+          className="relative mx-auto aspect-[16/8] w-full min-w-[700px] max-w-6xl rounded-3xl border border-white/[0.06] bg-surface-1/40 p-8 backdrop-blur-xl md:min-w-0"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-15%' }}
@@ -110,7 +113,7 @@ export function WorkflowUniverse() {
               const A = nodeMap[a];
               const B = nodeMap[b];
               // Connect right-edge of source to left-edge of target.
-              // HW = half node-box width in SVG x-units (~150px / 1152px max-w ~= 6.5 units).
+              // HW ≈ half-width of a node box in SVG x-units (~150px / 1152px max-w ≈ 6.5 units).
               const HW = 6.5;
               const x1 = A.x + HW;
               const y1 = A.y / 2;
@@ -204,6 +207,7 @@ export function WorkflowUniverse() {
             </span>
           </div>
         </motion.div>
+        </div>{/* end mobile scroll wrapper */}
       </div>
     </section>
   );

@@ -52,7 +52,7 @@ const FEATURES = [
     title: 'Audit-grade by default.',
     body: 'Every signal logged. Every action timestamped. Compliance teams approve before they ask.',
     accent: 'from-violet/25 to-accent/15',
-    span: 'md:col-span-2',
+    span: 'md:col-span-4',
   },
 ];
 
@@ -60,7 +60,7 @@ export function FeatureStorytelling() {
   return (
     <section id="product" className="section relative">
       <div className="container-edge">
-        <div className="mb-20 max-w-3xl">
+        <div className="mb-14 max-w-3xl md:mb-20">
           <SectionHeader
             kicker="The Capability Surface"
             title={
@@ -73,7 +73,7 @@ export function FeatureStorytelling() {
           />
         </div>
 
-        <div className="grid auto-rows-[minmax(220px,_auto)] grid-cols-1 gap-3 md:grid-cols-4">
+        <div className="grid auto-rows-[minmax(220px,_auto)] grid-cols-1 gap-3.5 md:grid-cols-4">
           {FEATURES.map((f, i) => {
             const Icon = f.Icon;
             return (
@@ -101,10 +101,10 @@ export function FeatureStorytelling() {
                         {f.kicker}
                       </span>
                     </div>
-                    <h3 className="mt-6 max-w-md text-balance text-[22px] font-semibold leading-[1.15] tracking-tight text-white md:text-2xl">
+                    <h3 className="mt-5 max-w-md text-balance text-[20px] font-semibold leading-[1.18] tracking-tight text-white md:mt-6 md:text-[24px] md:leading-[1.15]">
                       {f.title}
                     </h3>
-                    <p className="mt-3 max-w-md text-[14px] leading-relaxed text-ink-300">{f.body}</p>
+                    <p className="mt-3 max-w-md text-[14px] leading-relaxed text-ink-300/95">{f.body}</p>
                   </div>
                 </GlassCard>
               </motion.div>

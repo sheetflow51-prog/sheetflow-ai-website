@@ -27,7 +27,7 @@ export function SectionHeader({
   return (
     <div
       className={cn(
-        'flex flex-col gap-5',
+        'flex flex-col gap-4 md:gap-5',
         align === 'center' && 'items-center text-center',
         className,
       )}
@@ -53,7 +53,7 @@ export function SectionHeader({
       </motion.h2>
       {description && (
         <motion.p
-          className="max-w-xl text-[17px] leading-relaxed text-ink-300 text-pretty"
+          className="max-w-xl text-[16px] leading-relaxed text-ink-300 text-pretty md:text-[17px]"
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-15% 0px' }}

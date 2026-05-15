@@ -36,7 +36,7 @@ export function Hero() {
   const { track } = useAnalytics();
 
   return (
-    <section className="relative isolate min-h-[100svh] overflow-hidden pt-32 pb-24 md:pt-36 md:pb-32">
+    <section className="relative isolate min-h-[100svh] overflow-hidden pt-24 pb-20 md:pt-36 md:pb-32">
       {/* Layered backgrounds */}
       <div className="absolute inset-0 -z-10 signature-grid opacity-50" aria-hidden="true" />
       <ParticleField className="-z-10" reactive />
@@ -85,7 +85,7 @@ export function Hero() {
         </motion.h1>
 
         <motion.p
-          className="mx-auto mt-7 max-w-2xl text-balance text-[19px] leading-[1.55] text-ink-300 md:text-xl"
+          className="mx-auto mt-6 max-w-2xl text-balance text-[17px] leading-[1.55] text-ink-300 md:mt-7 md:text-xl"
           initial="hidden"
           animate="show"
           variants={reveal}
@@ -128,7 +128,7 @@ export function Hero() {
 
         {/* Trust strip */}
         <motion.div
-          className="mt-20 flex w-full max-w-3xl flex-col items-center gap-4"
+          className="mt-14 flex w-full max-w-3xl flex-col items-center gap-4 md:mt-20"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 1.2 }}
@@ -136,11 +136,11 @@ export function Hero() {
           <p className="text-[10px] uppercase tracking-[0.18em] text-ink-400">
             Trusted by intelligence-driven teams
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3 opacity-50 grayscale">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 opacity-50 grayscale sm:gap-x-10">
             {TRUST_LOGOS.map((name) => (
               <span
                 key={name}
-                className="font-display text-[13px] font-semibold tracking-[0.18em] text-white/60"
+                className="font-display text-[12px] font-semibold tracking-[0.18em] text-white/60 sm:text-[13px]"
               >
                 {name}
               </span>
@@ -150,7 +150,7 @@ export function Hero() {
 
         {/* Signature Trace — recurring memory motif under the trust strip */}
         <motion.div
-          className="mt-10"
+          className="mt-8 md:mt-10"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.6, duration: 0.6 }}
@@ -160,7 +160,7 @@ export function Hero() {
 
         {/* Scroll indicator */}
         <motion.div
-          className="mt-12 flex flex-col items-center gap-2 text-[11px] uppercase tracking-widest text-ink-400"
+          className="mt-10 flex flex-col items-center gap-2 text-[11px] uppercase tracking-widest text-ink-400 md:mt-12"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 2, duration: 0.8 }}

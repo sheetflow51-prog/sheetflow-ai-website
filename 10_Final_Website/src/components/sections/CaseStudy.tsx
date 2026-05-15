@@ -39,7 +39,7 @@ export function CaseStudy() {
   return (
     <section id="customers" className="section relative">
       <div className="container-edge">
-        <div className="mb-16 max-w-3xl">
+        <div className="mb-12 max-w-3xl md:mb-16">
           <SectionHeader
             kicker="In the Field"
             title={
@@ -52,7 +52,7 @@ export function CaseStudy() {
           />
         </div>
 
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3.5 md:grid-cols-3">
           {STUDIES.map((s, i) => (
             <motion.div
               key={s.company}

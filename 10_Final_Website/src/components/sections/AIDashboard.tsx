@@ -114,7 +114,7 @@ export function AIDashboard() {
   return (
     <section id="intelligence" className="section relative">
       <div className="container-edge">
-        <div className="grid gap-16 lg:grid-cols-[1fr_1.3fr] lg:gap-24">
+        <div className="grid gap-12 md:gap-16 lg:grid-cols-[1fr_1.3fr] lg:gap-20">
           <SectionHeader
             kicker="Operational Intelligence"
             title={
@@ -128,7 +128,7 @@ export function AIDashboard() {
           />
 
           <motion.div
-            className="relative"
+            className="relative pb-6 pl-0 md:pb-10 md:pl-12"
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-10%' }}
@@ -177,9 +177,9 @@ export function AIDashboard() {
                 />
               </GlassCard>
 
-              {/* Floating signal card */}
+              {/* Floating signal card — hidden on mobile to avoid clipping */}
               <motion.div
-                className="absolute -right-4 -top-8 w-[260px] md:-right-10"
+                className="absolute hidden -right-10 -top-8 w-[260px] md:block"
                 initial={{ opacity: 0, x: 30, y: -10 }}
                 whileInView={{ opacity: 1, x: 0, y: 0 }}
                 viewport={{ once: true }}
@@ -204,9 +204,9 @@ export function AIDashboard() {
                 </GlassCard>
               </motion.div>
 
-              {/* Floating alert card */}
+              {/* Floating alert card — hidden on mobile to avoid clipping */}
               <motion.div
-                className="absolute -bottom-6 -left-4 w-[240px] md:-left-12"
+                className="absolute hidden -bottom-6 -left-12 w-[240px] md:block"
                 initial={{ opacity: 0, x: -30, y: 20 }}
                 whileInView={{ opacity: 1, x: 0, y: 0 }}
                 viewport={{ once: true }}

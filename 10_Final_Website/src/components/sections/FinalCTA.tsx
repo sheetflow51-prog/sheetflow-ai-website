@@ -36,7 +36,7 @@ export function FinalCTA() {
   return (
     <section
       ref={sectionRef}
-      className="relative isolate overflow-hidden py-32 md:py-44"
+      className="relative isolate overflow-hidden py-24 md:py-44"
     >
       {/* Particle field */}
       <ParticleField className="opacity-60" reactive />
@@ -111,7 +111,7 @@ export function FinalCTA() {
           </motion.h2>
 
           <motion.p
-            className="mt-7 max-w-xl text-[18px] leading-relaxed text-ink-300 text-balance"
+            className="mt-6 max-w-xl text-[16px] leading-relaxed text-ink-300 text-balance md:mt-7 md:text-[18px]"
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -142,7 +142,7 @@ export function FinalCTA() {
 
           {/* Signature Trace — mirror of the hero motif, closing the loop */}
           <motion.div
-            className="mt-12"
+            className="mt-10 md:mt-12"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}

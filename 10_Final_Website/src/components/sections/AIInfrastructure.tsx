@@ -4,27 +4,27 @@ import { motion } from 'framer-motion';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 
 const INTEGRATIONS = [
-  ['Google Sheets', 4, 4],
-  ['Excel', 7, 22],
-  ['Airtable', 16, 8],
+  ['Google Sheets', 4, 6],
+  ['Excel', 8, 22],
+  ['Airtable', 16, 10],
   ['Notion', 28, 26],
   ['Slack', 40, 12],
   ['Salesforce', 58, 18],
-  ['HubSpot', 70, 6],
+  ['HubSpot', 70, 8],
   ['Stripe', 82, 24],
-  ['QuickBooks', 92, 14],
-  ['Linear', 12, 60],
-  ['Zapier', 26, 78],
-  ['Webhooks', 38, 92],
-  ['Postgres', 54, 82],
+  ['QuickBooks', 92, 16],
+  ['Linear', 12, 62],
+  ['Zapier', 26, 76],
+  ['Webhooks', 38, 80],
+  ['Postgres', 54, 80],
   ['Snowflake', 66, 70],
-  ['BigQuery', 78, 88],
-  ['Discord', 88, 60],
+  ['BigQuery', 78, 78],
+  ['Discord', 88, 62],
 ] as const;
 
 export function AIInfrastructure() {
   return (
-    <section id="integrations" className="section relative overflow-hidden">
+    <section id="integrations" className="section relative">
       {/* Background grid */}
       <div className="absolute inset-0 -z-10 grid-backdrop opacity-30" aria-hidden="true" />
 
@@ -42,8 +42,11 @@ export function AIInfrastructure() {
           className="mx-auto items-center text-center"
         />
 
+        {/* Mobile: horizontal scroll wrapper so ecosystem nodes stay legible.
+            scroll-fade-edge softens the right edge to hint at more content. */}
+        <div className="scrollbar-none scroll-fade-edge mt-14 overflow-x-auto overflow-y-visible -mx-6 px-6 md:mt-0 md:mx-0 md:px-0 md:overflow-visible">
         <motion.div
-          className="relative mx-auto mt-20 aspect-[16/8] w-full max-w-6xl"
+          className="relative mx-auto aspect-[16/8] w-full min-w-[700px] max-w-6xl md:mt-20 md:min-w-0"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true, margin: '-10%' }}
@@ -127,9 +130,10 @@ export function AIInfrastructure() {
             );
           })}
         </motion.div>
+        </div>{/* end mobile scroll wrapper */}
 
         <motion.p
-          className="mx-auto mt-10 max-w-md text-center text-[13px] text-ink-400"
+          className="mx-auto mt-8 max-w-md text-center text-[13px] text-ink-400 md:mt-10"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
