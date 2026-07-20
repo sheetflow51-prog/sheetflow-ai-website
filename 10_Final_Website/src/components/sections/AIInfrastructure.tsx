@@ -4,22 +4,22 @@ import { motion } from 'framer-motion';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 
 const INTEGRATIONS = [
-  ['Google Sheets', 4, 6],
-  ['Excel', 8, 22],
-  ['Airtable', 16, 10],
-  ['Notion', 28, 26],
+  ['WhatsApp', 4, 6],
+  ['Google Sheets', 8, 22],
+  ['Calendly', 16, 10],
+  ['Gmail', 28, 26],
   ['Slack', 40, 12],
-  ['Salesforce', 58, 18],
-  ['HubSpot', 70, 8],
+  ['HubSpot', 58, 18],
+  ['Pipedrive', 70, 8],
   ['Stripe', 82, 24],
   ['QuickBooks', 92, 16],
-  ['Linear', 12, 62],
+  ['Instagram', 12, 62],
   ['Zapier', 26, 76],
-  ['Webhooks', 38, 80],
-  ['Postgres', 54, 80],
-  ['Snowflake', 66, 70],
-  ['BigQuery', 78, 78],
-  ['Discord', 88, 62],
+  ['Make', 38, 80],
+  ['GoHighLevel', 54, 80],
+  ['Twilio', 66, 70],
+  ['Mailchimp', 78, 78],
+  ['Google Cal', 88, 62],
 ] as const;
 
 export function AIInfrastructure() {
@@ -30,14 +30,14 @@ export function AIInfrastructure() {
 
       <div className="container-edge">
         <SectionHeader
-          kicker="The Ecosystem"
+          kicker="Plays Nicely With Your Stack"
           title={
             <>
-              The intelligence layer{' '}
-              <span className="text-ink-300">connects to everything.</span>
+              Works with the tools{' '}
+              <span className="text-ink-300">your team already uses.</span>
             </>
           }
-          description="SheetFlow AI is a layer, not a silo. It bonds with the spreadsheets, databases, communication tools, and operational systems your team already uses."
+          description="No rip-and-replace. SheetFlow plugs into your CRM, calendar, WhatsApp, sheets and inbox — automating what's already in place."
           align="center"
           className="mx-auto items-center text-center"
         />
@@ -76,7 +76,7 @@ export function AIInfrastructure() {
                     SheetFlow
                   </p>
                   <p className="font-mono text-[9px] uppercase tracking-widest text-accent-bright">
-                    Core
+                    Automation
                   </p>
                 </div>
               </motion.div>
@@ -139,7 +139,7 @@ export function AIInfrastructure() {
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 1.5 }}
         >
-          + 60 more integrations · Native connectors built monthly · Open API for the rest
+          50+ integrations supported · Custom connections built on request · Your stack stays yours
         </motion.p>
       </div>
     </section>

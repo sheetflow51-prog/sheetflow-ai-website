@@ -8,49 +8,49 @@ import { SectionHeader } from '@/components/ui/SectionHeader';
 const FEATURES = [
   {
     Icon: Eye,
-    kicker: 'Watching',
-    title: 'It sees what changes — and what changes mean.',
-    body: 'Continuous monitoring across every cell, every formula, every dependency. SheetFlow AI knows the difference between a value that grew and a value that\'s wrong.',
+    kicker: 'Capture',
+    title: 'Every lead caught — from every channel.',
+    body: 'Web forms, WhatsApp, Instagram DMs, missed calls, Google Ads — all funneled into one place automatically. No lead ever sits unread.',
     accent: 'from-accent-bright/30 to-violet/20',
     span: 'md:col-span-2 md:row-span-2',
   },
   {
     Icon: Zap,
-    kicker: 'Acting',
-    title: 'Workflows that fire before you ask.',
-    body: 'When a threshold breaks, a report is due, or an integration needs a nudge — it just happens.',
+    kicker: 'Respond',
+    title: 'Reply in 60 seconds — even at 2am.',
+    body: 'An AI assistant that answers, qualifies and books — so leads never go cold while you\'re sleeping or in a meeting.',
     accent: 'from-signal-info/30 to-accent/15',
     span: 'md:col-span-2',
   },
   {
     Icon: Bell,
-    kicker: 'Signaling',
-    title: 'Calm by default. Urgent when it matters.',
-    body: 'A notification is a tax. A signal is a service. SheetFlow AI is opinionated about which one to send.',
+    kicker: 'Book',
+    title: 'Appointments confirmed without you lifting a finger.',
+    body: 'Self-serve scheduling, reminders sent on WhatsApp, no-shows reduced. Your calendar fills itself.',
     accent: 'from-signal-warning/25 to-accent/10',
     span: 'md:col-span-2',
   },
   {
     Icon: Brain,
-    kicker: 'Understanding',
-    title: 'Natural language that means business.',
-    body: '"Alert me when MRR drops below $150K every Monday at 8am." — that\'s the entire setup. SheetFlow AI builds, runs, and maintains it.',
+    kicker: 'Sync',
+    title: 'Your CRM updates itself.',
+    body: 'Every conversation, form, call and booking flows into HubSpot, Pipedrive or GoHighLevel — automatically. Manual data entry is over.',
     accent: 'from-accent/30 to-violet/30',
     span: 'md:col-span-2',
   },
   {
     Icon: GitMerge,
-    kicker: 'Connecting',
-    title: 'Lives where your data already lives.',
-    body: 'Google Sheets. Excel. Airtable. Notion. The intelligence layer doesn\'t demand migration — it bonds with what you already trust.',
+    kicker: 'Report',
+    title: 'A clear picture of your business — every morning.',
+    body: 'Leads, bookings, revenue, follow-ups — one calm email at 8am tells you exactly where things stand and what needs attention.',
     accent: 'from-signal-success/25 to-accent/15',
     span: 'md:col-span-2',
   },
   {
     Icon: ShieldCheck,
-    kicker: 'Protecting',
-    title: 'Audit-grade by default.',
-    body: 'Every signal logged. Every action timestamped. Compliance teams approve before they ask.',
+    kicker: 'Trust',
+    title: 'Built carefully. Yours to own.',
+    body: 'Read-only access by default. Every action logged. We hand over the keys — no lock-in, no platform tax. Cancel anytime.',
     accent: 'from-violet/25 to-accent/15',
     span: 'md:col-span-4',
   },
@@ -62,14 +62,14 @@ export function FeatureStorytelling() {
       <div className="container-edge">
         <div className="mb-14 max-w-3xl md:mb-20">
           <SectionHeader
-            kicker="The Capability Surface"
+            kicker="How We Work"
             title={
               <>
-                Six instincts.{' '}
-                <span className="text-ink-300">One quiet intelligence.</span>
+                Six pillars of automation.{' '}
+                <span className="text-ink-300">One quietly run business.</span>
               </>
             }
-            description="SheetFlow AI doesn't add features to your spreadsheets. It adds awareness — six instincts that compound into operational intelligence you didn't know was possible."
+            description="We don't sell tools — we install systems. Six everyday operations, automated end-to-end, so your team can focus on the work only humans can do."
           />
         </div>
 

@@ -43,27 +43,28 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'SheetFlow AI — The intelligence layer your spreadsheets always deserved.',
+    default: 'SheetFlow AI — AI automation agency for growing businesses.',
     template: '%s · SheetFlow AI',
   },
   description:
-    'SheetFlow AI is the operational intelligence layer for spreadsheets. It watches your data, catches what matters, and acts before you have to ask.',
+    'SheetFlow builds AI automations that capture leads, follow up on WhatsApp, book appointments, and keep your CRM updated — so your business runs itself.',
   keywords: [
-    'AI spreadsheet',
-    'spreadsheet automation',
-    'operational intelligence',
-    'AI operating system',
-    'autonomous monitoring',
-    'data intelligence',
+    'AI automation agency',
+    'WhatsApp automation',
+    'lead capture automation',
+    'CRM automation',
+    'appointment booking automation',
+    'small business automation',
+    'AI follow-up systems',
   ],
   authors: [{ name: 'SheetFlow AI' }],
   creator: 'SheetFlow AI',
   publisher: 'SheetFlow AI',
   alternates: { canonical: '/' },
   openGraph: {
-    title: 'SheetFlow AI — The intelligence layer your spreadsheets always deserved.',
+    title: 'SheetFlow AI — AI automation agency for growing businesses.',
     description:
-      "Operational intelligence for the world's most important data — your spreadsheets.",
+      'AI automations for lead capture, WhatsApp follow-ups, appointment booking, CRM updates and daily reports — built for clinics, agencies, coaches and service businesses.',
     url: SITE_URL,
     type: 'website',
     locale: 'en_US',
@@ -71,8 +72,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'SheetFlow AI — The intelligence layer your spreadsheets always deserved.',
-    description: 'Operational intelligence for spreadsheets. Monitor, automate, signal — without lifting a finger.',
+    title: 'SheetFlow AI — AI automation agency for growing businesses.',
+    description: 'We automate the busywork running your business — leads, follow-ups, bookings, CRM, reports.',
     creator: '@sheetflowai',
   },
   robots: {
@@ -98,7 +99,7 @@ const organizationJsonLd = {
   url: SITE_URL,
   logo: `${SITE_URL}/icon.svg`,
   description:
-    'The operational intelligence layer for spreadsheets — watching, resolving, and signaling so the work happens before you have to ask.',
+    'AI automation agency for growing businesses — lead capture, WhatsApp follow-ups, appointment booking, CRM and reporting automation.',
   sameAs: [],
 };
 

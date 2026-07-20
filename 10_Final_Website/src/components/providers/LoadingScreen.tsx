@@ -15,8 +15,8 @@ import { prefersReducedMotion } from '@/lib/utils';
  * Total ≈ 1600ms.
  */
 const STATUS_LINES = [
-  'Initializing Intelligence...',
-  'Loading systems...',
+  'Loading automations...',
+  'Connecting your stack...',
   'Ready.',
 ];
 

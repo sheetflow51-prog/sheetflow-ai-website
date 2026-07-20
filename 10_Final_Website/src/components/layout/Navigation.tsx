@@ -10,11 +10,11 @@ import { useStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 
 const NAV_LINKS = [
-  { label: 'Product', href: '#product' },
-  { label: 'Workflows', href: '#workflow' },
-  { label: 'Intelligence', href: '#intelligence' },
+  { label: 'Services', href: '#workflows' },
+  { label: 'How we work', href: '#product' },
+  { label: 'Reports', href: '#reports' },
   { label: 'Integrations', href: '#integrations' },
-  { label: 'Customers', href: '#customers' },
+  { label: 'Results', href: '#customers' },
 ];
 
 export function Navigation() {
@@ -77,7 +77,7 @@ export function Navigation() {
               Sign in
             </Button>
             <Button variant="primary" size="sm" className="hidden sm:inline-flex">
-              Begin watching
+              Book free audit
             </Button>
             {/* Mobile menu trigger */}
             <button
@@ -144,14 +144,14 @@ export function Navigation() {
                 className="mt-auto flex flex-col gap-3 pb-10"
               >
                 <Button variant="primary" size="lg" className="w-full justify-center">
-                  Begin watching
+                  Book free audit
                 </Button>
                 <Button variant="ghost" size="lg" trailing={false} className="w-full justify-center">
                   Sign in
                 </Button>
                 <p className="mt-2 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-ink-400">
                   <span className="h-1.5 w-1.5 rounded-full bg-signal-success animate-pulse-live" />
-                  Live · 4 minutes to first signal
+                  Free 30-min audit · No commitment
                 </p>
               </motion.div>
             </nav>

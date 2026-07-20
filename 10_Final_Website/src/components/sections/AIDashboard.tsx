@@ -112,18 +112,18 @@ function MiniChart() {
 
 export function AIDashboard() {
   return (
-    <section id="intelligence" className="section relative">
+    <section id="reports" className="section relative">
       <div className="container-edge">
         <div className="grid gap-12 md:gap-16 lg:grid-cols-[1fr_1.3fr] lg:gap-20">
           <SectionHeader
-            kicker="Operational Intelligence"
+            kicker="Reporting Dashboards"
             title={
               <>
-                You wake up to{' '}
-                <span className="text-accent-gradient">resolved problems.</span>
+                One clean dashboard for{' '}
+                <span className="text-accent-gradient">leads, bookings, revenue.</span>
               </>
             }
-            description="While you slept, SheetFlow AI watched 47 spreadsheets, caught a $40,000 billing error, and filed the correction before the business day started. This isn't a dashboard. It's a colleague who never sleeps."
+            description="No more scattered spreadsheets. We build you a single view of your business — leads in, follow-ups out, appointments booked, money in the bank. Delivered to your inbox every morning."
             align="left"
           />
 
@@ -144,23 +144,23 @@ export function AIDashboard() {
                   <div className="flex items-center gap-2">
                     <Badge variant="live">Live</Badge>
                     <span className="font-mono text-[10px] uppercase tracking-widest text-ink-400">
-                      Q3 Revenue Tracker
+                      This Week · Overview
                     </span>
                   </div>
                   <span className="font-mono text-[10px] text-ink-400">Updated 2s ago</span>
                 </div>
 
                 <div className="mt-6 grid grid-cols-2 gap-6">
-                  <StatCounter value={2847000} label="MRR" prefix="$" delta="+18.4%" positive />
-                  <StatCounter value={147} label="New customers" delta="+12" positive />
+                  <StatCounter value={184} label="New leads" delta="+12" positive />
+                  <StatCounter value={47} label="Bookings confirmed" delta="+8" positive />
                 </div>
 
                 <div className="mt-6">
                   <div className="mb-2 flex items-center justify-between text-[11px] text-ink-400">
-                    <span className="font-mono uppercase tracking-widest">Trend · 14 days</span>
+                    <span className="font-mono uppercase tracking-widest">Leads · last 14 days</span>
                     <span className="inline-flex items-center gap-1 text-signal-success">
                       <TrendingUp className="h-3 w-3" />
-                      Anomaly: positive
+                      Trending up
                     </span>
                   </div>
                   <MiniChart />
@@ -192,12 +192,12 @@ export function AIDashboard() {
                       <CheckCircle2 className="h-4 w-4 text-signal-success" strokeWidth={2.4} />
                     </div>
                     <div className="flex-1">
-                      <p className="text-[12px] font-medium text-white">Anomaly resolved</p>
+                      <p className="text-[12px] font-medium text-white">Lead followed up</p>
                       <p className="mt-1 text-[11px] leading-relaxed text-ink-300">
-                        Row 412 outlier auto-flagged. Procurement notified at 03:14.
+                        WhatsApp reply sent in 38s. Booked a call for Friday 2pm.
                       </p>
                       <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-signal-success">
-                        Saved · $12,400
+                        Auto · No staff needed
                       </p>
                     </div>
                   </div>
@@ -217,11 +217,11 @@ export function AIDashboard() {
                   <div className="flex items-center gap-2">
                     <AlertCircle className="h-3.5 w-3.5 text-accent-bright" strokeWidth={2.4} />
                     <span className="font-mono text-[10px] uppercase tracking-widest text-accent-bright">
-                      Watching
+                      Today's goal
                     </span>
                   </div>
                   <p className="mt-2 text-[12px] text-white">
-                    Pipeline coverage drift detected
+                    20 leads contacted · 13 done
                   </p>
                   <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/5">
                     <motion.div

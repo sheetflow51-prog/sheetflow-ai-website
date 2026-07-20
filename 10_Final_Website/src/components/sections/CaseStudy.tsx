@@ -7,30 +7,30 @@ import { SectionHeader } from '@/components/ui/SectionHeader';
 
 const STUDIES = [
   {
-    company: 'Strata Ops',
-    industry: 'Series B SaaS',
-    metric: '$847K',
-    metricLabel: 'caught in surface anomalies',
-    quote: 'SheetFlow AI monitors 47 spreadsheets for our operations team. It catches problems we didn\'t even know to look for.',
-    role: 'Director of Operations',
+    company: 'North Clinic',
+    industry: 'Dental clinic · 3 locations',
+    metric: '+38%',
+    metricLabel: 'more bookings in 60 days',
+    quote: 'Patients now book themselves on WhatsApp. We stopped losing appointments to voicemail — and our front desk got their afternoons back.',
+    role: 'Practice Manager',
     accent: 'from-accent-bright/15 via-transparent to-transparent',
   },
   {
-    company: 'Northfield Capital',
-    industry: 'Investment fund',
-    metric: '92%',
-    metricLabel: 'reduction in manual reporting time',
-    quote: 'Our weekly board prep used to take a full day. Now the deck is in our inbox at 7am Monday — generated overnight.',
-    role: 'Chief of Staff',
+    company: 'Oakwood Realty',
+    industry: 'Real estate agency',
+    metric: '< 1 min',
+    metricLabel: 'average reply time to new leads',
+    quote: 'Every lead now gets a personal reply within a minute, day or night. Our conversion rate doubled in the first quarter.',
+    role: 'Founder',
     accent: 'from-violet/15 via-transparent to-transparent',
   },
   {
-    company: 'Parallel Logistics',
-    industry: 'Supply chain ops',
-    metric: '4 sec',
-    metricLabel: 'time-to-detection on supplier outliers',
-    quote: 'A human auditor might catch this in a monthly review. SheetFlow AI caught it in 4 seconds. The procurement team was notified before the next order.',
-    role: 'VP of Operations',
+    company: 'Summit Coaching',
+    industry: 'Coaching business',
+    metric: '12 hrs',
+    metricLabel: 'saved per week on admin',
+    quote: 'CRM updates, follow-ups, invoice nudges — all handled. I went from drowning in admin to running calls full-time again.',
+    role: 'Owner',
     accent: 'from-signal-info/15 via-transparent to-transparent',
   },
 ];
@@ -41,14 +41,14 @@ export function CaseStudy() {
       <div className="container-edge">
         <div className="mb-12 max-w-3xl md:mb-16">
           <SectionHeader
-            kicker="In the Field"
+            kicker="Real Results"
             title={
               <>
-                The teams who never miss a signal{' '}
-                <span className="text-ink-300">use SheetFlow AI.</span>
+                Quiet automations.{' '}
+                <span className="text-ink-300">Loud results.</span>
               </>
             }
-            description="From two-person startups to global operations teams — the intelligence layer has caught the silent errors, surfaced the hidden patterns, and compounded the saved hours."
+            description="Clinics, agencies, coaches and service businesses use SheetFlow to capture more leads, book more clients, and reclaim hours every week."
           />
         </div>
 

@@ -30,7 +30,7 @@ const reveal = {
   }),
 };
 
-const TRUST_LOGOS = ['STRATA', 'ARC.OPS', 'NORTHFIELD', 'OBSIDIAN', 'PARALLEL', 'KINETIK'];
+const TRUST_LOGOS = ['NORTH CLINIC', 'OAKWOOD REALTY', 'BRIGHTPATH', 'SUMMIT COACHING', 'LUMEN AGENCY', 'KINETIK'];
 
 export function Hero() {
   const { track } = useAnalytics();
@@ -69,19 +69,19 @@ export function Hero() {
         <motion.div initial="hidden" animate="show" variants={reveal} custom={0}>
           <Badge variant="ai" className="mb-7">
             <Sparkles className="h-3 w-3" strokeWidth={2.4} />
-            Introducing the Intelligence Layer
+            AI Automation Agency
           </Badge>
         </motion.div>
 
         <motion.h1
-          className="headline-monument text-fade text-balance max-w-[18ch]"
+          className="headline-monument text-fade text-balance max-w-[20ch]"
           initial="hidden"
           animate="show"
           variants={reveal}
           custom={1}
         >
-          Your data,{' '}
-          <span className="text-accent-gradient text-glow">finally alive.</span>
+          We automate the busywork{' '}
+          <span className="text-accent-gradient text-glow">running your business.</span>
         </motion.h1>
 
         <motion.p
@@ -91,9 +91,9 @@ export function Hero() {
           variants={reveal}
           custom={2}
         >
-          SheetFlow AI is the operational intelligence layer for spreadsheets.
-          It watches your data, catches what matters, and acts before you
-          have to ask.
+          SheetFlow builds AI systems that capture leads, follow up on WhatsApp, book
+          appointments, and keep your CRM updated — so you stop losing customers to
+          slow replies and forgotten tasks.
         </motion.p>
 
         <motion.div
@@ -104,13 +104,13 @@ export function Hero() {
           custom={3}
         >
           <Magnetic strength={10} inner={1.6}>
-            <Button variant="primary" size="lg" onClick={() => track('hero_cta_click', { variant: 'activate' })}>
-              Activate intelligence
+            <Button variant="primary" size="lg" onClick={() => track('hero_cta_click', { variant: 'audit' })}>
+              Book a free automation audit
             </Button>
           </Magnetic>
           <Magnetic strength={8} inner={1.4}>
             <Button variant="secondary" size="lg" trailing={<Play className="h-3.5 w-3.5" fill="currentColor" />} onClick={() => track('hero_demo_click')}>
-              Watch the demo
+              See our work
             </Button>
           </Magnetic>
         </motion.div>
@@ -123,7 +123,7 @@ export function Hero() {
           custom={4}
         >
           <span className="h-1.5 w-1.5 rounded-full bg-signal-success animate-pulse-live" />
-          Free to start. No credit card. 4 minutes to first signal.
+          Free 30-min audit. No commitment. Built for SMBs, agencies & service businesses.
         </motion.div>
 
         {/* Trust strip */}
@@ -134,7 +134,7 @@ export function Hero() {
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 1.2 }}
         >
           <p className="text-[10px] uppercase tracking-[0.18em] text-ink-400">
-            Trusted by intelligence-driven teams
+            Trusted by growing businesses
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 opacity-50 grayscale sm:gap-x-10">
             {TRUST_LOGOS.map((name) => (
@@ -166,7 +166,7 @@ export function Hero() {
           transition={{ delay: 2, duration: 0.8 }}
           aria-hidden="true"
         >
-          <span>Scroll to begin</span>
+          <span>See what we automate</span>
           <div className="relative h-12 w-px overflow-hidden bg-white/10">
             <motion.div
               className="absolute left-0 top-0 h-1/3 w-full bg-gradient-to-b from-transparent via-accent-bright to-transparent"

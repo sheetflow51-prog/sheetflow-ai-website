@@ -95,19 +95,19 @@ export function FinalCTA() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
-            <Badge variant="ai">The Invitation</Badge>
+            <Badge variant="ai">Let's Build Yours</Badge>
           </motion.div>
 
           <motion.h2
-            className="headline-cinematic text-fade text-balance mt-6 max-w-[18ch] origin-left"
+            className="headline-cinematic text-fade text-balance mt-6 max-w-[20ch] origin-left"
             initial={{ opacity: 0, y: 32, filter: 'blur(8px)' }}
             whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
             viewport={{ once: true }}
             transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
             style={{ scale: headlineScale }}
           >
-            Stop watching your data.{' '}
-            <span className="text-accent-gradient text-glow">Let it watch itself.</span>
+            Stop doing the busywork.{' '}
+            <span className="text-accent-gradient text-glow">Let SheetFlow run it.</span>
           </motion.h2>
 
           <motion.p
@@ -117,8 +117,9 @@ export function FinalCTA() {
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.25 }}
           >
-            Activate intelligence on your first spreadsheet in under four minutes.
-            The first signal will probably surprise you. Most of them do.
+            Book a free 30-minute automation audit. We'll map exactly what we'd automate
+            in your business — leads, follow-ups, bookings, reports — and show you the
+            hours and revenue you'd get back. No commitment.
           </motion.p>
 
           <motion.div
@@ -129,13 +130,13 @@ export function FinalCTA() {
             transition={{ duration: 0.6, delay: 0.4 }}
           >
             <Magnetic strength={10} inner={1.6}>
-              <Button variant="primary" size="lg" onClick={() => track('final_cta_click', { variant: 'activate' })}>
-                Activate intelligence
+              <Button variant="primary" size="lg" onClick={() => track('final_cta_click', { variant: 'audit' })}>
+                Book a free automation audit
               </Button>
             </Magnetic>
             <Magnetic strength={6} inner={1.4}>
               <Button variant="ghost" size="lg" trailing="arrow" onClick={() => track('final_strategist_click')}>
-                Talk to a strategist
+                See pricing
               </Button>
             </Magnetic>
           </motion.div>
@@ -160,12 +161,12 @@ export function FinalCTA() {
           >
             <span className="inline-flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-signal-success" />
-              SOC 2 Type II
+              30-min free audit
             </span>
             <span>·</span>
-            <span>GDPR aligned</span>
+            <span>No commitment</span>
             <span>·</span>
-            <span>Read-only by default</span>
+            <span>Your tools stay yours</span>
             <span>·</span>
             <span>Cancel any time</span>
           </motion.div>
