@@ -15,9 +15,13 @@ export default function CustomCursor() {
   const [enabled, setEnabled] = useState(false);
   const variant = useStore((s) => s.cursorVariant);
   const setVariant = useStore((s) => s.setCursorVariant);
+  const reducedMotion = useStore((s) => s.reducedMotion);
 
   useEffect(() => {
-    if (isTouchDevice()) return;
+    if (isTouchDevice() || reducedMotion) {
+      setEnabled(false);
+      return;
+    }
     setEnabled(true);
     document.documentElement.classList.add('cursor-none-all');
 
@@ -74,7 +78,7 @@ export default function CustomCursor() {
       document.removeEventListener('mouseup', onUp);
       document.documentElement.classList.remove('cursor-none-all');
     };
-  }, [setVariant]);
+  }, [setVariant, reducedMotion]);
 
   if (!enabled) return null;
 

@@ -16,10 +16,10 @@
 import { useCallback } from 'react';
 
 type EventName =
-  | 'hero_cta_click'        // Primary CTA in Hero
-  | 'hero_demo_click'       // "Watch the demo" in Hero
-  | 'final_cta_click'       // Primary CTA in FinalCTA
-  | 'final_strategist_click'// "Talk to a strategist" in FinalCTA
+  | 'hero_cta_click'          // Primary CTA in Hero
+  | 'hero_demo_click'         // "See our work" in Hero
+  | 'final_cta_click'         // Primary CTA in FinalCTA
+  | 'final_case_studies_click'// "See our work" in FinalCTA
   | 'form_submit'           // Inquiry form submission
   | 'audio_enabled'         // User enables audio
   | 'nav_cta_click'         // Nav bar CTA

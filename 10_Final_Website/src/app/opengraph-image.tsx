@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const alt = 'SheetFlow AI — The intelligence layer your spreadsheets always deserved.';
+export const alt = 'SheetFlow AI — AI automation agency for growing businesses.';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -71,7 +71,7 @@ export default async function OpengraphImage() {
               gap: '0.25em',
             }}
           >
-            <span style={{ color: '#FFFFFF' }}>Spreadsheets,</span>
+            <span style={{ color: '#FFFFFF' }}>Stop doing the busywork.</span>
             <span
               style={{
                 background: 'linear-gradient(135deg, #818CF8 0%, #A78BFA 50%, #06B6D4 100%)',
@@ -79,7 +79,7 @@ export default async function OpengraphImage() {
                 color: 'transparent',
               }}
             >
-              finally alive.
+              Let SheetFlow run it.
             </span>
           </div>
           <div
@@ -92,7 +92,7 @@ export default async function OpengraphImage() {
               display: 'flex',
             }}
           >
-            The operational intelligence layer for spreadsheets. Watch your data, catch what matters, act before you have to ask.
+            AI automations for leads, WhatsApp follow-ups, bookings, and CRM — built for clinics, agencies, coaches and service businesses.
           </div>
         </div>
 
@@ -109,11 +109,11 @@ export default async function OpengraphImage() {
               letterSpacing: '0.12em',
             }}
           >
-            <span>WATCHING</span>
+            <span>CAPTURE</span>
             <span>·</span>
-            <span>RESOLVING</span>
+            <span>FOLLOW UP</span>
             <span>·</span>
-            <span>SIGNALING</span>
+            <span>BOOK</span>
           </div>
         </div>
 

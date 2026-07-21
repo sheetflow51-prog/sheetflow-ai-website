@@ -11,6 +11,7 @@ import { Parallax } from '@/components/motion/Parallax';
 import { Brackets } from '@/components/signature/Brackets';
 import { Trace } from '@/components/signature/Trace';
 import { useAnalytics } from '@/lib/hooks/useAnalytics';
+import { BOOKING_URL } from '@/lib/contact';
 
 // 3D core is heavy → ssr: false + lazy.
 // IntelligenceCore upgrades to a Spline scene when NEXT_PUBLIC_SPLINE_SCENE_HERO
@@ -104,7 +105,12 @@ export function Hero() {
           custom={3}
         >
           <Magnetic strength={10} inner={1.6}>
-            <Button variant="primary" size="lg" onClick={() => track('hero_cta_click', { variant: 'audit' })}>
+            <Button
+              variant="primary"
+              size="lg"
+              href={BOOKING_URL}
+              onClick={() => track('hero_cta_click', { variant: 'audit' })}
+            >
               Book a free automation audit
             </Button>
           </Magnetic>

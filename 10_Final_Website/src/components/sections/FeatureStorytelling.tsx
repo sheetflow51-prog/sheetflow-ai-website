@@ -1,9 +1,9 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { Eye, Zap, Bell, Brain, GitMerge, ShieldCheck } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { ScrollReveal } from '@/components/motion/ScrollReveal';
 
 const FEATURES = [
   {
@@ -19,7 +19,7 @@ const FEATURES = [
     kicker: 'Respond',
     title: 'Reply in 60 seconds — even at 2am.',
     body: 'An AI assistant that answers, qualifies and books — so leads never go cold while you\'re sleeping or in a meeting.',
-    accent: 'from-signal-info/30 to-accent/15',
+    accent: 'from-violet/30 to-accent/15',
     span: 'md:col-span-2',
   },
   {
@@ -73,18 +73,16 @@ export function FeatureStorytelling() {
           />
         </div>
 
-        <div className="grid auto-rows-[minmax(220px,_auto)] grid-cols-1 gap-3.5 md:grid-cols-4">
-          {FEATURES.map((f, i) => {
+        <ScrollReveal
+          className="grid auto-rows-[minmax(220px,_auto)] grid-cols-1 gap-3.5 md:grid-cols-4"
+          y={30}
+          duration={0.7}
+          stagger={0.06}
+        >
+          {FEATURES.map((f) => {
             const Icon = f.Icon;
             return (
-              <motion.div
-                key={f.title}
-                className={`relative ${f.span ?? ''}`}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-10%' }}
-                transition={{ duration: 0.7, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
-              >
+              <div key={f.title} className={`relative ${f.span ?? ''}`}>
                 <GlassCard variant="feature" className="h-full">
                   <div className="flex h-full flex-col">
                     {/* Accent glow blob */}
@@ -107,10 +105,10 @@ export function FeatureStorytelling() {
                     <p className="mt-3 max-w-md text-[14px] leading-relaxed text-ink-300/95">{f.body}</p>
                   </div>
                 </GlassCard>
-              </motion.div>
+              </div>
             );
           })}
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );

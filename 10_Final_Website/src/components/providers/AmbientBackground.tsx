@@ -26,11 +26,15 @@ export default function AmbientBackground() {
       mouseX = e.clientX;
       mouseY = e.clientY;
     };
-    const tick = () => {
+    const tick = (time: number) => {
       curX += (mouseX - curX) * 0.04;
       curY += (mouseY - curY) * 0.04;
-      const px = (curX / window.innerWidth) * 100;
-      const py = (curY / window.innerHeight) * 100;
+      // Slow autonomous drift, independent of the cursor — otherwise the
+      // atmosphere is completely frozen whenever the mouse isn't moving.
+      const driftX = Math.sin(time * 0.00014) * 14;
+      const driftY = Math.cos(time * 0.00011) * 12;
+      const px = (curX / window.innerWidth) * 100 + driftX;
+      const py = (curY / window.innerHeight) * 100 + driftY;
       node.style.setProperty('--ax', `${px}%`);
       node.style.setProperty('--ay', `${py}%`);
       raf = requestAnimationFrame(tick);
@@ -51,9 +55,9 @@ export default function AmbientBackground() {
       style={
         {
           background: `
-            radial-gradient(ellipse 70% 50% at var(--ax, 30%) var(--ay, 30%), rgba(99, 102, 241, 0.18), transparent 60%),
-            radial-gradient(ellipse 60% 50% at calc(100% - var(--ax, 30%)) calc(100% - var(--ay, 30%)), rgba(139, 92, 246, 0.10), transparent 60%),
-            radial-gradient(ellipse 100% 60% at 50% 100%, rgba(6, 182, 212, 0.05), transparent 70%)
+            radial-gradient(ellipse 70% 50% at var(--ax, 30%) var(--ay, 30%), rgba(99, 102, 241, 0.26), transparent 62%),
+            radial-gradient(ellipse 60% 50% at calc(100% - var(--ax, 30%)) calc(100% - var(--ay, 30%)), rgba(139, 92, 246, 0.16), transparent 62%),
+            radial-gradient(ellipse 100% 60% at 50% 100%, rgba(6, 182, 212, 0.08), transparent 70%)
           `,
         } as React.CSSProperties
       }

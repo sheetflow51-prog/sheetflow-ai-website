@@ -10,6 +10,7 @@ import { Magnetic } from '@/components/motion/Magnetic';
 import { Brackets } from '@/components/signature/Brackets';
 import { Trace } from '@/components/signature/Trace';
 import { useAnalytics } from '@/lib/hooks/useAnalytics';
+import { BOOKING_URL } from '@/lib/contact';
 
 const IntelligenceCore = dynamic(() => import('@/components/three/IntelligenceCore'), { ssr: false });
 
@@ -35,6 +36,7 @@ export function FinalCTA() {
 
   return (
     <section
+      id="contact"
       ref={sectionRef}
       className="relative isolate overflow-hidden py-24 md:py-44"
     >
@@ -130,13 +132,24 @@ export function FinalCTA() {
             transition={{ duration: 0.6, delay: 0.4 }}
           >
             <Magnetic strength={10} inner={1.6}>
-              <Button variant="primary" size="lg" onClick={() => track('final_cta_click', { variant: 'audit' })}>
+              <Button
+                variant="primary"
+                size="lg"
+                href={BOOKING_URL}
+                onClick={() => track('final_cta_click', { variant: 'audit' })}
+              >
                 Book a free automation audit
               </Button>
             </Magnetic>
             <Magnetic strength={6} inner={1.4}>
-              <Button variant="ghost" size="lg" trailing="arrow" onClick={() => track('final_strategist_click')}>
-                See pricing
+              <Button
+                variant="ghost"
+                size="lg"
+                trailing="arrow"
+                href="#customers"
+                onClick={() => track('final_case_studies_click')}
+              >
+                See our work
               </Button>
             </Magnetic>
           </motion.div>

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, JetBrains_Mono } from 'next/font/google';
+import { Inter, Fraunces, JetBrains_Mono } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import './globals.css';
@@ -26,11 +26,17 @@ const inter = Inter({
   weight: ['300', '400', '500', '600', '700', '800'],
 });
 
-const display = Inter({
+// A distinct editorial serif for headlines — separates "display" from "sans"
+// (both were Inter before) and reads closer to a premium studio brand than a SaaS dashboard.
+const display = Fraunces({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-display',
-  weight: ['500', '600', '700', '800'],
+  weight: 'variable',
+  style: ['normal', 'italic'],
+  // Just optical size — refined hairline contrast at monument headline scale,
+  // sturdier at small sizes. Skipping the SOFT/WONK axes to stay premium, not playful.
+  axes: ['opsz'],
 });
 
 const mono = JetBrains_Mono({
@@ -97,7 +103,7 @@ const organizationJsonLd = {
   '@type': 'Organization',
   name: 'SheetFlow AI',
   url: SITE_URL,
-  logo: `${SITE_URL}/icon.svg`,
+  logo: `${SITE_URL}/logo.jpg`,
   description:
     'AI automation agency for growing businesses — lead capture, WhatsApp follow-ups, appointment booking, CRM and reporting automation.',
   sameAs: [],

@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, useInView } from 'framer-motion';
+import { animate, motion, useInView } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, TrendingUp, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
@@ -32,17 +32,16 @@ function StatCounter({
     if (!inView) return;
     // Reduced-motion: snap to final value — no counting animation.
     if (prefersReducedMotion()) { setCount(value); return; }
-    let raf = 0;
-    const start = performance.now();
-    const duration = 1800;
-    const tick = (now: number) => {
-      const t = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - t, 3);
-      setCount(Math.floor(eased * value));
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    // Was a hand-rolled 1800ms RAF loop with its own cubic curve — exceeded
+    // the documented 1600ms cinematic-moment ceiling and used a fourth
+    // easing curve nobody else in the codebase does. Framer's own `animate`
+    // reuses the same cinematic bezier as every other whileInView entrance.
+    const controls = animate(0, value, {
+      duration: 1.4,
+      ease: [0.16, 1, 0.3, 1],
+      onUpdate: (latest) => setCount(Math.floor(latest)),
+    });
+    return () => controls.stop();
   }, [inView, value]);
 
   return (

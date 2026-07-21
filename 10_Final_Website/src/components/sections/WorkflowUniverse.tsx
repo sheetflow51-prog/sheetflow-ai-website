@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { ScrollReveal } from '@/components/motion/ScrollReveal';
 
 interface Workflow {
   id: string;
@@ -19,10 +20,18 @@ interface Workflow {
   body: string;
   impact: string;
   Icon: typeof BellRing;
+  /** Corner glow gradient — token classes only (indigo/violet + signal-* status colors), no raw hex. */
   accent: string;
+  /** Icon + status-dot color — a token class, not a hardcoded hex. */
+  tint: string;
+  dot: string;
 }
 
 // Six real automation examples a business owner instantly recognises.
+// Accent/tint/dot are all Tailwind token classes (accent/violet/signal-*) —
+// this previously hardcoded 6 raw hex values, two of which (a #34D399 green
+// and a #FBBF24 amber) didn't exist anywhere in the token system at all,
+// breaking the brand's indigo/violet(+signal-status) palette law.
 const WORKFLOWS: Workflow[] = [
   {
     id: 'lead-alerts',
@@ -30,7 +39,9 @@ const WORKFLOWS: Workflow[] = [
     body: 'Instant notifications the moment a lead comes in — so nothing waits 24 hours for a reply.',
     impact: 'Reply in under 60s',
     Icon: BellRing,
-    accent: '#F59E0B',
+    accent: 'from-signal-warning/30 to-accent/15',
+    tint: 'text-signal-warning',
+    dot: 'bg-signal-warning',
   },
   {
     id: 'whatsapp',
@@ -38,7 +49,9 @@ const WORKFLOWS: Workflow[] = [
     body: 'An AI assistant that answers questions, qualifies leads, and books calls on WhatsApp — 24/7.',
     impact: 'Always on, always polite',
     Icon: MessageCircle,
-    accent: '#34D399',
+    accent: 'from-signal-success/30 to-accent/15',
+    tint: 'text-signal-success',
+    dot: 'bg-signal-success',
   },
   {
     id: 'booking',
@@ -46,7 +59,9 @@ const WORKFLOWS: Workflow[] = [
     body: 'A self-serve booking flow that syncs to your calendar and CRM. No back-and-forth.',
     impact: 'Calendar fills itself',
     Icon: CalendarCheck,
-    accent: '#A5B4FC',
+    accent: 'from-accent-light/30 to-violet/15',
+    tint: 'text-accent-light',
+    dot: 'bg-accent-light',
   },
   {
     id: 'reports',
@@ -54,7 +69,9 @@ const WORKFLOWS: Workflow[] = [
     body: 'A clean morning email with leads, bookings, revenue and what needs your attention today.',
     impact: 'Clarity by 9am',
     Icon: BarChart3,
-    accent: '#818CF8',
+    accent: 'from-accent-bright/30 to-violet/15',
+    tint: 'text-accent-bright',
+    dot: 'bg-accent-bright',
   },
   {
     id: 'crm-sync',
@@ -62,7 +79,9 @@ const WORKFLOWS: Workflow[] = [
     body: 'Forms, calls and chats flow into HubSpot, Pipedrive or GoHighLevel automatically. No manual entry.',
     impact: 'Zero data entry',
     Icon: RefreshCw,
-    accent: '#A78BFA',
+    accent: 'from-violet-bright/30 to-accent/15',
+    tint: 'text-violet-bright',
+    dot: 'bg-violet-bright',
   },
   {
     id: 'invoices',
@@ -70,7 +89,9 @@ const WORKFLOWS: Workflow[] = [
     body: 'Polite, automated nudges that get invoices paid faster — without you chasing clients.',
     impact: 'Get paid sooner',
     Icon: Receipt,
-    accent: '#FBBF24',
+    accent: 'from-accent/25 to-signal-warning/10',
+    tint: 'text-accent',
+    dot: 'bg-accent',
   },
 ];
 
@@ -112,43 +133,26 @@ export function WorkflowUniverse() {
           className="mx-auto items-center text-center"
         />
 
-        <div className="mt-14 grid grid-cols-1 gap-4 sm:grid-cols-2 md:mt-20 md:gap-5 lg:grid-cols-3">
-          {WORKFLOWS.map((w, i) => {
+        <ScrollReveal
+          className="mt-14 grid grid-cols-1 gap-4 sm:grid-cols-2 md:mt-20 md:gap-5 lg:grid-cols-3"
+          y={24}
+          duration={0.7}
+          stagger={0.08}
+        >
+          {WORKFLOWS.map((w) => {
             const Icon = w.Icon;
             return (
-              <motion.div
-                key={w.id}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-10%' }}
-                transition={{
-                  duration: 0.7,
-                  delay: 0.08 * i,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
-              >
+              <div key={w.id}>
                 <GlassCard variant="feature" className="group h-full" interactive>
-                  {/* Subtle accent glow per card */}
+                  {/* Subtle accent glow per card — token gradient, not raw hex */}
                   <div
                     aria-hidden="true"
-                    className="pointer-events-none absolute right-0 top-0 h-32 w-32 rounded-full opacity-40 blur-3xl transition-opacity duration-500 group-hover:opacity-70"
-                    style={{
-                      background: `radial-gradient(circle, ${w.accent}55, transparent 70%)`,
-                    }}
+                    className={`pointer-events-none absolute right-0 top-0 h-32 w-32 rounded-full bg-gradient-to-br ${w.accent} opacity-60 blur-3xl transition-opacity duration-500 group-hover:opacity-90`}
                   />
 
                   <div className="relative flex h-full flex-col">
-                    <div
-                      className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 backdrop-blur-md"
-                      style={{
-                        boxShadow: `0 0 18px ${w.accent}22, inset 0 1px 0 rgba(255,255,255,0.06)`,
-                      }}
-                    >
-                      <Icon
-                        className="h-4 w-4"
-                        style={{ color: w.accent }}
-                        strokeWidth={2.2}
-                      />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 backdrop-blur-md">
+                      <Icon className={`h-4 w-4 ${w.tint}`} strokeWidth={2.2} />
                     </div>
 
                     <h3 className="mt-6 text-[19px] font-semibold leading-[1.2] tracking-tight text-white md:text-[20px]">
@@ -160,20 +164,17 @@ export function WorkflowUniverse() {
                     </p>
 
                     <div className="mt-6 flex items-center gap-2 border-t border-white/[0.06] pt-4">
-                      <span
-                        className="h-1.5 w-1.5 rounded-full"
-                        style={{ background: w.accent }}
-                      />
+                      <span className={`h-1.5 w-1.5 rounded-full ${w.dot}`} />
                       <span className="font-mono text-[10px] uppercase tracking-widest text-ink-400">
                         {w.impact}
                       </span>
                     </div>
                   </div>
                 </GlassCard>
-              </motion.div>
+              </div>
             );
           })}
-        </div>
+        </ScrollReveal>
 
         <motion.p
           className="mx-auto mt-10 max-w-md text-center text-[13px] text-ink-400 md:mt-14"

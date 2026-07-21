@@ -2,6 +2,7 @@
 
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import * as React from 'react';
+import { prefersReducedMotion } from '@/lib/utils';
 
 interface ParallaxProps {
   children: React.ReactNode;
@@ -39,6 +40,17 @@ export function Parallax({
   const y = useTransform(smooth, [0, 1], [range / 2, -range / 2]);
   const r = useTransform(smooth, [0, 1], [-rotate / 2, rotate / 2]);
   const s = useTransform(smooth, [0, 0.5, 1], [scale, 1, scale]);
+
+  // useTransform/useSpring values applied via `style` bypass MotionConfig's
+  // reducedMotion="user" entirely (that only covers animate/whileInView) —
+  // this wrapped the whole Hero 3D core with no guard at all until now.
+  if (prefersReducedMotion()) {
+    return (
+      <div ref={ref} className={className} style={style} {...props}>
+        {children}
+      </div>
+    );
+  }
 
   return (
     <motion.div

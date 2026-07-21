@@ -25,15 +25,12 @@ const FOOTER_GROUPS = [
     title: 'Resources',
     links: [
       { label: 'Case Studies', href: '#customers' },
-      { label: 'Pricing', href: '#pricing' },
-      { label: 'FAQ', href: '#faq' },
       { label: 'Integrations', href: '#integrations' },
     ],
   },
   {
     title: 'Company',
     links: [
-      { label: 'About', href: '#about' },
       { label: 'Contact', href: '#contact' },
       { label: 'Book an Audit', href: '#contact' },
     ],

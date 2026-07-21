@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { AudioToggle } from '@/components/ui/AudioToggle';
 import { useStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
+import { BOOKING_URL } from '@/lib/contact';
 
 const NAV_LINKS = [
   { label: 'Services', href: '#workflows' },
@@ -73,10 +74,12 @@ export function Navigation() {
           </div>
           <div className="flex items-center gap-2">
             <AudioToggle className="hidden sm:inline-flex" />
-            <Button variant="ghost" size="sm" trailing={false} className="hidden sm:inline-flex">
-              Sign in
-            </Button>
-            <Button variant="primary" size="sm" className="hidden sm:inline-flex">
+            <Button
+              variant="primary"
+              size="sm"
+              href={BOOKING_URL}
+              className="hidden sm:inline-flex"
+            >
               Book free audit
             </Button>
             {/* Mobile menu trigger */}
@@ -143,11 +146,14 @@ export function Navigation() {
                 transition={{ duration: 0.5, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
                 className="mt-auto flex flex-col gap-3 pb-10"
               >
-                <Button variant="primary" size="lg" className="w-full justify-center">
+                <Button
+                  variant="primary"
+                  size="lg"
+                  href={BOOKING_URL}
+                  className="w-full justify-center"
+                  onClick={() => setOpen(false)}
+                >
                   Book free audit
-                </Button>
-                <Button variant="ghost" size="lg" trailing={false} className="w-full justify-center">
-                  Sign in
                 </Button>
                 <p className="mt-2 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-ink-400">
                   <span className="h-1.5 w-1.5 rounded-full bg-signal-success animate-pulse-live" />

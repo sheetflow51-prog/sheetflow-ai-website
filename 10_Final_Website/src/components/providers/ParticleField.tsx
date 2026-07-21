@@ -45,9 +45,14 @@ export default function ParticleField({
     let mouseX = -9999;
     let mouseY = -9999;
     let raf = 0;
+    // Cached instead of calling getBoundingClientRect() on every RAF tick
+    // and every mousemove event — that was a forced layout read many times
+    // a second, per mounted instance (this component is mounted twice).
+    // Only resize() (on mount + window resize) needs the real measurement.
+    let rect = { width: 0, height: 0, left: 0, top: 0 };
 
     const resize = () => {
-      const rect = canvas.getBoundingClientRect();
+      rect = canvas.getBoundingClientRect();
       canvas.width = rect.width * dpr;
       canvas.height = rect.height * dpr;
       canvas.style.width = `${rect.width}px`;
@@ -68,7 +73,6 @@ export default function ParticleField({
     };
 
     const onMove = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
       mouseX = e.clientX - rect.left;
       mouseY = e.clientY - rect.top;
     };
@@ -78,7 +82,6 @@ export default function ParticleField({
     };
 
     const tick = () => {
-      const rect = canvas.getBoundingClientRect();
       ctx.clearRect(0, 0, rect.width, rect.height);
 
       // Update + draw particles
@@ -149,12 +152,29 @@ export default function ParticleField({
     };
 
     resize();
-    raf = requestAnimationFrame(tick);
     window.addEventListener('resize', resize);
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseleave', onLeave);
 
+    // Pause the RAF loop (and its O(n²) connection-line pass) entirely while
+    // off-screen — this canvas is mounted in both Hero and FinalCTA, and the
+    // FinalCTA instance previously kept ticking for the whole session despite
+    // sitting at the bottom of the page.
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          if (!raf) raf = requestAnimationFrame(tick);
+        } else if (raf) {
+          cancelAnimationFrame(raf);
+          raf = 0;
+        }
+      },
+      { rootMargin: '200px' },
+    );
+    io.observe(canvas);
+
     return () => {
+      io.disconnect();
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', onMove);

@@ -1,9 +1,9 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { ArrowUpRight, Quote } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { ScrollReveal } from '@/components/motion/ScrollReveal';
 
 const STUDIES = [
   {
@@ -31,7 +31,7 @@ const STUDIES = [
     metricLabel: 'saved per week on admin',
     quote: 'CRM updates, follow-ups, invoice nudges — all handled. I went from drowning in admin to running calls full-time again.',
     role: 'Owner',
-    accent: 'from-signal-info/15 via-transparent to-transparent',
+    accent: 'from-violet/15 via-transparent to-transparent',
   },
 ];
 
@@ -52,15 +52,9 @@ export function CaseStudy() {
           />
         </div>
 
-        <div className="grid gap-3.5 md:grid-cols-3">
-          {STUDIES.map((s, i) => (
-            <motion.div
-              key={s.company}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-10%' }}
-              transition={{ duration: 0.7, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
-            >
+        <ScrollReveal className="grid gap-3.5 md:grid-cols-3" y={30} duration={0.7} stagger={0.1}>
+          {STUDIES.map((s) => (
+            <div key={s.company}>
               <GlassCard variant="feature" className="group h-full" interactive>
                 <div className="flex h-full flex-col gap-6">
                   <div
@@ -96,9 +90,9 @@ export function CaseStudy() {
                   </div>
                 </div>
               </GlassCard>
-            </motion.div>
+            </div>
           ))}
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );

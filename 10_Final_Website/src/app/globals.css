@@ -176,24 +176,27 @@
      mobile-floor to desktop-ceiling, which produced cramped 64px monoliths
      on 390px viewports. New floors give a smoother responsive curve. */
   .headline-monument {
+    font-family: var(--font-display);
     font-size: clamp(52px, 11vw, 128px);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 0.95;
-    letter-spacing: -0.04em;
+    letter-spacing: -0.01em;
   }
 
   .headline-cinematic {
+    font-family: var(--font-display);
     font-size: clamp(42px, 7.5vw, 96px);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 0.98;
-    letter-spacing: -0.035em;
+    letter-spacing: -0.01em;
   }
 
   .headline-section {
+    font-family: var(--font-display);
     font-size: clamp(32px, 5.6vw, 64px);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.02;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.01em;
   }
 
   /* Apple-style fade gradient on headlines */

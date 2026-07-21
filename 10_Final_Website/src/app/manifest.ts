@@ -5,14 +5,13 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'SheetFlow AI',
     short_name: 'SheetFlow',
     description:
-      'The operational intelligence layer for spreadsheets. Watch your data, catch what matters, act before you have to ask.',
+      'SheetFlow builds AI automations that capture leads, follow up on WhatsApp, book appointments, and keep your CRM updated — so your business runs itself.',
     start_url: '/',
     display: 'standalone',
     background_color: '#060608',
     theme_color: '#060608',
-    icons: [
-      { src: '/icon.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-      { src: '/icon-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-    ],
+    // Actual source file is 248x252 — declaring 512x512 here would be a
+    // false claim that fails Lighthouse/browser manifest-icon validation.
+    icons: [{ src: '/logo.jpg', sizes: '248x252', type: 'image/jpeg', purpose: 'any' }],
   };
 }
