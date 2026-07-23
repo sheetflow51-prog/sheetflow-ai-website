@@ -9,7 +9,7 @@ interface LogoProps {
 }
 
 /**
- * Logo — real brand mark (public/logo.jpg), paired with the ".AI" wordmark
+ * Logo — real brand mark (public/logo.png), paired with the ".AI" wordmark
  * so the mark reads distinctly from the icon's own baked-in "SheetFlow" text.
  */
 export function Logo({ size = 32, showWordmark = true, className }: LogoProps) {
@@ -24,7 +24,7 @@ export function Logo({ size = 32, showWordmark = true, className }: LogoProps) {
       aria-label="SheetFlow AI — Home"
     >
       <Image
-        src="/logo.jpg"
+        src="/logo.png"
         alt="SheetFlow"
         width={size}
         height={size}

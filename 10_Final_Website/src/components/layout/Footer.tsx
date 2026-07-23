@@ -37,6 +37,38 @@ const FOOTER_GROUPS = [
   },
 ];
 
+const SOCIALS = [
+  {
+    label: 'SheetFlow on X',
+    href: 'https://x.com/Sheetflow51',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden="true">
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+      </svg>
+    ),
+  },
+  {
+    label: 'SheetFlow on Instagram',
+    href: 'https://www.instagram.com/sheetflow51',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-[18px] w-[18px]" aria-hidden="true">
+        <rect x="2.5" y="2.5" width="19" height="19" rx="5.2" />
+        <circle cx="12" cy="12" r="4.2" />
+        <circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none" />
+      </svg>
+    ),
+  },
+  {
+    label: 'SheetFlow on LinkedIn',
+    href: 'https://www.linkedin.com/company/sheetflow51',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="currentColor" className="h-[18px] w-[18px]" aria-hidden="true">
+        <path d="M4.98 3.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5zM3 9h4v12H3zM10 9h3.8v1.71h.05c.53-1 1.83-2.06 3.77-2.06 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.4c0-1.29-.02-2.95-1.8-2.95-1.8 0-2.08 1.4-2.08 2.86V21h-4z" />
+      </svg>
+    ),
+  },
+];
+
 export function Footer() {
   return (
     <footer className="relative border-t border-white/[0.06]">
@@ -50,6 +82,23 @@ export function Footer() {
             <div className="mt-2 flex items-center gap-2 text-[11px] uppercase tracking-widest text-ink-400">
               <span className="h-1.5 w-1.5 rounded-full bg-signal-success animate-pulse-live" />
               Now taking new clients
+            </div>
+
+            {/* Social links */}
+            <div className="mt-4 flex items-center gap-3">
+              {SOCIALS.map((s) => (
+                <a
+                  key={s.label}
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={s.label}
+                  data-cursor="hover"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] text-ink-300 transition-all hover:border-accent/50 hover:bg-accent/10 hover:text-white"
+                >
+                  {s.icon}
+                </a>
+              ))}
             </div>
           </div>
 

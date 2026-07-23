@@ -92,12 +92,20 @@ function OrbitalRing({
 }) {
   const ref = useRef<THREE.Points>(null);
   const positions = useMemo(() => {
+    // Deterministic pseudo-random (GLSL-style sine hash) instead of
+    // Math.random(): keeps the ring's organic wobble while staying pure/
+    // idempotent across renders (Math.random() in render is impure and
+    // produces unstable output the React purity rules rightly flag).
+    const hash = (n: number) => {
+      const x = Math.sin(n * 12.9898) * 43758.5453;
+      return x - Math.floor(x);
+    };
     const arr = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
       const a = (i / count) * Math.PI * 2;
-      const wobble = (Math.random() - 0.5) * 0.04;
+      const wobble = (hash(i + 1) - 0.5) * 0.04;
       arr[i * 3] = Math.cos(a) * (radius + wobble);
-      arr[i * 3 + 1] = (Math.random() - 0.5) * 0.04;
+      arr[i * 3 + 1] = (hash(i + 91.7) - 0.5) * 0.04;
       arr[i * 3 + 2] = Math.sin(a) * (radius + wobble);
     }
     return arr;

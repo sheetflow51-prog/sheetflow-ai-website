@@ -36,7 +36,6 @@ async function safeTrack(event: EventName, props?: EventProperties) {
     // Analytics not installed or not in browser — silent no-op.
     if (process.env.NODE_ENV === 'development') {
       // Helpful dev-only log to verify events are firing correctly.
-      // eslint-disable-next-line no-console
       console.log('[analytics]', event, props ?? '');
     }
   }

@@ -12,6 +12,6 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#060608',
     // Actual source file is 248x252 — declaring 512x512 here would be a
     // false claim that fails Lighthouse/browser manifest-icon validation.
-    icons: [{ src: '/logo.jpg', sizes: '248x252', type: 'image/jpeg', purpose: 'any' }],
+    icons: [{ src: '/logo.png', sizes: '248x252', type: 'image/png', purpose: 'any' }],
   };
 }

@@ -72,7 +72,7 @@ export default function LoadingScreen() {
                 aria-hidden="true"
               />
               <Image
-                src="/logo.jpg"
+                src="/logo.png"
                 alt="SheetFlow"
                 width={112}
                 height={112}
