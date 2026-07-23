@@ -209,11 +209,36 @@
   }
 
   .text-accent-gradient {
-    background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 35%, #F4C063 100%);
+    /* Shiny: a blue→gold→blue band that sweeps continuously across the text,
+       so accent headlines shimmer like brushed metal (the logo's gold sheen). */
+    background: linear-gradient(
+      110deg,
+      #3B82F6 0%,
+      #60A5FA 25%,
+      #93C5FD 40%,
+      #F6D089 50%,
+      #F4C063 60%,
+      #60A5FA 78%,
+      #3B82F6 100%
+    );
+    background-size: 220% auto;
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
+    animation: text-shine 6.5s linear infinite;
+  }
+
+  @keyframes text-shine {
+    to {
+      background-position: 220% center;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .text-accent-gradient {
+      animation: none;
+    }
   }
 
   .text-glow {

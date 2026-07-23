@@ -5,7 +5,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
 import { Button } from '@/components/ui/Button';
-import { AudioToggle } from '@/components/ui/AudioToggle';
 import { useStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { BOOKING_URL } from '@/lib/contact';
@@ -73,7 +72,6 @@ export function Navigation() {
             </nav>
           </div>
           <div className="flex items-center gap-2">
-            <AudioToggle className="hidden sm:inline-flex" />
             <Button
               variant="primary"
               size="sm"
