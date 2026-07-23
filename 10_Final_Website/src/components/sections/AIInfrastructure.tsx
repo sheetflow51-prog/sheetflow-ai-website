@@ -140,11 +140,16 @@ export function AIInfrastructure() {
       const tx = ux !== 0 ? hw / Math.abs(ux) : Infinity;
       const ty = uy !== 0 ? hh / Math.abs(uy) : Infinity;
       const t = Math.min(tx, ty);
+      // End the rail ~9px INSIDE the pill (toward its centre). The pill is
+      // opaque and painted above the SVG, so the line disappears exactly at
+      // the box boundary — a flush, gap-free connection for every pill,
+      // regardless of width or angle. (Clamped so tiny pills don't overshoot.)
+      const tIn = Math.max(t - 9, 0);
       return {
         nx,
         ny,
-        edgeX: nx + ux * t,
-        edgeY: ny + uy * t,
+        edgeX: nx + ux * tIn,
+        edgeY: ny + uy * tIn,
       };
     });
   }, [dims, pillSizes]);
@@ -282,34 +287,6 @@ export function AIInfrastructure() {
                   );
                 })}
 
-                {/* Connection nubs — the terminal sits ON the pill's inner
-                    edge, reading as a wired port fused to the box. */}
-                {INTEGRATIONS.map((name, i) => {
-                  const g = geometry[i];
-                  const isHovered = hovered === i;
-                  return (
-                    <motion.g
-                      key={`port-${name}`}
-                      initial={{ opacity: 0 }}
-                      animate={inView ? { opacity: 1 } : { opacity: 0 }}
-                      transition={{ opacity: { duration: 0.4, delay: 0.35 + i * 0.03 } }}
-                    >
-                      <circle
-                        cx={g.edgeX}
-                        cy={g.edgeY}
-                        r={isHovered ? 8 : 6}
-                        fill={isHovered ? 'rgba(147,197,253,0.28)' : 'rgba(96,165,250,0.18)'}
-                      />
-                      <circle
-                        cx={g.edgeX}
-                        cy={g.edgeY}
-                        r={isHovered ? 3.4 : 2.6}
-                        fill={isHovered ? '#93C5FD' : '#60A5FA'}
-                      />
-                    </motion.g>
-                  );
-                })}
-
                 {/* Live signal — travels the FULL rail, core → pill inner edge,
                     on a loop. Only the base set (every 5th node) plus the
                     hovered node animate, staggered so ~1–2 are ever in flight. */}
@@ -363,9 +340,9 @@ export function AIInfrastructure() {
                     ref={(el) => {
                       pillRefs.current[i] = el;
                     }}
-                    className={`rounded-full border bg-surface-2/70 px-3 py-1.5 backdrop-blur-md transition-all ${
+                    className={`rounded-full border bg-surface-2 px-3 py-1.5 backdrop-blur-md transition-all ${
                       isHovered
-                        ? 'border-accent-bright/80 bg-accent/15 shadow-[0_0_30px_rgba(59,130,246,0.42)]'
+                        ? 'border-accent-bright/80 bg-accent/20 shadow-[0_0_30px_rgba(59,130,246,0.42)]'
                         : 'border-accent/50 shadow-[0_0_16px_rgba(59,130,246,0.20)]'
                     }`}
                   >

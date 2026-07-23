@@ -68,7 +68,7 @@ export default function AmbientBackground() {
     >
       <style>{ambientCss}</style>
 
-      {/* Breathing group holds the two orbiting aurora layers. */}
+      {/* Breathing group holds the orbiting + central aurora layers. */}
       <div className="ambient-breathe absolute inset-0">
         {/* Azure aurora — orbits clockwise. Oversized wrapper (-inset-1/4) so
             the rotating rectangle's corners never enter the viewport. */}
@@ -77,7 +77,7 @@ export default function AmbientBackground() {
             className="absolute left-[12%] top-[8%] h-[68%] w-[68%]"
             style={{
               background:
-                'radial-gradient(circle at center, rgba(59, 130, 246, 0.24), rgba(96, 165, 250, 0.10) 38%, transparent 64%)',
+                'radial-gradient(circle at center, rgba(59, 130, 246, 0.30), rgba(96, 165, 250, 0.12) 38%, transparent 64%)',
             }}
           />
         </div>
@@ -88,7 +88,20 @@ export default function AmbientBackground() {
             className="absolute bottom-[10%] right-[14%] h-[60%] w-[60%]"
             style={{
               background:
-                'radial-gradient(circle at center, rgba(233, 162, 59, 0.18), rgba(244, 192, 99, 0.08) 40%, transparent 66%)',
+                'radial-gradient(circle at center, rgba(233, 162, 59, 0.22), rgba(244, 192, 99, 0.10) 40%, transparent 66%)',
+            }}
+          />
+        </div>
+
+        {/* Central aurora — always present so mid-page sections are never a
+            flat void; it breathes with the group and gently rotates so the
+            middle of every screen stays alive as you scroll. */}
+        <div className="ambient-spin-b absolute -inset-1/4 will-change-transform">
+          <div
+            className="absolute left-1/2 top-1/2 h-[70%] w-[70%] -translate-x-1/2 -translate-y-1/2"
+            style={{
+              background:
+                'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.14), rgba(233, 162, 59, 0.06) 45%, transparent 68%)',
             }}
           />
         </div>
@@ -119,12 +132,12 @@ export default function AmbientBackground() {
           opaque blob covering the headline or CTAs. */}
       <div
         ref={glow}
-        className="absolute left-0 top-0 -ml-[180px] -mt-[180px] h-[360px] w-[360px] rounded-full opacity-0 will-change-transform"
+        className="absolute left-0 top-0 -ml-[260px] -mt-[260px] h-[520px] w-[520px] rounded-full opacity-0 will-change-transform"
         style={{
           background:
-            'radial-gradient(circle, rgba(96, 165, 250, 0.10) 0%, rgba(244, 192, 99, 0.05) 45%, transparent 70%)',
+            'radial-gradient(circle, rgba(96, 165, 250, 0.20) 0%, rgba(244, 192, 99, 0.10) 42%, transparent 70%)',
           mixBlendMode: 'plus-lighter',
-          transition: 'opacity 900ms ease-out',
+          transition: 'opacity 700ms ease-out',
         }}
       />
     </div>
