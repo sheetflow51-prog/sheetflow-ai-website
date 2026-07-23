@@ -59,7 +59,7 @@ function Core() {
     <group ref={groupRef}>
       {/* Solid emissive core — indigo, never pure white */}
       <mesh ref={coreRef}>
-        <icosahedronGeometry args={[0.95, 4]} />
+        <icosahedronGeometry args={[0.95, 3]} />
         <meshStandardMaterial
           color="#12152A"
           emissive="#5B6CFF"
@@ -165,7 +165,7 @@ export default function AICore({ className = '' }: { className?: string }) {
       <Canvas
         camera={{ position: [0, 0, 7.5], fov: 30 }}
         gl={{
-          antialias: true,
+          antialias: false,
           alpha: true,
           toneMapping: ACESFilmicToneMapping,
           toneMappingExposure: 1.1,

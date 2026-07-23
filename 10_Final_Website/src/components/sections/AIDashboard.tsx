@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/Badge';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { TiltCard } from '@/components/motion/TiltCard';
+import { Breathing } from '@/components/motion/Breathing';
 import { prefersReducedMotion } from '@/lib/utils';
 
 function StatCounter({
@@ -57,7 +58,7 @@ function StatCounter({
           <span
             className={`inline-flex items-center gap-0.5 ${positive ? 'text-signal-success' : 'text-signal-danger'}`}
           >
-            {positive ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+            {positive ? <ArrowUp className="h-3 w-3" aria-hidden="true" /> : <ArrowDown className="h-3 w-3" aria-hidden="true" />}
             {delta}
           </span>
         )}
@@ -79,33 +80,44 @@ function MiniChart() {
     })
     .join(' ');
   return (
-    <svg viewBox="0 0 100 100" className="h-24 w-full" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#818CF8" stopOpacity="0.4" />
-          <stop offset="100%" stopColor="#818CF8" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <motion.path
-        d={`${path} L 100 100 L 0 100 Z`}
-        fill="url(#chartFill)"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 1, delay: 0.4 }}
-      />
-      <motion.path
-        d={path}
-        stroke="#A5B4FC"
-        strokeWidth="1.4"
-        fill="none"
-        strokeLinecap="round"
-        initial={{ pathLength: 0 }}
-        whileInView={{ pathLength: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
-      />
-    </svg>
+    <div className="relative h-24 w-full">
+      <svg viewBox="0 0 100 100" className="h-full w-full" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#818CF8" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#818CF8" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <motion.path
+          d={`${path} L 100 100 L 0 100 Z`}
+          fill="url(#chartFill)"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1, delay: 0.4 }}
+        />
+        <motion.path
+          d={path}
+          stroke="#A5B4FC"
+          strokeWidth="1.4"
+          fill="none"
+          strokeLinecap="round"
+          initial={{ pathLength: 0 }}
+          whileInView={{ pathLength: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
+        />
+      </svg>
+      {/* Live endpoint — the one pixel that stays alive after the one-time
+          reveal, so the "live" chart doesn't freeze. Sits on the trend-line's
+          final (top-right) point; Breathing is reduced-motion-guarded. */}
+      <Breathing period={6} className="absolute right-0 top-0 -translate-y-1/2 translate-x-1/2">
+        <span
+          className="block h-2 w-2 rounded-full bg-accent-light"
+          style={{ boxShadow: '0 0 8px 2px rgba(165, 180, 252, 0.7)' }}
+        />
+      </Breathing>
+    </div>
   );
 }
 
@@ -158,7 +170,7 @@ export function AIDashboard() {
                   <div className="mb-2 flex items-center justify-between text-[11px] text-ink-400">
                     <span className="font-mono uppercase tracking-widest">Leads · last 14 days</span>
                     <span className="inline-flex items-center gap-1 text-signal-success">
-                      <TrendingUp className="h-3 w-3" />
+                      <TrendingUp className="h-3 w-3" aria-hidden="true" />
                       Trending up
                     </span>
                   </div>
@@ -188,7 +200,7 @@ export function AIDashboard() {
                 <GlassCard variant="strong" className="border-signal-success/30 p-4">
                   <div className="flex items-start gap-3">
                     <div className="rounded-full bg-signal-success/15 p-1.5">
-                      <CheckCircle2 className="h-4 w-4 text-signal-success" strokeWidth={2.4} />
+                      <CheckCircle2 className="h-4 w-4 text-signal-success" strokeWidth={2.4} aria-hidden="true" />
                     </div>
                     <div className="flex-1">
                       <p className="text-[12px] font-medium text-white">Lead followed up</p>
@@ -214,7 +226,7 @@ export function AIDashboard() {
               >
                 <GlassCard variant="strong" className="p-4">
                   <div className="flex items-center gap-2">
-                    <AlertCircle className="h-3.5 w-3.5 text-accent-bright" strokeWidth={2.4} />
+                    <AlertCircle className="h-3.5 w-3.5 text-accent-bright" strokeWidth={2.4} aria-hidden="true" />
                     <span className="font-mono text-[10px] uppercase tracking-widest text-accent-bright">
                       Today's goal
                     </span>

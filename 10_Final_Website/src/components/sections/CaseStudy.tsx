@@ -71,11 +71,12 @@ export function CaseStudy() {
                     <ArrowUpRight
                       className="h-5 w-5 text-ink-400 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent-bright"
                       strokeWidth={1.6}
+                      aria-hidden="true"
                     />
                   </div>
 
                   <div className="relative">
-                    <Quote className="mb-3 h-4 w-4 text-accent-bright/60" strokeWidth={1.5} />
+                    <Quote className="mb-3 h-4 w-4 text-accent-bright/60" strokeWidth={1.5} aria-hidden="true" />
                     <p className="text-[15px] leading-relaxed text-white/85 text-balance">
                       "{s.quote}"
                     </p>

@@ -69,7 +69,7 @@ export function Hero() {
       <div className="container-edge relative z-10 mx-auto flex flex-col items-center text-center">
         <motion.div initial="hidden" animate="show" variants={reveal} custom={0}>
           <Badge variant="ai" className="mb-7">
-            <Sparkles className="h-3 w-3" strokeWidth={2.4} />
+            <Sparkles className="h-3 w-3" strokeWidth={2.4} aria-hidden="true" />
             AI Automation Agency
           </Badge>
         </motion.div>
@@ -115,7 +115,7 @@ export function Hero() {
             </Button>
           </Magnetic>
           <Magnetic strength={8} inner={1.4}>
-            <Button variant="secondary" size="lg" trailing={<Play className="h-3.5 w-3.5" fill="currentColor" />} onClick={() => track('hero_demo_click')}>
+            <Button variant="secondary" size="lg" trailing={<Play className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true" />} onClick={() => track('hero_demo_click')}>
               See our work
             </Button>
           </Magnetic>
@@ -142,11 +142,11 @@ export function Hero() {
           <p className="text-[10px] uppercase tracking-[0.18em] text-ink-400">
             Trusted by growing businesses
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 opacity-50 grayscale sm:gap-x-10">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 grayscale sm:gap-x-10">
             {TRUST_LOGOS.map((name) => (
               <span
                 key={name}
-                className="font-display text-[12px] font-semibold tracking-[0.18em] text-white/60 sm:text-[13px]"
+                className="font-display text-[12px] font-semibold tracking-[0.18em] text-white/70 sm:text-[13px]"
               >
                 {name}
               </span>

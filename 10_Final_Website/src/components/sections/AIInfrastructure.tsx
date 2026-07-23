@@ -84,7 +84,7 @@ export function AIInfrastructure() {
 
         {/* Mobile: horizontal scroll wrapper so ecosystem nodes stay legible.
             scroll-fade-edge softens the right edge to hint at more content. */}
-        <div className="scrollbar-none scroll-fade-edge mt-14 overflow-x-auto overflow-y-visible -mx-6 px-6 md:mt-0 md:mx-0 md:px-0 md:overflow-visible">
+        <div className="scrollbar-none scroll-fade-edge mt-14 overflow-x-auto overflow-y-visible -mx-6 px-6 md:mt-0 md:mx-0 md:px-0 md:overflow-visible" tabIndex={0} role="region" aria-label="Integration diagram">
         <motion.div
           ref={diagramRef}
           className="relative mx-auto aspect-[16/8] w-full min-w-[760px] max-w-6xl md:mt-20 md:min-w-0"
@@ -179,7 +179,7 @@ export function AIInfrastructure() {
             {flowActive &&
               INTEGRATIONS.map((name, i) => {
                 const isHovered = hovered === i;
-                const inBaseSet = i % 3 === 0;
+                const inBaseSet = i % 5 === 0;
                 if (!inBaseSet && !isHovered) return null;
                 const { x, y } = nodePosition(i, INTEGRATIONS.length);
                 return (

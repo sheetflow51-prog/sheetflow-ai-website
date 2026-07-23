@@ -93,7 +93,7 @@ export function FeatureStorytelling() {
 
                     <div className="relative flex items-center gap-2.5">
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 backdrop-blur-md">
-                        <Icon className="h-4 w-4 text-accent-bright" strokeWidth={2.2} />
+                        <Icon className="h-4 w-4 text-accent-bright" strokeWidth={2.2} aria-hidden="true" />
                       </div>
                       <span className="font-mono text-[10px] uppercase tracking-widest text-accent-bright/80">
                         {f.kicker}

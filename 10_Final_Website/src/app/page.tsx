@@ -1,8 +1,10 @@
 import { Hero } from '@/components/sections/Hero';
 import { WorkflowUniverse } from '@/components/sections/WorkflowUniverse';
 import { AIDashboard } from '@/components/sections/AIDashboard';
+import { WorkflowPipeline } from '@/components/sections/WorkflowPipeline';
 import { FeatureStorytelling } from '@/components/sections/FeatureStorytelling';
 import { CaseStudy } from '@/components/sections/CaseStudy';
+import { DigitalCraft } from '@/components/sections/DigitalCraft';
 import { AIInfrastructure } from '@/components/sections/AIInfrastructure';
 import { FinalCTA } from '@/components/sections/FinalCTA';
 import { SectionHandoff } from '@/components/signature/SectionHandoff';
@@ -16,9 +18,13 @@ export default function HomePage() {
       <SectionHandoff />
       <AIDashboard />
       <SectionHandoff />
+      <WorkflowPipeline />
+      <SectionHandoff />
       <FeatureStorytelling />
       <SectionHandoff />
       <CaseStudy />
+      <SectionHandoff />
+      <DigitalCraft />
       <SectionHandoff />
       <AIInfrastructure />
       <FinalCTA />

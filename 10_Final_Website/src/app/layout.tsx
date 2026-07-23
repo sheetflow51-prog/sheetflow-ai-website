@@ -101,12 +101,85 @@ export const viewport: Viewport = {
 const organizationJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
+  '@id': `${SITE_URL}/#organization`,
   name: 'SheetFlow AI',
   url: SITE_URL,
   logo: `${SITE_URL}/logo.jpg`,
   description:
     'AI automation agency for growing businesses — lead capture, WhatsApp follow-ups, appointment booking, CRM and reporting automation.',
   sameAs: [],
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: 'AI Automation Services',
+    itemListElement: [
+      {
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'Service',
+          name: 'Missed Lead Alerts',
+          description:
+            'Instant notifications the moment a lead comes in — so nothing waits 24 hours for a reply.',
+          serviceType: 'Lead capture automation',
+          provider: { '@id': `${SITE_URL}/#organization` },
+        },
+      },
+      {
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'Service',
+          name: 'WhatsApp Follow-Ups',
+          description:
+            'An AI assistant that answers questions, qualifies leads, and books calls on WhatsApp — 24/7.',
+          serviceType: 'WhatsApp automation',
+          provider: { '@id': `${SITE_URL}/#organization` },
+        },
+      },
+      {
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'Service',
+          name: 'Appointment Booking',
+          description:
+            'A self-serve booking flow that syncs to your calendar and CRM. No back-and-forth.',
+          serviceType: 'Appointment booking automation',
+          provider: { '@id': `${SITE_URL}/#organization` },
+        },
+      },
+      {
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'Service',
+          name: 'Daily Business Reports',
+          description:
+            'A clean morning email with leads, bookings, revenue and what needs your attention today.',
+          serviceType: 'Business reporting automation',
+          provider: { '@id': `${SITE_URL}/#organization` },
+        },
+      },
+      {
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'Service',
+          name: 'CRM Auto-Updates',
+          description:
+            'Forms, calls and chats flow into HubSpot, Pipedrive or GoHighLevel automatically. No manual entry.',
+          serviceType: 'CRM automation',
+          provider: { '@id': `${SITE_URL}/#organization` },
+        },
+      },
+      {
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'Service',
+          name: 'Invoice Reminders',
+          description:
+            'Polite, automated nudges that get invoices paid faster — without you chasing clients.',
+          serviceType: 'Invoice reminder automation',
+          provider: { '@id': `${SITE_URL}/#organization` },
+        },
+      },
+    ],
+  },
 };
 
 const websiteJsonLd = {

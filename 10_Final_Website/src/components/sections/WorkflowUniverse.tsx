@@ -152,7 +152,7 @@ export function WorkflowUniverse() {
 
                   <div className="relative flex h-full flex-col">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 backdrop-blur-md">
-                      <Icon className={`h-4 w-4 ${w.tint}`} strokeWidth={2.2} />
+                      <Icon className={`h-4 w-4 ${w.tint}`} strokeWidth={2.2} aria-hidden="true" />
                     </div>
 
                     <h3 className="mt-6 text-[19px] font-semibold leading-[1.2] tracking-tight text-white md:text-[20px]">
