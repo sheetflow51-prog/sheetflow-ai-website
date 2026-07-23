@@ -78,6 +78,7 @@ export default function LoadingScreen() {
                 height={112}
                 priority
                 className="relative rounded-full"
+                style={{ height: 'auto' }}
               />
             </motion.div>
 

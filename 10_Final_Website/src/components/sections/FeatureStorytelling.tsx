@@ -79,17 +79,28 @@ export function FeatureStorytelling() {
           duration={0.7}
           stagger={0.06}
         >
-          {FEATURES.map((f) => {
+          {FEATURES.map((f, i) => {
             const Icon = f.Icon;
             return (
               <div key={f.title} className={`relative ${f.span ?? ''}`}>
-                <GlassCard variant="feature" className="h-full">
+                <GlassCard variant="feature" className="group h-full">
                   <div className="flex h-full flex-col">
-                    {/* Accent glow blob */}
+                    {/* Accent glow blob — a slow continuous drift keeps the
+                        corner light alive after reveal (transform-only). */}
                     <div
-                      className={`pointer-events-none absolute right-0 top-0 h-40 w-40 rounded-full bg-gradient-to-br ${f.accent} opacity-60 blur-3xl`}
+                      className={`pointer-events-none absolute right-0 top-0 h-40 w-40 animate-float rounded-full bg-gradient-to-br ${f.accent} opacity-60 blur-3xl`}
+                      style={{ animationDuration: '15s', animationDelay: `${i * 0.8}s` }}
                       aria-hidden="true"
                     />
+
+                    {/* Refined "running" highlight on hover — one travelling
+                        sheen along the top edge. */}
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-x-0 top-0 h-px overflow-hidden opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                    >
+                      <div className="h-full w-full animate-none bg-[linear-gradient(90deg,transparent_0%,rgba(147,197,253,0.7)_50%,transparent_100%)] bg-[length:200%_100%] group-hover:animate-shimmer" />
+                    </div>
 
                     <div className="relative flex items-center gap-2.5">
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 backdrop-blur-md">

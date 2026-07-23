@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import ParticleField from '@/components/providers/ParticleField';
@@ -11,6 +11,7 @@ import { Brackets } from '@/components/signature/Brackets';
 import { Trace } from '@/components/signature/Trace';
 import { useAnalytics } from '@/lib/hooks/useAnalytics';
 import { BOOKING_URL } from '@/lib/contact';
+import { prefersReducedMotion } from '@/lib/utils';
 
 const IntelligenceCore = dynamic(() => import('@/components/three/IntelligenceCore'), { ssr: false });
 
@@ -34,12 +35,47 @@ export function FinalCTA() {
   const coreScale = useTransform(descent, [0, 1], [0.9, 1.15]);
   const coreOpacity = useTransform(descent, [0, 0.4, 1], [0.2, 0.5, 0.8]);
 
+  // Continuous ambient motion (traveling beam + CTA sheen) mounts only after
+  // hydration and only when reduced-motion is not requested.
+  const [runMotion, setRunMotion] = useState(false);
+  useEffect(() => {
+    setRunMotion(!prefersReducedMotion());
+  }, []);
+
   return (
     <section
       id="contact"
       ref={sectionRef}
       className="relative isolate overflow-hidden py-24 md:py-44"
     >
+      {/* Continuous signal beam traveling the closing section's top edge —
+          mirrors the hero's bottom-edge beam (gold-led here) so the two
+          bookends "hand off" the running signal. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 -z-[4] h-px"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-violet/25 to-transparent" />
+        {runMotion && (
+          <motion.span
+            className="absolute inset-y-0 left-0 w-40 rounded-full"
+            style={{
+              background:
+                'linear-gradient(90deg, transparent, rgba(244, 192, 99,0.9) 42%, rgba(96, 165, 250,0.85) 58%, transparent)',
+              boxShadow: '0 0 12px 1px rgba(244, 192, 99,0.45)',
+            }}
+            initial={{ x: '-20vw', opacity: 0 }}
+            animate={{ x: ['-20vw', '120vw'], opacity: [0, 1, 1, 0] }}
+            transition={{
+              duration: 5.5,
+              ease: 'easeInOut',
+              repeat: Infinity,
+              repeatDelay: 1.4,
+            }}
+          />
+        )}
+      </div>
+
       {/* Particle field */}
       <ParticleField className="opacity-60" reactive />
 
@@ -132,14 +168,38 @@ export function FinalCTA() {
             transition={{ duration: 0.6, delay: 0.4 }}
           >
             <Magnetic strength={10} inner={1.6}>
-              <Button
-                variant="primary"
-                size="lg"
-                href={BOOKING_URL}
-                onClick={() => track('final_cta_click', { variant: 'audit' })}
-              >
-                Book a free automation audit
-              </Button>
+              <span className="relative inline-flex">
+                <Button
+                  variant="primary"
+                  size="lg"
+                  href={BOOKING_URL}
+                  onClick={() => track('final_cta_click', { variant: 'audit' })}
+                >
+                  Book a free automation audit
+                </Button>
+                {runMotion && (
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 overflow-hidden rounded-lg"
+                  >
+                    <motion.span
+                      className="absolute inset-y-0 left-0 w-1/2 -skew-x-12"
+                      style={{
+                        background:
+                          'linear-gradient(90deg, transparent, rgba(147, 197, 253,0.28) 38%, rgba(255,255,255,0.42) 50%, rgba(244, 192, 99,0.34) 62%, transparent)',
+                      }}
+                      initial={{ x: '-160%' }}
+                      animate={{ x: ['-160%', '260%'] }}
+                      transition={{
+                        duration: 1.15,
+                        ease: 'easeInOut',
+                        repeat: Infinity,
+                        repeatDelay: 4.5,
+                      }}
+                    />
+                  </span>
+                )}
+              </span>
             </Magnetic>
             <Magnetic strength={6} inner={1.4}>
               <Button

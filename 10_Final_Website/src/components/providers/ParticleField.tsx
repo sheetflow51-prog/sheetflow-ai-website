@@ -14,8 +14,8 @@ interface Particle {
 
 /**
  * ParticleField — canvas 2D data atmosphere.
- * Particles drift, connect within 120px, and react to the cursor.
- * Used as a background layer on the hero & key sections.
+ * Particles ride a slow flow-field current, connect within 120px, and react to
+ * the cursor. Used as a background layer on the hero & key sections.
  */
 export default function ParticleField({
   density = 0.00012, // particles per pixel² — auto-scaled
@@ -46,9 +46,7 @@ export default function ParticleField({
     let mouseY = -9999;
     let raf = 0;
     // Cached instead of calling getBoundingClientRect() on every RAF tick
-    // and every mousemove event — that was a forced layout read many times
-    // a second, per mounted instance (this component is mounted twice).
-    // Only resize() (on mount + window resize) needs the real measurement.
+    // and every mousemove event. Only resize() needs the real measurement.
     let rect = { width: 0, height: 0, left: 0, top: 0 };
 
     const resize = () => {
@@ -84,6 +82,10 @@ export default function ParticleField({
     const tick = () => {
       ctx.clearRect(0, 0, rect.width, rect.height);
 
+      // Slow global flow-field phase — makes the whole network drift like a
+      // gentle current instead of jittering in place. Cheap: one read/frame.
+      const t = performance.now() * 0.0002;
+
       // Update + draw particles
       for (const p of particles) {
         // Mouse repulsion
@@ -98,6 +100,10 @@ export default function ParticleField({
           }
         }
 
+        // Flow field — a soft curl current so particles glide cohesively.
+        p.vx += Math.cos(p.y * 0.011 + t) * 0.006;
+        p.vy += Math.sin(p.x * 0.011 + t) * 0.006;
+
         // Speed limit
         const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
         if (speed > 1.5) {
@@ -105,11 +111,11 @@ export default function ParticleField({
           p.vy = (p.vy / speed) * 1.5;
         }
 
-        // Drift back to baseline
-        p.vx *= 0.985;
-        p.vy *= 0.985;
-        p.vx += (Math.random() - 0.5) * 0.012;
-        p.vy += (Math.random() - 0.5) * 0.012;
+        // Drift back to baseline (light damping keeps the current from piling up)
+        p.vx *= 0.99;
+        p.vy *= 0.99;
+        p.vx += (Math.random() - 0.5) * 0.006;
+        p.vy += (Math.random() - 0.5) * 0.006;
 
         p.x += p.vx;
         p.y += p.vy;
@@ -128,6 +134,8 @@ export default function ParticleField({
 
       // Connection lines
       if (connect) {
+        // Subtle global shimmer so the lattice reads as "alive", not static.
+        const shimmer = 0.85 + Math.sin(t * 3) * 0.15;
         for (let i = 0; i < particles.length; i++) {
           for (let j = i + 1; j < particles.length; j++) {
             const a = particles[i];
@@ -136,7 +144,7 @@ export default function ParticleField({
             const dy = a.y - b.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
             if (dist < 120) {
-              const opacity = (1 - dist / 120) * 0.18;
+              const opacity = (1 - dist / 120) * 0.18 * shimmer;
               ctx.beginPath();
               ctx.strokeStyle = `rgba(96, 165, 250, ${opacity})`;
               ctx.lineWidth = 0.6;
@@ -157,9 +165,7 @@ export default function ParticleField({
     window.addEventListener('mouseleave', onLeave);
 
     // Pause the RAF loop (and its O(n²) connection-line pass) entirely while
-    // off-screen — this canvas is mounted in both Hero and FinalCTA, and the
-    // FinalCTA instance previously kept ticking for the whole session despite
-    // sitting at the bottom of the page.
+    // off-screen — this canvas is mounted in both Hero and FinalCTA.
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {

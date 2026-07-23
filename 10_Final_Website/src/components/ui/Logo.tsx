@@ -29,6 +29,7 @@ export function Logo({ size = 32, showWordmark = true, className }: LogoProps) {
         width={size}
         height={size}
         className="rounded-full"
+        style={{ height: 'auto' }}
         priority
       />
       {showWordmark && (

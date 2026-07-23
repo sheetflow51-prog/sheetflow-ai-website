@@ -10,6 +10,43 @@ import { TiltCard } from '@/components/motion/TiltCard';
 import { Breathing } from '@/components/motion/Breathing';
 import { prefersReducedMotion } from '@/lib/utils';
 
+/**
+ * useReduced — SSR-safe reduced-motion gate.
+ * Defaults to `true` so the server render and first client paint emit NO
+ * ambient motion (avoids a hydration mismatch / flash); flips to the real
+ * preference after mount. Continuous decorative motion is opt-in only.
+ */
+function useReduced() {
+  const [reduced, setReduced] = useState(true);
+  useEffect(() => {
+    setReduced(prefersReducedMotion());
+  }, []);
+  return reduced;
+}
+
+/**
+ * ScanBeam — a single soft light bar that travels top→bottom of the dashboard,
+ * echoing the WorkflowPipeline "traveling packet". Pure transform (translateY),
+ * clipped by the card's `overflow-hidden`. Disabled under reduced-motion.
+ */
+function ScanBeam() {
+  const reduced = useReduced();
+  if (reduced) return null;
+  return (
+    <motion.div
+      className="pointer-events-none absolute inset-x-0 top-0 h-1/3"
+      aria-hidden="true"
+      style={{
+        background:
+          'linear-gradient(180deg, transparent 0%, rgba(96,165,250,0.10) 50%, transparent 100%)',
+      }}
+      initial={{ y: '-120%' }}
+      animate={{ y: ['-120%', '360%'] }}
+      transition={{ duration: 5.5, repeat: Infinity, ease: 'linear', repeatDelay: 1.5 }}
+    />
+  );
+}
+
 function StatCounter({
   value,
   label,
@@ -33,10 +70,6 @@ function StatCounter({
     if (!inView) return;
     // Reduced-motion: snap to final value — no counting animation.
     if (prefersReducedMotion()) { setCount(value); return; }
-    // Was a hand-rolled 1800ms RAF loop with its own cubic curve — exceeded
-    // the documented 1600ms cinematic-moment ceiling and used a fourth
-    // easing curve nobody else in the codebase does. Framer's own `animate`
-    // reuses the same cinematic bezier as every other whileInView entrance.
     const controls = animate(0, value, {
       duration: 1.4,
       ease: [0.16, 1, 0.3, 1],
@@ -109,8 +142,7 @@ function MiniChart() {
         />
       </svg>
       {/* Live endpoint — the one pixel that stays alive after the one-time
-          reveal, so the "live" chart doesn't freeze. Sits on the trend-line's
-          final (top-right) point; Breathing is reduced-motion-guarded. */}
+          reveal, so the "live" chart doesn't freeze. */}
       <Breathing period={6} className="absolute right-0 top-0 -translate-y-1/2 translate-x-1/2">
         <span
           className="block h-2 w-2 rounded-full bg-accent-light"
@@ -122,6 +154,9 @@ function MiniChart() {
 }
 
 export function AIDashboard() {
+  // Gate the goal-bar shimmer on the same SSR-safe reduced-motion check.
+  const reduced = useReduced();
+
   return (
     <section id="reports" className="section relative">
       <div className="container-edge">
@@ -138,8 +173,14 @@ export function AIDashboard() {
             align="left"
           />
 
+          {/*
+            Symmetric horizontal gutter (md:px-14 = 56px each side) creates a
+            SAFE ZONE the floating accent cards overhang into, so nothing spills
+            past the grid column at 1280px and up. The TiltCard's 3D tilt also
+            rotates inside this gutter → no horizontal page scroll.
+          */}
           <motion.div
-            className="relative pb-6 pl-0 md:pb-10 md:pl-12"
+            className="relative pb-6 pl-0 md:pb-10 md:px-14"
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-10%' }}
@@ -177,6 +218,10 @@ export function AIDashboard() {
                   <MiniChart />
                 </div>
 
+                {/* Continuous "live" scan — one traveling light bar, transform-only,
+                    clipped by this card's overflow-hidden. Reduced-motion-guarded. */}
+                <ScanBeam />
+
                 {/* Scan line overlay */}
                 <div
                   className="pointer-events-none absolute inset-0 opacity-[0.04]"
@@ -188,9 +233,10 @@ export function AIDashboard() {
                 />
               </GlassCard>
 
-              {/* Floating signal card — hidden on mobile to avoid clipping */}
+              {/* Floating signal card — hidden on mobile; pulled inward (-right-6)
+                  so it reads as depth without clipping past the column edge. */}
               <motion.div
-                className="absolute hidden -right-10 -top-8 w-[260px] md:block"
+                className="absolute hidden -right-6 -top-8 w-[260px] md:block"
                 initial={{ opacity: 0, x: 30, y: -10 }}
                 whileInView={{ opacity: 1, x: 0, y: 0 }}
                 viewport={{ once: true }}
@@ -215,9 +261,10 @@ export function AIDashboard() {
                 </GlassCard>
               </motion.div>
 
-              {/* Floating alert card — hidden on mobile to avoid clipping */}
+              {/* Floating alert card — hidden on mobile; pulled inward (-left-8)
+                  to stay clear of the column's left edge. */}
               <motion.div
-                className="absolute hidden -bottom-6 -left-12 w-[240px] md:block"
+                className="absolute hidden -bottom-6 -left-8 w-[240px] md:block"
                 initial={{ opacity: 0, x: -30, y: 20 }}
                 whileInView={{ opacity: 1, x: 0, y: 0 }}
                 viewport={{ once: true }}
@@ -234,7 +281,7 @@ export function AIDashboard() {
                   <p className="mt-2 text-[12px] text-white">
                     20 leads contacted · 13 done
                   </p>
-                  <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/5">
+                  <div className="relative mt-2 h-1 w-full overflow-hidden rounded-full bg-white/5">
                     <motion.div
                       className="h-full bg-accent-bright"
                       initial={{ width: '0%' }}
@@ -242,6 +289,21 @@ export function AIDashboard() {
                       viewport={{ once: true }}
                       transition={{ duration: 1, delay: 1.2 }}
                     />
+                    {/* Continuous soft shimmer travelling the goal bar — transform-only,
+                        clipped by the bar's overflow-hidden. Reduced-motion-guarded. */}
+                    {!reduced && (
+                      <motion.div
+                        className="pointer-events-none absolute inset-y-0 left-0 w-1/3"
+                        aria-hidden="true"
+                        style={{
+                          background:
+                            'linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)',
+                        }}
+                        initial={{ x: '-100%' }}
+                        animate={{ x: ['-100%', '320%'] }}
+                        transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut', repeatDelay: 0.9 }}
+                      />
+                    )}
                   </div>
                 </GlassCard>
               </motion.div>

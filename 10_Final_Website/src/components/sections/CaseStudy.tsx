@@ -53,14 +53,26 @@ export function CaseStudy() {
         </div>
 
         <ScrollReveal className="grid gap-3.5 md:grid-cols-3" y={30} duration={0.7} stagger={0.1}>
-          {STUDIES.map((s) => (
+          {STUDIES.map((s, i) => (
             <div key={s.company}>
               <GlassCard variant="feature" className="group h-full" interactive>
                 <div className="flex h-full flex-col gap-6">
+                  {/* Living colour wash — a slow opacity breathe keeps a faint
+                      pulse after reveal (opacity-only, reduced-motion gated). */}
                   <div
-                    className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${s.accent} opacity-50`}
+                    className={`pointer-events-none absolute inset-0 animate-glow-breathe bg-gradient-to-br ${s.accent} opacity-50`}
+                    style={{ animationDuration: '7.5s', animationDelay: `${i * 1.1}s` }}
                     aria-hidden="true"
                   />
+
+                  {/* Refined "running" highlight on hover — one travelling sheen
+                      along the top edge. */}
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-x-0 top-0 h-px overflow-hidden opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                  >
+                    <div className="h-full w-full animate-none bg-[linear-gradient(90deg,transparent_0%,rgba(147,197,253,0.7)_50%,transparent_100%)] bg-[length:200%_100%] group-hover:animate-shimmer" />
+                  </div>
                   <div className="relative flex items-center justify-between">
                     <div>
                       <h3 className="font-display text-[18px] font-semibold text-white">{s.company}</h3>

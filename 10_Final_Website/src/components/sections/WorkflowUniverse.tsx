@@ -139,16 +139,28 @@ export function WorkflowUniverse() {
           duration={0.7}
           stagger={0.08}
         >
-          {WORKFLOWS.map((w) => {
+          {WORKFLOWS.map((w, i) => {
             const Icon = w.Icon;
             return (
               <div key={w.id}>
                 <GlassCard variant="feature" className="group h-full" interactive>
-                  {/* Subtle accent glow per card — token gradient, not raw hex */}
+                  {/* Subtle accent glow per card — animate-float gives the corner
+                      light a slow continuous drift so the card stays alive after
+                      reveal (transform-only, reduced-motion-gated globally). */}
                   <div
                     aria-hidden="true"
-                    className={`pointer-events-none absolute right-0 top-0 h-32 w-32 rounded-full bg-gradient-to-br ${w.accent} opacity-60 blur-3xl transition-opacity duration-500 group-hover:opacity-90`}
+                    className={`pointer-events-none absolute right-0 top-0 h-32 w-32 animate-float rounded-full bg-gradient-to-br ${w.accent} opacity-60 blur-3xl transition-opacity duration-500 group-hover:opacity-90`}
+                    style={{ animationDuration: '13s', animationDelay: `${i * 0.9}s` }}
                   />
+
+                  {/* Refined "running" highlight — a single blue sheen that travels
+                      the top edge on hover (one card at a time). */}
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-x-0 top-0 h-px overflow-hidden opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                  >
+                    <div className="h-full w-full animate-none bg-[linear-gradient(90deg,transparent_0%,rgba(147,197,253,0.7)_50%,transparent_100%)] bg-[length:200%_100%] group-hover:animate-shimmer" />
+                  </div>
 
                   <div className="relative flex h-full flex-col">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 backdrop-blur-md">
@@ -164,7 +176,10 @@ export function WorkflowUniverse() {
                     </p>
 
                     <div className="mt-6 flex items-center gap-2 border-t border-white/[0.06] pt-4">
-                      <span className={`h-1.5 w-1.5 rounded-full ${w.dot}`} />
+                      <span
+                        className={`h-1.5 w-1.5 animate-pulse-live rounded-full ${w.dot}`}
+                        style={{ animationDuration: '2.8s', animationDelay: `${i * 0.35}s` }}
+                      />
                       <span className="font-mono text-[10px] uppercase tracking-widest text-ink-400">
                         {w.impact}
                       </span>

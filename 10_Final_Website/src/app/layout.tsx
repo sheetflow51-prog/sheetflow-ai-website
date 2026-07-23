@@ -80,8 +80,8 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'SheetFlow AI — AI automation agency for growing businesses.',
     description: 'We automate the busywork running your business — leads, follow-ups, bookings, CRM, reports.',
-    site: '@Sheetflow51',
-    creator: '@Sheetflow51',
+    site: '@sheetflow51',
+    creator: '@sheetflow51',
   },
   robots: {
     index: true,
@@ -109,9 +109,10 @@ const organizationJsonLd = {
   description:
     'AI automation agency for growing businesses — lead capture, WhatsApp follow-ups, appointment booking, CRM and reporting automation.',
   sameAs: [
-    'https://x.com/Sheetflow51',
+    'https://x.com/sheetflow51',
     'https://www.instagram.com/sheetflow51',
-    'https://www.linkedin.com/company/sheetflow51',
+    'https://www.linkedin.com/in/sheet-flow-1173563a7',
+    'https://github.com/sheetflow51-prog',
   ],
   hasOfferCatalog: {
     '@type': 'OfferCatalog',

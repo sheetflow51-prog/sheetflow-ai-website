@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Play } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
@@ -12,6 +13,7 @@ import { Brackets } from '@/components/signature/Brackets';
 import { Trace } from '@/components/signature/Trace';
 import { useAnalytics } from '@/lib/hooks/useAnalytics';
 import { BOOKING_URL } from '@/lib/contact';
+import { prefersReducedMotion } from '@/lib/utils';
 
 // 3D core is heavy → ssr: false + lazy.
 // IntelligenceCore upgrades to a Spline scene when NEXT_PUBLIC_SPLINE_SCENE_HERO
@@ -35,6 +37,13 @@ const TRUST_LOGOS = ['NORTH CLINIC', 'OAKWOOD REALTY', 'BRIGHTPATH', 'SUMMIT COA
 
 export function Hero() {
   const { track } = useAnalytics();
+
+  // Continuous ambient motion mounts only after hydration and only when the
+  // visitor hasn't requested reduced motion.
+  const [runMotion, setRunMotion] = useState(false);
+  useEffect(() => {
+    setRunMotion(!prefersReducedMotion());
+  }, []);
 
   return (
     <section className="relative isolate min-h-[100svh] overflow-hidden pt-24 pb-20 md:pt-36 md:pb-32">
@@ -105,14 +114,38 @@ export function Hero() {
           custom={3}
         >
           <Magnetic strength={10} inner={1.6}>
-            <Button
-              variant="primary"
-              size="lg"
-              href={BOOKING_URL}
-              onClick={() => track('hero_cta_click', { variant: 'audit' })}
-            >
-              Book a free automation audit
-            </Button>
+            <span className="relative inline-flex">
+              <Button
+                variant="primary"
+                size="lg"
+                href={BOOKING_URL}
+                onClick={() => track('hero_cta_click', { variant: 'audit' })}
+              >
+                Book a free automation audit
+              </Button>
+              {runMotion && (
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 overflow-hidden rounded-lg"
+                >
+                  <motion.span
+                    className="absolute inset-y-0 left-0 w-1/2 -skew-x-12"
+                    style={{
+                      background:
+                        'linear-gradient(90deg, transparent, rgba(147, 197, 253,0.28) 38%, rgba(255,255,255,0.42) 50%, rgba(244, 192, 99,0.34) 62%, transparent)',
+                    }}
+                    initial={{ x: '-160%' }}
+                    animate={{ x: ['-160%', '260%'] }}
+                    transition={{
+                      duration: 1.15,
+                      ease: 'easeInOut',
+                      repeat: Infinity,
+                      repeatDelay: 4.5,
+                    }}
+                  />
+                </span>
+              )}
+            </span>
           </Magnetic>
           <Magnetic strength={8} inner={1.4}>
             <Button variant="secondary" size="lg" trailing={<Play className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true" />} onClick={() => track('hero_demo_click')}>
@@ -181,6 +214,33 @@ export function Hero() {
             />
           </div>
         </motion.div>
+      </div>
+
+      {/* Continuous signal beam traveling the hero's bottom edge — the
+          "alive, running" pipeline motif as a full-bleed boundary. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 -z-[4] h-px"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-accent/25 to-transparent" />
+        {runMotion && (
+          <motion.span
+            className="absolute inset-y-0 left-0 w-40 rounded-full"
+            style={{
+              background:
+                'linear-gradient(90deg, transparent, rgba(96, 165, 250,0.9) 42%, rgba(244, 192, 99,0.85) 58%, transparent)',
+              boxShadow: '0 0 12px 1px rgba(96, 165, 250,0.5)',
+            }}
+            initial={{ x: '-20vw', opacity: 0 }}
+            animate={{ x: ['-20vw', '120vw'], opacity: [0, 1, 1, 0] }}
+            transition={{
+              duration: 5.5,
+              ease: 'easeInOut',
+              repeat: Infinity,
+              repeatDelay: 1.4,
+            }}
+          />
+        )}
       </div>
     </section>
   );

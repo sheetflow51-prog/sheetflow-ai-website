@@ -63,11 +63,28 @@ export function DigitalCraft() {
           duration={0.7}
           stagger={0.08}
         >
-          {CRAFT.map((c) => {
+          {CRAFT.map((c, i) => {
             const Icon = c.Icon;
             return (
               <div key={c.id}>
                 <GlassCard variant="feature" className="group h-full" interactive>
+                  {/* Faint accent glow — deliberately low-alpha to honour this
+                      section's quieter, monochrome intent, with a slow drift. */}
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute right-0 top-0 h-28 w-28 animate-float rounded-full bg-gradient-to-br from-accent-bright/10 to-transparent opacity-70 blur-3xl transition-opacity duration-500 group-hover:opacity-100"
+                    style={{ animationDuration: '14s', animationDelay: `${i * 1.05}s` }}
+                  />
+
+                  {/* Refined "running" highlight on hover — a single travelling
+                      sheen along the top edge. */}
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-x-0 top-0 h-px overflow-hidden opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                  >
+                    <div className="h-full w-full animate-none bg-[linear-gradient(90deg,transparent_0%,rgba(147,197,253,0.7)_50%,transparent_100%)] bg-[length:200%_100%] group-hover:animate-shimmer" />
+                  </div>
+
                   <div className="relative flex h-full flex-col">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 backdrop-blur-md">
                       <Icon

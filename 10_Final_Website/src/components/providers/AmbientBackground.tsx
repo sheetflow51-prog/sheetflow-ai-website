@@ -6,61 +6,55 @@ import { prefersReducedMotion } from '@/lib/utils';
 /**
  * AmbientBackground — page-wide living atmosphere behind every section.
  *
- * Three layers, all moved with transform: translate3d() (GPU composite, no
- * per-frame repaint):
- *   1. Two large aurora blobs (blue + gold) that slowly drift on their own
- *      AND react to the cursor — the ambient "weather".
- *   2. A tighter, brighter spotlight that tracks the cursor closely, so the
- *      page visibly responds to the pointer everywhere, not just the hero.
- * Under prefers-reduced-motion it renders a calm static frame (no listeners).
+ * All continuous motion is CSS keyframe animation on `transform` only, so the
+ * background stays alive even when the pointer is still and the GPU never
+ * repaints the full viewport per frame (each layer's gradient is painted once
+ * to its own composited layer, then rotated / translated / scaled):
+ *   1. Two large radial aurora blobs (blue + gold), offset inside oversized
+ *      counter-rotating wrappers, so they slowly *orbit* — the ambient weather.
+ *   2. A gentle breathing scale on the whole aurora group.
+ *   3. A soft diagonal light sheen that drifts across and fades.
+ *   4. A subtle, additive (plus-lighter) cursor glow that follows the pointer
+ *      — low opacity, small, starts invisible; only adds a whisper of light,
+ *      never sits on content as an opaque disc.
+ *
+ * Under prefers-reduced-motion: JS early-returns (no listeners / RAF, the glow
+ * never fades in) and the CSS media query disables every keyframe animation.
  */
 export default function AmbientBackground() {
-  const blobA = useRef<HTMLDivElement>(null);
-  const blobB = useRef<HTMLDivElement>(null);
-  const spot = useRef<HTMLDivElement>(null);
+  const glow = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (prefersReducedMotion()) return;
-    const a = blobA.current;
-    const b = blobB.current;
-    const s = spot.current;
-    if (!a || !b || !s) return;
+    const g = glow.current;
+    if (!g) return;
 
     let mouseX = window.innerWidth / 2;
     let mouseY = window.innerHeight / 2;
-    // Slow-following aurora centers (as % of viewport).
-    let curX = mouseX;
-    let curY = mouseY;
-    // Tight-following spotlight center (in px).
-    let spotX = mouseX;
-    let spotY = mouseY;
+    let gx = mouseX;
+    let gy = mouseY;
+    let shown = false;
     let raf = 0;
 
     const onMove = (e: MouseEvent) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
+      if (!shown) {
+        shown = true;
+        g.style.opacity = '1';
+      }
     };
 
-    const tick = (time: number) => {
-      // Aurora: gentle lerp + slow autonomous drift so it breathes even when idle.
-      curX += (mouseX - curX) * 0.04;
-      curY += (mouseY - curY) * 0.04;
-      const driftX = Math.sin(time * 0.00014) * 14;
-      const driftY = Math.cos(time * 0.00011) * 12;
-      const px = (curX / window.innerWidth) * 100 + driftX;
-      const py = (curY / window.innerHeight) * 100 + driftY;
-      a.style.transform = `translate3d(${px - 50}%, ${py - 50}%, 0)`;
-      b.style.transform = `translate3d(${50 - px}%, ${50 - py}%, 0)`;
-
-      // Spotlight: tighter lerp → clearly tracks the pointer.
-      spotX += (mouseX - spotX) * 0.12;
-      spotY += (mouseY - spotY) * 0.12;
-      s.style.transform = `translate3d(${spotX}px, ${spotY}px, 0)`;
-
+    const tick = () => {
+      // Soft lerp — trails the pointer without ever snapping to a hard disc.
+      gx += (mouseX - gx) * 0.1;
+      gy += (mouseY - gy) * 0.1;
+      g.style.transform = `translate3d(${gx}px, ${gy}px, 0)`;
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     window.addEventListener('mousemove', onMove);
+
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener('mousemove', onMove);
@@ -72,26 +66,44 @@ export default function AmbientBackground() {
       aria-hidden="true"
       className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
     >
-      {/* Indigo→azure aurora — cursor-reactive weather. */}
+      <style>{ambientCss}</style>
+
+      {/* Breathing group holds the two orbiting aurora layers. */}
+      <div className="ambient-breathe absolute inset-0">
+        {/* Azure aurora — orbits clockwise. Oversized wrapper (-inset-1/4) so
+            the rotating rectangle's corners never enter the viewport. */}
+        <div className="ambient-spin-a absolute -inset-1/4 will-change-transform">
+          <div
+            className="absolute left-[12%] top-[8%] h-[68%] w-[68%]"
+            style={{
+              background:
+                'radial-gradient(circle at center, rgba(59, 130, 246, 0.24), rgba(96, 165, 250, 0.10) 38%, transparent 64%)',
+            }}
+          />
+        </div>
+
+        {/* Gold aurora — counter-orbits slower, positioned opposite. */}
+        <div className="ambient-spin-b absolute -inset-1/4 will-change-transform">
+          <div
+            className="absolute bottom-[10%] right-[14%] h-[60%] w-[60%]"
+            style={{
+              background:
+                'radial-gradient(circle at center, rgba(233, 162, 59, 0.18), rgba(244, 192, 99, 0.08) 40%, transparent 66%)',
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Diagonal light sheen — drifts across and fades, mix-blend adds light. */}
       <div
-        ref={blobA}
-        className="absolute inset-0 will-change-transform"
+        className="ambient-sheen absolute -inset-1/4 will-change-transform"
         style={{
-          transform: 'translate3d(-20%, -20%, 0)',
           background:
-            'radial-gradient(ellipse 70% 50% at 50% 50%, rgba(59, 130, 246, 0.28), transparent 62%)',
+            'linear-gradient(115deg, transparent 38%, rgba(147, 197, 253, 0.06) 50%, transparent 62%)',
+          mixBlendMode: 'screen',
         }}
       />
-      {/* Gold aurora — counter-positioned, cursor-reactive. */}
-      <div
-        ref={blobB}
-        className="absolute inset-0 will-change-transform"
-        style={{
-          transform: 'translate3d(20%, 20%, 0)',
-          background:
-            'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(233, 162, 59, 0.18), transparent 62%)',
-        }}
-      />
+
       {/* Cyan horizon — static "signal-info" moment anchored at the bottom edge. */}
       <div
         className="absolute inset-0"
@@ -100,16 +112,46 @@ export default function AmbientBackground() {
             'radial-gradient(ellipse 100% 60% at 50% 100%, rgba(6, 182, 212, 0.08), transparent 70%)',
         }}
       />
-      {/* Cursor spotlight — a 720px glow centered on the pointer (via -360px
-          margins) that follows it closely, making the whole page feel live. */}
+
+      {/* Cursor glow — small, additive, starts invisible. Centered on the
+          pointer via -180px margins; JS ramps opacity to 1 on first move.
+          `plus-lighter` means it only ADDS light, so it can never read as an
+          opaque blob covering the headline or CTAs. */}
       <div
-        ref={spot}
-        className="absolute left-0 top-0 -ml-[360px] -mt-[360px] h-[720px] w-[720px] rounded-full will-change-transform"
+        ref={glow}
+        className="absolute left-0 top-0 -ml-[180px] -mt-[180px] h-[360px] w-[360px] rounded-full opacity-0 will-change-transform"
         style={{
           background:
-            'radial-gradient(circle, rgba(96, 165, 250, 0.14) 0%, rgba(244, 192, 99, 0.06) 40%, transparent 70%)',
+            'radial-gradient(circle, rgba(96, 165, 250, 0.10) 0%, rgba(244, 192, 99, 0.05) 45%, transparent 70%)',
+          mixBlendMode: 'plus-lighter',
+          transition: 'opacity 900ms ease-out',
         }}
       />
     </div>
   );
 }
+
+const ambientCss = `
+@keyframes ambient-spin-a { to { transform: rotate(360deg); } }
+@keyframes ambient-spin-b { to { transform: rotate(-360deg); } }
+@keyframes ambient-breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.07); }
+}
+@keyframes ambient-sheen {
+  0%   { transform: translate3d(-22%, 0, 0); opacity: 0; }
+  25%  { opacity: 1; }
+  75%  { opacity: 1; }
+  100% { transform: translate3d(22%, 0, 0); opacity: 0; }
+}
+.ambient-spin-a { animation: ambient-spin-a 90s linear infinite; }
+.ambient-spin-b { animation: ambient-spin-b 130s linear infinite; }
+.ambient-breathe { animation: ambient-breathe 16s ease-in-out infinite; }
+.ambient-sheen { animation: ambient-sheen 26s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .ambient-spin-a, .ambient-spin-b, .ambient-breathe, .ambient-sheen {
+    animation: none !important;
+  }
+  .ambient-sheen { opacity: 0 !important; }
+}
+`;
