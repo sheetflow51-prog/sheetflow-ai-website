@@ -115,7 +115,7 @@ export function WorkflowUniverse() {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(99,102,241,0.06), transparent 70%)',
+            'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(59, 130, 246,0.06), transparent 70%)',
           opacity: veilOpacity,
         }}
       />

@@ -63,7 +63,7 @@ function StaticCoreGlow({ className = '' }: { className?: string }) {
       <div
         className="h-2/3 w-2/3 rounded-full"
         style={{
-          background: 'radial-gradient(circle, rgba(129,140,248,0.35), transparent 70%)',
+          background: 'radial-gradient(circle, rgba(96, 165, 250,0.35), transparent 70%)',
           filter: 'blur(20px)',
         }}
       />

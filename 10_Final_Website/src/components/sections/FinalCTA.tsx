@@ -52,7 +52,7 @@ export function FinalCTA() {
         className="pointer-events-none absolute inset-0 -z-[6]"
         style={{
           background:
-            'radial-gradient(ellipse 80% 70% at 70% 50%, rgba(139,92,246,1), transparent 60%)',
+            'radial-gradient(ellipse 80% 70% at 70% 50%, rgba(233, 162, 59,1), transparent 60%)',
           opacity: violetIntensity,
           mixBlendMode: 'screen',
         }}
@@ -83,7 +83,7 @@ export function FinalCTA() {
         className="pointer-events-none absolute left-1/2 top-1/2 -z-[5] h-[60vh] w-[60vh] -translate-x-1/2 -translate-y-1/2"
         style={{
           background:
-            'radial-gradient(circle, rgba(99,102,241,0.22), transparent 60%)',
+            'radial-gradient(circle, rgba(59, 130, 246,0.22), transparent 60%)',
           opacity: useTransform(descent, [0, 0.5, 1], [0.2, 0.6, 0.8]),
           filter: 'blur(10px)',
         }}

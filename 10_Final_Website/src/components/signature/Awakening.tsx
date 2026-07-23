@@ -82,7 +82,7 @@ export default function Awakening() {
               className="h-[40vh] w-[40vh] rounded-full"
               style={{
                 background:
-                  'radial-gradient(circle, rgba(129,140,248,0.45) 0%, rgba(99,102,241,0.18) 40%, transparent 70%)',
+                  'radial-gradient(circle, rgba(96, 165, 250,0.45) 0%, rgba(59, 130, 246,0.18) 40%, transparent 70%)',
                 filter: 'blur(20px)',
               }}
             />
@@ -104,7 +104,7 @@ export default function Awakening() {
               ease: [0.16, 1, 0.3, 1],
             }}
             style={{
-              boxShadow: '0 0 40px rgba(129,140,248,0.4)',
+              boxShadow: '0 0 40px rgba(96, 165, 250,0.4)',
             }}
           />
 
@@ -121,7 +121,7 @@ export default function Awakening() {
             }}
             style={{
               background:
-                'radial-gradient(ellipse 70% 50% at 50% 50%, rgba(99,102,241,0.18), transparent 60%)',
+                'radial-gradient(ellipse 70% 50% at 50% 50%, rgba(59, 130, 246,0.18), transparent 60%)',
               mixBlendMode: 'screen',
             }}
           />
@@ -139,8 +139,8 @@ export default function Awakening() {
             }}
             style={{
               background:
-                'linear-gradient(90deg, transparent, rgba(165,180,252,0.7), transparent)',
-              boxShadow: '0 0 20px rgba(165,180,252,0.5)',
+                'linear-gradient(90deg, transparent, rgba(147, 197, 253,0.7), transparent)',
+              boxShadow: '0 0 20px rgba(147, 197, 253,0.5)',
             }}
           />
         </motion.div>

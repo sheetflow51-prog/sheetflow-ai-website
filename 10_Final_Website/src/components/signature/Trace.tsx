@@ -66,7 +66,7 @@ export function Trace({
                 height: 1,
                 transform: 'translateY(-50%)',
                 background:
-                  'linear-gradient(90deg, transparent, rgba(165,180,252,0.5) 30%, rgba(165,180,252,0.5) 70%, transparent)',
+                  'linear-gradient(90deg, transparent, rgba(147, 197, 253,0.5) 30%, rgba(147, 197, 253,0.5) 70%, transparent)',
                 transformOrigin: 'left',
               }
             : {
@@ -76,7 +76,7 @@ export function Trace({
                 width: 1,
                 transform: 'translateX(-50%)',
                 background:
-                  'linear-gradient(180deg, transparent, rgba(165,180,252,0.5) 30%, rgba(165,180,252,0.5) 70%, transparent)',
+                  'linear-gradient(180deg, transparent, rgba(147, 197, 253,0.5) 30%, rgba(147, 197, 253,0.5) 70%, transparent)',
                 transformOrigin: 'top',
               }
         }
@@ -109,8 +109,8 @@ export function Trace({
               ...nodeStyle,
               width: isActive ? 6 : 4,
               height: isActive ? 6 : 4,
-              background: isActive ? '#A5B4FC' : 'rgba(165, 180, 252, 0.45)',
-              boxShadow: isActive ? '0 0 12px rgba(165,180,252,0.8)' : 'none',
+              background: isActive ? '#93C5FD' : 'rgba(147, 197, 253, 0.45)',
+              boxShadow: isActive ? '0 0 12px rgba(147, 197, 253,0.8)' : 'none',
             }}
             initial={animate ? { opacity: 0, scale: 0.4 } : false}
             whileInView={animate ? { opacity: 1, scale: 1 } : undefined}
@@ -138,7 +138,7 @@ export function Trace({
                   width: 14,
                   height: 14,
                   background:
-                    'radial-gradient(circle, rgba(165,180,252,0.5), transparent 70%)',
+                    'radial-gradient(circle, rgba(147, 197, 253,0.5), transparent 70%)',
                 }
               : {
                   top: `${(activeIdx / Math.max(nodes - 1, 1)) * 100}%`,
@@ -147,7 +147,7 @@ export function Trace({
                   width: 14,
                   height: 14,
                   background:
-                    'radial-gradient(circle, rgba(165,180,252,0.5), transparent 70%)',
+                    'radial-gradient(circle, rgba(147, 197, 253,0.5), transparent 70%)',
                 }
           }
           animate={{ opacity: [0.4, 0.9, 0.4], scale: [0.8, 1.2, 0.8] }}

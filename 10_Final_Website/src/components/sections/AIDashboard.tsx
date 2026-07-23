@@ -84,8 +84,8 @@ function MiniChart() {
       <svg viewBox="0 0 100 100" className="h-full w-full" preserveAspectRatio="none">
         <defs>
           <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#818CF8" stopOpacity="0.4" />
-            <stop offset="100%" stopColor="#818CF8" stopOpacity="0" />
+            <stop offset="0%" stopColor="#60A5FA" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#60A5FA" stopOpacity="0" />
           </linearGradient>
         </defs>
         <motion.path
@@ -98,7 +98,7 @@ function MiniChart() {
         />
         <motion.path
           d={path}
-          stroke="#A5B4FC"
+          stroke="#93C5FD"
           strokeWidth="1.4"
           fill="none"
           strokeLinecap="round"
@@ -114,7 +114,7 @@ function MiniChart() {
       <Breathing period={6} className="absolute right-0 top-0 -translate-y-1/2 translate-x-1/2">
         <span
           className="block h-2 w-2 rounded-full bg-accent-light"
-          style={{ boxShadow: '0 0 8px 2px rgba(165, 180, 252, 0.7)' }}
+          style={{ boxShadow: '0 0 8px 2px rgba(147, 197, 253, 0.7)' }}
         />
       </Breathing>
     </div>

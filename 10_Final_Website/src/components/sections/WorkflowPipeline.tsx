@@ -139,7 +139,7 @@ function PipelineConnector({
         {flowActive && (
           <motion.span
             className="absolute top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent-light"
-            style={{ boxShadow: '0 0 8px 2px rgba(165, 180, 252, 0.55)' }}
+            style={{ boxShadow: '0 0 8px 2px rgba(147, 197, 253, 0.55)' }}
             initial={{ opacity: 0 }}
             animate={{ left: ['0%', '100%'], opacity: [0, 1, 1, 0] }}
             transition={transition}
@@ -157,7 +157,7 @@ function PipelineConnector({
         {flowActive && (
           <motion.span
             className="absolute left-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent-light"
-            style={{ boxShadow: '0 0 8px 2px rgba(165, 180, 252, 0.55)' }}
+            style={{ boxShadow: '0 0 8px 2px rgba(147, 197, 253, 0.55)' }}
             initial={{ opacity: 0 }}
             animate={{ top: ['0%', '100%'], opacity: [0, 1, 1, 0] }}
             transition={transition}

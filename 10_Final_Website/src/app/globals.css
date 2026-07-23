@@ -24,15 +24,15 @@
     --color-text-tertiary: 120 129 157;
     --color-text-disabled: 61 68 96;
 
-    /* Accent — Intelligence */
-    --color-accent: 99 102 241;
-    --color-accent-bright: 129 140 248;
-    --color-accent-light: 165 180 252;
-    --color-accent-deep: 79 70 229;
+    /* Accent — Logo azure blue */
+    --color-accent: 59 130 246;
+    --color-accent-bright: 96 165 250;
+    --color-accent-light: 147 197 253;
+    --color-accent-deep: 37 99 235;
 
-    /* Accent — Depth */
-    --color-violet: 139 92 246;
-    --color-violet-bright: 167 139 250;
+    /* Accent — Logo gold */
+    --color-violet: 233 162 59;
+    --color-violet-bright: 244 192 99;
 
     /* Status */
     --color-success: 16 185 129;
@@ -91,7 +91,7 @@
 
   /* Selection */
   ::selection {
-    background: rgba(99, 102, 241, 0.3);
+    background: rgba(59, 130, 246, 0.3);
     color: #FFFFFF;
   }
 
@@ -104,16 +104,16 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(99, 102, 241, 0.2);
+    background: rgba(59, 130, 246, 0.2);
     border-radius: 999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(99, 102, 241, 0.4);
+    background: rgba(59, 130, 246, 0.4);
   }
 
   /* Focus rings — accessible but not ugly */
   :focus-visible {
-    outline: 2px solid rgba(99, 102, 241, 0.6);
+    outline: 2px solid rgba(59, 130, 246, 0.6);
     outline-offset: 2px;
     border-radius: 6px;
   }
@@ -209,7 +209,7 @@
   }
 
   .text-accent-gradient {
-    background: linear-gradient(135deg, #818CF8 0%, #A78BFA 50%, #06B6D4 100%);
+    background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 35%, #F4C063 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -218,8 +218,8 @@
 
   .text-glow {
     text-shadow:
-      0 0 20px rgba(99, 102, 241, 0.4),
-      0 0 60px rgba(99, 102, 241, 0.2);
+      0 0 20px rgba(59, 130, 246, 0.4),
+      0 0 60px rgba(59, 130, 246, 0.2);
   }
 
   /* ---------- Glass surfaces ---------- */
@@ -261,13 +261,13 @@
 
   .card-interactive:hover {
     background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(99, 102, 241, 0.35);
+    border-color: rgba(59, 130, 246, 0.35);
     transform: translateY(-4px);
     box-shadow:
       0 1px 0 rgba(255, 255, 255, 0.08) inset,
       0 20px 60px rgba(0, 0, 0, 0.4),
-      0 0 0 1px rgba(99, 102, 241, 0.1),
-      0 0 40px rgba(99, 102, 241, 0.1);
+      0 0 0 1px rgba(59, 130, 246, 0.1),
+      0 0 40px rgba(59, 130, 246, 0.1);
   }
 
   /* Feature card with mouse-tracked highlight */
@@ -284,7 +284,7 @@
     inset: 0;
     background: radial-gradient(
       circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-      rgba(99, 102, 241, 0.08),
+      rgba(59, 130, 246, 0.08),
       transparent 60%
     );
     opacity: 0;
@@ -297,7 +297,7 @@
   }
 
   .feature-card:hover {
-    border-color: rgba(99, 102, 241, 0.2);
+    border-color: rgba(59, 130, 246, 0.2);
   }
 
   /* ---------- Badge / pill ---------- */
@@ -321,15 +321,15 @@
   }
 
   .badge-ai {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
-    color: #A5B4FC;
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(233, 162, 59, 0.15));
+    color: #93C5FD;
+    border: 1px solid rgba(59, 130, 246, 0.2);
   }
 
   .badge-new {
-    background: rgba(99, 102, 241, 0.12);
-    color: #818CF8;
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    background: rgba(59, 130, 246, 0.12);
+    color: #60A5FA;
+    border: 1px solid rgba(59, 130, 246, 0.2);
   }
 
   /* ---------- Buttons ---------- */
@@ -342,16 +342,16 @@
     background: rgb(var(--color-accent));
     color: #FFFFFF;
     box-shadow:
-      0 0 0 1px rgba(99, 102, 241, 0.5),
-      0 4px 16px rgba(99, 102, 241, 0.35),
+      0 0 0 1px rgba(59, 130, 246, 0.5),
+      0 4px 16px rgba(59, 130, 246, 0.35),
       inset 0 1px 0 rgba(255, 255, 255, 0.15);
   }
   .btn-primary:hover {
     background: rgb(var(--color-accent-bright));
     transform: translateY(-1px);
     box-shadow:
-      0 0 0 1px rgba(99, 102, 241, 0.7),
-      0 8px 24px rgba(99, 102, 241, 0.5),
+      0 0 0 1px rgba(59, 130, 246, 0.7),
+      0 8px 24px rgba(59, 130, 246, 0.5),
       inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
   .btn-primary:active {
@@ -403,27 +403,27 @@
   }
   .input:focus {
     outline: none;
-    border-color: rgba(99, 102, 241, 0.6);
-    background: rgba(99, 102, 241, 0.05);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    border-color: rgba(59, 130, 246, 0.6);
+    background: rgba(59, 130, 246, 0.05);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
   }
 
   .command-input {
     @apply h-14 w-full rounded-xl pl-12 pr-5 text-[15px] font-mono;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(99, 102, 241, 0.3);
+    border: 1px solid rgba(59, 130, 246, 0.3);
     color: #FFFFFF;
     backdrop-filter: blur(20px);
     box-shadow:
-      0 0 40px rgba(99, 102, 241, 0.1),
+      0 0 40px rgba(59, 130, 246, 0.1),
       inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
 
   /* ---------- Aurora background ---------- */
   .aurora-bg {
     background:
-      radial-gradient(ellipse 80% 60% at 20% 20%, rgba(99, 102, 241, 0.18), transparent 60%),
-      radial-gradient(ellipse 60% 50% at 80% 30%, rgba(139, 92, 246, 0.12), transparent 60%),
+      radial-gradient(ellipse 80% 60% at 20% 20%, rgba(59, 130, 246, 0.18), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 30%, rgba(233, 162, 59, 0.12), transparent 60%),
       radial-gradient(ellipse 100% 60% at 50% 100%, rgba(6, 182, 212, 0.06), transparent 70%);
   }
 
@@ -466,7 +466,7 @@
     background: linear-gradient(
       90deg,
       transparent,
-      rgba(165, 180, 252, 0.55),
+      rgba(147, 197, 253, 0.55),
       transparent
     );
     pointer-events: none;
@@ -496,8 +496,8 @@
      toward the edges. Used as the "intelligence canvas" backdrop. */
   .signature-grid {
     background-image:
-      linear-gradient(rgba(165, 180, 252, 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(165, 180, 252, 0.04) 1px, transparent 1px);
+      linear-gradient(rgba(147, 197, 253, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(147, 197, 253, 0.04) 1px, transparent 1px);
     background-size: 64px 64px;
     mask-image: radial-gradient(ellipse 60% 50% at 50% 50%, #000 30%, transparent 80%);
     -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 50%, #000 30%, transparent 80%);

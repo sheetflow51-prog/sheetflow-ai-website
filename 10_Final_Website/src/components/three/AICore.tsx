@@ -62,7 +62,7 @@ function Core() {
         <icosahedronGeometry args={[0.95, 3]} />
         <meshStandardMaterial
           color="#12152A"
-          emissive="#5B6CFF"
+          emissive="#3B82F6"
           emissiveIntensity={0.8}
           roughness={0.15}
           metalness={0.4}
@@ -71,7 +71,7 @@ function Core() {
       {/* Wireframe overlay at 1.05× scale — opposing counter-rotation creates depth */}
       <mesh ref={wireRef}>
         <icosahedronGeometry args={[1.0, 1]} />
-        <meshBasicMaterial color="#818CF8" wireframe transparent opacity={0.15} />
+        <meshBasicMaterial color="#60A5FA" wireframe transparent opacity={0.15} />
       </mesh>
     </group>
   );
@@ -130,8 +130,8 @@ function Scene() {
   return (
     <>
       {/* Three-point lighting: indigo key · violet fill · cyan rim (spec §2.6) */}
-      <pointLight position={[-4, 4, 3]} intensity={1.2} color="#5B6CFF" />
-      <pointLight position={[4, -4, 2]} intensity={0.6} color="#9A6CFF" />
+      <pointLight position={[-4, 4, 3]} intensity={1.2} color="#3B82F6" />
+      <pointLight position={[4, -4, 2]} intensity={0.6} color="#F0B24A" />
       <pointLight position={[0, -3, -2]} intensity={0.35} color="#6CC8FF" />
 
       {/* Core — no Float wrapper (Float counts as a 3rd active motion) */}
@@ -142,9 +142,9 @@ function Scene() {
         Adjacent rings in opposing directions at ~0.05 rad/s.
         Using per-frame delta × speed to get ~0.05 rad/s at 60fps: 0.05 / 60 ≈ 0.00083.
       */}
-      <OrbitalRing radius={2.0} count={120} speed={0.00083}  color="#A5B4FC" size={0.012} />
-      <OrbitalRing radius={2.8} count={180} speed={-0.00083} color="#818CF8" size={0.009} />
-      <OrbitalRing radius={3.8} count={240} speed={0.00083}  color="#5B6CFF" size={0.007} />
+      <OrbitalRing radius={2.0} count={120} speed={0.00083}  color="#93C5FD" size={0.012} />
+      <OrbitalRing radius={2.8} count={180} speed={-0.00083} color="#60A5FA" size={0.009} />
+      <OrbitalRing radius={3.8} count={240} speed={0.00083}  color="#3B82F6" size={0.007} />
 
       {/* Bloom: emissive only — threshold 0.85, intensity 0.7 (spec §2.6) */}
       <EffectComposer multisampling={0}>

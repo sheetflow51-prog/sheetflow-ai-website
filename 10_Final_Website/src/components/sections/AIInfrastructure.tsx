@@ -99,7 +99,7 @@ export function AIInfrastructure() {
               <div
                 className="absolute inset-0 -m-12 rounded-full"
                 style={{
-                  background: 'radial-gradient(circle, rgba(99,102,241,0.4), transparent 70%)',
+                  background: 'radial-gradient(circle, rgba(59, 130, 246,0.4), transparent 70%)',
                   filter: 'blur(20px)',
                 }}
                 aria-hidden="true"
@@ -110,7 +110,7 @@ export function AIInfrastructure() {
                 <div
                   className="relative flex h-28 w-28 items-center justify-center rounded-full border border-accent-bright/40 bg-surface-1/80 backdrop-blur-xl"
                   style={{
-                    boxShadow: '0 0 40px rgba(99,102,241,0.5), inset 0 1px 0 rgba(255,255,255,0.1)',
+                    boxShadow: '0 0 40px rgba(59, 130, 246,0.5), inset 0 1px 0 rgba(255,255,255,0.1)',
                   }}
                 >
                   <div className="text-center">
@@ -157,8 +157,8 @@ export function AIInfrastructure() {
                   y1="50"
                   x2={x}
                   y2={y}
-                  stroke={isHovered ? 'rgba(165, 180, 252, 0.9)' : 'rgba(129, 140, 248, 0.15)'}
-                  strokeWidth={isHovered ? '0.35' : '0.15'}
+                  stroke={isHovered ? 'rgba(147, 197, 253, 0.95)' : 'rgba(96, 165, 250, 0.4)'}
+                  strokeWidth={isHovered ? '0.45' : '0.22'}
                   initial={{ pathLength: 0, opacity: 0 }}
                   animate={inView ? { pathLength: 1, opacity: 1 } : { pathLength: 0, opacity: 0 }}
                   transition={{
@@ -171,8 +171,28 @@ export function AIInfrastructure() {
               );
             })}
 
+            {/* Persistent connection ports — a lit dot at every node where its
+                line terminates, so each box reads as wired to the core even at
+                rest. Sits under the translucent pill and glows through it. */}
+            {INTEGRATIONS.map((name, i) => {
+              const { x, y } = nodePosition(i, INTEGRATIONS.length);
+              const isHovered = hovered === i;
+              return (
+                <motion.circle
+                  key={`port-${name}`}
+                  cx={x}
+                  cy={y}
+                  r={isHovered ? '0.8' : '0.5'}
+                  fill={isHovered ? '#93C5FD' : '#60A5FA'}
+                  initial={{ opacity: 0 }}
+                  animate={inView ? { opacity: isHovered ? 1 : 0.75 } : { opacity: 0 }}
+                  transition={{ opacity: { duration: 0.4, delay: 0.35 + i * 0.03 }, r: { duration: 0.2 } }}
+                />
+              );
+            })}
+
             {/* Live signal — travels from the core to a node and back on a
-                loop. Only every 3rd node animates by default (plus whichever
+                loop. Only every 5th node animates by default (plus whichever
                 node is hovered) — with 19 integrations, animating all of them
                 at once was the main cause of the reported lag. This keeps the
                 "living data" feeling at a fraction of the animation cost. */}
@@ -194,7 +214,7 @@ export function AIInfrastructure() {
                     // re-fires; only r/fill (plain props) updated instantly.
                     key={`pulse-${name}-${isHovered}`}
                     r={isHovered ? '0.7' : '0.45'}
-                    fill={isHovered ? '#C7D2FE' : '#818CF8'}
+                    fill={isHovered ? '#BFDBFE' : '#60A5FA'}
                     initial={{ opacity: 0 }}
                     animate={{
                       cx: [50, x],
@@ -236,8 +256,8 @@ export function AIInfrastructure() {
                 onMouseEnter={() => setHovered(i)}
                 onMouseLeave={() => setHovered(null)}
               >
-                <div className="rounded-full border border-white/10 bg-surface-2/60 px-3 py-1.5 backdrop-blur-md transition-all hover:border-accent/40 hover:bg-surface-2/90">
-                  <span className="text-[11px] font-medium text-white/85">{name}</span>
+                <div className="rounded-full border border-accent/45 bg-surface-2/70 px-3 py-1.5 shadow-[0_0_16px_rgba(59,130,246,0.18)] backdrop-blur-md transition-all hover:border-accent-bright/80 hover:bg-accent/15 hover:shadow-[0_0_30px_rgba(59,130,246,0.42)]">
+                  <span className="text-[11px] font-medium text-white/90">{name}</span>
                 </div>
               </motion.div>
             );

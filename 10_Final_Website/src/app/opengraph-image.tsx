@@ -32,7 +32,7 @@ export default async function OpengraphImage() {
             position: 'absolute',
             inset: 0,
             background:
-              'radial-gradient(ellipse 80% 60% at 20% 20%, rgba(99,102,241,0.35), transparent 60%), radial-gradient(ellipse 60% 50% at 80% 30%, rgba(139,92,246,0.22), transparent 60%), radial-gradient(ellipse 100% 60% at 50% 100%, rgba(6,182,212,0.12), transparent 70%)',
+              'radial-gradient(ellipse 80% 60% at 20% 20%, rgba(59, 130, 246,0.35), transparent 60%), radial-gradient(ellipse 60% 50% at 80% 30%, rgba(233, 162, 59,0.22), transparent 60%), radial-gradient(ellipse 100% 60% at 50% 100%, rgba(6,182,212,0.12), transparent 70%)',
             display: 'flex',
           }}
         />
@@ -74,7 +74,7 @@ export default async function OpengraphImage() {
             <span style={{ color: '#FFFFFF' }}>Stop doing the busywork.</span>
             <span
               style={{
-                background: 'linear-gradient(135deg, #818CF8 0%, #A78BFA 50%, #06B6D4 100%)',
+                background: 'linear-gradient(135deg, #60A5FA 0%, #F4C063 50%, #06B6D4 100%)',
                 backgroundClip: 'text',
                 color: 'transparent',
               }}
@@ -131,8 +131,8 @@ export default async function OpengraphImage() {
               ...pos,
               width: 28,
               height: 28,
-              borderTop: '2px solid rgba(99,102,241,0.65)',
-              borderLeft: '2px solid rgba(99,102,241,0.65)',
+              borderTop: '2px solid rgba(59, 130, 246,0.65)',
+              borderLeft: '2px solid rgba(59, 130, 246,0.65)',
               display: 'flex',
             }}
           />

@@ -122,7 +122,7 @@ export default function ParticleField({
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(165, 180, 252, ${p.alpha})`;
+        ctx.fillStyle = `rgba(147, 197, 253, ${p.alpha})`;
         ctx.fill();
       }
 
@@ -138,7 +138,7 @@ export default function ParticleField({
             if (dist < 120) {
               const opacity = (1 - dist / 120) * 0.18;
               ctx.beginPath();
-              ctx.strokeStyle = `rgba(129, 140, 248, ${opacity})`;
+              ctx.strokeStyle = `rgba(96, 165, 250, ${opacity})`;
               ctx.lineWidth = 0.6;
               ctx.moveTo(a.x, a.y);
               ctx.lineTo(b.x, b.y);

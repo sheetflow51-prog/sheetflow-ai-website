@@ -50,7 +50,7 @@ export function SectionHandoff() {
           className="absolute inset-0"
           style={{
             background:
-              'linear-gradient(90deg, transparent, rgba(129,140,248,0.5) 50%, transparent)',
+              'linear-gradient(90deg, transparent, rgba(96, 165, 250,0.5) 50%, transparent)',
             opacity: glow,
             filter: 'blur(2px)',
           }}

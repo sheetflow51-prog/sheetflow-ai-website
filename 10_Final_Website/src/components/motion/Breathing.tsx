@@ -45,9 +45,9 @@ export function Breathing({
       : prop === 'glow'
         ? {
             filter: [
-              `drop-shadow(0 0 12px rgba(129,140,248,${0.3 - amount * 2}))`,
-              `drop-shadow(0 0 18px rgba(129,140,248,${0.3 + amount * 4}))`,
-              `drop-shadow(0 0 12px rgba(129,140,248,${0.3 - amount * 2}))`,
+              `drop-shadow(0 0 12px rgba(96, 165, 250,${0.3 - amount * 2}))`,
+              `drop-shadow(0 0 18px rgba(96, 165, 250,${0.3 + amount * 4}))`,
+              `drop-shadow(0 0 12px rgba(96, 165, 250,${0.3 - amount * 2}))`,
             ],
           }
         : { scale: [1, 1 + amount, 1] };

@@ -1,6 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useStore } from '@/lib/store';
 import { prefersReducedMotion } from '@/lib/utils';
@@ -53,56 +54,31 @@ export default function LoadingScreen() {
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           aria-hidden="true"
         >
-          <div className="relative flex flex-col items-center gap-8">
-            {/* Logo mark — drawn by SVG */}
-            <motion.svg
-              width="56"
-              height="56"
-              viewBox="0 0 56 56"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="overflow-visible"
-            >
-              <motion.path
-                d="M14 18 L42 18 M14 28 L42 28 M14 38 L42 38"
-                stroke="url(#bootGrad)"
-                strokeWidth="2"
-                strokeLinecap="round"
-                initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: 1 }}
-                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              />
-              <motion.circle
-                cx="28"
-                cy="28"
-                r="22"
-                stroke="url(#bootGrad)"
-                strokeWidth="1"
-                fill="none"
-                initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: 0.6 }}
-                transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-              />
-              <defs>
-                <linearGradient id="bootGrad" x1="0" y1="0" x2="56" y2="56">
-                  <stop offset="0%" stopColor="#818CF8" />
-                  <stop offset="100%" stopColor="#A78BFA" />
-                </linearGradient>
-              </defs>
-            </motion.svg>
-
-            {/* Wordmark */}
+          <div className="relative flex flex-col items-center gap-7">
+            {/* Brand logo — scales up and settles as the system boots */}
             <motion.div
-              className="font-display text-2xl font-semibold tracking-tight"
-              initial={{ opacity: 0, y: 8, filter: 'blur(8px)' }}
-              animate={
-                stage >= 1
-                  ? { opacity: 1, y: 0, filter: 'blur(0px)' }
-                  : { opacity: 0, y: 8, filter: 'blur(8px)' }
-              }
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="relative"
+              initial={{ opacity: 0, scale: 0.82, filter: 'blur(10px)' }}
+              animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
             >
-              SheetFlow<span className="text-accent-bright">.</span>AI
+              {/* Soft brand glow behind the mark */}
+              <div
+                className="absolute inset-0 -m-8 rounded-full"
+                style={{
+                  background: 'radial-gradient(circle, rgba(59,130,246,0.4), transparent 70%)',
+                  filter: 'blur(24px)',
+                }}
+                aria-hidden="true"
+              />
+              <Image
+                src="/logo.jpg"
+                alt="SheetFlow"
+                width={112}
+                height={112}
+                priority
+                className="relative rounded-full"
+              />
             </motion.div>
 
             {/* Status + progress */}

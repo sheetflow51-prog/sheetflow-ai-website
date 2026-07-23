@@ -69,7 +69,7 @@ export default function AmbientBackground() {
         style={{
           transform: 'translate3d(-20%, -20%, 0)',
           background:
-            'radial-gradient(ellipse 70% 50% at 50% 50%, rgba(99, 102, 241, 0.26), transparent 62%)',
+            'radial-gradient(ellipse 70% 50% at 50% 50%, rgba(59, 130, 246, 0.26), transparent 62%)',
         }}
       />
       {/* Violet aurora — counter-positioned, cursor-reactive. */}
@@ -79,7 +79,7 @@ export default function AmbientBackground() {
         style={{
           transform: 'translate3d(20%, 20%, 0)',
           background:
-            'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(139, 92, 246, 0.16), transparent 62%)',
+            'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(233, 162, 59, 0.16), transparent 62%)',
         }}
       />
       {/* Cyan horizon — static "signal-info" moment anchored at the bottom edge. */}

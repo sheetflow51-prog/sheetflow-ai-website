@@ -47,15 +47,15 @@ const config: Config = {
         },
         // Intelligence accent
         accent: {
-          DEFAULT: '#6366F1',
-          bright: '#818CF8',
-          light: '#A5B4FC',
-          deep: '#4F46E5',
-          glow: 'rgba(99, 102, 241, 0.15)',
+          DEFAULT: '#3B82F6',
+          bright: '#60A5FA',
+          light: '#93C5FD',
+          deep: '#2563EB',
+          glow: 'rgba(59, 130, 246, 0.15)',
         },
         violet: {
-          DEFAULT: '#8B5CF6',
-          bright: '#A78BFA',
+          DEFAULT: '#E9A23B',
+          bright: '#F4C063',
         },
         // Status
         signal: {
@@ -106,20 +106,20 @@ const config: Config = {
         '144': '36rem',
       },
       boxShadow: {
-        'glow-sm': '0 0 20px rgba(99, 102, 241, 0.15)',
-        'glow': '0 0 40px rgba(99, 102, 241, 0.2)',
-        'glow-lg': '0 0 80px rgba(99, 102, 241, 0.3)',
-        'glow-violet': '0 0 60px rgba(139, 92, 246, 0.25)',
+        'glow-sm': '0 0 20px rgba(59, 130, 246, 0.15)',
+        'glow': '0 0 40px rgba(59, 130, 246, 0.2)',
+        'glow-lg': '0 0 80px rgba(59, 130, 246, 0.3)',
+        'glow-violet': '0 0 60px rgba(233, 162, 59, 0.25)',
         'card': '0 1px 0 rgba(255,255,255,0.05) inset, 0 8px 24px rgba(0,0,0,0.3)',
-        'card-hover': '0 1px 0 rgba(255,255,255,0.08) inset, 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(99,102,241,0.1), 0 0 40px rgba(99,102,241,0.1)',
+        'card-hover': '0 1px 0 rgba(255,255,255,0.08) inset, 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(59, 130, 246,0.1), 0 0 40px rgba(59, 130, 246,0.1)',
         'inner-highlight': '0 1px 0 rgba(255,255,255,0.08) inset',
       },
       backgroundImage: {
-        'aurora': 'radial-gradient(ellipse 80% 60% at 20% 20%, rgba(99,102,241,0.18), transparent 60%), radial-gradient(ellipse 60% 50% at 80% 30%, rgba(139,92,246,0.12), transparent 60%), radial-gradient(ellipse 100% 60% at 50% 100%, rgba(6,182,212,0.08), transparent 70%)',
+        'aurora': 'radial-gradient(ellipse 80% 60% at 20% 20%, rgba(59, 130, 246,0.18), transparent 60%), radial-gradient(ellipse 60% 50% at 80% 30%, rgba(233, 162, 59,0.12), transparent 60%), radial-gradient(ellipse 100% 60% at 50% 100%, rgba(6,182,212,0.08), transparent 70%)',
         'grid-fade': 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)',
         'gradient-headline': 'linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.55) 100%)',
-        'gradient-accent': 'linear-gradient(135deg, #818CF8 0%, #A78BFA 50%, #06B6D4 100%)',
-        'gradient-radial-glow': 'radial-gradient(circle at center, rgba(99,102,241,0.25), transparent 60%)',
+        'gradient-accent': 'linear-gradient(135deg, #3B82F6 0%, #60A5FA 35%, #F4C063 100%)',
+        'gradient-radial-glow': 'radial-gradient(circle at center, rgba(59, 130, 246,0.25), transparent 60%)',
       },
       keyframes: {
         'pulse-live': {

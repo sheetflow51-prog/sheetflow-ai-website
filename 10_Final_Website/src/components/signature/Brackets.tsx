@@ -33,7 +33,7 @@ export function Brackets({
   inset = 16,
   size = 18,
   thickness = 1,
-  color = 'rgba(165, 180, 252, 0.45)',
+  color = 'rgba(147, 197, 253, 0.45)',
   animate = true,
   corners = ['tl', 'tr', 'bl', 'br'],
   className,
