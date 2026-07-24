@@ -11,6 +11,7 @@ import CustomCursor from '@/components/providers/CustomCursor';
 import LoadingScreen from '@/components/providers/LoadingScreen';
 import ScrollProgress from '@/components/providers/ScrollProgress';
 import AmbientBackground from '@/components/providers/AmbientBackground';
+import ParticleField from '@/components/providers/ParticleField';
 import NoiseTexture from '@/components/providers/NoiseTexture';
 import GsapProvider from '@/components/providers/GsapProvider';
 import AudioProvider from '@/components/providers/AudioProvider';
@@ -214,6 +215,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Awakening />
           <CustomCursor />
           <AmbientBackground />
+          {/* Site-wide living wallpaper: the geometric data-network that drifts
+              on a flow-field and reacts to the cursor (repulsion), behind every
+              section. Reduced-motion users get a static frame (component
+              early-returns). One fixed canvas — replaces the old per-section
+              instances so the whole page feels alive, not just the hero. */}
+          <ParticleField fixed reactive className="z-0 opacity-80" />
           <NoiseTexture />
           <ScrollProgress />
           <SmoothScroll>

@@ -6,7 +6,6 @@ import { motion } from 'framer-motion';
 import { Sparkles, Play } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import ParticleField from '@/components/providers/ParticleField';
 import { Magnetic } from '@/components/motion/Magnetic';
 import { Parallax } from '@/components/motion/Parallax';
 import { Brackets } from '@/components/signature/Brackets';
@@ -49,7 +48,6 @@ export function Hero() {
     <section className="relative isolate min-h-[100svh] overflow-hidden pt-24 pb-20 md:pt-36 md:pb-32">
       {/* Layered backgrounds */}
       <div className="absolute inset-0 -z-10 signature-grid opacity-50" aria-hidden="true" />
-      <ParticleField className="-z-10" reactive />
 
       {/* Signature L-bracket frame — recurring brand motif (see VISUAL_DNA § 10.2) */}
       <Brackets inset={32} size={22} animate />

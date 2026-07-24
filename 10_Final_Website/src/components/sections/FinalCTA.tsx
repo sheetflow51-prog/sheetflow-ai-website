@@ -5,7 +5,6 @@ import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import ParticleField from '@/components/providers/ParticleField';
 import { Magnetic } from '@/components/motion/Magnetic';
 import { Brackets } from '@/components/signature/Brackets';
 import { Trace } from '@/components/signature/Trace';
@@ -76,8 +75,6 @@ export function FinalCTA() {
         )}
       </div>
 
-      {/* Particle field */}
-      <ParticleField className="opacity-60" reactive />
 
       {/* Signature L-bracket frame — closes the brand memory loop with the hero (VISUAL_DNA § 10.2) */}
       <Brackets inset={32} size={22} animate />
