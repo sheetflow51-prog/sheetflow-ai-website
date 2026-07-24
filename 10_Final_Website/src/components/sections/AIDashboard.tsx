@@ -180,7 +180,7 @@ export function AIDashboard() {
             rotates inside this gutter → no horizontal page scroll.
           */}
           <motion.div
-            className="relative pb-6 pl-0 md:pb-10 md:px-14"
+            className="relative pb-6 pl-0 md:px-14 md:pb-16 md:pt-16"
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-10%' }}
@@ -233,10 +233,11 @@ export function AIDashboard() {
                 />
               </GlassCard>
 
-              {/* Floating signal card — hidden on mobile; pulled inward (-right-6)
-                  so it reads as depth without clipping past the column edge. */}
+              {/* Floating signal card — peeks from ABOVE the card's top edge
+                  (mostly outside) so it can never cover the header row, at any
+                  column width. Hidden on mobile. */}
               <motion.div
-                className="absolute hidden -right-6 -top-8 w-[260px] md:block"
+                className="absolute hidden -top-[74px] right-2 w-[230px] md:block"
                 initial={{ opacity: 0, x: 30, y: -10 }}
                 whileInView={{ opacity: 1, x: 0, y: 0 }}
                 viewport={{ once: true }}
@@ -261,10 +262,10 @@ export function AIDashboard() {
                 </GlassCard>
               </motion.div>
 
-              {/* Floating alert card — hidden on mobile; pulled inward (-left-8)
-                  to stay clear of the column's left edge. */}
+              {/* Floating alert card — peeks from BELOW the card's bottom edge
+                  (mostly outside) so it clears all interior content. */}
               <motion.div
-                className="absolute hidden -bottom-6 -left-8 w-[240px] md:block"
+                className="absolute hidden -bottom-[58px] left-2 w-[220px] md:block"
                 initial={{ opacity: 0, x: -30, y: 20 }}
                 whileInView={{ opacity: 1, x: 0, y: 0 }}
                 viewport={{ once: true }}
