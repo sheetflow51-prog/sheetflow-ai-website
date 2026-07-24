@@ -1,6 +1,5 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Play } from 'lucide-react';
@@ -13,14 +12,6 @@ import { Trace } from '@/components/signature/Trace';
 import { useAnalytics } from '@/lib/hooks/useAnalytics';
 import { BOOKING_URL } from '@/lib/contact';
 import { prefersReducedMotion } from '@/lib/utils';
-
-// 3D core is heavy → ssr: false + lazy.
-// IntelligenceCore upgrades to a Spline scene when NEXT_PUBLIC_SPLINE_SCENE_HERO
-// is set; otherwise falls back to the R3F AICore.
-const IntelligenceCore = dynamic(() => import('@/components/three/IntelligenceCore'), {
-  ssr: false,
-  loading: () => null,
-});
 
 const reveal = {
   hidden: { opacity: 0, y: 32, filter: 'blur(8px)' },
@@ -58,8 +49,18 @@ export function Hero() {
         scale={1.04}
         className="pointer-events-none absolute inset-0 -z-10 mx-auto flex items-center justify-center opacity-90"
       >
-        <div className="aspect-square h-[80vh] max-h-[820px] w-auto max-w-[820px]">
-          <IntelligenceCore scene="hero" disableInteraction skipOnTouch />
+        <div className="aspect-square h-[80vh] max-h-[820px] w-auto max-w-[820px] overflow-hidden rounded-[36px]">
+          <video
+            className="h-full w-full object-cover"
+            src="/videos/hero-core.mp4"
+            poster="/posters/spline_hero_v1.0.svg"
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            aria-hidden="true"
+          />
         </div>
       </Parallax>
 

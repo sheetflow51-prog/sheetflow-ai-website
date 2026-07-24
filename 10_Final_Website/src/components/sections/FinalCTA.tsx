@@ -1,6 +1,5 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -11,8 +10,6 @@ import { Trace } from '@/components/signature/Trace';
 import { useAnalytics } from '@/lib/hooks/useAnalytics';
 import { BOOKING_URL } from '@/lib/contact';
 import { prefersReducedMotion } from '@/lib/utils';
-
-const IntelligenceCore = dynamic(() => import('@/components/three/IntelligenceCore'), { ssr: false });
 
 export function FinalCTA() {
   const { track } = useAnalytics();
@@ -96,7 +93,19 @@ export function FinalCTA() {
         className="pointer-events-none absolute -right-40 top-1/2 -z-10 hidden h-[700px] w-[700px] -translate-y-1/2 lg:block"
         style={{ scale: coreScale, opacity: coreOpacity }}
       >
-        <IntelligenceCore scene="cta" disableInteraction skipOnTouch />
+        <div className="h-full w-full overflow-hidden rounded-[40px]">
+          <video
+            className="h-full w-full object-cover"
+            src="/videos/cta-core.mp4"
+            poster="/posters/spline_cta_v1.0.svg"
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="none"
+            aria-hidden="true"
+          />
+        </div>
       </motion.div>
 
       {/* Edge vignette — darkens as the closing scene approaches */}
