@@ -52,7 +52,7 @@ export function Hero() {
         <div className="aspect-square h-[80vh] max-h-[820px] w-auto max-w-[820px] overflow-hidden rounded-[36px]">
           <video
             className="h-full w-full object-cover"
-            src="/videos/hero-core.mp4"
+            src="/videos/cta-core.mp4"
             poster="/posters/spline_hero_v1.0.svg"
             autoPlay
             loop

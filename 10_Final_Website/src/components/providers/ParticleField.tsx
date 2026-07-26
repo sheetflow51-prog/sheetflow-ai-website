@@ -56,9 +56,12 @@ export default function ParticleField({
       canvas.style.width = `${rect.width}px`;
       canvas.style.height = `${rect.height}px`;
       ctx.scale(dpr, dpr);
+      // Capped low: this is now a single site-wide, always-on fixed canvas,
+      // and the connection pass below is O(n²). 130 keeps the network legible
+      // while roughly quartering per-frame pair checks vs. the old 260 cap.
       const count = Math.min(
         Math.floor(rect.width * rect.height * density),
-        260,
+        130,
       );
       particles = new Array(count).fill(0).map(() => ({
         x: Math.random() * rect.width,
@@ -143,8 +146,8 @@ export default function ParticleField({
             const dx = a.x - b.x;
             const dy = a.y - b.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 120) {
-              const opacity = (1 - dist / 120) * 0.18 * shimmer;
+            if (dist < 100) {
+              const opacity = (1 - dist / 100) * 0.18 * shimmer;
               ctx.beginPath();
               ctx.strokeStyle = `rgba(96, 165, 250, ${opacity})`;
               ctx.lineWidth = 0.6;

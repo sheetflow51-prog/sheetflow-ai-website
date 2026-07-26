@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { MessageCircle, Users, CalendarClock, Workflow, CreditCard } from 'lucide-react';
+import { MessageCircle, Users, CalendarClock, Workflow, CreditCard, Boxes } from 'lucide-react';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { Breathing } from '@/components/motion/Breathing';
 import { prefersReducedMotion } from '@/lib/utils';
@@ -54,6 +54,13 @@ const BRANCHES: Branch[] = [
     Icon: CreditCard,
     tint: 'text-violet',
     tools: ['Stripe', 'QuickBooks'],
+  },
+  {
+    id: 'more',
+    label: 'Custom & More',
+    Icon: Boxes,
+    tint: 'text-accent-light',
+    tools: ['Notion', 'Google Drive', 'Telegram', 'Webhooks', '+40 more'],
   },
 ];
 
@@ -116,17 +123,10 @@ export function AIInfrastructure() {
           </div>
         </div>
 
-        {/* BRANCHES — a responsive grid so every card aligns perfectly. On lg a
-            single row reads as branches spreading from the trunk above. */}
+        {/* BRANCHES — a responsive grid so every card aligns perfectly (root →
+            trunk → balanced 2×3 grid of branch cards). */}
         <div className="relative">
-          {/* Distributor line (lg only): a horizontal rail the branch cards
-              hang from, visually continuing the trunk. Decorative. */}
-          <div
-            className="pointer-events-none absolute left-[8%] right-[8%] top-0 hidden h-px bg-gradient-to-r from-transparent via-accent-bright/30 to-transparent lg:block"
-            aria-hidden="true"
-          />
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5 lg:gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {BRANCHES.map((b, i) => {
               const Icon = b.Icon;
               return (
@@ -138,16 +138,6 @@ export function AIInfrastructure() {
                   viewport={{ once: true, margin: '-10%' }}
                   transition={{ duration: 0.6, delay: 0.1 * i, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  {/* connector stub + node dot rising to the distributor (lg) */}
-                  <span
-                    className="absolute -top-3 left-1/2 hidden h-3 w-px -translate-x-1/2 bg-accent-bright/30 lg:block"
-                    aria-hidden="true"
-                  />
-                  <span
-                    className="absolute -top-[3px] left-1/2 hidden h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-accent-bright shadow-[0_0_8px_rgba(96,165,250,0.9)] lg:block"
-                    aria-hidden="true"
-                  />
-
                   {/* branch header */}
                   <div className="flex items-center gap-2.5">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5">

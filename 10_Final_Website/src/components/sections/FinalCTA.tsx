@@ -93,19 +93,16 @@ export function FinalCTA() {
         className="pointer-events-none absolute -right-40 top-1/2 -z-10 hidden h-[700px] w-[700px] -translate-y-1/2 lg:block"
         style={{ scale: coreScale, opacity: coreOpacity }}
       >
-        <div className="h-full w-full overflow-hidden rounded-[40px]">
-          <video
-            className="h-full w-full object-cover"
-            src="/videos/cta-core.mp4"
-            poster="/posters/spline_cta_v1.0.svg"
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="none"
-            aria-hidden="true"
-          />
-        </div>
+        {/* Lightweight static brand glow (no second video) — keeps the closing
+            scene atmospheric without a second decoding <video> (perf). */}
+        <div
+          className="h-full w-full rounded-full"
+          style={{
+            background:
+              'radial-gradient(circle, rgba(59,130,246,0.35), rgba(233,162,59,0.12) 45%, transparent 70%)',
+            filter: 'blur(30px)',
+          }}
+        />
       </motion.div>
 
       {/* Edge vignette — darkens as the closing scene approaches */}
