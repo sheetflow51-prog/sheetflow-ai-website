@@ -49,9 +49,9 @@ export function Hero() {
         scale={1.04}
         className="pointer-events-none absolute inset-0 -z-10 mx-auto flex items-center justify-center opacity-90"
       >
-        <div className="aspect-square h-[80vh] max-h-[820px] w-auto max-w-[820px] overflow-hidden rounded-[36px]">
+        <div className="aspect-square h-[80vh] max-h-[820px] w-auto max-w-[820px] overflow-hidden rounded-[36px] opacity-50">
           <video
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover blur-[2px] brightness-[0.6]"
             src="/videos/cta-core.mp4"
             poster="/posters/spline_hero_v1.0.svg"
             autoPlay
@@ -70,7 +70,7 @@ export function Hero() {
         aria-hidden="true"
         style={{
           background:
-            'radial-gradient(ellipse 60% 60% at 50% 60%, transparent 30%, rgba(6,6,8,0.6) 75%, rgba(6,6,8,0.95) 100%)',
+            'radial-gradient(ellipse 72% 78% at 50% 48%, rgba(6,6,8,0.58) 0%, rgba(6,6,8,0.4) 42%, rgba(6,6,8,0.82) 76%, rgba(6,6,8,0.97) 100%)',
         }}
       />
 
@@ -94,7 +94,7 @@ export function Hero() {
         </motion.h1>
 
         <motion.p
-          className="mx-auto mt-6 max-w-2xl text-balance text-[17px] leading-[1.55] text-ink-300 md:mt-7 md:text-xl"
+          className="mx-auto mt-6 max-w-2xl text-balance text-[17px] leading-[1.55] text-ink-200 [text-shadow:0_2px_16px_rgba(6,6,8,0.85)] md:mt-7 md:text-xl"
           initial="hidden"
           animate="show"
           variants={reveal}
