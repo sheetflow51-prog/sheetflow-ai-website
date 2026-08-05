@@ -192,14 +192,17 @@ export function AIDashboard() {
             <TiltCard max={6} lift={10} glow={0.14} className="relative">
               {/* Main dashboard card */}
               <GlassCard variant="strong" className="relative overflow-hidden">
+                {/* This card is a product preview, not a customer account. The
+                    figures below are sample data chosen to show the layout, so
+                    the header says so rather than implying a live tenant. */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Badge variant="live">Live</Badge>
+                    <Badge variant="plain">Product preview</Badge>
                     <span className="font-mono text-[10px] uppercase tracking-widest text-ink-400">
-                      This Week · Overview
+                      Weekly Overview
                     </span>
                   </div>
-                  <span className="font-mono text-[10px] text-ink-400">Updated 2s ago</span>
+                  <span className="font-mono text-[10px] text-ink-400">Sample data</span>
                 </div>
 
                 <div className="mt-6 grid grid-cols-2 gap-6">

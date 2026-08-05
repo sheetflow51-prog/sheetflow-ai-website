@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Sparkles, Play } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
@@ -12,6 +13,7 @@ import { Trace } from '@/components/signature/Trace';
 import { useAnalytics } from '@/lib/hooks/useAnalytics';
 import { BOOKING_URL } from '@/lib/contact';
 import { prefersReducedMotion } from '@/lib/utils';
+import { publishedTrustLogos } from '@/content/proof';
 
 const reveal = {
   hidden: { opacity: 0, y: 32, filter: 'blur(8px)' },
@@ -23,10 +25,13 @@ const reveal = {
   }),
 };
 
-const TRUST_LOGOS = ['NORTH CLINIC', 'OAKWOOD REALTY', 'BRIGHTPATH', 'SUMMIT COACHING', 'LUMEN AGENCY', 'KINETIK'];
-
 export function Hero() {
   const { track } = useAnalytics();
+
+  /* Client logos require written usage permission from each business. Until
+     that exists the strip does not render at all — an empty or placeholder
+     logo row in the hero reads as a broken asset, not as honesty. */
+  const logos = publishedTrustLogos();
 
   // Continuous ambient motion mounts only after hydration and only when the
   // visitor hasn't requested reduced motion.
@@ -164,31 +169,35 @@ export function Hero() {
           Free 30-min audit. No commitment. Built for SMBs, agencies & service businesses.
         </motion.div>
 
-        {/* Trust strip */}
-        <motion.div
-          className="mt-14 flex w-full max-w-3xl flex-col items-center gap-4 md:mt-20"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 1.2 }}
-        >
-          <p className="text-[10px] uppercase tracking-[0.18em] text-ink-400">
-            Trusted by growing businesses
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 grayscale sm:gap-x-10">
-            {TRUST_LOGOS.map((name) => (
-              <span
-                key={name}
-                className="font-display text-[12px] font-semibold tracking-[0.18em] text-white/70 sm:text-[13px]"
-              >
-                {name}
-              </span>
-            ))}
-          </div>
-        </motion.div>
+        {/* Trust strip — renders only for logos with granted permission. */}
+        {logos.length > 0 && (
+          <motion.div
+            className="mt-14 flex w-full max-w-3xl flex-col items-center gap-4 md:mt-20"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 1.2 }}
+          >
+            <p className="text-[10px] uppercase tracking-[0.18em] text-ink-400">
+              Trusted by growing businesses
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 sm:gap-x-10">
+              {logos.map((logo) => (
+                <Image
+                  key={logo.slug}
+                  src={logo.src}
+                  alt={logo.name}
+                  width={logo.width}
+                  height={logo.height}
+                  className="h-5 w-auto opacity-60 transition-opacity duration-300 hover:opacity-90"
+                />
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* Signature Trace — recurring memory motif under the trust strip */}
         <motion.div
-          className="mt-8 md:mt-10"
+          className={logos.length > 0 ? 'mt-8 md:mt-10' : 'mt-14 md:mt-20'}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.6, duration: 0.6 }}
