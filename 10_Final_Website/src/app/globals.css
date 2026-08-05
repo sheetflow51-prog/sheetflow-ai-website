@@ -31,8 +31,19 @@
     --color-accent-deep: 37 99 235;
 
     /* Accent — Logo gold */
-    --color-violet: 233 162 59;
-    --color-violet-bright: 244 192 99;
+    --color-gold: 233 162 59;
+    --color-gold-bright: 244 192 99;
+    --color-gold-deep: 196 131 42;
+
+    /* @deprecated Aliases of --color-gold-*. The 0920b03 rebrand repurposed the
+       violet token to hold gold values; the name no longer describes the
+       colour. Use --color-gold-* in new code. */
+    --color-violet: var(--color-gold);
+    --color-violet-bright: var(--color-gold-bright);
+
+    /* Cyan — horizon light, gradient end-stop and rim aurora only */
+    --color-cyan: 6 182 212;
+    --color-cyan-bright: 34 211 238;
 
     /* Status */
     --color-success: 16 185 129;

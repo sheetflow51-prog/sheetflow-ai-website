@@ -53,9 +53,26 @@ const config: Config = {
           deep: '#2563EB',
           glow: 'rgba(59, 130, 246, 0.15)',
         },
+        // Gold — the logo's second brand colour. Gradient-mid and fill-aurora.
+        gold: {
+          DEFAULT: '#E9A23B',
+          bright: '#F4C063',
+          deep: '#C4832A',
+        },
+        /**
+         * @deprecated Alias of `gold`, kept so existing `violet-*` classes keep
+         * resolving. The 0920b03 rebrand moved the palette to the logo's blue +
+         * gold and repurposed this token to hold gold values, leaving the name
+         * describing a colour it no longer contains. Use `gold-*` in new code.
+         */
         violet: {
           DEFAULT: '#E9A23B',
           bright: '#F4C063',
+        },
+        // Cyan — horizon light. Gradient end-stop and rim aurora only.
+        cyan: {
+          DEFAULT: '#06B6D4',
+          bright: '#22D3EE',
         },
         // Status
         signal: {
