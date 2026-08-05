@@ -1,0 +1,41 @@
+# SheetFlow v2 — repository-root ignore rules
+#
+# The Next.js app in 10_Final_Website/ carries its own .gitignore for
+# framework-local artifacts. This file covers the repository as a whole so
+# build output and local noise cannot be committed from any directory.
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# Build output
+.next/
+out/
+build/
+*.tsbuildinfo
+
+# Deployment provider
+.vercel/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment — .env.example is tracked on purpose and must stay tracked.
+# Do not broaden this to `.env*`, which would swallow it.
+.env
+.env.local
+.env.*.local
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+*.swp
+*.pem
+
+# Test output
+/coverage

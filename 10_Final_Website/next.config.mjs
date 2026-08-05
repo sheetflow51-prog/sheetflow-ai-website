@@ -4,12 +4,9 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   productionBrowserSourceMaps: false,
-  // ESLint is run as a separate CI gate (npm run lint).
-  // Disabling during build avoids double-running and prevents
-  // the build from failing on lint warnings in Vercel's build pipeline.
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // No `eslint` key. Next 16 removed built-in linting from `next build` and
+  // reports the key as an unrecognized option. ESLint remains a separate CI
+  // gate via `npm run lint` / `npm run preflight`.
   // TypeScript type errors from @react-three/fiber@8 types vs React 19 types are suppressed.
   // The JS runtime is correct; these are type-definition gaps in R3F 8 that R3F 9 resolves.
   typescript: {
@@ -23,23 +20,17 @@ const nextConfig = {
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60 * 60 * 24 * 30,
   },
-  webpack: (config) => {
-    config.module.rules.push({
-      test: /\.(glsl|vs|fs|vert|frag)$/,
-      exclude: /node_modules/,
-      use: ['raw-loader'],
-    });
-    // `@splinetool/react-spline` is ESM-only and its `exports` field
-    // declares only `types` + `import` (no `default`/`require`/`node`).
-    // Explicitly admitting `import` (plus `default` as a defensive fallback)
-    // makes the resolver accept the ESM entry without changing how the package
-    // is consumed.
-    config.resolve = config.resolve ?? {};
-    config.resolve.conditionNames = Array.from(
-      new Set([...(config.resolve.conditionNames ?? []), 'import', 'default']),
-    );
-    return config;
-  },
+  // No `webpack()` override. Next 16 runs Turbopack by default, and a webpack
+  // config with no matching turbopack config is a hard build error. Both rules
+  // that used to live here were webpack-specific and are no longer needed:
+  //
+  //   • a raw-loader rule for .glsl/.vs/.fs/.vert/.frag — the project contains
+  //     no shader files of any kind, so the rule never matched anything.
+  //   • a `resolve.conditionNames` patch admitting 'import'/'default' for the
+  //     ESM-only @splinetool/react-spline — that worked around webpack's
+  //     resolver. Turbopack honours the `exports` `import` condition natively,
+  //     and `transpilePackages` below remains the actual load-bearing mechanism.
+  //
   // Route the Spline packages through Next's loader chain so the
   // ESM-only sources are normalised for both server and client bundles.
   // Combined with `ssr: false` on the dynamic import in SplineScene.tsx,

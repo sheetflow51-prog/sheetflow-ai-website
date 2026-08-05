@@ -21,7 +21,8 @@ export function ensureGsapRegistered() {
 
 /**
  * Brand easing curves — use these instead of inline cubic-beziers.
- * Names mirror the motion philosophy in 05_Motion_References/.
+ * Names mirror the motion philosophy in
+ * Documentation/Archive/05_Motion_References/.
  */
 function installCustomEases() {
   if (easesInstalled || typeof window === 'undefined') return;
