@@ -2,154 +2,110 @@
 
 ## Current Milestone
 
-M00 — Foundation. Restructuring, index repair, and build repair **complete and
-staged**, awaiting founder review. Not committed.
+M01
 
 ## Current Status
 
-Governance resolved: the seven governing documents are maintained externally in
-the founder's Claude CoWork project, are approved and immutable, and are
-deliberately absent from this repository. `Documentation/Approved/` holds a
-pointer only — no contents reproduced.
+**Ready.**
 
-The approved archive-only restructuring is complete. Two follow-on repairs
-requested after review are also complete:
+M00 is closed, committed, tagged `v2-m00-foundation`, and pushed to
+`origin/feat/m00-foundation`. The full verification suite is green and the
+working tree is clean.
 
-- **`MASTER_INDEX.md` is repaired.** All 30 link targets broken by the archive
-  move now resolve. Only link targets changed; no prose was rewritten.
-- **The build system is repaired.** `npm run build` now exits 0 with no manual
-  flags, on Next 16's default Turbopack.
-
-The full verification suite is green. One commit exists (Hero legibility); all
-other work remains staged for founder review.
+M01 has **not** been started, scoped, or planned. Its definition lives in the
+external Execution Contract (Claude CoWork). Awaiting founder authorisation
+before any M01 work begins.
 
 ## Completed Tasks
 
-**Committed**
+None for M01 — not yet started.
 
-- `5e8ef5d` — `fix(hero): raise headline legibility over background video`.
-  Subhead contrast on `void #060608` improves from ~8.4:1 to ~14.9:1.
-
-**Staged, not committed**
-
-- Created `Documentation/Approved/` with a governance pointer README.
-- Created `Documentation/Archive/`; moved 11 inert reference folders into it
-  (118 files, all rename-detected at 100% similarity — zero content drift).
-- Archived 3 legacy deploy scripts to `Documentation/Archive/legacy_scripts/`.
-- Created root `.gitignore` (none previously existed) and `CHANGELOG.md`.
-- Repointed one stale path comment in `10_Final_Website/src/lib/gsap.ts`.
-- **Repaired 30 link targets in `MASTER_INDEX.md`** (30 lines changed, +660
-  bytes = 30 × the 22-character `Documentation/Archive/` prefix, confirming no
-  prose was touched).
-- **Repaired `10_Final_Website/next.config.mjs`** (−9 lines net): removed the
-  dead `webpack()` override and the Next-16-invalid `eslint` key.
-
-## Verification
-
-Full suite, re-run after all repairs:
-
-| Check | Result |
-|---|---|
-| `npm run type-check` | **Pass** — exit 0 |
-| `npm run lint` | **Pass** — exit 0, 9 warnings (unchanged, none new) |
-| `npm run build` | **Pass** — exit 0, 19.8s, no flags, 8/8 routes |
-| Rename integrity | 118/118 at R100 — byte-identical, history preserved |
-| Tracked file count | 228 → 235 (+7 new, 0 lost) |
-| `MASTER_INDEX.md` links | 30/30 resolve on disk; 0 broken |
-| `.gitignore` shadowing | None — no tracked file newly ignored |
-| `.env.example` still tracked | Yes |
-| `.eslintrc.json` retained | Yes — untouched per decision 6 |
-| Vercel root `10_Final_Website/` | Path unchanged; only config + 1 comment edited |
-
-Build-time warnings remaining (all pre-existing, none introduced):
-- Workspace-root inference from a stray 81-byte `C:\Users\pc\package-lock.json`
-  (outside this repository — not touched).
-- Custom `Cache-Control` on `/_next/static/:path*` — intentional, set by
-  `headers()` in `next.config.mjs`.
-- Edge runtime disables static generation for one route.
+M00's completed task list is recorded in `CHANGELOG.md` and sealed at tag
+`v2-m00-foundation`.
 
 ## Current Blockers
 
-**None.** Both prior blockers are resolved:
-
-- ~~B1 — `npm run build` fails~~ → **RESOLVED.** Root cause: Next 16 defaults to
-  Turbopack, and a `webpack()` override with no `turbopack` config is a hard
-  error. The override was dead weight — its raw-loader rule matched a file type
-  the project does not contain (zero `.glsl/.vs/.fs/.vert/.frag` files), and its
-  `resolve.conditionNames` patch was a webpack-resolver workaround that
-  Turbopack does not need (`transpilePackages` is the load-bearing mechanism,
-  per the comment in `SplineScene.tsx`). Deleting it lets the default path work.
-- ~~B2 — 30 broken links in `MASTER_INDEX.md`~~ → **RESOLVED.**
+None.
 
 ## Open Decisions
 
-**D1 — `raw-loader` is now an unused devDependency.** Its only consumer was the
-deleted webpack rule. Removal is recommended but requires founder approval for
-package changes; left in place.
+Carried forward from M00. None block the start of M01, but all remain unresolved.
 
-**D2 — Deployment reconciliation.** Deferred by founder instruction.
-`origin/main` (`92057ca`) and local remain diverged 13 ahead / 1 behind.
+**D1 — Fabricated marketing claims are still live in production.** Two distinct
+generations exist: the deployed set (`Strata Ops` $847K, `Northfield Capital`
+92%, `Parallel Logistics` 4s, MRR +18.4%) and the newer set in the working tree
+(`North Clinic` +38%, `Oakwood Realty` <1 min, `Summit Coaching` 12 hrs) under a
+kicker reading "Real Results". Shipping the repository as-is would swap one set
+of invented claims for another, not remove them. **Highest-priority open item.**
 
-**D3 — Fabricated claims.** Unresolved and still live in two generations.
-Carried forward; no action taken in M00.
+**D2 — Deployment reconciliation.** `origin/main` (`92057ca`) and the M00 branch
+remain diverged: 13 ahead, 1 behind. No fast-forward path exists. Resolution
+strategy (merge / rebase / discard `92057ca`) is undecided. A force push would
+be required to overwrite `origin/main` and has not been attempted.
 
-**D4 — `.eslintrc.json`** retained per decision 6, but inert: ESLint 9.39.4 uses
-flat config and ignores it. Slated for the tooling milestone.
+**D3 — No Vercel control-plane access.** `list_teams` returns empty and
+`list_projects` fails, so the deployment cannot be disabled, rolled back, or
+reconfigured programmatically. Any Vercel-side change is manual.
 
-**D5 — `.claude/` directory** untracked and not ignored. Not in the approved
-manifest; left as-is.
+**D4 — `raw-loader` is now an unused devDependency.** Its only consumer was the
+webpack rule deleted in M00. Removal requires founder approval for package
+changes.
 
-**D6 — Stray `C:\Users\pc\package-lock.json`** makes Next infer the wrong
-workspace root. Outside the repository; deletion is the founder's call.
+**D5 — `.eslintrc.json`** retained per founder decision, but inert: ESLint
+9.39.4 uses flat config and ignores it. Slated for the tooling milestone.
+
+**D6 — `typescript.ignoreBuildErrors: true`** remains set in `next.config.mjs`,
+so `next build` does not gate on type errors. `npm run type-check` is the real
+gate and passes independently.
+
+**D7 — Stray `C:\Users\pc\package-lock.json`** (81 bytes) makes Next infer the
+wrong workspace root. Outside the repository; deletion is the founder's call.
+
+**D8 — `.claude/` directory** is untracked and not ignored.
 
 ## Next Milestone
 
-M01 — not started, not scoped, gated on founder approval.
+M02 — not defined in this repository.
 
 ## Latest Commit
 
-`5e8ef5d` — `fix(hero): raise headline legibility over background video`
-on `feat/m00-foundation`. All other work staged and uncommitted.
+`5b3b8ba` — `chore(m00): archive reference material, repair index links and build`
+
+Branch `feat/m00-foundation`, tagged `v2-m00-foundation`. A follow-up commit
+finalises `CHANGELOG.md` and this file.
 
 ## Current Lighthouse
 
-Not measured. Requires serving the production build and a browser audit harness,
-which is out of M00 scope. No dated measurement exists anywhere in the
-repository — treat `DEPLOYMENT.md`'s targets as aspirations, not results.
+Not measured. Requires serving the production build and a browser audit harness.
+No dated measurement exists anywhere in the repository — treat `DEPLOYMENT.md`'s
+targets as aspirations, not results.
 
 ## Current Bundle Size
 
-From the green Turbopack build: **13 client JS chunks, 1.00 MB raw
-(uncompressed)** in `.next/static/chunks`.
+**13 client JS chunks, 1.00 MB raw (uncompressed)** in `.next/static/chunks`,
+from the green Turbopack build.
 
-For comparison, the webpack build produced 28 chunks / 1.23 MB raw — Turbopack
-emits fewer, smaller chunks here.
-
-Neither figure is comparable to the ~165 kB "First Load JS" in `DEPLOYMENT.md`,
-which is a per-route gzipped metric. Next 16 no longer prints per-route sizes in
-default build output, so that documented baseline remains **unverified**.
+Not comparable to the ~165 kB "First Load JS" figure in `DEPLOYMENT.md`, which is
+a per-route gzipped metric. Next 16 no longer prints per-route sizes in default
+build output, so that documented baseline remains **unverified**.
 
 ## Notes
 
-**Root before → after:** 15 directories → 5 (`10_Final_Website/`, `brand-os/`,
-`docs/`, `Documentation/`, `.claude/`).
+**Repository shape:** root holds 5 directories — `10_Final_Website/` (the Next.js
+app and Vercel root), `Documentation/` (`Approved/` pointer + `Archive/`),
+`brand-os/`, `docs/`, `.claude/`.
 
-**Deliberately unchanged:** `10_Final_Website/` stays put to protect the Vercel
-Root Directory setting, which cannot be edited without dashboard access
-(`list_teams` empty, `list_projects` fails).
+**Test infrastructure:** none exists. No unit, integration, or e2e harness. This
+is the single largest structural gap carried into M01.
 
-**`DEPLOY_FINAL.log` was not deleted.** Deletion was proposed but never
-explicitly approved, and the file is untracked (unrecoverable if removed). The
-root `.gitignore` covers `*.log`, so it is ignored in place.
+**Accessibility:** the M00 Hero change lifted subhead contrast on `void #060608`
+from ~8.4:1 to ~14.9:1. No systematic audit has been performed.
 
-**Self-review — debt carried, not silently fixed:** 9 ESLint warnings (7
-`react-hooks/set-state-in-effect`, deliberately downgraded with rationale in
-`eslint.config.mjs`; 2 unused disable directives in `layout.tsx`); dual ESLint
-config; `typescript.ignoreBuildErrors: true` still set in `next.config.mjs`,
-which means the build does not gate on type errors — `npm run type-check` is the
-real gate and passes independently; no test infrastructure of any kind.
+**Lint debt:** 9 warnings — 7 `react-hooks/set-state-in-effect` (deliberately
+downgraded with documented rationale in `eslint.config.mjs`) and 2 unused disable
+directives in `layout.tsx`.
 
 ---
 
-*No conflict with the Constitution or Decision Register was detected. All work
-staged and awaiting founder review. M01 not begun.*
+*No conflict with the Constitution or Decision Register was detected during M00.
+M01 not begun; awaiting founder authorisation.*
