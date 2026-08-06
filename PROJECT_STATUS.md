@@ -25,15 +25,23 @@ M00's completed task list is recorded in `CHANGELOG.md` and sealed at tag
 
 ## Current Blockers
 
-**B1 — The four founder-named engagements cannot be published.** R3S Realty,
-Saraswati Dental, Sparc Physiotherapy and Elevate WPC were named as real
-projects, but no corroborating record exists in this repository or the
-surrounding workspace. The only trace is `R3S-n8n-workflow.json`, referenced in
-`Sheetflow_Strategy/01_Market_and_Audience_Analysis.md` but absent from disk,
-and "Saraswati" appearing incidentally inside a scraped Google-Maps *prospect*
-CSV of Agra dental clinics. They are held as `pending` entries carrying no
-claims. Each needs its engagement scope, a measured outcome with methodology,
-and written permission before it can render.
+**B1 — Engagements corroborated; permission still required.** Vercel access
+(gained 2026-08-06) confirms three of the four named projects are real, deployed
+sites under the founder's own account: `sparc-physiotherapy.vercel.app`,
+`saraswati-dental-clinic.vercel.app` and `r3s-realty.vercel.app`, all returning
+HTTP 200. `r3s-realty-agra.vercel.app` is unreachable; "Elevate WPC" is not on
+Vercel.
+
+This resolves the *existence* question that blocked B1 — these are not invented.
+It does not resolve publication. Nothing shows these are paying clients, that
+any outcome was measured, or that anyone consented to be named. Both "customer
+proof" and "portfolio permission" are founder decisions, so the entries remain
+`pending` and render nothing.
+
+**To unblock:** for each project, written permission to name it publicly, plus
+either a measured outcome with stated methodology or agreement to show the work
+with no metric attached. The architecture already supports the second case —
+a case study can carry a summary without a metric.
 
 ## Open Decisions
 

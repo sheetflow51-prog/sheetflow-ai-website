@@ -15,6 +15,7 @@ const NAV_LINKS = [
   { label: 'Reports', href: '#reports' },
   { label: 'Integrations', href: '#integrations' },
   { label: 'Results', href: '#customers' },
+  { label: 'FAQ', href: '#faq' },
 ];
 
 export function Navigation() {

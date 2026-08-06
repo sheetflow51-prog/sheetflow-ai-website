@@ -12,7 +12,7 @@
 | Types | TypeScript 5.6 | `npm run type-check` | ✅ |
 | Lint | ESLint 9 (flat config) | `npm run lint` | ✅ 9 known warnings |
 | Build | Next.js 16.2.6 (Turbopack) | `npm run build` | ✅ 8/8 routes |
-| E2E + a11y | Playwright 1.62 + axe-core 4.12 | `npm run test:e2e` | ✅ 50 tests |
+| E2E + a11y + SEO | Playwright 1.62 + axe-core 4.12 | `npm run test:e2e` | ✅ 70 tests |
 | Lighthouse | lighthouse 13.4 | `npm run audit:lh` | ✅ median of N |
 | CLS attribution | Playwright + PerformanceObserver | `node scripts/probe-cls.mjs` | ✅ |
 | Bundle budget | custom, gzip-accurate | `npm run audit:bundle` | ✅ |
@@ -34,7 +34,8 @@ accessibility and performance numbers describe a build nobody ships.
 | Integration | State | Notes |
 |---|---|---|
 | GitHub | ✅ `gh` 2.96.0 | Repo ops, PRs |
-| Vercel MCP | ⚠️ connected, **no access** | `list_teams` → `{"teams": []}`. Cannot create previews, read build logs, or manage the project. |
+| **Vercel CLI** | ✅ **58.7.0, authenticated** | Logged in as `sheetflow51-prog`, scope `sheetflow51-progs-projects`. Project linked via `.vercel/project.json`. **This is the working path for deployments.** |
+| Vercel MCP | ⛔ **403 Forbidden** | Authenticated to a *different* account than the one owning this project: `Not authorized ... under scope "sheetflow51-progs-projects". You must re-authenticate to this scope.` Re-authorise the claude.ai Vercel connector against that scope to use it. Until then, use the CLI. |
 | Adobe, Figma, Canva | ✅ connected | Not used — DEC-302 makes `logo.png` canonical, so external design tooling would only add drift |
 | Notion, Slack, Gmail, Drive, Calendar, Airtable, Calendly | ✅ connected | Not used by the build |
 | ElevenLabs | ✅ connected | Candidate for the dormant audio system (`public/audio/`) |
@@ -94,10 +95,13 @@ to 69.2 kB, and the atmosphere is no longer on the critical path.
 
 ### Tests
 
-50 passing — desktop + mobile. Smoke, heading order, metadata, anchor
+70 passing — desktop + mobile. Smoke, heading order, metadata, anchor
 integrity, external-link safety, brand-asset serving, DEC-302 compliance,
 fabricated-content guard, axe WCAG 2.1 AA (default + reduced-motion), focus
-indicators, image alt text, 5 viewport overflow checks, tap-target sizing.
+indicators, image alt text, 5 viewport overflow checks, tap-target sizing,
+JSON-LD graph parseability and `@id` resolution, FAQ markup/copy parity,
+answers present without interaction, per-answer anchors, keyboard disclosure,
+`/llms.txt`, `robots.txt` AI-crawler rules, sitemap well-formedness.
 
 ---
 

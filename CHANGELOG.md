@@ -1,5 +1,49 @@
 # SheetFlow v2 Changelog
 
+## Phase C - Answer-Engine Optimization (2026-08-06)
+
+### Added
+
+- **FAQ section** — eight questions, every answer grounded in something the
+  site already states (the six services, the named integrations, the published
+  five-step process, the free-audit offer). No pricing, no timelines, no
+  outcomes, no certifications: none of those are established, and an
+  unverifiable answer here is the first thing an engine quotes.
+- **FAQPage JSON-LD**, generated from the same `content/faq.ts` array the
+  section renders. Google treats FAQ markup that does not appear on the page as
+  spam; one source makes divergence impossible, and a test asserts it.
+- **`/llms.txt`** — a plain-text brief for language models, generated from the
+  same source. Includes explicit citation guidance stating that SheetFlow
+  publishes no customer names, metrics or certifications, so a model asked
+  about results answers "not published" rather than inferring.
+- **Consolidated entity graph.** Organization, WebSite, WebPage and FAQPage now
+  emit as one linked `@graph` with resolvable `@id` references, replacing two
+  unlinked blocks.
+- **`robots.txt` names AI crawlers explicitly** — GPTBot, ClaudeBot,
+  PerplexityBot, Google-Extended, Applebot-Extended and others. Access is
+  unchanged (the wildcard already allowed them); naming them makes any future
+  restriction a visible edit rather than a side effect.
+- **12 new tests** covering graph parseability, `@id` resolution, markup/copy
+  parity, answer presence without interaction, per-answer anchors, keyboard
+  disclosure, and the three machine-readable surfaces.
+
+### Fixed (found by the new tests)
+
+- `<dt>` was nested inside `<summary>`, which is invalid — a `<dl>` requires
+  `<dt>`/`<dd>` as direct children. Two serious axe violations. Rebuilt on
+  headings inside `<details>`, which is valid, adds the questions to the
+  document outline, and keeps answers in the DOM without JavaScript.
+- Two FAQ anchors (`integrations`, `how-it-works`) collided with existing
+  section ids. Duplicate ids are invalid HTML and break anchor navigation.
+  All FAQ ids are now namespaced `faq-*`.
+
+### Infrastructure
+
+Vercel deployment access resolved. The CLI (58.7.0) is authenticated as
+`sheetflow51-prog` and the project is linked; the MCP connector still returns
+403 because it is authenticated to a different account. Documented in
+`TOOLING_MANIFEST.md`.
+
 ## Phase B - Layout Stability and Measurement Rigour (2026-08-06)
 
 ### Fixed

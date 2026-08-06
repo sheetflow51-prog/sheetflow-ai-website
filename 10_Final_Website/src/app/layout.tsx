@@ -16,6 +16,7 @@ import MotionProvider from '@/components/providers/MotionProvider';
 import DeferredAtmosphere from '@/components/providers/DeferredAtmosphere';
 import { Navigation } from '@/components/layout/Navigation';
 import { Footer } from '@/components/layout/Footer';
+import { faqs } from '@/content/faq';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -98,7 +99,6 @@ export const viewport: Viewport = {
 };
 
 const organizationJsonLd = {
-  '@context': 'https://schema.org',
   '@type': 'Organization',
   '@id': `${SITE_URL}/#organization`,
   name: 'SheetFlow AI',
@@ -190,25 +190,73 @@ const organizationJsonLd = {
 };
 
 const websiteJsonLd = {
-  '@context': 'https://schema.org',
   '@type': 'WebSite',
+  '@id': `${SITE_URL}/#website`,
   name: 'SheetFlow AI',
   url: SITE_URL,
+  publisher: { '@id': `${SITE_URL}/#organization` },
+  inLanguage: 'en',
+};
+
+/**
+ * FAQPage — built from the same `faqs` array the visible section renders.
+ *
+ * Google's structured-data guidance requires FAQPage markup to match on-page
+ * content; markup that answers questions the page does not is treated as spam.
+ * Deriving both from one source makes that class of mismatch impossible.
+ *
+ * This is also the page's primary answer-engine surface: AI Overviews,
+ * Perplexity and ChatGPT browsing quote question/answer pairs far more readily
+ * than prose, and they quote them verbatim — which is why every answer in
+ * content/faq.ts is restricted to claims the product can back.
+ */
+const faqJsonLd = {
+  '@type': 'FAQPage',
+  '@id': `${SITE_URL}/#faq`,
+  isPartOf: { '@id': `${SITE_URL}/#website` },
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    '@id': `${SITE_URL}/#${f.id}`,
+    name: f.question,
+    acceptedAnswer: { '@type': 'Answer', text: f.answer },
+  })),
+};
+
+/**
+ * WebPage — ties the homepage to the organisation and names the entity the
+ * page is about. Retrieval systems resolve entities before they resolve
+ * keywords, so stating the subject explicitly is worth more than any phrasing
+ * change in the copy.
+ */
+const webPageJsonLd = {
+  '@type': 'WebPage',
+  '@id': `${SITE_URL}/#webpage`,
+  url: SITE_URL,
+  name: 'SheetFlow AI — AI automation agency for growing businesses.',
+  isPartOf: { '@id': `${SITE_URL}/#website` },
+  about: { '@id': `${SITE_URL}/#organization` },
+  primaryImageOfPage: `${SITE_URL}/brand/raster/lockup-512.png`,
+  inLanguage: 'en',
+};
+
+/** The complete entity graph for the homepage, emitted as one script. */
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@graph': [organizationJsonLd, websiteJsonLd, webPageJsonLd, faqJsonLd],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${display.variable} ${mono.variable}`}>
       <body className="relative bg-void font-sans text-white antialiased">
+        {/* One linked @graph rather than four loose blocks. Every node carries
+            an @id and references the others, so a consumer resolves the whole
+            entity set — organisation, site, page, questions — in a single pass
+            instead of guessing how separate blocks relate. */}
         <script
           type="application/ld+json"
           // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
-        />
-        <script
-          type="application/ld+json"
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
         <MotionProvider>
           <LoadingScreen />

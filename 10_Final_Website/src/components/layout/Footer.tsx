@@ -26,6 +26,10 @@ const FOOTER_GROUPS = [
     links: [
       { label: 'Case Studies', href: '#customers' },
       { label: 'Integrations', href: '#integrations' },
+      { label: 'FAQ', href: '#faq' },
+      // Machine-readable brief for language models. Linked rather than left
+      // to discovery so crawlers that never guess at /llms.txt still find it.
+      { label: 'For AI assistants', href: '/llms.txt' },
     ],
   },
   {

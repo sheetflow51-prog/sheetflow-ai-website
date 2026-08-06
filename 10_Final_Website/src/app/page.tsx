@@ -6,6 +6,7 @@ import { FeatureStorytelling } from '@/components/sections/FeatureStorytelling';
 import { CaseStudy } from '@/components/sections/CaseStudy';
 import { DigitalCraft } from '@/components/sections/DigitalCraft';
 import { AIInfrastructure } from '@/components/sections/AIInfrastructure';
+import { Faq } from '@/components/sections/Faq';
 import { FinalCTA } from '@/components/sections/FinalCTA';
 import { SectionHandoff } from '@/components/signature/SectionHandoff';
 
@@ -27,6 +28,11 @@ export default function HomePage() {
       <DigitalCraft />
       <SectionHandoff />
       <AIInfrastructure />
+      <SectionHandoff />
+      {/* Placed last before the CTA: objections are answered at the moment a
+          visitor is deciding, and the section doubles as the page's
+          answer-engine surface. */}
+      <Faq />
       <FinalCTA />
     </>
   );

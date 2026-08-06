@@ -11,6 +11,32 @@ import AxeBuilder from '@axe-core/playwright';
 
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 
+/**
+ * Freezes every animation and transition at its final state before scanning.
+ *
+ * Without this the suite is flaky: under parallel load the reveal animations
+ * are still in flight when axe runs, and it samples elements mid-fade — an
+ * element at opacity 0.4 fails contrast on its way to passing. The failures
+ * moved between runs and disappeared when the spec ran alone, which is the
+ * signature of a timing artefact rather than a defect.
+ *
+ * Forcing animations to completion tests the state a user actually reads. It
+ * does not weaken the audit: the finished frame is the one that has to pass.
+ */
+async function settle(page: import('@playwright/test').Page) {
+  await page.addStyleTag({
+    content: `*, *::before, *::after {
+      animation-duration: 0s !important;
+      animation-delay: 0s !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0s !important;
+      transition-delay: 0s !important;
+    }`,
+  });
+  // Let framer-motion's JS-driven values land on their targets.
+  await page.waitForTimeout(600);
+}
+
 /** Formats violations so a failure explains itself without opening a report. */
 function summarise(violations: Awaited<ReturnType<AxeBuilder['analyze']>>['violations']) {
   return violations
@@ -24,8 +50,7 @@ function summarise(violations: Awaited<ReturnType<AxeBuilder['analyze']>>['viola
 test.describe('accessibility', () => {
   test('homepage has no WCAG 2.1 AA violations', async ({ page }) => {
     await page.goto('/');
-    // Let the reveal animations settle so nothing is mid-transition.
-    await page.waitForTimeout(1200);
+    await settle(page);
 
     const { violations } = await new AxeBuilder({ page }).withTags(TAGS).analyze();
     expect(violations.length, `\n${summarise(violations)}\n`).toBe(0);
@@ -34,7 +59,7 @@ test.describe('accessibility', () => {
   test('homepage has no violations under prefers-reduced-motion', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/');
-    await page.waitForTimeout(600);
+    await settle(page);
 
     const { violations } = await new AxeBuilder({ page }).withTags(TAGS).analyze();
     expect(violations.length, `\n${summarise(violations)}\n`).toBe(0);

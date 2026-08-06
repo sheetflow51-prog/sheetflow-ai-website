@@ -131,15 +131,39 @@ code.
 
 ## Open founder decisions
 
-**B1 — Four named engagements are unverifiable.** R3S Realty, Saraswati Dental,
-Sparc Physiotherapy, Elevate WPC have no corroborating record in this repo or
-the workspace. Held as `pending`, rendering nothing. Each needs scope, a
-measured outcome with methodology, and written permission.
+**B1 — Three of four named engagements are now CORROBORATED as real work.**
+`vercel project ls` lists them as deployed projects under the founder's own
+Vercel account, and three are live:
+
+| Project | URL | State |
+|---|---|---|
+| Sparc Physiotherapy | `sparc-physiotherapy.vercel.app` | HTTP 200 |
+| Saraswati Dental | `saraswati-dental-clinic.vercel.app` | HTTP 200 |
+| R3S Realty | `r3s-realty.vercel.app` | HTTP 200 |
+| R3S Realty Agra | `r3s-realty-agra.vercel.app` | unreachable |
+| Elevate WPC | — | not on Vercel |
+
+**This establishes existence, not permission.** These are sites the founder
+built; nothing here shows they are paying clients, that outcomes were measured,
+or that anyone consented to be named publicly. Publishing a name or a metric
+still needs founder sign-off — "portfolio permission" and "customer proof" are
+both explicit stop conditions. The entries stay `pending` until then.
+
+What would unblock: for each, written permission to name them, and either a
+measured outcome with methodology or agreement to show the work with no metric
+attached.
 
 **D2 — `origin/main` diverged.** Never reconciled.
 
-**D3 — No Vercel control-plane access.** `list_teams` returns empty. Preview
-deployments cannot be created or verified from here.
+**D3 — RESOLVED for deployment, open for the MCP.** The Vercel **CLI** (58.7.0)
+is installed and authenticated as `sheetflow51-prog`; `.vercel/project.json`
+links the project. Deploy previews with `vercel deploy` from the repo root.
+
+The Vercel **MCP connector** still returns 403: it is authenticated to a
+different account than the one owning this project (`scope
+"sheetflow51-progs-projects"`). Re-authorising the claude.ai connector against
+that scope would restore programmatic access to build logs and project
+settings. Not required for deployments.
 
 **A1 — Is the Spline/3D direction still live?** `src/components/three/` is
 imported by nothing and the bundle carries zero Three.js symbols, yet six
