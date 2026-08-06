@@ -6,37 +6,42 @@ M01
 
 ## Current Status
 
-**Ready.**
+**In progress — awaiting review.**
 
-M00 is closed, committed, tagged `v2-m00-foundation`, and pushed to
-`origin/feat/m00-foundation`. The full verification suite is green and the
-working tree is clean.
+M01 was authorised by the founder and scoped as the production-foundation
+rebuild. The first execution phase is complete, verified, committed, and pushed
+to `origin/feat/m01-foundation`. Working tree clean apart from an untracked
+`.gitignore` edit not made by this milestone.
 
-M01 has **not** been started, scoped, or planned. Its definition lives in the
-external Execution Contract (Claude CoWork). Awaiting founder authorisation
-before any M01 work begins.
+Production deployment has **not** been performed and awaits explicit approval.
 
 ## Completed Tasks
 
-None for M01 — not yet started.
+M01 phase 1 — proof architecture, design-token reconciliation, and an
+accessibility pass. Full detail in `CHANGELOG.md`.
 
 M00's completed task list is recorded in `CHANGELOG.md` and sealed at tag
 `v2-m00-foundation`.
 
 ## Current Blockers
 
-None.
+**B1 — The four founder-named engagements cannot be published.** R3S Realty,
+Saraswati Dental, Sparc Physiotherapy and Elevate WPC were named as real
+projects, but no corroborating record exists in this repository or the
+surrounding workspace. The only trace is `R3S-n8n-workflow.json`, referenced in
+`Sheetflow_Strategy/01_Market_and_Audience_Analysis.md` but absent from disk,
+and "Saraswati" appearing incidentally inside a scraped Google-Maps *prospect*
+CSV of Agra dental clinics. They are held as `pending` entries carrying no
+claims. Each needs its engagement scope, a measured outcome with methodology,
+and written permission before it can render.
 
 ## Open Decisions
 
-Carried forward from M00. None block the start of M01, but all remain unresolved.
-
-**D1 — Fabricated marketing claims are still live in production.** Two distinct
-generations exist: the deployed set (`Strata Ops` $847K, `Northfield Capital`
-92%, `Parallel Logistics` 4s, MRR +18.4%) and the newer set in the working tree
-(`North Clinic` +38%, `Oakwood Realty` <1 min, `Summit Coaching` 12 hrs) under a
-kicker reading "Real Results". Shipping the repository as-is would swap one set
-of invented claims for another, not remove them. **Highest-priority open item.**
+**D1 — RESOLVED.** Every fabricated trust signal has been removed and replaced
+with an architecture that cannot publish an unverified claim. Enforcement lives
+in the type system, not in reviewer discipline: `src/content/proof.ts` gives
+`pending` entries nowhere to put a metric. Production still serves the old
+build until a deployment is approved.
 
 **D2 — Deployment reconciliation.** `origin/main` (`92057ca`) and the M00 branch
 remain diverged: 13 ahead, 1 behind. No fast-forward path exists. Resolution
@@ -63,16 +68,28 @@ wrong workspace root. Outside the repository; deletion is the founder's call.
 
 **D8 — `.claude/` directory** is untracked and not ignored.
 
+**D9 — `violet` token migration.** `violet` is now a deprecated alias holding
+gold values. 34 usages remain on the old name. Migration is mechanical and
+visually inert (both names resolve to identical hex), but has not been done.
+
+**D10 — Systemic small-text contrast.** 14 pre-existing call sites render text
+at 12px or below in `ink-400`, which measures 4.26:1 against the composited
+card surface — below the 4.5:1 WCAG AA floor. Only the instances M01 authored
+were corrected. A dedicated pass is needed.
+
+**D11 — `.gitignore` was modified outside this milestone** (adding `.vercel`
+and `.env*`) and is left unstaged. Sensible, but unattributed.
+
 ## Next Milestone
 
 M02 — not defined in this repository.
 
 ## Latest Commit
 
-`5b3b8ba` — `chore(m00): archive reference material, repair index links and build`
+`e5cbb3b` — `fix(a11y): raise label contrast to AA in the new proof components`
 
-Branch `feat/m00-foundation`, tagged `v2-m00-foundation`. A follow-up commit
-finalises `CHANGELOG.md` and this file.
+Branch `feat/m01-foundation`, pushed to `origin/feat/m01-foundation`. A
+follow-up commit finalises `CHANGELOG.md` and this file.
 
 ## Current Lighthouse
 
@@ -82,8 +99,9 @@ targets as aspirations, not results.
 
 ## Current Bundle Size
 
-**13 client JS chunks, 1.00 MB raw (uncompressed)** in `.next/static/chunks`,
-from the green Turbopack build.
+**13 client JS chunks, 1,048,349 bytes raw (1.00 MB), 321 kB gzipped** in
+`.next/static/chunks`, from the green Turbopack build. Byte-identical to the
+M00 baseline after M01 phase 1.
 
 Not comparable to the ~165 kB "First Load JS" figure in `DEPLOYMENT.md`, which is
 a per-route gzipped metric. Next 16 no longer prints per-route sizes in default
