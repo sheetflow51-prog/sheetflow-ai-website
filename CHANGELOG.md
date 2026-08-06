@@ -1,5 +1,93 @@
 # SheetFlow v2 Changelog
 
+## Phase E — Retraction, and the instrument that earned it (2026-08-07)
+
+### Retracted
+
+**Phase D's headline finding was wrong.** It reported 1,232 ms of steady-state
+blocking against 0 ms under reduced motion, and concluded the decorative motion
+system caused *100% of steady-state blocking*. Both numbers were instrument
+artifacts. Two defects, found by trying to act on the finding:
+
+- **A mount race.** `DeferredAtmosphere` mounts on `load` then
+  `requestIdleCallback(..., {timeout: 3000})`. Both profilers used a hard-coded
+  3,000 ms load/steady boundary — the same instant — so the measurement window
+  opened exactly when the subject appeared. The metric was **bimodal** (~370 ms
+  and ~1,300 ms, almost nothing between), and medians reported whichever mode an
+  arm happened to draw. The same arm scored **−64% and −2% on identical code**.
+
+- **Observer effect.** Sampling at 100 µs is 10,000 samples/second, and that
+  overhead lands inside the tasks being timed. Changing *only* the interval to
+  Chrome's 1,000 µs default moved steady-state blocking from **1,182 ms to
+  555 ms**. Load phase barely moved (488 → 489) — per-task overhead inflates many
+  small tasks, not a few large ones. At one point the sampler reported more
+  blocking time than there was total task time, which is impossible.
+
+An intermediate conclusion — "the `ambient-breathe` scale animation is 64% of
+the cost" — is retracted for the same reason.
+
+### Added
+
+- **`scripts/trace-paint.mjs`** (`npm run trace`, `npm run trace:all`) — splits
+  main-thread time into paint & composite / script / style recalc / layout using
+  CDP `Performance.getMetrics`. These are **cumulative counters, not samples**,
+  so they carry no observer effect. Waits for the atmosphere to mount before
+  timing steady state, which is what removes the race.
+
+### Measured — corrected
+
+Steady state, 4 s idle, atmosphere confirmed mounted, median of 7–9:
+
+| Arm | Total main-thread task | Paint & composite |
+|---|---|---|
+| Motion on | 374 ms | 272 ms (73%) |
+| Reduced motion (no atmosphere) | 246 ms | 224 ms (91%) |
+
+**Paint and compositing are 73–91% of steady state and 76% of load phase** —
+this is the finding that survives, and the one that matters. It is a within-run
+decomposition, immune to both defects. JavaScript is the minority cost, which is
+why three phases of JS optimisation never moved the number.
+
+The atmosphere costs **~128 ms per 4 s (~9% duty cycle)**, not ~40%. The page
+spends 246 ms per 4 s with no atmosphere at all.
+
+Load-phase blocking, 1,000 µs sampling, median of 9: **488 ms** motion on
+(spread 270–6,049) vs **124 ms** reduced motion (spread 32–599).
+
+### Resolved
+
+- **D17 — closed in the negative.** There is no single expensive effect. Every
+  isolating arm measured *higher* than baseline (`no-ambient-anim` +10%,
+  `no-breathe` +11%, `breathe-on-children` +17%, `no-particles` +24%), which is
+  impossible if any were removing real work — invalidating all of them,
+  including the one that had confirmed the hypothesis. The blend-mode theory is
+  **unsupported**: `no-blend` moved nothing.
+
+- **A2 — now answerable, recommendation is to do nothing.** The cost is diffuse
+  and structural: a dark page with several large translucent gradient layers is
+  expensive to composite whether or not it animates. A 9% steady-state duty
+  cycle does not justify weakening the visual signature, and load-phase blocking
+  is better attacked through hydration cost, which has no design consequence.
+
+### Fixed
+
+- **The Playwright timeout was wrong project-wide, not per-spec.** Phase D
+  raised it to 90 s for `a11y.spec.ts`; `seo.spec.ts` then timed out next —
+  "FAQ markup matches the rendered answers exactly", which passes in 8.0 s
+  standalone. Every spec here navigates to a page that is ~75% paint and waits
+  for it to settle, and two device projects run in parallel. Moved to a global
+  `timeout: 90_000` in `playwright.config.ts` and removed the per-spec override,
+  since the default is wrong for the project rather than for one file.
+
+### Changed
+
+- Profiler default sampling interval 100 µs → **1,000 µs**, with a printed
+  warning when lowered. 100 µs remains correct for module attribution; its
+  blocking figures must be ignored.
+- Both profilers split phases on the **observed mount time**, not a fixed 3,000 ms.
+- Both launch Chromium with renderer backgrounding and occlusion detection
+  disabled.
+
 ## Phase D — Toolchain and performance attribution (2026-08-06)
 
 ### Added

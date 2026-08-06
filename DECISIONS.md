@@ -150,25 +150,45 @@ against a preview URL needs either a protection-bypass secret or relaxed
 protection — both security settings, therefore founder decisions. Verification
 currently runs against the identical production build locally.
 
-### D17 — Which paint effect costs the main thread is unproven *(new, 2026-08-06)*
-Profiling established that the decorative motion system causes ~63% of TBT and
-**100% of steady-state blocking** (0 ms across 9 reduced-motion runs, spread
-0–0), and that `(program)` — paint/layout/composite — is ~65% of main-thread
-time.
+### D17 — RESOLVED, in the negative *(opened 2026-08-06, closed 2026-08-07)*
 
-It did **not** establish which effect is responsible. Four narrower experiments
-failed to separate above the noise floor; `no-ambient-anim` scored worse than
-baseline, which is physically impossible and proves the arms were noise-bound.
+**There is no single expensive effect.** The question assumed one existed; the
+measurement says otherwise.
 
-**Leading hypothesis, unconfirmed:** `mix-blend-mode: screen` on the
-full-viewport `ambient-sheen` and `plus-lighter` on the cursor glow in
-`AmbientBackground.tsx`. Blend modes prevent independent compositing and force
-backdrop read-back every frame.
+Steady state, 4 s idle, atmosphere confirmed mounted, CDP counters, median of 7–9:
 
-**Next step is measurement, not code:** a paint-level trace via
-`chrome-devtools` MCP. A CPU profiler cannot see inside `(program)`.
+| Arm | Total main-thread task |
+|---|---|
+| Motion on | 374 ms |
+| Reduced motion (no atmosphere) | 246 ms |
 
-**Do not** delete animation to win a metric before this is answered.
+Every isolating arm measured **higher** than baseline — `no-ambient-anim` +10%,
+`no-breathe` +11%, `breathe-on-children` +17%, `no-particles` +24% — which is
+impossible if any were removing real work. `no-blend`, `no-sheen` and
+`no-backdrop-blur` were equally unseparable. **The blend-mode hypothesis is
+unsupported.**
+
+**Two retractions.** The original D17 entry recorded "~63% of TBT and 100% of
+steady-state blocking". A later pass recorded "the breathing animation is 64% of
+the cost". **Both were instrument artifacts:**
+
+1. A **mount race** — `DeferredAtmosphere` mounts via
+   `requestIdleCallback(..., {timeout: 3000})` and both profilers used a
+   hard-coded 3,000 ms phase boundary, so the measurement window opened exactly
+   when the subject appeared. The metric was bimodal (~370 / ~1,300 ms) and the
+   same arm scored −64% and −2% on identical code.
+2. **Observer effect** — 100 µs sampling inflated steady-state blocking from
+   555 ms to 1,182 ms. Default is now 1,000 µs.
+
+**What stands:** paint and compositing are 73–91% of steady-state and 76% of
+load-phase main-thread time. JavaScript is the minority cost. The atmosphere
+costs ~128 ms per 4 s (~9% duty cycle), and the page spends 246 ms per 4 s with
+no atmosphere at all, 91% of it paint.
+
+**Consequence:** the cost is diffuse and structural — a dark page with several
+large translucent gradient layers is expensive to composite whether or not it
+animates. There is no bug to fix. Reducing it means fewer or smaller translucent
+layers, which is **A2**, a design decision.
 
 ---
 
@@ -198,14 +218,24 @@ conflict (`drei@9` wants `fiber@^8`, project pins `^9`) is what forces
 Removing them retires the direction documented in `SPLINE_SCENE_BRIEF.md`, so
 it is an architectural decision, not a cleanup. **Resolving it also resolves D6.**
 
-### A2 — Does the cinematic identity survive its measured cost? *(new)*
-Follows from **D17**, and only becomes answerable once D17 is.
+### A2 — Does the cinematic identity survive its measured cost? *(now answerable)*
+**D17 closed the way that makes this a design question.** The cost is not one
+fixable effect; it is inherent to the composition — several large translucent
+gradient layers over a dark page, expensive to composite animated or not.
 
-The motion system is the site's visual signature *and* the dominant source of
-main-thread blocking. If the cost turns out to be inherent rather than
-attributable to one fixable effect, the trade — signature against battery,
-jank and INP — is a founder call under `EXPERIENCE_GOVERNANCE.md`, not an
-engineering one.
+**The honest scale, so this is decided on facts rather than dread:** the
+atmosphere costs ~128 ms of main-thread time per 4 s (374 vs 246), about a 9%
+duty cycle. Real, but far smaller than the ~40% an earlier retracted
+measurement implied. Load-phase blocking is the larger gap — 488 ms with the
+atmosphere against 124 ms without — though that compares *having* it to *never
+creating* it, not animating it to freezing it.
 
-Framing it early so that, when the trace lands, the decision is already known
-to be a design decision.
+**The lever, if one is wanted:** fewer or smaller translucent layers, or
+cheaper fills. Not "turn off the animations" — the arms show that buys nothing
+measurable.
+
+**Recommendation: do nothing yet.** A 9% steady-state duty cycle does not
+justify weakening the site's visual signature, and load-phase blocking is
+better attacked through hydration cost (`next` 138 ms, `framer-motion` 90 ms),
+which carries no design consequence at all. Revisit if mobile *field* data —
+not lab numbers — shows INP suffering.

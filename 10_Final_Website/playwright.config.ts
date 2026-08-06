@@ -13,6 +13,25 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests/e2e',
+
+  /**
+   * 90 s, not Playwright's 30 s default.
+   *
+   * Any spec here navigates to a page whose steady-state main thread is ~75%
+   * paint and compositing (see TOOLING_MANIFEST.md), then waits for it to
+   * settle. Standalone those tests take 4–15 s and pass. Run as a full suite —
+   * two device projects, parallel workers, all loading the same heavy page —
+   * they reach 28–38 s and hit the default, which reads as an accessibility or
+   * markup regression that does not exist.
+   *
+   * This was first patched per-spec on a11y, and seo timed out next, which is
+   * the tell that the default is wrong for this project rather than for one
+   * file. 90 s is ~2.4x the worst observed run: enough headroom for a loaded
+   * machine, still short enough that a genuinely wedged test fails rather than
+   * hanging for minutes.
+   */
+  timeout: 90_000,
+
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

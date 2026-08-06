@@ -17,6 +17,8 @@
     "build:profile": "cross-env PROFILE_SOURCEMAPS=true next build",
     "profile": "node scripts/profile-main-thread.mjs",
     "profile:mobile": "cross-env PROFILE_CPU=4 node scripts/profile-main-thread.mjs",
+    "trace": "node scripts/trace-paint.mjs",
+    "trace:all": "cross-env TRACE_EXPERIMENTS=none,no-blend,no-sheen,no-ambient-anim,no-ambient,no-backdrop-blur,no-particles node scripts/trace-paint.mjs",
     "preflight": "npm run type-check && npm run lint && npm run build",
     "verify": "npm run preflight && npm run test:e2e && npm run audit:bundle"
   },

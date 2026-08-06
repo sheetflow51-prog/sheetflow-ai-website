@@ -19,7 +19,8 @@ real data** — a server that starts but has never answered a question is
 | Build | Next.js 16.2.6 (Turbopack) | `npm run build` | ✅ 10 routes |
 | E2E + a11y + SEO | Playwright 1.62 + axe-core 4.12 | `npm run test:e2e` | ✅ 70 tests |
 | Lighthouse | lighthouse 13.4 | `npm run audit:lh` | ✅ median of N |
-| **Main-thread CPU profile** | **CDP + source maps (new)** | **`npm run profile`** | ✅ **median of N, module-attributed** |
+| **Main-thread CPU profile** | **CDP + source maps** | **`npm run profile`** | ✅ **median of N, module-attributed** |
+| **Paint / layout / style split** | **CDP `Performance.getMetrics` (new)** | **`npm run trace`** · **`trace:all`** | ✅ **counters, no observer effect** |
 | CLS attribution | Playwright + PerformanceObserver | `node scripts/probe-cls.mjs` | ✅ |
 | Bundle budget | custom, gzip-accurate | `npm run audit:bundle` | ✅ |
 | Bundle treemap | `@next/bundle-analyzer` | `npm run analyze` | ✅ |
@@ -179,61 +180,83 @@ decisions rather than improve them.
 
 Desktop: FCP 0.4 s · LCP 1.2 s · **TBT ~610 ms** · **CLS 0.000** · SI 3.4 s
 
-### Main-thread profile — first module-level attribution in the project's history
+### Main-thread attribution
 
-`npm run profile`, production build, source-mapped, median of 9, warm-up discarded.
+> **⚠ Corrected 2026-08-07.** An earlier revision of this file reported
+> "1,232 ms of steady-state blocking, 0 ms under reduced motion" and concluded
+> the decorative motion system caused *100% of steady-state blocking*. **That
+> was an instrument artifact and is retracted.** Two defects produced it, both
+> now fixed; the corrected numbers are below. The retraction is kept visible
+> because a wrong number that was believed is more dangerous than no number.
 
-| Arm | Load-phase blocking | Steady-state blocking (3 s, page idle) |
+#### The two defects
+
+**1. A mount race made the metric bimodal.** `DeferredAtmosphere` mounts on
+`load` then `requestIdleCallback(..., {timeout: 3000})`. Both instruments used a
+hard-coded 3,000 ms load/steady boundary — the same instant. Whether the
+atmosphere was animating during "steady state" came down to milliseconds of
+jitter, producing two clean modes (~370 ms and ~1,300 ms) rather than a spread.
+Medians then reported whichever mode an arm happened to draw more of. This is
+how `no-breathe` scored **−64% in one pass and −2% in the next on identical
+code**. Both scripts now split on the observed mount time.
+
+**2. The CPU profiler inflated its own measurement.** Sampling at 100 µs is
+10,000 samples/second, and that overhead lands inside the tasks being measured.
+Changing *only* the interval to Chrome's 1,000 µs default moved steady-state
+blocking from **1,182 ms → 555 ms** on identical code. Load-phase barely moved
+(488 → 489), because it is dominated by a few large tasks rather than many small
+ones — the signature of per-task observer overhead. The default is now 1,000 µs
+and the script warns when it is lowered.
+
+#### Corrected numbers
+
+Steady state, 4 s with the page idle and the atmosphere confirmed mounted.
+Measured with **CDP `Performance.getMetrics` counters**, which do not sample and
+therefore carry no observer effect. Median of 7–9.
+
+| Arm | Total main-thread task | Paint & composite |
 |---|---|---|
-| **Motion on (ships today)** | **453 ms** (spread 233–843) | **1,232 ms** (spread 0–3,428) |
-| **Reduced motion** | **166 ms** (spread 142–596) | **0 ms** (spread 0–0) |
+| Motion on (ships today) | **374 ms** | 272 ms (73%) |
+| Reduced motion (no atmosphere at all) | **246 ms** | 224 ms (91%) |
 
-Two findings, at very different confidence levels.
+**The decorative atmosphere costs ~128 ms per 4 s — roughly a 9% duty cycle,
+not the ~40% previously claimed.** The page burns 246 ms per 4 s even with no
+atmosphere whatsoever, and 91% of that is paint.
 
-**1. The instrument is calibrated.** Load-phase blocking measured 603 ms in one
-5-run pass and 453 ms in a 9-run pass, against Lighthouse's 610 ms TBT. It is
-measuring the same phenomenon Lighthouse reports.
+Load-phase blocking, median of 9 at 1,000 µs sampling: **488 ms** motion on
+(spread 270–6,049) vs **124 ms** reduced motion (spread 32–599), against
+Lighthouse's 610 ms TBT. This gap is robust — reproduced at both sampling rates
+— but it compares *mounting and running the whole atmosphere* against *never
+creating it*, so it is not attributable to animation specifically.
 
-**2. The decorative motion system is the dominant cost — high confidence.**
-Steady-state is the decisive result: with motion on, an idle page blocks the
-main thread for ~1.2 s of every 3 s. With reduced motion, **zero long tasks in
-all nine runs (spread 0–0)**. That is categorical, not marginal. Load-phase
-blocking falls ~63% (453 → 166 ms), reproduced across independent 5-run and
-9-run passes.
+#### What holds
 
-**Lighthouse never sees the steady-state cost**, because TBT stops at
-interactive. It is nonetheless real: battery drain, scroll jank, and INP risk on
-every device that stays on the page.
+**Paint and compositing dominate the main thread.** 76% of load-phase task time
+and 73–91% of steady state. This is a within-run decomposition, unaffected by
+either defect, and it is the finding that matters: **JavaScript is the minority
+cost, which is why three phases of JS optimisation never moved the number.**
 
-### Where the time goes
+Ranked JS self-time, load phase — `next` (hydration) 138 ms, `framer-motion`
+90 ms, turbopack chunk runtime 77 ms, `gsap` 37 ms, `AIDashboard.tsx` 29 ms.
+`ParticleField` no longer appears in the top 20, so the earlier spatial-grid
+rewrite genuinely worked.
 
-`(program)` — paint, layout, style, compositing — is **~65% of the main thread**
-in both phases. JS is the minority cost. Ranked JS self-time, load phase:
+#### What could NOT be shown
 
-| Module | Load | Steady |
-|---|---|---|
-| `next` (React runtime + hydration) | 138 ms | 217 ms |
-| `framer-motion` | 90 ms | 45 ms |
-| turbopack chunk runtime | 77 ms | 52 ms |
-| `gsap` | 37 ms | 17 ms |
-| `src/components/sections/AIDashboard.tsx` | 29 ms | 14 ms |
+**No individual decorative effect is separable from the others.** On the fixed
+instrument, every arm measured *higher* than baseline — `no-ambient-anim` +10%,
+`no-breathe` +11%, `breathe-on-children` +17%, `no-particles` +24% — which is
+impossible if any were removing real work. `no-blend`, `no-sheen` and
+`no-backdrop-blur` were equally unseparable.
 
-`ParticleField` no longer appears in the top 20 — the spatial-grid rewrite
-worked. **The remaining cost is not JavaScript. It is paint.**
+**So D17 is answered in the negative:** there is no single expensive effect to
+find. The earlier "the breathing animation is 64% of the cost" conclusion was
+the mount race, and the "blend modes defeat layer isolation" hypothesis is
+unsupported — `no-blend` moved nothing.
 
-### What could NOT be shown
-
-Four narrower experiments — `no-blend`, `no-sheen`, `no-ambient-anim`,
-`no-backdrop-blur` (`PROFILE_EXPERIMENT=` in the profiler) — **failed to
-separate above the noise floor.** Spreads overlapped completely, and
-`no-ambient-anim` scored *worse* than baseline, which is physically implausible.
-
-**No conclusion may be drawn about which specific effect is responsible.** The
-`mix-blend-mode: screen` sheen and the `plus-lighter` cursor glow remain the
-leading suspects on theory — blend modes defeat layer isolation and force
-backdrop read-back — but that is a hypothesis, not a measurement. Confirming it
-needs a paint-level trace, which is exactly what **chrome-devtools MCP** provides
-and a CPU profiler cannot.
+The remaining paint cost is diffuse: a dark page with several large translucent
+gradient layers is simply expensive to composite, with or without animation.
+Reducing it is a design question (A2), not a bug hunt.
 
 ### Bundle
 
@@ -297,9 +320,19 @@ middleware and no locale config, both verified.
 ## Conventions
 
 - Verification runs against the production build, never `next dev`.
-- **Never report a single run.** Load-phase blocking spans 233–843 ms on an
+- **Never report a single run.** Load-phase blocking spans 270–6,049 ms on an
   unchanged build. Report a median of N with its spread, and treat any delta
   inside the spread as unmeasured.
+- **Prefer counters to samplers.** `Performance.getMetrics` is cumulative and
+  carries no observer effect; a CPU sampler perturbs what it measures, badly at
+  short intervals. When the two disagree, the counter wins.
+- **A bimodal result is a broken instrument, not a noisy one.** Two clean modes
+  mean a race, not variance, and no number of extra runs will fix it. Check
+  what changes between the modes before reaching for a larger N.
+- **Before believing a delta, check the impossible arms.** If removing work
+  makes a number go *up*, the arms are measuring something other than what they
+  claim, and none of them can be trusted — including the one that agreed with
+  the hypothesis.
 - Budgets and thresholds start at the measured baseline and only ratchet up.
 - `public/brand/` is build output. Never hand-edit — see DEC-302.
 - Installs need `--legacy-peer-deps` until the drei/fiber conflict is resolved.

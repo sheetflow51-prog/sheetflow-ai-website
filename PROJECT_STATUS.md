@@ -30,25 +30,32 @@ M00's completed task list is recorded in `CHANGELOG.md` and sealed at tag
 
 ## Headline finding — TBT is paint, not JavaScript
 
-`npm run profile` (CDP CPU profiler + source maps, median of 9):
+Measured with `npm run trace` (CDP `Performance.getMetrics` counters — no
+sampling, no observer effect), 4 s idle, atmosphere confirmed mounted:
 
-| Arm | Load-phase blocking | Steady state (3 s idle) |
+| Arm | Total main-thread task | Paint & composite |
 |---|---|---|
-| Motion on (ships today) | 453 ms (spread 233–843) | 1,232 ms (spread 0–3,428) |
-| Reduced motion | 166 ms (spread 142–596) | **0 ms (spread 0–0)** |
+| Motion on (ships today) | 374 ms | 272 ms (73%) |
+| Reduced motion (no atmosphere) | 246 ms | 224 ms (91%) |
 
-The decorative motion system is **~63% of TBT and 100% of steady-state
-blocking**. `(program)` — paint, layout, compositing — is **~65% of the main
-thread**. Three previous optimisation phases targeted JavaScript, which is the
-minority cost; that is why they did not move the number.
+**Paint and compositing are 73–91% of steady state and 76% of load phase.**
+JavaScript is the minority cost — which is why three previous optimisation
+phases, all of which targeted JavaScript, never moved the number.
 
-**Lighthouse never saw the steady-state cost** because TBT stops at
-interactive. An idle page blocking ~1.2 s of every 3 s still costs battery,
-scroll smoothness and INP.
+The decorative atmosphere costs **~128 ms per 4 s, about a 9% duty cycle**. The
+page spends 246 ms per 4 s with no atmosphere at all.
 
-**Which specific effect is responsible is NOT known** — see D17. Four narrower
-experiments failed to separate above the noise floor. The next step is a
-paint-level trace via chrome-devtools MCP, not a code change.
+**D17 is RESOLVED — in the negative.** There is no single expensive effect. On
+the corrected instrument every isolating arm measured *higher* than baseline,
+which is impossible if any removed real work; the blend-mode hypothesis is
+unsupported. The cost is diffuse and structural, so reducing it is a design
+question (**A2**), not a bug hunt. Current recommendation on A2: **do nothing
+yet** — 9% does not justify weakening the visual signature.
+
+> **⚠ Retraction (2026-08-07).** The previous revision of this section claimed
+> "1,232 ms of steady-state blocking, 0 ms under reduced motion" and "100% of
+> steady-state blocking". That was an instrument artifact — a mount race plus
+> profiler observer effect, both now fixed. Full detail in `TOOLING_MANIFEST.md`.
 
 ## Current Blockers
 

@@ -39,8 +39,22 @@ const CPU_THROTTLE = Number(process.env.PROFILE_CPU ?? 1);
 /** How long to keep sampling after `load`, in ms — long enough to catch deferred work. */
 const SETTLE_MS = Number(process.env.PROFILE_SETTLE ?? 5000);
 
-/** V8's default is 1000µs, which is too coarse to separate modules. */
-const SAMPLE_INTERVAL_US = Number(process.env.PROFILE_INTERVAL ?? 100);
+/**
+ * Sampling interval, µs. Chrome's default is 1000 and that is the default here.
+ *
+ * DO NOT lower this and then quote the blocking-time numbers. Sampling is not
+ * free: at 100µs the profiler takes 10,000 samples a second, and that overhead
+ * lands inside the very tasks being measured. Steady-state blocking measured
+ * 1,182 ms at 100µs and 555 ms at 1000µs on identical code — more than half the
+ * "blocking" was the instrument. Load-phase blocking barely moved (488 vs 489),
+ * because it is dominated by a few large tasks rather than many small ones,
+ * which is exactly the signature of an observer effect on per-task overhead.
+ *
+ * 100µs remains the right choice for *module attribution*, where more samples
+ * mean finer resolution. Use `PROFILE_INTERVAL=100` for the module table and
+ * ignore its long-task figures.
+ */
+const SAMPLE_INTERVAL_US = Number(process.env.PROFILE_INTERVAL ?? 1000);
 
 /**
  * Boundary between "still loading" and "sitting there animating", in ms from
@@ -230,8 +244,19 @@ function sourceMapFor(url) {
 const pad = (s, n) => String(s).padEnd(n);
 const ms = (n) => `${n.toFixed(1)} ms`.padStart(10);
 
+/**
+ * Rendering must not be throttled or backgrounded, or the page under
+ * measurement quietly stops animating. See the same list in trace-paint.mjs.
+ */
+const NO_THROTTLE_ARGS = [
+  '--disable-background-timer-throttling',
+  '--disable-backgrounding-occluded-windows',
+  '--disable-renderer-backgrounding',
+  '--disable-features=CalculateNativeWinOcclusion',
+];
+
 async function runOnce(label) {
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({ args: NO_THROTTLE_ARGS });
   // `PROFILE_REDUCED_MOTION=true` is a controlled experiment, not an accessibility
   // check. Every decorative layer (ParticleField, AmbientBackground, CustomCursor,
   // Parallax, SmoothScroll, DeferredAtmosphere) already gates on this query, so
@@ -271,6 +296,26 @@ async function runOnce(label) {
   await cdp.send('Profiler.start');
 
   await page.goto(URL_, { waitUntil: 'load' });
+
+  /**
+   * The load/steady boundary is where the atmosphere mounts, not a fixed 3,000 ms.
+   *
+   * `DeferredAtmosphere` mounts on `load` then `requestIdleCallback(..., {timeout:
+   * 3000})`, which lands within jitter of a hard-coded 3,000 ms boundary. Steady
+   * state then sometimes included the mount itself and sometimes preceded it,
+   * making the metric bimodal — the same defect found and fixed in
+   * trace-paint.mjs. Splitting on the observed mount time removes the race and
+   * keeps mount cost out of a number labelled "cost paid forever".
+   */
+  let boundaryMs = LOAD_PHASE_MS;
+  try {
+    await page.waitForSelector('.ambient-breathe', { state: 'attached', timeout: 10_000 });
+    await page.waitForTimeout(250);
+    boundaryMs = await page.evaluate(() => performance.now());
+  } catch {
+    // Reduced motion renders no atmosphere; the fixed boundary is then correct.
+  }
+
   await page.waitForTimeout(SETTLE_MS);
 
   const { profile } = await cdp.send('Profiler.stop');
@@ -406,6 +451,12 @@ async function main() {
   const rank = (m) => [...m.entries()].sort((a, b) => b[1] - a[1]);
 
   console.log(`\n  ${mapped}/${mapCache.size} chunks source-mapped`);
+  if (SAMPLE_INTERVAL_US < 1000) {
+    console.log(
+      `  ⚠  Sampling at ${SAMPLE_INTERVAL_US}µs inflates blocking time (observer effect).\n` +
+        `     Trust the module table; ignore the blocking figures below.`,
+    );
+  }
   if (mapped === 0) {
     console.log('  ⚠  No source maps. Rebuild with:  npm run build:profile\n');
   }

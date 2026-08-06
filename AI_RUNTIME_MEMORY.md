@@ -125,6 +125,31 @@ Install, verify with a real `initialize` + `tools/list` handshake, and use it
 next session. A server that starts is *configured*; only one that has answered
 a question is *usable*.
 
+**A bimodal result is a broken instrument, not a noisy one.** Steady-state task
+time clustered at ~370 ms and ~1,300 ms with almost nothing between — two clean
+modes, not a spread. The cause was a race: `DeferredAtmosphere` mounts on `load`
+then `requestIdleCallback(..., {timeout: 3000})`, and both profilers used a
+hard-coded 3,000 ms load/steady boundary, so the measurement window opened at
+the exact instant the thing being measured appeared. The same arm scored −64%
+and −2% on identical code. **No amount of extra runs fixes a race.** When a
+distribution has two peaks, find what differs between them before increasing N.
+
+**The profiler perturbs what it measures.** Sampling at 100 µs is 10,000
+samples/second and that overhead lands inside the tasks being timed. Changing
+only the interval to Chrome's 1,000 µs default moved steady-state blocking from
+1,182 ms to 555 ms on identical code. Load phase barely moved (488 vs 489) —
+per-task overhead inflates many small tasks, not a few large ones, and that
+asymmetry is the tell. Use counters (`Performance.getMetrics`) for magnitudes
+and the sampler only for attribution. **When a sampler and a counter disagree,
+the counter wins** — the sampler once reported more blocking time than there was
+total task time, which is impossible.
+
+**Check the impossible arms before believing the plausible one.** Five
+experiment arms all measured *higher* than baseline while claiming to remove
+work. That is physically impossible, and it invalidated every arm — including
+the one that had confirmed the hypothesis. An experiment that only gets audited
+when it disagrees with you is not an experiment.
+
 **A negation in `.gitignore` is not optional when a rule broadens.** `vercel
 link` appended `.env*` to the repo root, four lines below a comment explicitly
 warning not to do exactly that. It shadowed the tracked `.env.example`, which
@@ -213,48 +238,43 @@ decision, so it has not been taken autonomously.
 
 ## Next
 
-**TBT has been attributed. It is paint, not JavaScript.**
+**TBT is paint, not JavaScript. The decorative layers cost far less than one
+session of this project claimed.**
 
-`npm run profile` (CDP CPU profiler + source maps, median of 9) settles the
-question three previous phases could not:
+Measured with `npm run trace` (CDP `Performance.getMetrics` counters — no
+sampling, no observer effect), 4 s idle, atmosphere confirmed mounted:
 
-| Arm | Load-phase blocking | Steady state (3 s, page idle) |
+| Arm | Total main-thread task | Paint & composite |
 |---|---|---|
-| Motion on (ships today) | 453 ms (spread 233–843) | 1,232 ms (spread 0–3,428) |
-| Reduced motion | 166 ms (spread 142–596) | **0 ms (spread 0–0)** |
+| Motion on (ships today) | 374 ms | 272 ms (73%) |
+| Reduced motion (no atmosphere) | 246 ms | 224 ms (91%) |
 
-Three things follow.
+**Paint and compositing are 73–91% of steady state and 76% of load phase.** JS
+is the minority cost, which is why three phases of JS optimisation never moved
+the number. Ranked JS: `next` (hydration) 138 ms, `framer-motion` 90 ms,
+turbopack runtime 77 ms, `gsap` 37 ms, `AIDashboard` 29 ms. `ParticleField` has
+left the top 20 — the spatial-grid rewrite worked; nothing left to win there.
 
-**The decorative motion system is ~63% of TBT and 100% of steady-state
-blocking.** The steady-state result is categorical — nine runs, zero long tasks,
-zero spread — not a marginal delta inside the noise band.
+**The atmosphere costs ~128 ms per 4 s (374 vs 246), about a 9% duty cycle.**
+An earlier revision of these docs claimed ~1,232 ms and "100% of steady-state
+blocking". That was retracted on 2026-08-07 — see the retraction in
+`TOOLING_MANIFEST.md`. Even with no atmosphere at all the page still spends
+246 ms per 4 s, 91% of it paint.
 
-**Lighthouse cannot see the steady-state cost**, because TBT stops at
-interactive. An idle page blocking ~1.2 s of every 3 s is real regardless:
-battery, scroll jank, INP risk. This was invisible for the project's whole life.
+**No individual effect is separable.** On the fixed instrument every arm
+measured *higher* than baseline (`no-ambient-anim` +10%, `no-breathe` +11%,
+`breathe-on-children` +17%, `no-particles` +24%), which is impossible if any
+were removing real work. The blend-mode hypothesis is **unsupported** —
+`no-blend` moved nothing. D17 is answered in the negative: there is no single
+expensive effect to find.
 
-**`(program)` — paint, layout, style, compositing — is ~65% of the main thread.**
-JS is the minority cost. That is why the prior phases failed: they optimised
-JavaScript. `ParticleField` no longer appears in the top 20, so the spatial-grid
-rewrite genuinely worked and there is nothing left to win there. Ranked JS is
-now `next` (hydration) 138 ms, `framer-motion` 90 ms, turbopack runtime 77 ms,
-`gsap` 37 ms, `AIDashboard` 29 ms.
+**So the remaining cost is diffuse and structural**: a dark page carrying
+several large translucent gradient layers is expensive to composite, animated or
+not. Reducing it means fewer or smaller translucent layers, which is a design
+question (A2) under `EXPERIENCE_GOVERNANCE.md` — not a bug hunt, and not
+something to resolve by quietly deleting animation to win a metric.
 
-**What is NOT known — do not skip this.** Four narrower experiments
-(`PROFILE_EXPERIMENT=no-blend|no-sheen|no-ambient-anim|no-backdrop-blur`)
-**could not be separated above the noise floor**; spreads overlapped entirely
-and `no-ambient-anim` scored worse than baseline, which is impossible. So
-*which* effect costs the paint time is unproven. The `mix-blend-mode: screen`
-sheen and `plus-lighter` cursor glow in `AmbientBackground.tsx` are the leading
-suspects on theory — blend modes defeat layer isolation and force backdrop
-read-back every frame — but theory is not evidence.
-
-**The next step is a paint-level trace, not a code change.** A CPU profiler
-cannot see inside `(program)`; `chrome-devtools` MCP (installed, live next
-session) can, via `performance_start_trace` and `performance_analyze_insight`.
-Get the layerisation and paint records first.
-
-**Then it becomes a design decision, not an engineering one.** If the cost is
-inherent to the cinematic identity rather than to one fixable effect, the trade
-— visual signature against battery and jank — belongs to the founder under
-`EXPERIENCE_GOVERNANCE.md`. Do not quietly delete animation to win a metric.
+**If more precision is ever needed**, `chrome-devtools` MCP (installed, live
+next session) exposes real layerisation and raster records via
+`performance_start_trace` / `performance_analyze_insight`, which is a level
+below what `Performance.getMetrics` reports.
