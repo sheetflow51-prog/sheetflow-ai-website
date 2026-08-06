@@ -50,6 +50,42 @@ accessibility and performance numbers describe a build nobody ships.
 | Context7 | not installed | Would supply live framework docs. Not blocking: this is a single Next.js 16 app on a stable API surface, and no phase has stalled on documentation. Install: `claude mcp add context7 -- npx -y @upstash/context7-mcp@latest` |
 | 21st.dev | not installed | Supplies premium React components. **Deliberately declined**: the component language is already defined in `brand-os/03_component-language` and implemented against the design tokens. Importing third-party components would fork the design system, which is the drift DEC-302 exists to prevent. |
 
+## Capability selection for UI work
+
+**Before writing any new UI, check whether an existing capability produces a
+better result than hand-authoring. Record the choice and the reason.**
+
+Ask in this order, stopping at the first that applies:
+
+| # | Capability | Use it when | Why it usually loses here |
+|---|---|---|---|
+| 1 | **Figma MCP** | A Figma file is the design source — implement from the real frames rather than re-deriving them | Account is **starter tier, View seat**, and no SheetFlow design file exists. Nothing to read. |
+| 2 | **`ui-ux-pro-max`** | Reviewing UI against WCAG/UX rules, or choosing patterns for a genuinely new surface | Good for *review*. Its style/colour/typography recommendations must not override `EXPERIENCE_GOVERNANCE.md`, `SHEETFLOW_VISUAL_DNA.md` or DEC-301/302. |
+| 3 | **`design-system` skill** | Token architecture, component specs, drift checks | Already applied (Phase 4 reconciliation). |
+| 4 | **GitHub search (`gh`)** | A well-solved primitive exists (focus traps, disclosure, virtual lists) — read a proven implementation before inventing one | Fine, but licence and design-system fit must be checked before copying. |
+| 5 | **21st.dev** | Need a premium component fast and no design system exists | **Not installed, and declined**: `brand-os/03_component-language` already defines the component language. Importing third-party components forks the design system — the drift DEC-302 exists to prevent. |
+| 6 | **Chrome DevTools MCP** | Deep runtime profiling beyond Lighthouse | Not installed. Lighthouse (median-of-N), Playwright tracing and `probe-cls.mjs` already cover traces, CWV and shift attribution. |
+| 7 | **Context7** | Blocked on a library's current API | Not installed. Never been the blocker: `node_modules` carries the exact installed types, which is more authoritative than a docs index, and behaviour is verified empirically (build output, rendered HTML, tests). |
+| 8 | **Adobe / Canva** | Producing raster or vector marketing assets | DEC-302 makes `logo.png` canonical and `public/brand/` generated. Routing brand assets through external tools reintroduces drift. |
+| 9 | Hand-author | Nothing above applies | The usual outcome here, because the design system is already defined in code and governed. |
+
+### Applied 2026-08-06
+
+Selected **`ui-ux-pro-max`** to review the homepage rather than to design
+anything — the only option that adds value without overriding approved
+decisions. It surfaced two High-severity rules worth checking:
+
+- *Reduced Motion* — respect `prefers-reduced-motion`
+- *Motion Sensitivity* — parallax and scroll-jacking cause nausea; do not force
+  scroll effects
+
+Audited against the implementation: `SmoothScroll` (Lenis), `Parallax`,
+`ParticleField`, `AmbientBackground`, `CustomCursor` and `DeferredAtmosphere`
+all guard on `prefersReducedMotion()`, with a global CSS fallback, and focus
+indicators are asserted by an existing test. **No violations, so no UI change
+was made.** Recorded because "we checked and it was already correct" is a
+result, not a non-event.
+
 ### Skills
 
 `design-system` was used (Phase 4 token reconciliation). `ui-ux-pro-max`,

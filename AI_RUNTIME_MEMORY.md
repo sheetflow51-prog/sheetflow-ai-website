@@ -114,6 +114,11 @@ the source URI plus metadata. To answer "is anything unsaved", enumerate those,
 extract the content after line 1, and diff it against disk — `git status` alone
 cannot see an unsaved buffer, and neither can any file read.
 
+**Check for a better capability before hand-authoring UI.** The order to try,
+and why each usually loses on this project, is in `TOOLING_MANIFEST.md` under
+"Capability selection for UI work". Record the choice — including when the
+answer is "hand-author", and including when a review finds nothing.
+
 ## Architecture notes
 
 **Proof architecture** — `src/config/features.ts` (env-backed flags, all
