@@ -2,7 +2,8 @@
 
 > The mark is not redesigned here. It is made producible.
 >
-> Governed by [DEC-301 — Logo Canon](../07_governance/DEC-301_LOGO_CANON.md).
+> Governed by [DEC-301 — Logo Canon](../07_governance/DEC-301_LOGO_CANON.md) and
+> [DEC-302 — Brand Asset Hierarchy](../07_governance/DEC-302_BRAND_ASSET_HIERARCHY.md).
 > Source of truth: [`public/logo.png`](../../10_Final_Website/public/logo.png).
 > Generator: [`scripts/build-brand-assets.mjs`](../../10_Final_Website/scripts/build-brand-assets.mjs).
 
@@ -20,6 +21,24 @@ Editing anything in `public/brand/` by hand is a brand violation — the next
 build overwrites it. Change the generator.
 
 `public/logo.png` may not be deleted, moved, or regenerated.
+
+## Replacing the logo
+
+1. Drop the new artwork at `public/logo.png`.
+2. Run `npm run brand`.
+3. Read the measurement block it prints and confirm the numbers look right.
+4. Commit the regenerated assets.
+
+Nothing else needs editing. The generator measures the PNG on every run — badge,
+sphere and wordmark bounds are recovered by classifying its pixels, never
+hard-coded — so a new master regenerates every derivative on its own.
+
+If it aborts, the message names the failed check. **Update the classifier in
+`measure()` to match the new composition; do not hand-write numbers back in.**
+Hard-coded constants are exactly what DEC-302 clause 5 forbids.
+
+A master with no wordmark is supported: the icon crop then takes the sphere's
+own extent.
 
 ---
 
@@ -82,15 +101,16 @@ slot.
 
 ## Geometry
 
-Measured from the PNG, not chosen:
+Measured from the PNG on every run, never chosen. Current master:
 
 ```
-badge     bbox x   2-243, y   1-243  ->  d 242, centre (122.5, 122.0)
-sphere    bbox x  54-177, y  36-152  ->  120.5 mean d, centre (115.5, 94.0)
-wordmark  rows y 153-171
+canvas        248 x 252
+badge         d=242   at (122.5, 122.0)
+sphere        d=123.5 at (117.0,  93.5)
+wordmark top  y=153
 
-sphere : badge diameter   0.4979
-sphere centre offset      (-2.9%, -11.6%) of badge diameter
+sphere : badge diameter   0.5103
+sphere centre offset      (-2.3%, -11.8%) of badge diameter
 ```
 
 The sphere sits **above** badge centre — that offset exists to make room for the

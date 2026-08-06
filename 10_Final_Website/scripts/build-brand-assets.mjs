@@ -45,39 +45,153 @@ const APP = join(ROOT, 'src', 'app');
 const SOURCE = join(ROOT, 'public', 'logo.png');
 
 /* ------------------------------------------------------------------ */
-/* Measurements of the canonical render (248x252)                       */
+/* Measurement — read from the PNG on every run                         */
 /* ------------------------------------------------------------------ */
 
 /**
- * Recovered by classifying the PNG's pixels: badge = opaque non-white,
- * sphere = saturated blue or gold, wordmark = near-white below the sphere.
+ * DEC-302 clause 5: replacing `public/logo.png` must be enough on its own, with
+ * the generator regenerating every derivative automatically.
  *
- *   badge     bbox x   2-243, y   1-243  -> d 242, centre (122.5, 122.0)
- *   sphere    bbox x  54-177, y  36-152  -> 124 x 117, centre (115.5, 94.0)
- *   wordmark  rows y 153-171
+ * That rules out hard-coded pixel constants. An earlier revision inlined the
+ * bounds of this specific render, which meant a new master with different
+ * dimensions or composition would have been cropped against stale numbers —
+ * silently producing wrong assets, or crashing on an out-of-bounds extract.
  *
- * These are the numbers DEC-301 means by "keep the sphere proportions
- * identical". They are measurements, not preferences, and are not to be
- * nudged for legibility.
+ * So the geometry is recovered from whatever PNG is present, each run, by
+ * classifying its pixels:
+ *
+ *   background  the modal corner colour, or transparency
+ *   badge       everything that is not background
+ *   sphere      saturated pixels (the coloured ribbons)
+ *   wordmark    the first row below the sphere carrying a run of near-white,
+ *               low-saturation pixels — enough of them to be type rather than
+ *               a sparkle
+ *
+ * Every result is sanity-checked below. On a master this classifier cannot
+ * read, the build fails loudly rather than emitting a broken asset set.
  */
-const M = {
-  badge: { left: 2, top: 1, size: 242 },
-  sphere: { cx: 115.5, cy: 94.0, d: 120.5 },
-  wordmarkTop: 153,
-};
+async function measure() {
+  const { data, info } = await sharp(SOURCE)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const { width: W, height: H, channels: CH } = info;
+  const at = (x, y) => {
+    const i = (y * W + x) * CH;
+    return [data[i], data[i + 1], data[i + 2], data[i + 3]];
+  };
 
-/** sphere diameter over badge diameter — 0.4979 */
+  // Background: assume the corners are it. Transparent counts too.
+  const [br, bg_, bb] = at(0, 0);
+  const isBackground = (r, g, b, a) =>
+    a < 24 ||
+    (Math.abs(r - br) < 14 && Math.abs(g - bg_) < 14 && Math.abs(b - bb) < 14);
+
+  const box = () => ({ x0: Infinity, y0: Infinity, x1: -1, y1: -1, n: 0 });
+  const grow = (t, x, y) => {
+    if (x < t.x0) t.x0 = x;
+    if (x > t.x1) t.x1 = x;
+    if (y < t.y0) t.y0 = y;
+    if (y > t.y1) t.y1 = y;
+    t.n++;
+  };
+
+  const badge = box();
+  const sphere = box();
+  const brightRows = new Array(H).fill(0);
+
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const [r, g, b, a] = at(x, y);
+      if (isBackground(r, g, b, a)) continue;
+      grow(badge, x, y);
+
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      if (max - min > 45 && max > 90) grow(sphere, x, y);
+      if (r > 195 && g > 195 && b > 195 && max - min < 30) brightRows[y]++;
+    }
+  }
+
+  const badgeW = badge.x1 - badge.x0 + 1;
+  const badgeH = badge.y1 - badge.y0 + 1;
+  const sphereCx = (sphere.x0 + sphere.x1) / 2;
+  const sphereCy = (sphere.y0 + sphere.y1) / 2;
+  const sphereD = (sphere.x1 - sphere.x0 + 1 + (sphere.y1 - sphere.y0 + 1)) / 2;
+
+  /*
+   * Wordmark: first row below the sphere with enough near-white pixels to be
+   * type. The threshold is a fraction of badge width so it scales with the
+   * master, and it is high enough that the sparkle field cannot trip it.
+   */
+  const minRun = Math.max(6, Math.round(badgeW * 0.05));
+  let wordmarkTop = null;
+  for (let y = Math.ceil(sphereCy); y < badge.y1; y++) {
+    if (brightRows[y] >= minRun) {
+      wordmarkTop = y;
+      break;
+    }
+  }
+
+  const fail = (msg) => {
+    throw new Error(
+      `Cannot read ${SOURCE}: ${msg}\n` +
+        `Measured badge ${badgeW}x${badgeH} at (${badge.x0},${badge.y0}), ` +
+        `sphere d=${sphereD.toFixed(1)} at (${sphereCx.toFixed(1)},${sphereCy.toFixed(1)}).\n` +
+        `DEC-302 expects a circular badge carrying a saturated mark. If the ` +
+        `master's composition changed, the classifier in measure() must be ` +
+        `updated to match it — do not hand-write the numbers back in.`,
+    );
+  };
+
+  if (badge.n === 0 || sphere.n === 0) fail('found no artwork');
+  if (Math.abs(badgeW - badgeH) > badgeW * 0.08) fail('badge is not square');
+  if (badgeW < W * 0.5) fail('badge occupies less than half the canvas');
+  if (sphereD < badgeW * 0.15 || sphereD > badgeW * 0.95) {
+    fail('sphere is an implausible fraction of the badge');
+  }
+
+  return {
+    canvas: { W, H },
+    badge: {
+      left: badge.x0,
+      top: badge.y0,
+      size: Math.min(badgeW, badgeH),
+      cx: (badge.x0 + badge.x1) / 2,
+      cy: (badge.y0 + badge.y1) / 2,
+    },
+    sphere: { cx: sphereCx, cy: sphereCy, d: sphereD, bottom: sphere.y1 },
+    wordmarkTop,
+  };
+}
+
+const M = await measure();
+
+/** sphere diameter over badge diameter */
 const SPHERE_RATIO = M.sphere.d / M.badge.size;
 
 /**
- * The icon crop stops at the wordmark's first row, so the sphere is taken as
- * large as it can be without pulling in a sliver of type. Radius 58 puts the
- * crop's bottom edge exactly on y=152.
+ * The icon crop stops just above the wordmark, so the sphere is taken as large
+ * as it can be without pulling in a sliver of type. Where the master carries no
+ * wordmark, the sphere's own extent is the limit. Clamped to the canvas so the
+ * extract can never run out of bounds.
  */
-const ICON_R = Math.min(
-  Math.round(M.wordmarkTop - 1 - M.sphere.cy),
-  Math.round(M.sphere.cy),
+const ICON_R = Math.floor(
+  Math.min(
+    M.wordmarkTop === null ? M.sphere.d / 2 + 4 : M.wordmarkTop - 1 - M.sphere.cy,
+    M.sphere.cy,
+    M.sphere.cx,
+    M.canvas.W - M.sphere.cx,
+    M.canvas.H - M.sphere.cy,
+  ),
 );
+
+if (ICON_R < 8) {
+  throw new Error(
+    `Icon crop radius resolved to ${ICON_R}px, which is unusable. The sphere ` +
+      `sits too close to the wordmark or to the canvas edge in ${SOURCE}.`,
+  );
+}
 
 /* ------------------------------------------------------------------ */
 /* Raster — cut from the original                                       */
@@ -103,8 +217,8 @@ async function cut({ cx, cy, r }) {
 /** Full lockup: badge, sphere and wordmark — the complete canonical mark. */
 const lockupSource = () =>
   cut({
-    cx: M.badge.left + M.badge.size / 2,
-    cy: M.badge.top + M.badge.size / 2,
+    cx: M.badge.cx,
+    cy: M.badge.cy,
     r: M.badge.size / 2,
   });
 
@@ -151,8 +265,8 @@ const F = 256;
 const BADGE_C = F / 2;
 const BADGE_R = F / 2;
 const SPHERE_R = +((SPHERE_RATIO * F) / 2).toFixed(2);
-const SPHERE_CX = +(BADGE_C + ((M.sphere.cx - 122.5) / M.badge.size) * F).toFixed(2);
-const SPHERE_CY = +(BADGE_C + ((M.sphere.cy - 122.0) / M.badge.size) * F).toFixed(2);
+const SPHERE_CX = +(BADGE_C + ((M.sphere.cx - M.badge.cx) / M.badge.size) * F).toFixed(2);
+const SPHERE_CY = +(BADGE_C + ((M.sphere.cy - M.badge.cy) / M.badge.size) * F).toFixed(2);
 
 /**
  * The original's sphere is a ribbon wound around a ball on a tilted axis.
@@ -405,7 +519,11 @@ export const BRAND_MARK_DATA_URI =
 console.log('ts    src/lib/brand-mark.ts', `(${(ogMark.length / 1024).toFixed(1)} kB source)`);
 
 console.log(
-  `\nDEC-301 geometry, measured from logo.png:\n` +
-    `  sphere:badge ${SPHERE_RATIO.toFixed(4)}   icon crop r=${ICON_R} at (${M.sphere.cx}, ${M.sphere.cy})\n` +
-    `  raster: cut from the original.  vector: scalability-only.\n`,
+  `\nMeasured from ${SOURCE.replace(ROOT, '').replace(/\\/g, '/')} this run:\n` +
+    `  canvas       ${M.canvas.W}x${M.canvas.H}\n` +
+    `  badge        d=${M.badge.size} at (${M.badge.cx.toFixed(1)}, ${M.badge.cy.toFixed(1)})\n` +
+    `  sphere       d=${M.sphere.d.toFixed(1)} at (${M.sphere.cx.toFixed(1)}, ${M.sphere.cy.toFixed(1)})\n` +
+    `  wordmark top ${M.wordmarkTop === null ? 'none detected' : `y=${M.wordmarkTop}`}\n` +
+    `  sphere:badge ${SPHERE_RATIO.toFixed(4)}   icon crop r=${ICON_R}\n` +
+    `\n  DEC-302: raster cut from the canonical PNG; vector is scalability-only.\n`,
 );

@@ -11,31 +11,31 @@
     <radialGradient id="sfBall" cx="34%" cy="26%" r="86%">
       <stop offset="0%" stop-color="#152A4F"/><stop offset="100%" stop-color="#080F20"/>
     </radialGradient>
-    <linearGradient id="sfRibbon" x1="56.85999999999999" y1="0" x2="184.34" y2="0" gradientUnits="userSpaceOnUse">
+    <linearGradient id="sfRibbon" x1="56.860000000000014" y1="0" x2="187.5" y2="0" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#1E40AF"/><stop offset="16%" stop-color="#2563EB"/>
       <stop offset="32%" stop-color="#3B82F6"/><stop offset="45%" stop-color="#60A5FA"/>
       <stop offset="55%" stop-color="#F6D089"/><stop offset="72%" stop-color="#E9A23B"/>
       <stop offset="100%" stop-color="#C4832A"/>
     </linearGradient>
-    <linearGradient id="sfEdge" x1="56.85999999999999" y1="0" x2="184.34" y2="0" gradientUnits="userSpaceOnUse">
+    <linearGradient id="sfEdge" x1="56.860000000000014" y1="0" x2="187.5" y2="0" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#93C5FD"/><stop offset="40%" stop-color="#DBEAFE"/>
       <stop offset="60%" stop-color="#FFF6DF"/><stop offset="100%" stop-color="#F6D089"/>
-    </linearGradient><clipPath id="sfSphere"><circle cx="120.6" cy="98.38" r="63.74"/></clipPath></defs>
+    </linearGradient><clipPath id="sfSphere"><circle cx="122.18" cy="97.85" r="65.32"/></clipPath></defs>
   <g transform="translate(36 40) scale(0.25000) translate(-128 -128)">
   <circle cx="128" cy="128" r="128" fill="url(#sfBadge)"/>
-  <g transform="translate(7.40 29.62)">
-    <circle cx="120.6" cy="98.38" r="98.8" fill="url(#sfHalo)"/>
-  <g clip-path="url(#sfSphere)"><circle cx="120.6" cy="98.38" r="63.74" fill="url(#sfBall)"/>
-    <path d="M179.68 96.24 A35.64 16.04 125.01 0 1 138.78 154.63 A35.64 16.04 125.01 0 1 179.68 96.24 Z" fill="none" stroke="url(#sfRibbon)" stroke-width="17.85"/>
-    <path d="M174.76 67.61 A56.28 25.33 125.01 0 1 110.19 159.80 A56.28 25.33 125.01 0 1 174.76 67.61 Z" fill="none" stroke="url(#sfRibbon)" stroke-width="17.85"/>
-    <path d="M157.17 46.17 A63.74 28.68 125.01 0 1 84.03 150.59 A63.74 28.68 125.01 0 1 157.17 46.17 Z" fill="none" stroke="url(#sfRibbon)" stroke-width="17.85"/>
-    <path d="M131.01 36.96 A56.28 25.33 125.01 0 1 66.44 129.15 A56.28 25.33 125.01 0 1 131.01 36.96 Z" fill="none" stroke="url(#sfRibbon)" stroke-width="17.85"/>
-    <path d="M102.42 42.13 A35.64 16.04 125.01 0 1 61.52 100.52 A35.64 16.04 125.01 0 1 102.42 42.13 Z" fill="none" stroke="url(#sfRibbon)" stroke-width="17.85"/>
-    <path d="M178.08 93.84 A35.64 16.04 125.01 0 1 137.18 152.23 A35.64 16.04 125.01 0 1 178.08 93.84 Z" fill="none" stroke="url(#sfEdge)" stroke-width="4.64" opacity="0.8"/>
-    <path d="M173.16 65.21 A56.28 25.33 125.01 0 1 108.59 157.40 A56.28 25.33 125.01 0 1 173.16 65.21 Z" fill="none" stroke="url(#sfEdge)" stroke-width="4.64" opacity="0.8"/>
-    <path d="M155.57 43.77 A63.74 28.68 125.01 0 1 82.43 148.19 A63.74 28.68 125.01 0 1 155.57 43.77 Z" fill="none" stroke="url(#sfEdge)" stroke-width="4.64" opacity="0.8"/>
-    <path d="M129.41 34.56 A56.28 25.33 125.01 0 1 64.84 126.75 A56.28 25.33 125.01 0 1 129.41 34.56 Z" fill="none" stroke="url(#sfEdge)" stroke-width="4.64" opacity="0.8"/>
-    <path d="M100.82 39.73 A35.64 16.04 125.01 0 1 59.92 98.12 A35.64 16.04 125.01 0 1 100.82 39.73 Z" fill="none" stroke="url(#sfEdge)" stroke-width="4.64" opacity="0.8"/>
+  <g transform="translate(5.82 30.15)">
+    <circle cx="122.18" cy="97.85" r="101.2" fill="url(#sfHalo)"/>
+  <g clip-path="url(#sfSphere)"><circle cx="122.18" cy="97.85" r="65.32" fill="url(#sfBall)"/>
+    <path d="M182.72 95.66 A36.53 16.44 125.01 0 1 140.81 155.49 A36.53 16.44 125.01 0 1 182.72 95.66 Z" fill="none" stroke="url(#sfRibbon)" stroke-width="18.29"/>
+    <path d="M177.69 66.31 A57.67 25.95 125.01 0 1 111.51 160.79 A57.67 25.95 125.01 0 1 177.69 66.31 Z" fill="none" stroke="url(#sfRibbon)" stroke-width="18.29"/>
+    <path d="M159.66 44.35 A65.32 29.39 125.01 0 1 84.70 151.35 A65.32 29.39 125.01 0 1 159.66 44.35 Z" fill="none" stroke="url(#sfRibbon)" stroke-width="18.29"/>
+    <path d="M132.85 34.91 A57.67 25.95 125.01 0 1 66.67 129.39 A57.67 25.95 125.01 0 1 132.85 34.91 Z" fill="none" stroke="url(#sfRibbon)" stroke-width="18.29"/>
+    <path d="M103.55 40.21 A36.53 16.44 125.01 0 1 61.64 100.04 A36.53 16.44 125.01 0 1 103.55 40.21 Z" fill="none" stroke="url(#sfRibbon)" stroke-width="18.29"/>
+    <path d="M181.12 93.26 A36.53 16.44 125.01 0 1 139.21 153.09 A36.53 16.44 125.01 0 1 181.12 93.26 Z" fill="none" stroke="url(#sfEdge)" stroke-width="4.76" opacity="0.8"/>
+    <path d="M176.09 63.91 A57.67 25.95 125.01 0 1 109.91 158.39 A57.67 25.95 125.01 0 1 176.09 63.91 Z" fill="none" stroke="url(#sfEdge)" stroke-width="4.76" opacity="0.8"/>
+    <path d="M158.06 41.95 A65.32 29.39 125.01 0 1 83.10 148.95 A65.32 29.39 125.01 0 1 158.06 41.95 Z" fill="none" stroke="url(#sfEdge)" stroke-width="4.76" opacity="0.8"/>
+    <path d="M131.25 32.51 A57.67 25.95 125.01 0 1 65.07 126.99 A57.67 25.95 125.01 0 1 131.25 32.51 Z" fill="none" stroke="url(#sfEdge)" stroke-width="4.76" opacity="0.8"/>
+    <path d="M101.95 37.81 A36.53 16.44 125.01 0 1 60.04 97.64 A36.53 16.44 125.01 0 1 101.95 37.81 Z" fill="none" stroke="url(#sfEdge)" stroke-width="4.76" opacity="0.8"/>
   </g>
   </g>
   <g><circle cx="54" cy="62" r="2.6" fill="#FFFFFF" opacity="0.85"/><circle cx="196" cy="168" r="2.4" fill="#FFFFFF" opacity="0.55"/><circle cx="172" cy="34" r="1.7" fill="#FFFFFF" opacity="0.5"/><circle cx="34" cy="122" r="1.6" fill="#FFFFFF" opacity="0.4"/><circle cx="206" cy="74" r="2.1" fill="#F6D089" opacity="0.75"/><circle cx="92" cy="30" r="1.5" fill="#F6D089" opacity="0.5"/><circle cx="62" cy="172" r="2" fill="#93C5FD" opacity="0.65"/><circle cx="222" cy="124" r="1.5" fill="#93C5FD" opacity="0.45"/></g></g>
