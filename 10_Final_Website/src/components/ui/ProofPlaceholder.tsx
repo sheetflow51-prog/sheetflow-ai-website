@@ -38,7 +38,10 @@ export function ProofPlaceholder({ title, body, cards = 3 }: ProofPlaceholderPro
         >
           {i === 0 ? (
             <>
-              <div className="flex items-center gap-2 text-ink-400">
+              {/* ink-300, not the ink-400 used for muted labels elsewhere:
+                  at 10px on this surface ink-400 measures 4.26:1, under the
+                  4.5:1 AA floor. ink-300 measures 8.31:1. */}
+              <div className="flex items-center gap-2 text-ink-300">
                 <Lock className="h-3.5 w-3.5" strokeWidth={1.6} aria-hidden="true" />
                 <span className="font-mono text-[10px] uppercase tracking-widest">
                   {title}

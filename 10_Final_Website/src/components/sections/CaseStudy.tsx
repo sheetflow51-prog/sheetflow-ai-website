@@ -95,8 +95,9 @@ export function CaseStudy() {
                       </div>
                       <p className="mt-1 text-[12px] text-ink-300">{s.metricLabel}</p>
                       {/* The measurement basis travels with the number. A metric
-                          that cannot state its methodology does not ship. */}
-                      <p className="mt-2 text-[11px] leading-snug text-ink-400">
+                          that cannot state its methodology does not ship.
+                          ink-300 for AA at this size (ink-400 measures 4.26:1). */}
+                      <p className="mt-2 text-[11px] leading-snug text-ink-300">
                         {s.verification.methodology}
                       </p>
                     </div>

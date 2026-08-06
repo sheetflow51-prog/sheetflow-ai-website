@@ -188,7 +188,8 @@ export function Hero() {
                   alt={logo.name}
                   width={logo.width}
                   height={logo.height}
-                  className="h-5 w-auto opacity-60 transition-opacity duration-300 hover:opacity-90"
+                  /* 60% → 90% over 240ms per FINAL_EXECUTION_LAYER §2.3. */
+                  className="h-5 w-auto opacity-60 transition-opacity duration-[240ms] hover:opacity-90"
                 />
               ))}
             </div>
