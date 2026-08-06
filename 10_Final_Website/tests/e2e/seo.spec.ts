@@ -81,6 +81,44 @@ test.describe('structured data', () => {
     const catalog = org.hasOfferCatalog as { itemListElement: unknown[] };
     expect(catalog.itemListElement.length).toBeGreaterThanOrEqual(6);
   });
+
+  /**
+   * GEO signals an assistant reads directly rather than inferring from prose.
+   * Asserted so they cannot be dropped in a refactor without a failing test.
+   */
+  test('Organization carries reachable contact and expertise signals', async ({ page }) => {
+    await page.goto('/');
+    const org = byType(await graph(page), 'Organization')!;
+
+    const contactPoints = org.contactPoint as Array<Record<string, unknown>>;
+    expect(Array.isArray(contactPoints)).toBe(true);
+    expect(contactPoints[0].telephone).toMatch(/^\+\d{10,15}$/);
+    expect(String(contactPoints[0].url)).toContain('calendly.com');
+
+    const knowsAbout = org.knowsAbout as string[];
+    expect(knowsAbout.length).toBeGreaterThanOrEqual(6);
+    // Every advertised service must be represented in the expertise signal,
+    // or the two halves of the graph describe different businesses.
+    expect(knowsAbout.join(' ').toLowerCase()).toContain('whatsapp');
+    expect(knowsAbout.join(' ').toLowerCase()).toContain('crm');
+  });
+
+  /**
+   * LocalBusiness requires a PostalAddress. SheetFlow publishes no address, so
+   * claiming the type would fabricate business information — see the comment in
+   * layout.tsx. This asserts the *absence* deliberately, so a future "add
+   * LocalBusiness for local SEO" change has to confront the reason.
+   */
+  test('does not claim LocalBusiness without a verifiable address', async ({ page }) => {
+    await page.goto('/');
+    const nodes = await graph(page);
+    const local = nodes.filter((n) =>
+      String(n['@type']).match(/LocalBusiness|ProfessionalService/),
+    );
+    for (const node of local) {
+      expect(node.address, 'LocalBusiness requires a real address').toBeTruthy();
+    }
+  });
 });
 
 test.describe('answer-engine surfaces', () => {

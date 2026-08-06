@@ -16,6 +16,7 @@ import MotionProvider from '@/components/providers/MotionProvider';
 import DeferredAtmosphere from '@/components/providers/DeferredAtmosphere';
 import { Navigation } from '@/components/layout/Navigation';
 import { Footer } from '@/components/layout/Footer';
+import { BOOKING_URL, WHATSAPP_NUMBER } from '@/lib/contact';
 import { faqs } from '@/content/faq';
 
 const inter = Inter({
@@ -114,6 +115,42 @@ const organizationJsonLd = {
     'https://www.instagram.com/sheetflow51',
     'https://www.linkedin.com/in/sheet-flow-1173563a7',
     'https://github.com/sheetflow51-prog',
+  ],
+  /**
+   * NOT typed as `LocalBusiness`. That subtype requires a `PostalAddress`, and
+   * SheetFlow publishes no street address or locality anywhere — inventing one
+   * to satisfy a schema would be fabricated business information, which both
+   * this project's first standing rule and Google's own structured-data policy
+   * forbid. `Organization` is the accurate type for a remote service business.
+   * Revisit only if a real registered address is provided.
+   */
+  telephone: `+${WHATSAPP_NUMBER}`,
+  contactPoint: [
+    {
+      '@type': 'ContactPoint',
+      contactType: 'sales',
+      telephone: `+${WHATSAPP_NUMBER}`,
+      url: BOOKING_URL,
+      availableLanguage: ['en', 'hi'],
+    },
+  ],
+  /**
+   * GEO signal. `knowsAbout` is how an assistant answering "who does WhatsApp
+   * automation for clinics" decides whether this entity is relevant, and it is
+   * read directly rather than inferred from prose. Every entry below maps to a
+   * service the site actually sells (see `hasOfferCatalog`) or a tool named in
+   * the integrations section — nothing aspirational, or it becomes a claim.
+   */
+  knowsAbout: [
+    'Business process automation',
+    'AI workflow automation',
+    'Lead capture automation',
+    'WhatsApp Business API automation',
+    'Appointment booking automation',
+    'CRM automation',
+    'Automated business reporting',
+    'Invoice reminder automation',
+    'n8n workflow orchestration',
   ],
   hasOfferCatalog: {
     '@type': 'OfferCatalog',

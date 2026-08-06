@@ -66,7 +66,7 @@ export function FeatureStorytelling() {
             title={
               <>
                 Six pillars of automation.{' '}
-                <span className="text-ink-300">One quietly run business.</span>
+                <span className="text-ink-300">One quietly running business.</span>
               </>
             }
             description="We don't sell tools — we install systems. Six everyday operations, automated end-to-end, so your team can focus on the work only humans can do."

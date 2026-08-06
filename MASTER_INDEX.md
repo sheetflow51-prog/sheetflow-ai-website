@@ -23,6 +23,7 @@ It contains brand strategy, design research, motion systems, 3D concepts, UX arc
 > | [TOOLING_MANIFEST.md](TOOLING_MANIFEST.md) | Verified capabilities, measured baselines, known issues |
 > | [PROJECT_STATUS.md](PROJECT_STATUS.md) | Where things stand, open decisions |
 > | [DECISIONS.md](DECISIONS.md) | Decision register — every constraint and the reasoning behind it |
+> | [PROJECT_HEALTH.md](PROJECT_HEALTH.md) | Single-snapshot dashboard — scores, blockers, next phase |
 > | [CHANGELOG.md](CHANGELOG.md) | What changed and why |
 > | [brand-os/07_governance/](brand-os/07_governance/) | DEC-301, DEC-302 — binding brand decisions |
 > | [brand-os/09_logo-system/](brand-os/09_logo-system/LOGO_SYSTEM.md) | The logo system and how to regenerate it |

@@ -54,13 +54,32 @@ export function Hero() {
         scale={1.04}
         className="pointer-events-none absolute inset-0 -z-10 mx-auto flex items-center justify-center opacity-90"
       >
-        <div className="aspect-square h-[80vh] max-h-[820px] w-auto max-w-[820px] overflow-hidden rounded-[36px] opacity-50">
+        {/* The core is masked to a soft radial falloff rather than clipped to a
+            rounded rectangle. At 1440px the container's straight edges sat well
+            inside the viewport and the vignette above did not reach them, so the
+            "ambient glow" terminated in a visible seam across the headline. A
+            mask makes it dissolve into the void instead — the intended effect,
+            and the reason no `rounded` radius is needed any more. */}
+        <div
+          className="aspect-square h-[80vh] max-h-[820px] w-auto max-w-[820px] overflow-hidden opacity-50"
+          style={{
+            maskImage: 'radial-gradient(ellipse at center, #000 38%, transparent 72%)',
+            WebkitMaskImage: 'radial-gradient(ellipse at center, #000 38%, transparent 72%)',
+          }}
+        >
           <video
             className="h-full w-full object-cover blur-[2px] brightness-[0.6]"
             src="/videos/cta-core.mp4"
             poster="/posters/spline_hero_v1.0.svg"
-            autoPlay
-            loop
+            /* Not autoplayed under reduced motion. The global CSS rule in
+               globals.css neutralises CSS animation and transition only — it has
+               no effect on video playback, so a looping clip kept running for
+               exactly the visitors who asked motion to stop. That is WCAG 2.2.2
+               (moving content over five seconds with no mechanism to pause), and
+               it was the one motion layer missed when every other one was
+               audited. The poster still renders, so the composition is intact. */
+            autoPlay={runMotion}
+            loop={runMotion}
             muted
             playsInline
             preload="metadata"

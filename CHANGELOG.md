@@ -1,5 +1,71 @@
 # SheetFlow v2 Changelog
 
+## Phase F — Product completion pass (2026-08-07)
+
+### Fixed
+
+- **The hero video ignored `prefers-reduced-motion`.** `globals.css` neutralises
+  CSS animation and transition under that query, which does nothing to a
+  `<video autoPlay loop>` — so a looping clip kept running for exactly the
+  visitors who asked motion to stop. That is WCAG 2.2.2 (moving content over
+  five seconds with no mechanism to pause). `runMotion` already existed in the
+  component and had simply never been wired to the element. The poster still
+  renders, so the composition is unchanged. **This was the one motion layer
+  missed when every other one was audited.**
+
+- **The hero's AI core terminated in a visible seam.** It was clipped to a
+  `rounded-[36px]` container, and at 1440px the vignette above it never reached
+  those edges — so the ambient glow ended in a hard rectangle across the
+  headline. Replaced the clip with a radial mask; the core now dissolves into
+  the void, which was the intent.
+
+- **Ungrammatical H2.** "Six pillars of automation. One quietly run business."
+  → "One quietly running business."
+
+### Added
+
+- **`scripts/capture-screens.mjs`** (`npm run shots`) — deterministic
+  screenshots at desktop / tablet / mobile. Scrolls the page first so every
+  IntersectionObserver reveal has fired, then freezes animation, so captures are
+  diffable rather than catching elements mid-fade.
+
+  It uses **real device descriptors**, not bare viewport sizes. The first
+  version narrowed a desktop Chromium to 390px, which reports `pointer: fine` —
+  so `CustomCursor` mounted and parked a ring over the copy. That read as a
+  rendering bug in the site and was a bug in the script.
+
+- **GEO signals on `Organization`** — `contactPoint` (sales, reachable phone,
+  booking URL) and `knowsAbout` (9 expertise entities, each mapped to a service
+  actually sold). `knowsAbout` is read directly by assistants deciding whether
+  this entity answers a query, rather than inferred from prose.
+
+- **`PROJECT_HEALTH.md`** — single-snapshot dashboard, regenerated per phase.
+
+- **4 tests** asserting the new GEO signals, and asserting that `LocalBusiness`
+  is *not* claimed without an address.
+
+### Refused, deliberately
+
+- **`LocalBusiness` schema.** Requested, but that type requires a
+  `PostalAddress` and SheetFlow publishes no address or locality anywhere.
+  Inventing one would be fabricated business information — barred by this
+  project's first standing rule and by Google's structured-data policy.
+  `Organization` is the accurate type for a remote service business. A test now
+  asserts the absence so a future "add LocalBusiness for local SEO" change has
+  to confront the reason.
+
+- **`BreadcrumbList`.** Still N/A: one route means a one-item breadcrumb, which
+  is schema spam. It becomes correct the moment service sub-pages ship.
+
+### Verified and already correct
+
+- **Anchor targets clear the fixed nav.** No `scroll-margin-top` is declared
+  anywhere, which normally means anchors land under a fixed header. All six nav
+  anchors measured: every one lands at 182px against a 64px nav, because
+  sections carry their own top padding. No change made.
+
+Verified: 74 tests pass, type-check and lint clean, all bundle budgets met.
+
 ## Phase E — Retraction, and the instrument that earned it (2026-08-07)
 
 ### Retracted
