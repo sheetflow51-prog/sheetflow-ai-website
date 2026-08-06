@@ -113,15 +113,20 @@ export function Footer() {
 
           {FOOTER_GROUPS.map((group) => (
             <div key={group.title}>
-              <h4 className="mb-4 text-[11px] font-semibold uppercase tracking-widest text-ink-400">
+              {/* h3, not h4: the nearest preceding heading is the section h2,
+                  and skipping a level breaks screen-reader outline navigation. */}
+              <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-ink-400">
                 {group.title}
-              </h4>
-              <ul className="flex flex-col gap-3">
+              </h3>
+              <ul className="flex flex-col">
                 {group.links.map((l) => (
                   <li key={l.label}>
+                    {/* inline-flex + min-h-[24px] gives the link a 24px pointer
+                        target (WCAG 2.2 SC 2.5.8). At 13px the text box alone
+                        is 16px tall, which is under the floor on touch. */}
                     <a
                       href={l.href}
-                      className="text-[13px] text-ink-300 transition-colors hover:text-white"
+                      className="inline-flex min-h-[24px] items-center text-[13px] text-ink-300 transition-colors hover:text-white"
                       data-cursor="hover"
                     >
                       {l.label}

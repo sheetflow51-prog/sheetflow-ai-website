@@ -29,7 +29,10 @@ const config: Config = {
           100: '#F5F7FA',
           200: '#D6DCE8',
           300: '#A0A8BC',
-          400: '#6B7490',
+          // 4.81:1 on void, 4.70:1 on a glass card. The previous #6B7490
+          // measured 4.26:1 — below the 4.5:1 AA floor — and axe flagged it
+          // across the nav, section captions and footer.
+          400: '#717B98',
           500: '#3D4460',
           600: '#2A3045',
           700: '#1E2435',

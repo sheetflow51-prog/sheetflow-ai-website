@@ -72,10 +72,19 @@ wrong workspace root. Outside the repository; deletion is the founder's call.
 gold values. 34 usages remain on the old name. Migration is mechanical and
 visually inert (both names resolve to identical hex), but has not been done.
 
-**D10 — Systemic small-text contrast.** 14 pre-existing call sites render text
-at 12px or below in `ink-400`, which measures 4.26:1 against the composited
-card surface — below the 4.5:1 WCAG AA floor. Only the instances M01 authored
-were corrected. A dedicated pass is needed.
+**D10 — RESOLVED.** `ink.400` retuned from `#6B7490` (4.26:1) to `#717B98`
+(4.81:1 on void, 4.70:1 on glass), fixing all usages at the token. Lighthouse
+accessibility is 100 and axe reports zero WCAG 2.1 AA violations in both the
+default and reduced-motion paths.
+
+**A1 — Is the Spline/3D direction still live?** `src/components/three/`
+(`AICore`, `IntelligenceCore`, `SplineScene`) is imported by no rendered code,
+and the shipped bundle contains zero Three.js symbols. Six dependencies —
+`three`, `@react-three/{fiber,drei,postprocessing}`,
+`@splinetool/{react-spline,runtime}` — exist only for it, and their peer
+conflict (`drei@9` wants `fiber@^8`, project pins `^9`) is what forces
+`--legacy-peer-deps` on every install. Removing them retires the direction
+documented in `SPLINE_SCENE_BRIEF.md`, so it is a founder decision.
 
 **D11 — `.gitignore` was modified outside this milestone** (adding `.vercel`
 and `.env*`) and is left unstaged. Sensible, but unattributed.
@@ -93,9 +102,20 @@ follow-up commit finalises `CHANGELOG.md` and this file.
 
 ## Current Lighthouse
 
-Not measured. Requires serving the production build and a browser audit harness.
-No dated measurement exists anywhere in the repository — treat `DEPLOYMENT.md`'s
-targets as aspirations, not results.
+Measured **2026-08-06**, desktop, production build, via `npm run audit:lh`:
+
+| Category | Score |
+|---|---|
+| Performance | **65** |
+| Accessibility | **100** |
+| Best practices | **96** |
+| SEO | **100** |
+
+FCP 0.4s · LCP 1.4s · **TBT 490ms** · **CLS 0.103** · SI 3.0s
+
+Performance is the outstanding weakness: 660ms of main-thread script
+evaluation and ~91 kB of shipped-but-unused JS. `DEPLOYMENT.md`'s targets
+remain aspirations and should be read as such.
 
 ## Current Bundle Size
 
@@ -113,8 +133,10 @@ build output, so that documented baseline remains **unverified**.
 app and Vercel root), `Documentation/` (`Approved/` pointer + `Archive/`),
 `brand-os/`, `docs/`, `.claude/`.
 
-**Test infrastructure:** none exists. No unit, integration, or e2e harness. This
-is the single largest structural gap carried into M01.
+**Test infrastructure:** Playwright 1.62 + axe-core, 50 tests across desktop and
+mobile, running against the production build. Lighthouse and gzip-accurate
+bundle budgets wired as `npm run audit:lh` / `audit:bundle`; `npm run verify`
+runs the lot. This closes the largest structural gap carried into M01.
 
 **Accessibility:** the M00 Hero change lifted subhead contrast on `void #060608`
 from ~8.4:1 to ~14.9:1. No systematic audit has been performed.

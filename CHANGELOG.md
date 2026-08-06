@@ -1,5 +1,53 @@
 # SheetFlow v2 Changelog
 
+## Phase A - Verification Harness (2026-08-06)
+
+The project had no test infrastructure of any kind, and none of the mandated
+quality gates could run. Built the harness first, then measured.
+
+### Added
+
+- Playwright 1.62 against the **production** build, desktop + mobile.
+  50 tests: smoke, heading order, metadata, in-page anchor integrity,
+  external-link safety, brand-asset serving, DEC-302 compliance, a
+  fabricated-content guard, axe WCAG 2.1 AA (default *and* reduced-motion),
+  focus indicators, image alt text, 5-viewport overflow, tap-target sizing.
+- `scripts/audit-lighthouse.mjs` — reuses Playwright's Chromium over CDP
+  instead of adding a second browser download.
+- `scripts/audit-bundle.mjs` — gzip-accurate budgets that fail the build.
+- `@next/bundle-analyzer`, which `npm run analyze` had always referenced but
+  which was never installed; the script silently no-opped.
+- `AI_RUNTIME_MEMORY.md` and `TOOLING_MANIFEST.md`.
+- `npm run verify` — preflight + e2e + bundle.
+
+### Fixed (found by the new gates)
+
+- **Accessibility 100.** `ink.400` was `#6B7490`, measuring 4.26:1 on void —
+  under the AA floor — and axe flagged it across nav, section captions and
+  footer. Retuned to `#717B98` (4.81:1 on void, 4.70:1 on glass), fixing all
+  21 usages at the token.
+- Primary button was white on `#3B82F6` = 3.68:1, and its hover *lightened* to
+  `#60A5FA` = 2.54:1 — the state a user is most likely reading was the least
+  legible. Base moved to `accent-deep` (5.17:1); hover now lifts and brightens
+  the glow instead of the fill.
+- Footer links were 16px tall, under WCAG 2.2 SC 2.5.8's 24px pointer-target
+  floor.
+- Footer group headings were `h4` directly under the section `h2`, skipping a
+  level and breaking screen-reader outline navigation.
+
+### Baseline (first ever measured)
+
+Lighthouse desktop: **performance 65, accessibility 100, best-practices 96,
+SEO 100**. FCP 0.4s, LCP 1.4s, TBT 490ms, CLS 0.103, SI 3.0s.
+Bundle: 321.3 kB JS gzip (1024 kB raw, 16 files), 9.6 kB CSS.
+
+### Found, not acted on
+
+- `src/components/three/` is imported by nothing and the bundle contains zero
+  Three.js symbols. Six dependencies exist solely for it, and they are what
+  forces `--legacy-peer-deps` on every install. Retiring them retires the
+  planned Spline direction — an architectural decision, escalated not taken.
+
 ## M01 - Production Foundation (in progress)
 
 Branch `feat/m01-foundation`, cut from `feat/m00-foundation` at `66f5059`.

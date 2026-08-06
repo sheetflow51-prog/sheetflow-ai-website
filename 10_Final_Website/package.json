@@ -10,7 +10,12 @@
     "type-check": "tsc --noEmit",
     "analyze": "cross-env ANALYZE=true next build",
     "brand": "node scripts/build-brand-assets.mjs",
-    "preflight": "npm run type-check && npm run lint && npm run build"
+    "test:e2e": "playwright test",
+    "test:a11y": "playwright test a11y",
+    "audit:lh": "node scripts/audit-lighthouse.mjs",
+    "audit:bundle": "node scripts/audit-bundle.mjs",
+    "preflight": "npm run type-check && npm run lint && npm run build",
+    "verify": "npm run preflight && npm run test:e2e && npm run audit:bundle"
   },
   "dependencies": {
     "@react-three/drei": "^9.114.0",
@@ -34,6 +39,9 @@
     "zustand": "^5.0.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
+    "@next/bundle-analyzer": "^16.3.0",
+    "@playwright/test": "^1.62.1",
     "@types/node": "^22.9.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
@@ -42,6 +50,7 @@
     "cross-env": "^10.1.0",
     "eslint": "^9.15.0",
     "eslint-config-next": "16.2.6",
+    "lighthouse": "^13.4.1",
     "postcss": "^8.4.49",
     "raw-loader": "^4.0.2",
     "tailwindcss": "^3.4.15",

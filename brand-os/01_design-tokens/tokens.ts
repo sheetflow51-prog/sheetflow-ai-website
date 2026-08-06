@@ -36,7 +36,7 @@ export const color = {
     100: '#F5F7FA', // headlines
     200: '#D6DCE8', // body strong
     300: '#A0A8BC', // body
-    400: '#6B7490', // muted
+    400: '#717B98', // muted — 4.81:1 on void, the AA floor for small text
     500: '#3D4460', // hint
     600: '#2A3045', // dividers strong
     700: '#1E2435', // dividers

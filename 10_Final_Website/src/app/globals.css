@@ -374,8 +374,14 @@
     letter-spacing: -0.01em;
   }
 
+  /* accent-deep, not accent: white on #3B82F6 measures 3.68:1, under the
+     4.5:1 AA floor, and axe flagged it. #2563EB measures 5.17:1.
+
+     Hover lifts and brightens the glow rather than lightening the fill. The
+     old hover went to accent-bright, which dropped the label to 2.54:1 — the
+     state a user is most likely to be reading was the least legible one. */
   .btn-primary {
-    background: rgb(var(--color-accent));
+    background: rgb(var(--color-accent-deep));
     color: #FFFFFF;
     box-shadow:
       0 0 0 1px rgba(59, 130, 246, 0.5),
@@ -383,12 +389,11 @@
       inset 0 1px 0 rgba(255, 255, 255, 0.15);
   }
   .btn-primary:hover {
-    background: rgb(var(--color-accent-bright));
     transform: translateY(-1px);
     box-shadow:
-      0 0 0 1px rgba(59, 130, 246, 0.7),
-      0 8px 24px rgba(59, 130, 246, 0.5),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      0 0 0 1px rgba(96, 165, 250, 0.85),
+      0 8px 28px rgba(59, 130, 246, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.22);
   }
   .btn-primary:active {
     transform: scale(0.98);
