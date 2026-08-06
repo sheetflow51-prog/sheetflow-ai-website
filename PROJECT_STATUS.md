@@ -76,6 +76,14 @@ wrong workspace root. Outside the repository; deletion is the founder's call.
 
 **D8 — `.claude/` directory** is untracked and not ignored.
 
+**D12 — Preview deployments are SSO-protected.** The first preview
+(`sheetflow-ai-website-kmquksq6e-…vercel.app`, Ready) returns 302 to
+`vercel.com/sso-api` for anonymous requests. A logged-in Vercel session opens
+it normally. Automated verification against a preview URL would need either a
+protection-bypass secret or protection relaxed — both are security settings and
+therefore founder decisions. Verification is currently run against the
+identical production build locally.
+
 **D9 — `violet` token migration.** `violet` is now a deprecated alias holding
 gold values. 34 usages remain on the old name. Migration is mechanical and
 visually inert (both names resolve to identical hex), but has not been done.

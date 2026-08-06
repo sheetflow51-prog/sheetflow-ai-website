@@ -39,10 +39,26 @@
 
 ### Infrastructure
 
-Vercel deployment access resolved. The CLI (58.7.0) is authenticated as
-`sheetflow51-prog` and the project is linked; the MCP connector still returns
-403 because it is authenticated to a different account. Documented in
-`TOOLING_MANIFEST.md`.
+**Deployment was broken and is now fixed.** The first `vercel deploy` failed at
+`npm install`, before any build ran: plain `npm install` exits 1 because
+`@react-three/drei@9` declares a peer of `@react-three/fiber@^8` while the
+project pins `^9`. Reproduced locally with `npm install --dry-run`. Added
+`.npmrc` with `legacy-peer-deps=true`, making explicit the resolution every
+local install has used since before M00.
+
+This is a workaround. The six packages involved exist only for
+`src/components/three/`, which no rendered code imports — dead dependencies
+were blocking deployment of live code. Founder decision A1.
+
+**First preview deployment created:**
+`sheetflow-ai-website-kmquksq6e-sheetflow51-progs-projects.vercel.app`
+(status Ready). It sits behind Vercel SSO Deployment Protection, so it returns
+302 to `vercel.com/sso-api` for anonymous requests and requires a logged-in
+Vercel session to view.
+
+Vercel access resolved via CLI (58.7.0, authenticated as `sheetflow51-prog`).
+The MCP connector still returns 403 — it is authenticated to a different
+account. Documented in `TOOLING_MANIFEST.md`.
 
 ## Phase B - Layout Stability and Measurement Rigour (2026-08-06)
 
