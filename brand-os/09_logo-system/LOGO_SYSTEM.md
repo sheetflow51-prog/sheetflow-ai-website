@@ -2,135 +2,160 @@
 
 > The mark is not redesigned here. It is made producible.
 >
-> Source of truth: [`scripts/build-brand-assets.mjs`](../../10_Final_Website/scripts/build-brand-assets.mjs)
-> · Output: [`public/brand/`](../../10_Final_Website/public/brand/)
+> Governed by [DEC-301 — Logo Canon](../07_governance/DEC-301_LOGO_CANON.md).
+> Source of truth: [`public/logo.png`](../../10_Final_Website/public/logo.png).
+> Generator: [`scripts/build-brand-assets.mjs`](../../10_Final_Website/scripts/build-brand-assets.mjs).
 
 ---
 
 ## Operating principle
 
-**One geometry, every variant derived.** Nine SVGs that each redeclare the same
-arcs will drift the first time a curve is nudged. They are generated from a
-single definition instead:
+**The original PNG is the identity. Everything else is derived from it.**
 
 ```bash
-cd 10_Final_Website && node scripts/build-brand-assets.mjs
+cd 10_Final_Website && npm run brand
 ```
 
-Editing a `public/brand/*.svg` by hand is a brand violation — the next build
-overwrites it. Change the script.
+Editing anything in `public/brand/` by hand is a brand violation — the next
+build overwrites it. Change the generator.
+
+`public/logo.png` may not be deleted, moved, or regenerated.
 
 ---
 
-## What the mark is
+## The two tiers
 
-The canonical identity is the 3D render at `public/logo.png`: a dark navy disc
-carrying a sphere wrapped in blue and gold ribbons, a bright core, a sparkle
-field, and the wordmark beneath.
+### Tier 1 — Raster, cut from the original
 
-The production mark is a **flat vector reconstruction** of that render. Nothing
-was reinvented — badge, palette, sphere, ribbons, core, sparkles and wordmark
-all carry over. What changed is that photographic depth-of-field and raster
-bloom were replaced with geometry that stays crisp at 16px and prints in one
-pass.
+Every shipped bitmap is a crop and resample of `logo.png`. These carry the real
+ribbon flow, the real sphere, the real feel, because they *are* the original
+artwork. **Use these on the website, always.**
 
-### Ribbon construction
+Two crops:
 
-Each ribbon is a **lune**: the region inside the sphere circle (r=86) but
-outside a second circle (r=76) whose centre is offset from it.
-
-The offset is the whole design. A *concentric* inner circle yields a constant
-width crescent, and two of those mirrored read as a pie chart or a loading
-spinner — static. An *offset* inner circle makes the ribbon taper to a point at
-one end, which is what reads as flow. The two ribbons take opposite offsets
-(`-24,+12` gold, `+24,-12` blue) so they interlock rather than mirror.
-
-Gold draws last, so it passes in front on the right.
-
-### Palette
-
-Blue and gold only, straight from [`01_design-tokens`](../01_design-tokens/TOKENS.md).
-No colour in the mark is invented:
-
-| Role | Token | Hex |
+| Crop | Contents | Used at |
 |---|---|---|
-| Badge centre → edge | — | `#16294D` → `#070B14` |
-| Sphere body | — | `#31589F` → `#0A1329` |
-| Gold ribbon | `gold.bright` → `gold` → `gold.deep` | `#F6D089` → `#E9A23B` → `#C4832A` |
-| Blue ribbon | `accent.deep` → `accent` → `accent.light` | `#2563EB` → `#3B82F6` → `#93C5FD` |
-| Core | — | `#F2F7FF` → `#3B82F6` |
+| **Lockup** | Badge + sphere + wordmark — the complete mark | ≥180px |
+| **Icon** | Sphere alone, cropped to stop above the wordmark | 16–96px |
 
----
-
-## The variants
-
-| File | Use |
-|---|---|
-| `sheetflow-primary.svg` | **Primary.** Vertical lockup, wordmark inside the badge. Matches the original render's composition. |
-| `sheetflow-icon.svg` | **Icon.** Badge + sphere, no wordmark. Any lockup where the name is set in live text. |
-| `sheetflow-icon-small.svg` | Icon simplified for **≤32px** — no sparkles, no rim light, larger core. Also `src/app/icon.svg`. |
-| `sheetflow-icon-flat.svg` | Solid fills, **no gradients**. Print, embroidery, single-pass output. |
-| `sheetflow-horizontal.svg` | Icon left, wordmark right. Email signatures, letterheads, wide slots. |
-| `sheetflow-mono-white.svg` | Monochrome lockup for dark backgrounds. |
-| `sheetflow-mono-black.svg` | Monochrome lockup for light backgrounds. |
-| `sheetflow-icon-mono-white.svg` / `-black.svg` | Monochrome icon, no wordmark. |
-
-### Raster exports
+The icon crop exists because the lockup's type is illegible below roughly 64px.
+Dropping type that cannot be read is a smaller compromise than shipping mush.
 
 | Path | Size | Use |
 |---|---|---|
-| `raster/favicon-16/32/48.png` | 16–48 | Browser tabs. From the **simplified** master. |
-| `src/app/apple-icon.png` | 180 | iOS home screen. |
-| `raster/icon-192.png`, `icon-512.png` | 192, 512 | PWA manifest. |
-| `raster/icon-maskable-512.png` | 512 | Android adaptive icons. Content sits inside the central 80% safe zone. |
-| `social/avatar-400/800/1024.png` | 400–1024 | Social profile avatars. |
+| `raster/favicon-16/32/48.png` | 16–48 | Browser tabs |
+| `src/app/icon.png` | 32 | Next.js app-dir favicon |
+| `raster/icon-64.png`, `icon-96.png` | 64, 96 | Navigation mark (96 covers 3× DPR) |
+| `src/app/apple-icon.png` | 180 | iOS home screen |
+| `raster/icon-192.png` | 192 | PWA manifest |
+| `raster/lockup-256.png` | 256 | Loading screen |
+| `raster/lockup-512.png` | 512 | PWA manifest, Organization JSON-LD |
+| `raster/icon-maskable-512.png` | 512 | Android adaptive icons, 80% safe zone |
+| `social/avatar-400/800/1024.png` | 400–1024 | Social profile avatars |
+
+Largest upscale in the set is the 1024 avatar at 4.1× from source; the 512s are
+2.1×.
+
+### Tier 2 — Vector, scalability-only
+
+For print, embroidery, monochrome reproduction and large-format work — cases a
+raster genuinely cannot serve.
+
+**These are a faithful but inexact reconstruction.** Flat vector cannot
+reproduce a 3D render's ribbon interleaving, specular falloff or depth. Do not
+substitute them for the raster on the website.
+
+| File | Use |
+|---|---|
+| `sheetflow-primary.svg` | Vertical lockup, wordmark inside the badge |
+| `sheetflow-icon.svg` | Icon, no wordmark |
+| `sheetflow-icon-flat.svg` | Solid fills, no gradients — single-pass output |
+| `sheetflow-horizontal.svg` | Icon left, wordmark right |
+| `sheetflow-mono-white/black.svg` | Monochrome lockup |
+| `sheetflow-icon-mono-white/black.svg` | Monochrome icon |
+
+There is deliberately **no vector favicon**. Browsers prefer an SVG icon when
+one is offered, which would put the least faithful asset in the most visible
+slot.
+
+---
+
+## Geometry
+
+Measured from the PNG, not chosen:
+
+```
+badge     bbox x   2-243, y   1-243  ->  d 242, centre (122.5, 122.0)
+sphere    bbox x  54-177, y  36-152  ->  120.5 mean d, centre (115.5, 94.0)
+wordmark  rows y 153-171
+
+sphere : badge diameter   0.4979
+sphere centre offset      (-2.9%, -11.6%) of badge diameter
+```
+
+The sphere sits **above** badge centre — that offset exists to make room for the
+wordmark and is part of the silhouette. It is neutralised only in the icon
+variants, where there is no wordmark.
+
+### How the sphere is built (vector tier)
+
+The original is a ribbon **wound around a sphere** on a tilted axis. Each turn
+is a circle in a plane perpendicular to that axis. Under orthographic
+projection, a circle of radius `r` with unit normal `a`, centred at
+`R·cos(β)·a`, becomes an ellipse with semi-major `r` and semi-minor `r·|a_z|`,
+the major axis perpendicular to `a`'s projection.
+
+The generator computes this directly rather than approximating it with
+hand-drawn crescents. Rings are painted back-to-front.
+
+The sphere interior is **dark navy**. There is no glowing central core; an
+earlier revision invented one.
+
+### Palette
+
+Blue and gold only, from [`01_design-tokens`](../01_design-tokens/TOKENS.md).
+Ribbons run blue on the left flank to gold on the right, as the original reads
+across the coil.
 
 ---
 
 ## Rules
 
 ### Clear space
-Keep free space equal to **one quarter of the badge diameter** on all sides.
-Nothing crosses it — not text, not rules, not another logo.
+One quarter of the badge diameter on all sides. Nothing crosses it.
 
 ### Minimum sizes
-- Icon: **16px** digital (use the simplified master below 32px), **8mm** print.
-- Horizontal lockup: **120px** wide. Below that the wordmark fills in — use the
-  icon alone.
-- Primary vertical lockup: **64px**. Its wordmark is the limiting factor.
+- Icon: **16px** digital, **8mm** print.
+- Horizontal lockup: **120px** wide. Below that, use the icon alone.
+- Vertical lockup: **64px**. Its wordmark is the limiting factor.
 
 ### Backgrounds
 The badge carries its own dark disc, so the full-colour mark sits on anything.
-On busy imagery, prefer the badge variants over the mono icon — the disc is what
-guarantees separation.
-
-Never place the full-colour mark on a mid-blue or gold field; the ribbons lose
-against it. Use monochrome there.
+On busy imagery prefer the badge variants over the mono icon — the disc is what
+guarantees separation. Never place the full-colour mark on a mid-blue or gold
+field; use monochrome there.
 
 ### Never
 - Recolour the ribbons. Blue and gold are the identity.
 - Rotate, skew, or squash. Scale uniformly.
-- Add a drop shadow, outer glow, or bevel. The core already carries the light.
+- Add a drop shadow, outer glow, or bevel.
 - Reconstruct the wordmark in another typeface.
-- Place the icon and a separate "SheetFlow" wordmark next to `logo.png` — that
-  render already contains the name, which is exactly the duplication the icon
-  variant exists to prevent.
+- Use a vector variant where a raster cut of the original would serve.
+- Pair `logo.png` with a separate "SheetFlow" wordmark — that render already
+  contains the name, which is what the icon crop exists to avoid.
 
 ---
 
 ## The wordmark
 
-**Inter Bold (700)**, letter-spacing `-0.02em`, matching the site's `--font-sans`.
-The display serif (Fraunces) is for headlines and is never used for the logo.
+**Inter Bold (700)**, letter-spacing `-0.02em`, matching the site's
+`--font-sans`. The display serif (Fraunces) is never used for the logo.
 
-The lockup SVGs carry the wordmark as **live text**, not outlined paths. This
-repository has no font-to-path toolchain, and an eyeballed trace would be worse
-than live text. The consequence is that a machine without Inter renders those
-files in a fallback sans.
-
-This does not affect anything shipped: every raster export is icon-only, and the
-website sets the wordmark in HTML with its own loaded font. For print handoff,
-open the lockup in a vector editor and convert text to outlines first.
+The vector lockups carry the wordmark as **live text**, not outlined paths.
+There is no font-to-path toolchain here, and an eyeballed trace would drift from
+the original lettering. Nothing shipped depends on it — every raster is cut from
+the PNG, and the website sets the wordmark in HTML with its own loaded font.
+For print handoff, convert text to outlines in a vector editor first.
 
 ---
 
@@ -138,24 +163,22 @@ open the lockup in a vector editor and convert text to outlines first.
 
 | Consumer | Asset |
 |---|---|
-| `components/ui/Logo.tsx` | `sheetflow-icon.svg` + live-text wordmark |
-| `components/providers/LoadingScreen.tsx` | `sheetflow-primary.svg` |
-| `app/icon.svg` | simplified icon master |
-| `app/apple-icon.png` | 180px export |
-| `app/manifest.ts` | 192 / 512 / maskable-512 |
-| `app/layout.tsx` (Organization JSON-LD) | `raster/icon-512.png` |
-| `app/opengraph-image.tsx` | `lib/brand-mark.ts` data URI |
+| `components/ui/Logo.tsx` | `raster/icon-96.png` + live-text wordmark |
+| `components/providers/LoadingScreen.tsx` | `raster/lockup-256.png` |
+| `app/icon.png` | 32px icon crop |
+| `app/apple-icon.png` | 180px lockup |
+| `app/manifest.ts` | `icon-192`, `lockup-512`, `icon-maskable-512` |
+| `app/layout.tsx` (Organization JSON-LD) | `raster/lockup-512.png` |
+| `app/opengraph-image.tsx` | `lib/brand-mark.ts` data URI (96px icon crop) |
 
 `lib/brand-mark.ts` is generated. The OG routes run on the edge runtime, which
-has no filesystem and so cannot read the SVG masters at request time; embedding
-the mark as a data URI keeps them on the same geometry as everything else
-rather than carrying a hand-copied duplicate.
+has no filesystem, so the mark is inlined as a base64 PNG — cut from the
+original like everything else, not the vector.
 
 ---
 
-## Legacy
+## If pixel-accurate vector is ever needed
 
-`public/logo.png` is retained as the canonical reference render and is still the
-artwork of record for the identity. It is no longer referenced by any component:
-it is 248×252 (not square), too small for a 512px manifest icon, and has the
-wordmark baked in, which made it unusable in any lockup that also sets the name.
+Large-format print, vehicle livery or signage would need a true vector master.
+The correct route is a professional trace of `logo.png`, or the original 3D
+source — not further parametric refinement of the reconstruction here.

@@ -106,9 +106,10 @@ const organizationJsonLd = {
   '@id': `${SITE_URL}/#organization`,
   name: 'SheetFlow AI',
   url: SITE_URL,
-  // Square 512 export. Google's structured-data guidance expects a logo it can
-  // crop predictably; the old 248x252 source was neither square nor large.
-  logo: `${SITE_URL}/brand/raster/icon-512.png`,
+  // Square 512 cut of the canonical render. Google's structured-data guidance
+  // expects a logo it can crop predictably; the raw 248x252 source was neither
+  // square nor large enough.
+  logo: `${SITE_URL}/brand/raster/lockup-512.png`,
   description:
     'AI automation agency for growing businesses — lead capture, WhatsApp follow-ups, appointment booking, CRM and reporting automation.',
   sameAs: [

@@ -16,7 +16,7 @@ export default function manifest(): MetadataRoute.Manifest {
     // squircle, which the previous 248x252 source could not satisfy.
     icons: [
       { src: '/brand/raster/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-      { src: '/brand/raster/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+      { src: '/brand/raster/lockup-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
       {
         src: '/brand/raster/icon-maskable-512.png',
         sizes: '512x512',

@@ -1,13 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" width="320" height="80" role="img" aria-label="SheetFlow">
   <title>SheetFlow</title>
-  <defs><clipPath id="sfSphere"><circle cx="128" cy="128" r="86"/></clipPath></defs>
+  <defs><clipPath id="sfSphere"><circle cx="120.6" cy="98.38" r="63.74"/></clipPath></defs>
   <g transform="translate(36 40) scale(0.25000) translate(-128 -128)">
     <circle cx="128" cy="128" r="124" fill="none" stroke="#070B14" stroke-width="8"/>
+    <g transform="translate(7.40 29.62)">
   <g clip-path="url(#sfSphere)">
-    <path d="M200.14 174.80 A86 86 0 1 1 133.84 42.20 A76 76 0 1 0 200.14 174.80 Z" fill="#070B14" opacity="0.55"/>
-    <path d="M55.86 81.20 A86 86 0 1 1 122.16 213.80 A76 76 0 1 0 55.86 81.20 Z" fill="#070B14"/>
-  </g>
-  <circle cx="124" cy="124" r="26" fill="#070B14"/>
+    <path d="M179.68 96.24 A35.64 16.04 125.01 0 1 138.78 154.63 A35.64 16.04 125.01 0 1 179.68 96.24 Z" fill="none" stroke="#070B14" stroke-width="17.85"/>
+    <path d="M174.76 67.61 A56.28 25.33 125.01 0 1 110.19 159.80 A56.28 25.33 125.01 0 1 174.76 67.61 Z" fill="none" stroke="#070B14" stroke-width="17.85"/>
+    <path d="M157.17 46.17 A63.74 28.68 125.01 0 1 84.03 150.59 A63.74 28.68 125.01 0 1 157.17 46.17 Z" fill="none" stroke="#070B14" stroke-width="17.85"/>
+    <path d="M131.01 36.96 A56.28 25.33 125.01 0 1 66.44 129.15 A56.28 25.33 125.01 0 1 131.01 36.96 Z" fill="none" stroke="#070B14" stroke-width="17.85"/>
+    <path d="M102.42 42.13 A35.64 16.04 125.01 0 1 61.52 100.52 A35.64 16.04 125.01 0 1 102.42 42.13 Z" fill="none" stroke="#070B14" stroke-width="17.85"/>
+  </g></g>
   </g>
   <text x="82" y="52" text-anchor="start" fill="#070B14"
     font-family="Inter, 'Inter var', 'Helvetica Neue', Arial, sans-serif"

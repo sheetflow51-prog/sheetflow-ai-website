@@ -11,14 +11,12 @@ interface LogoProps {
 /**
  * Logo — the icon-only brand mark paired with a live-text wordmark.
  *
- * Uses `sheetflow-icon.svg`, not the original `logo.png`, because that render
- * has "SheetFlow" baked into it: pairing it with the wordmark printed the name
- * twice in the navigation. The icon variant exists precisely for lockups where
- * the wordmark is set in live text.
+ * Per DEC-301 this is a crop of the canonical `logo.png`, not the vector
+ * reconstruction: the nav needs no scalability that a 96px raster cannot give,
+ * so the original wins. The crop excludes the render's baked-in "SheetFlow",
+ * which would otherwise print the name twice beside the wordmark.
  *
- * `unoptimized` because the Next image optimizer rejects SVG unless
- * `dangerouslyAllowSVG` is set. The file is a 2.7 KB static asset, so there is
- * nothing to optimise.
+ * Served at 96px so it stays sharp at 3x DPR.
  */
 export function Logo({ size = 32, showWordmark = true, className }: LogoProps) {
   return (
@@ -32,12 +30,11 @@ export function Logo({ size = 32, showWordmark = true, className }: LogoProps) {
       aria-label="SheetFlow AI — Home"
     >
       <Image
-        src="/brand/sheetflow-icon.svg"
+        src="/brand/raster/icon-96.png"
         alt=""
         width={size}
         height={size}
         priority
-        unoptimized
         aria-hidden="true"
       />
       {showWordmark && (

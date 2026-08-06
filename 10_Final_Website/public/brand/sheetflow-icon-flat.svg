@@ -1,11 +1,38 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="SheetFlow">
   <title>SheetFlow</title>
-  <defs><clipPath id="sfSphere"><circle cx="128" cy="128" r="86"/></clipPath></defs>
+  <defs>
+    <radialGradient id="sfBadge" cx="50%" cy="38%" r="75%">
+      <stop offset="0%" stop-color="#16294D"/><stop offset="100%" stop-color="#070B14"/>
+    </radialGradient>
+    <radialGradient id="sfHalo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#3B82F6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="sfBall" cx="34%" cy="26%" r="86%">
+      <stop offset="0%" stop-color="#152A4F"/><stop offset="100%" stop-color="#080F20"/>
+    </radialGradient>
+    <linearGradient id="sfRibbon" x1="56.85999999999999" y1="0" x2="184.34" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1E40AF"/><stop offset="16%" stop-color="#2563EB"/>
+      <stop offset="32%" stop-color="#3B82F6"/><stop offset="45%" stop-color="#60A5FA"/>
+      <stop offset="55%" stop-color="#F6D089"/><stop offset="72%" stop-color="#E9A23B"/>
+      <stop offset="100%" stop-color="#C4832A"/>
+    </linearGradient>
+    <linearGradient id="sfEdge" x1="56.85999999999999" y1="0" x2="184.34" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#93C5FD"/><stop offset="40%" stop-color="#DBEAFE"/>
+      <stop offset="60%" stop-color="#FFF6DF"/><stop offset="100%" stop-color="#F6D089"/>
+    </linearGradient><clipPath id="sfSphere"><circle cx="120.6" cy="98.38" r="63.74"/></clipPath></defs>
   <circle cx="128" cy="128" r="128" fill="#070B14"/>
-  <g clip-path="url(#sfSphere)">
-    <circle cx="128" cy="128" r="86" fill="#0A1329"/>
-    <path d="M200.14 174.80 A86 86 0 1 1 133.84 42.20 A76 76 0 1 0 200.14 174.80 Z" fill="#3B82F6"/>
-    <path d="M55.86 81.20 A86 86 0 1 1 122.16 213.80 A76 76 0 1 0 55.86 81.20 Z" fill="#E9A23B"/>
-    <circle cx="124" cy="124" r="26" fill="#93C5FD"/>
-  </g>
+  <g transform="translate(7.40 29.62)">
+  <g clip-path="url(#sfSphere)"><circle cx="120.6" cy="98.38" r="63.74" fill="url(#sfBall)"/>
+    <path d="M179.68 96.24 A35.64 16.04 125.01 0 1 138.78 154.63 A35.64 16.04 125.01 0 1 179.68 96.24 Z" fill="none" stroke="url(#sfRibbon)" stroke-width="17.85"/>
+    <path d="M174.76 67.61 A56.28 25.33 125.01 0 1 110.19 159.80 A56.28 25.33 125.01 0 1 174.76 67.61 Z" fill="none" stroke="url(#sfRibbon)" stroke-width="17.85"/>
+    <path d="M157.17 46.17 A63.74 28.68 125.01 0 1 84.03 150.59 A63.74 28.68 125.01 0 1 157.17 46.17 Z" fill="none" stroke="url(#sfRibbon)" stroke-width="17.85"/>
+    <path d="M131.01 36.96 A56.28 25.33 125.01 0 1 66.44 129.15 A56.28 25.33 125.01 0 1 131.01 36.96 Z" fill="none" stroke="url(#sfRibbon)" stroke-width="17.85"/>
+    <path d="M102.42 42.13 A35.64 16.04 125.01 0 1 61.52 100.52 A35.64 16.04 125.01 0 1 102.42 42.13 Z" fill="none" stroke="url(#sfRibbon)" stroke-width="17.85"/>
+    <path d="M178.08 93.84 A35.64 16.04 125.01 0 1 137.18 152.23 A35.64 16.04 125.01 0 1 178.08 93.84 Z" fill="none" stroke="url(#sfEdge)" stroke-width="4.64" opacity="0.8"/>
+    <path d="M173.16 65.21 A56.28 25.33 125.01 0 1 108.59 157.40 A56.28 25.33 125.01 0 1 173.16 65.21 Z" fill="none" stroke="url(#sfEdge)" stroke-width="4.64" opacity="0.8"/>
+    <path d="M155.57 43.77 A63.74 28.68 125.01 0 1 82.43 148.19 A63.74 28.68 125.01 0 1 155.57 43.77 Z" fill="none" stroke="url(#sfEdge)" stroke-width="4.64" opacity="0.8"/>
+    <path d="M129.41 34.56 A56.28 25.33 125.01 0 1 64.84 126.75 A56.28 25.33 125.01 0 1 129.41 34.56 Z" fill="none" stroke="url(#sfEdge)" stroke-width="4.64" opacity="0.8"/>
+    <path d="M100.82 39.73 A35.64 16.04 125.01 0 1 59.92 98.12 A35.64 16.04 125.01 0 1 100.82 39.73 Z" fill="none" stroke="url(#sfEdge)" stroke-width="4.64" opacity="0.8"/>
+  </g></g>
 </svg>
