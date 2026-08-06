@@ -48,6 +48,23 @@ function summarise(violations: Awaited<ReturnType<AxeBuilder['analyze']>>['viola
 }
 
 test.describe('accessibility', () => {
+  /**
+   * Playwright's 30 s default is too tight for this spec, and the failure mode
+   * was misleading: on a quiet machine these tests take 13–15 s and pass; run
+   * alongside the rest of the suite they took 28–38 s and timed out, which
+   * reads as an accessibility regression and is not one.
+   *
+   * axe walks the full DOM twice per assertion, across two device profiles in
+   * parallel, on a page whose decorative layers repaint continuously — profiling
+   * measured ~65% of the main thread going to paint (see TOOLING_MANIFEST.md).
+   * The scan is genuinely slow, not stuck.
+   *
+   * Raised here rather than globally so a real hang elsewhere still fails fast.
+   * 90 s is ~2.4x the worst observed run, which leaves headroom for a loaded
+   * machine without letting a wedged test sit for minutes.
+   */
+  test.describe.configure({ timeout: 90_000 });
+
   test('homepage has no WCAG 2.1 AA violations', async ({ page }) => {
     await page.goto('/');
     await settle(page);

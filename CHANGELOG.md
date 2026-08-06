@@ -1,5 +1,106 @@
 # SheetFlow v2 Changelog
 
+## Phase D — Toolchain and performance attribution (2026-08-06)
+
+### Added
+
+- **`scripts/profile-main-thread.mjs`** — main-thread CPU profile attributed to
+  source modules. Samples V8 through CDP and resolves every call frame back
+  through the chunk's source map, so blocking time lands on `framer-motion` or
+  `AIDashboard.tsx` rather than on `060wcmibf9..8.js`. Decodes Base64-VLQ in
+  ~40 lines rather than taking a dependency, matching the reasoning that keeps
+  `chrome-launcher` out of `audit-lighthouse.mjs`.
+
+  Reports a **median of N with its spread** and discards a warm-up, because a
+  single run of this page produced 609 ms and 1,071 ms on an unchanged build.
+
+  Splits **load phase** from **steady state**. Lighthouse's TBT stops at
+  interactive, so a profile that keeps sampling mixes one-off hydration with
+  whatever the page burns forever. They have opposite fixes.
+
+  `PROFILE_EXPERIMENT=` injects CSS before first paint to price a suspected
+  cost without editing a component. `PROFILE_REDUCED_MOTION=true` turns the
+  entire animation system off in the identical build, since every decorative
+  layer already gates on that query.
+
+- **Six MCP servers**, declared in `.mcp.json` at project scope so the
+  toolchain is reviewable in git (D14). Each verified with a real `initialize`
+  + `tools/list` handshake, not just written to config: `chrome-devtools`
+  (1.6.0, 29 tools), `context7` (3.2.5), `sequential-thinking`, `playwright`
+  (1.63.0-alpha, 24 tools), `filesystem`, and the remote `github` server.
+
+- **`DECISIONS.md`** — consolidated decision register. Decisions were scattered
+  across `PROJECT_STATUS.md` and `brand-os/07_governance/`.
+
+- **`npm run build:profile` / `profile` / `profile:mobile`**.
+
+### Measured — TBT attributed for the first time
+
+Median of 9, production build, source-mapped:
+
+| Arm | Load-phase blocking | Steady state (3 s idle) |
+|---|---|---|
+| Motion on (ships today) | 453 ms (spread 233–843) | 1,232 ms (spread 0–3,428) |
+| Reduced motion | 166 ms (spread 142–596) | **0 ms (spread 0–0)** |
+
+The decorative motion system is **~63% of TBT and 100% of steady-state
+blocking**. `(program)` — paint, layout, compositing — is **~65% of the main
+thread**; JavaScript is the minority cost, which is why three previous phases
+that optimised JavaScript did not move the number.
+
+`ParticleField` no longer appears in the top 20, confirming the earlier
+spatial-grid rewrite worked. Remaining JS: `next` 138 ms, `framer-motion`
+90 ms, turbopack runtime 77 ms, `gsap` 37 ms, `AIDashboard.tsx` 29 ms.
+
+Load-phase blocking measured 453–603 ms across passes against Lighthouse's
+610 ms TBT, confirming the instrument measures the same phenomenon.
+
+### Not concluded — deliberately
+
+Four narrower experiments (`no-blend`, `no-sheen`, `no-ambient-anim`,
+`no-backdrop-blur`) **could not be separated above the noise floor**. Spreads
+overlapped entirely and `no-ambient-anim` scored worse than baseline, which is
+physically impossible. **No claim is made about which effect is responsible**
+(D17). The `mix-blend-mode: screen` sheen and `plus-lighter` cursor glow remain
+suspects on theory only. Confirming needs a paint-level trace, which a CPU
+profiler cannot produce.
+
+### Fixed
+
+- **`.gitignore` silently shadowed `.env.example`** (D13). `vercel link`
+  appended `.env*` to the repository root, four lines below a comment warning
+  against exactly that broadening. The tracked file survived only because it
+  was already in the index; a fresh clone adding one would have lost it.
+  Added `!.env.example` / `!**/.env.example`, verified by untracking and
+  confirming `git status` still lists it.
+
+- **Accessibility tests were a gate that only passed on a quiet machine.**
+  13–15 s standalone, 28–38 s under full-suite load, against Playwright's 30 s
+  default — five tests timed out in `npm run verify` and read as an
+  accessibility regression that did not exist. Raised to 90 s for that spec
+  only, so a real hang elsewhere still fails fast. axe walks the full DOM twice
+  per assertion across two device profiles while the page repaints
+  continuously; the scan is genuinely slow, not stuck.
+
+### Corrected
+
+- **The manifest claimed GitHub was available for "repo ops, PRs". It is not.**
+  `gh` 2.96.0 is installed but unauthenticated (`gh auth status`: "You are not
+  logged into any GitHub hosts"). `git push` works because the credential
+  helper holds a token that `gh` cannot see. GitHub repository research was
+  therefore **not performed** this session — it is blocked pending
+  `gh auth login`.
+
+- `@modelcontextprotocol/server-github` was **not** installed: npm marks it
+  `Package no longer supported`.
+
+### Changed
+
+- `productionBrowserSourceMaps` is gated on `PROFILE_SOURCEMAPS` (D16). Shipped
+  builds are unchanged — maps add a `sourceMappingURL` comment and sibling
+  files, the JS is byte-identical, and browsers do not fetch maps unless
+  devtools is open.
+
 ## Phase C - Answer-Engine Optimization (2026-08-06)
 
 ### Added

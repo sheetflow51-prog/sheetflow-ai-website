@@ -18,10 +18,37 @@ Production deployment has **not** been performed and awaits explicit approval.
 ## Completed Tasks
 
 M01 phase 1 — proof architecture, design-token reconciliation, and an
-accessibility pass. Full detail in `CHANGELOG.md`.
+accessibility pass.
+
+M01 phase 2 — **toolchain build-out and the first real performance
+attribution.** Six MCP servers installed and handshake-verified; a
+source-mapped main-thread profiler added; TBT attributed to its actual cause
+for the first time in the project's history. Full detail in `CHANGELOG.md`.
 
 M00's completed task list is recorded in `CHANGELOG.md` and sealed at tag
 `v2-m00-foundation`.
+
+## Headline finding — TBT is paint, not JavaScript
+
+`npm run profile` (CDP CPU profiler + source maps, median of 9):
+
+| Arm | Load-phase blocking | Steady state (3 s idle) |
+|---|---|---|
+| Motion on (ships today) | 453 ms (spread 233–843) | 1,232 ms (spread 0–3,428) |
+| Reduced motion | 166 ms (spread 142–596) | **0 ms (spread 0–0)** |
+
+The decorative motion system is **~63% of TBT and 100% of steady-state
+blocking**. `(program)` — paint, layout, compositing — is **~65% of the main
+thread**. Three previous optimisation phases targeted JavaScript, which is the
+minority cost; that is why they did not move the number.
+
+**Lighthouse never saw the steady-state cost** because TBT stops at
+interactive. An idle page blocking ~1.2 s of every 3 s still costs battery,
+scroll smoothness and INP.
+
+**Which specific effect is responsible is NOT known** — see D17. Four narrower
+experiments failed to separate above the noise floor. The next step is a
+paint-level trace via chrome-devtools MCP, not a code change.
 
 ## Current Blockers
 
@@ -42,6 +69,17 @@ proof" and "portfolio permission" are founder decisions, so the entries remain
 either a measured outcome with stated methodology or agreement to show the work
 with no metric attached. The architecture already supports the second case —
 a case study can carry a summary without a metric.
+
+## Decision Register
+
+Decisions now live in **`DECISIONS.md`** (new this session), which consolidates
+what was scattered across this file and `brand-os/07_governance/`. The summary
+below is retained for continuity; `DECISIONS.md` is authoritative.
+
+New this session: **D13** (`.gitignore` negation — resolved), **D14** (MCP
+servers project-scoped), **D15** (component registries declined), **D16**
+(source maps profiling-only), **D17** (which paint effect costs — open), **A2**
+(does the cinematic identity survive its measured cost — founder call).
 
 ## Open Decisions
 

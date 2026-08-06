@@ -14,6 +14,9 @@
     "test:a11y": "playwright test a11y",
     "audit:lh": "node scripts/audit-lighthouse.mjs",
     "audit:bundle": "node scripts/audit-bundle.mjs",
+    "build:profile": "cross-env PROFILE_SOURCEMAPS=true next build",
+    "profile": "node scripts/profile-main-thread.mjs",
+    "profile:mobile": "cross-env PROFILE_CPU=4 node scripts/profile-main-thread.mjs",
     "preflight": "npm run type-check && npm run lint && npm run build",
     "verify": "npm run preflight && npm run test:e2e && npm run audit:bundle"
   },

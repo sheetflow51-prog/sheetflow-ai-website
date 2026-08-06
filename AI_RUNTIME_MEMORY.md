@@ -106,6 +106,33 @@ already-fixed bug. Use
 them. To test whether a library ships, grep for a distinctive runtime symbol
 (`WebGLRenderer`, `BufferGeometry`) or trace the import graph in `src/`.
 
+**Turbopack hashes source maps independently of their chunks.**
+`060wcmibf9..8.js` ships next to `17bf.tm-de06b.js.map`. Deriving the map name
+by appending `.map` finds nothing and silently degrades attribution to chunk
+URLs — which looks like it worked. Always read the chunk's trailing
+`//# sourceMappingURL=` comment. `scripts/profile-main-thread.mjs` does this and
+prints `N/M chunks source-mapped` so a silent failure is visible.
+
+**`prefers-reduced-motion` is a free A/B switch for the whole animation
+system.** Every decorative layer already gates on it, so emulating it in
+Playwright turns all motion off *in the identical build* — no code change, no
+rebuild, no confound. This is what finally attributed TBT. Reach for an existing
+runtime switch before editing components to measure something.
+
+**MCP servers attach at session start.** Adding one to `.mcp.json` mid-session
+does not make it callable in that session, no matter how the config looks.
+Install, verify with a real `initialize` + `tools/list` handshake, and use it
+next session. A server that starts is *configured*; only one that has answered
+a question is *usable*.
+
+**A negation in `.gitignore` is not optional when a rule broadens.** `vercel
+link` appended `.env*` to the repo root, four lines below a comment explicitly
+warning not to do exactly that. It shadowed the tracked `.env.example`, which
+survived only because it was already in the index — a fresh clone adding one
+would have lost it silently. `git check-ignore -v` is ambiguous here (it prints
+the negation and its exit code reads as "matched"); the reliable test is to
+untrack the file and see whether `git status` still lists it.
+
 ---
 
 **Unsaved editor buffers are detectable, not guessable.** VSCode persists dirty
@@ -186,16 +213,48 @@ decision, so it has not been taken autonomously.
 
 ## Next
 
-**Total Blocking Time is still the weakness** — ~950 ms desktop, ~2,080 ms on a
-4x-throttled mobile profile. Phase B eliminated CLS but did not move TBT.
+**TBT has been attributed. It is paint, not JavaScript.**
 
-What Phase B ruled out: the particle field's O(n²) connection pass (now a
-spatial grid) and the decorative layer's position on the critical path (now
-deferred). Neither was the dominant cost.
+`npm run profile` (CDP CPU profiler + source maps, median of 9) settles the
+question three previous phases could not:
 
-What remains unexamined: framer-motion's hydration cost across every section,
-GSAP + Lenis in `SmoothScroll`/`GsapProvider` (still eager, and scroll
-behaviour depends on them), and the ~91 kB of shipped-but-unused JS. The next
-attempt should profile a real trace and attribute the long tasks to modules
-before changing anything — Phase B changed code first and measured second, and
-two of its three changes turned out not to matter.
+| Arm | Load-phase blocking | Steady state (3 s, page idle) |
+|---|---|---|
+| Motion on (ships today) | 453 ms (spread 233–843) | 1,232 ms (spread 0–3,428) |
+| Reduced motion | 166 ms (spread 142–596) | **0 ms (spread 0–0)** |
+
+Three things follow.
+
+**The decorative motion system is ~63% of TBT and 100% of steady-state
+blocking.** The steady-state result is categorical — nine runs, zero long tasks,
+zero spread — not a marginal delta inside the noise band.
+
+**Lighthouse cannot see the steady-state cost**, because TBT stops at
+interactive. An idle page blocking ~1.2 s of every 3 s is real regardless:
+battery, scroll jank, INP risk. This was invisible for the project's whole life.
+
+**`(program)` — paint, layout, style, compositing — is ~65% of the main thread.**
+JS is the minority cost. That is why the prior phases failed: they optimised
+JavaScript. `ParticleField` no longer appears in the top 20, so the spatial-grid
+rewrite genuinely worked and there is nothing left to win there. Ranked JS is
+now `next` (hydration) 138 ms, `framer-motion` 90 ms, turbopack runtime 77 ms,
+`gsap` 37 ms, `AIDashboard` 29 ms.
+
+**What is NOT known — do not skip this.** Four narrower experiments
+(`PROFILE_EXPERIMENT=no-blend|no-sheen|no-ambient-anim|no-backdrop-blur`)
+**could not be separated above the noise floor**; spreads overlapped entirely
+and `no-ambient-anim` scored worse than baseline, which is impossible. So
+*which* effect costs the paint time is unproven. The `mix-blend-mode: screen`
+sheen and `plus-lighter` cursor glow in `AmbientBackground.tsx` are the leading
+suspects on theory — blend modes defeat layer isolation and force backdrop
+read-back every frame — but theory is not evidence.
+
+**The next step is a paint-level trace, not a code change.** A CPU profiler
+cannot see inside `(program)`; `chrome-devtools` MCP (installed, live next
+session) can, via `performance_start_trace` and `performance_analyze_insight`.
+Get the layerisation and paint records first.
+
+**Then it becomes a design decision, not an engineering one.** If the cost is
+inherent to the cinematic identity rather than to one fixable effect, the trade
+— visual signature against battery and jank — belongs to the founder under
+`EXPERIENCE_GOVERNANCE.md`. Do not quietly delete animation to win a metric.

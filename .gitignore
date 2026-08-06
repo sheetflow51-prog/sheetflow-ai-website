@@ -41,4 +41,13 @@ Thumbs.db
 /coverage
 
 .vercel
+
+# Added by `vercel link`. `.env*` is exactly the broadening the rule above warns
+# against — it matches 10_Final_Website/.env.example, which is tracked on
+# purpose and is the only documentation of the app's environment contract. The
+# file survives today only because it is already in the index; a fresh clone
+# adding a new one would silently lose it. The negation restores the intent of
+# both rules: ignore real secrets, keep the example.
 .env*
+!.env.example
+!**/.env.example

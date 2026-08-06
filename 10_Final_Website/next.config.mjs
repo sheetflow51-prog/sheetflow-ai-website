@@ -3,7 +3,13 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
-  productionBrowserSourceMaps: false,
+  // Off for shipped builds. `PROFILE_SOURCEMAPS=true npm run build` turns maps
+  // on so `scripts/profile-main-thread.mjs` can attribute sampled CPU time to
+  // original modules instead of minified chunk offsets. Emitting maps appends a
+  // `sourceMappingURL` comment and writes sibling .map files; the JS itself is
+  // byte-identical and browsers never fetch the maps unless devtools is open,
+  // so a profiling build measures the same code the production build ships.
+  productionBrowserSourceMaps: process.env.PROFILE_SOURCEMAPS === 'true',
   // No `eslint` key. Next 16 removed built-in linting from `next build` and
   // reports the key as an unrecognized option. ESLint remains a separate CI
   // gate via `npm run lint` / `npm run preflight`.
