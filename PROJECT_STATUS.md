@@ -76,8 +76,9 @@ wrong workspace root. Outside the repository; deletion is the founder's call.
 
 **D8 — `.claude/` directory** is untracked and not ignored.
 
-**D12 — Preview deployments are SSO-protected.** The first preview
-(`sheetflow-ai-website-kmquksq6e-…vercel.app`, Ready) returns 302 to
+**D12 — Preview deployments are SSO-protected.** Latest preview
+`sheetflow-ai-website-muphh4vl9-sheetflow51-progs-projects.vercel.app`
+(Ready, 2026-08-06). Like the first, it returns 302 to
 `vercel.com/sso-api` for anonymous requests. A logged-in Vercel session opens
 it normally. Automated verification against a preview URL would need either a
 protection-bypass secret or protection relaxed — both are security settings and
@@ -123,13 +124,13 @@ Measured **2026-08-06**, production build, via `npm run audit:lh`
 
 | Category | Desktop | Mobile (4x CPU) |
 |---|---|---|
-| Performance | **60** | **50** |
+| Performance | **65** | **50** |
 | Accessibility | **100** | — |
 | Best practices | **96** | — |
 | SEO | **100** | — |
 
-Desktop: FCP 0.4s · LCP 1.3s · **TBT ~950ms** · **CLS 0.000** · SI 3.7s
-Mobile: LCP 4.3s · TBT ~2,080ms · CLS 0.000
+Desktop: FCP 0.4s · LCP 1.2s · **TBT ~610ms** · **CLS 0.000** · SI 3.4s
+Mobile: LCP 4.3s · TBT ~2,080ms · CLS 0.000 (measured Phase B; not re-run)
 
 **Read TBT with care.** Run-to-run spread on this machine is 443–1,223 ms for
 an unchanged build. Only differences larger than that are real. Phase B
