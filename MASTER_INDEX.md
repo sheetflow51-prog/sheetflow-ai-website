@@ -10,7 +10,21 @@
 This workspace is the **intelligence layer** behind the SheetFlow AI website.
 It contains brand strategy, design research, motion systems, 3D concepts, UX architecture, and complete copywriting — all designed to produce an experience that feels like Apple + Stripe + a futuristic AI lab designed it together.
 
-The website does not exist yet. The intelligence behind it does.
+> **The website now exists.** It lives in [`10_Final_Website/`](10_Final_Website/)
+> and is the Vercel root. The documents indexed below are the research that
+> preceded it and are **reference only** — they carry no governing authority and
+> several describe directions that were never built.
+>
+> For the current state of the product, read these instead:
+>
+> | Document | What it holds |
+> |---|---|
+> | [AI_RUNTIME_MEMORY.md](AI_RUNTIME_MEMORY.md) | Durable engineering context and hard-won lessons. Read first. |
+> | [TOOLING_MANIFEST.md](TOOLING_MANIFEST.md) | Verified capabilities, measured baselines, known issues |
+> | [PROJECT_STATUS.md](PROJECT_STATUS.md) | Where things stand, open decisions |
+> | [CHANGELOG.md](CHANGELOG.md) | What changed and why |
+> | [brand-os/07_governance/](brand-os/07_governance/) | DEC-301, DEC-302 — binding brand decisions |
+> | [brand-os/09_logo-system/](brand-os/09_logo-system/LOGO_SYSTEM.md) | The logo system and how to regenerate it |
 
 ---
 
@@ -120,18 +134,24 @@ Every component is evaluated against one test:
 
 ---
 
-## What Comes Next
+## What Was Actually Built
 
-With this intelligence system complete, the website build proceeds in this order:
+The original plan below is kept for the record. Where it diverged from what
+shipped, what shipped is authoritative.
 
-1. **Technical Setup** — Next.js 14, TypeScript, Tailwind CSS, GSAP, Three.js
-2. **Design System Implementation** — Component library from the UI Systems docs
-3. **Static Structure** — HTML/layout from the wireframes
-4. **3D Scene Build** — Spline scenes and Three.js from the 3D Concepts docs
-5. **Motion Layer** — GSAP animations from the Motion References docs
-6. **Copy Integration** — Full copy from the Content System docs
-7. **Performance Optimization** — Load time, animation performance, accessibility
-8. **QA & Polish** — The 1,000 small details that make good design great
+| Planned | Actual |
+|---|---|
+| Next.js 14, TypeScript, Tailwind, GSAP, Three.js | Next.js **16.2.6**, TypeScript 5.6, Tailwind 3.4, GSAP, Lenis, Framer Motion |
+| Design System Implementation | Built. `brand-os/01_design-tokens` mirrored into `tailwind.config.ts`; drift reconciled 2026-08-06 |
+| Static Structure | Built — nine homepage sections |
+| 3D Scene Build (Spline + Three.js) | **Not shipped.** `src/components/three/` exists but is imported by nothing and the bundle carries zero Three.js symbols. See open decision A1 |
+| Motion Layer | Built with Framer Motion + GSAP |
+| Copy Integration | Built. Fabricated customer proof removed and replaced with a verification-enforcing content architecture |
+| Performance Optimization | In progress. First measured baseline 2026-08-06 |
+| QA & Polish | Playwright + axe + Lighthouse + bundle budgets, 50 tests |
+
+*Original plan: Technical Setup → Design System → Static Structure → 3D Scene
+Build → Motion Layer → Copy Integration → Performance → QA & Polish.*
 
 ---
 

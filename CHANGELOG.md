@@ -1,5 +1,54 @@
 # SheetFlow v2 Changelog
 
+## Phase B - Layout Stability and Measurement Rigour (2026-08-06)
+
+### Fixed
+
+- **Cumulative Layout Shift eliminated: 0.079 -> 0.000.** The boot flourish
+  animated `top` from 50% to 0% to 100%, driving a layout on every frame. It
+  was the site's entire CLS. Now animates `y`, which compiles to a compositor
+  transform. Verified with a live `PerformanceObserver`, not just Lighthouse.
+- Particle field's connection pass rewritten from an all-pairs O(n²) scan
+  (8,385 distance checks per frame) to a uniform spatial grid, and throttled
+  from 60fps to 30fps. Squared-distance comparison removes a `sqrt` per
+  candidate pair.
+- The decorative layer — particles, aurora, cursor, grain, scroll rail, boot
+  flourish, dormant audio engine — moved off the critical path into
+  `DeferredAtmosphere`. It mounts after `load` and idle, is excluded from the
+  server payload, and is never downloaded at all under `prefers-reduced-motion`.
+
+### Measurement
+
+The harness was producing numbers that could not be trusted. Five consecutive
+runs of an *unchanged* build reported Total Blocking Times of 11,121 / 586 /
+655 / 538 / 701 ms; one contended sample read as a catastrophic regression and
+was noise.
+
+`npm run audit:lh` now discards a warm-up pass, launches a cold browser per
+run, and reports the median of N. `LH_PRESET=mobile` adds the 4x-CPU / slow-4G
+profile. Added `scripts/probe-cls.mjs` for layout-shift attribution, which
+found the `top` keyframe that Lighthouse could not attribute.
+
+### Honest result
+
+Measured against the previous commit with identical methodology (median of 5):
+
+| Metric | Before | After |
+|---|---|---|
+| CLS | 0.079 | **0.000** |
+| Performance | 62 | 60-63 |
+| Total Blocking Time | 700 ms | 950 ms |
+| LCP | 1.3 s | 1.2-1.3 s |
+
+**CLS is fixed. TBT did not improve.** The O(n²) rewrite and the deferral are
+sound engineering — strictly less work, and off the critical path — but neither
+was the dominant cost on this hardware, and the run-to-run spread (443-1,223 ms)
+exceeds any delta between them. Reported as measured rather than as intended.
+
+An interim revision made TBT genuinely worse by mounting the deferred layer in
+a `requestIdleCallback`, which fires inside the window TBT measures. Corrected
+to gate on `load` first.
+
 ## Phase A - Verification Harness (2026-08-06)
 
 The project had no test infrastructure of any kind, and none of the mandated

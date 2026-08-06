@@ -7,16 +7,13 @@ import './globals.css';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sheetflow.ai';
 
 import SmoothScroll from '@/components/providers/SmoothScroll';
-import CustomCursor from '@/components/providers/CustomCursor';
 import LoadingScreen from '@/components/providers/LoadingScreen';
-import ScrollProgress from '@/components/providers/ScrollProgress';
-import AmbientBackground from '@/components/providers/AmbientBackground';
-import ParticleField from '@/components/providers/ParticleField';
-import NoiseTexture from '@/components/providers/NoiseTexture';
 import GsapProvider from '@/components/providers/GsapProvider';
-import AudioProvider from '@/components/providers/AudioProvider';
-import Awakening from '@/components/signature/Awakening';
 import MotionProvider from '@/components/providers/MotionProvider';
+// The decorative layer — particles, aurora, cursor, grain, scroll rail, boot
+// flourish and the dormant audio engine — loads after the browser goes idle.
+// See DeferredAtmosphere for why.
+import DeferredAtmosphere from '@/components/providers/DeferredAtmosphere';
 import { Navigation } from '@/components/layout/Navigation';
 import { Footer } from '@/components/layout/Footer';
 
@@ -215,26 +212,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <MotionProvider>
           <LoadingScreen />
-          <Awakening />
-          <CustomCursor />
-          <AmbientBackground />
-          {/* Site-wide living wallpaper: the geometric data-network that drifts
-              on a flow-field and reacts to the cursor (repulsion), behind every
-              section. Reduced-motion users get a static frame (component
-              early-returns). One fixed canvas — replaces the old per-section
-              instances so the whole page feels alive, not just the hero. */}
-          <ParticleField fixed reactive className="z-0 opacity-80" />
-          <NoiseTexture />
-          <ScrollProgress />
           <SmoothScroll>
             <GsapProvider>
-              <AudioProvider>
-                <Navigation />
-                <main className="relative z-10">{children}</main>
-                <Footer />
-              </AudioProvider>
+              <Navigation />
+              <main className="relative z-10">{children}</main>
+              <Footer />
             </GsapProvider>
           </SmoothScroll>
+          <DeferredAtmosphere />
         </MotionProvider>
         {/* Vercel Analytics — zero-config Web Vitals + pageview tracking */}
         <Analytics />

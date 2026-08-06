@@ -126,11 +126,17 @@ export default function Awakening() {
             }}
           />
 
-          {/* Whisper line — single horizontal scan, low opacity */}
+          {/* Whisper line — single horizontal scan, low opacity.
+
+              Animates `y`, not `top`. Animating `top` drove a layout on every
+              frame and was the site's entire Cumulative Layout Shift (0.101 of
+              a 0.103 total). `y` compiles to a transform, which the compositor
+              handles without touching layout. Viewport units are safe here
+              because the parent is `fixed inset-0`. */}
           <motion.div
-            className="absolute left-0 right-0 h-px"
-            initial={{ top: '50%', opacity: 0 }}
-            animate={{ top: ['50%', '0%', '100%'], opacity: [0, 0.4, 0] }}
+            className="absolute left-0 right-0 top-0 h-px will-change-transform"
+            initial={{ y: '50vh', opacity: 0 }}
+            animate={{ y: ['50vh', '0vh', '100vh'], opacity: [0, 0.4, 0] }}
             transition={{
               duration: 1.4,
               delay: 0.4,

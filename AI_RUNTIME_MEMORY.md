@@ -39,6 +39,18 @@ regenerate with `npm run brand`, never hand-edit.
 performance "targets" that had never been run. Numbers in docs must carry the
 date they were measured and the command that produced them.
 
+**One Lighthouse run is not a measurement.** On this machine, five consecutive
+runs of an *unchanged* build produced Total Blocking Times of 11,121 / 586 /
+655 / 538 / 701 ms. A single sample once read as a catastrophic regression and
+was pure noise. `npm run audit:lh` therefore discards a warm-up pass and
+reports the median of N. Never compare two single runs and never report a
+delta smaller than the observed spread.
+
+**Compare like with like.** To claim an improvement, measure the previous
+commit with the *same* methodology — `git stash`, build, audit, restore. A
+"before" taken with a different instrument is not a baseline. Doing this is
+what revealed that Phase B fixed CLS but did nothing measurable for TBT.
+
 ---
 
 ## Hard-won lessons
@@ -67,7 +79,20 @@ pixel bounds made "replace the PNG and rerun" silently false. The generator now
 classifies the image each run and aborts loudly if it cannot.
 
 **Windows/OneDrive locks `.next`.** Builds intermittently fail with
-`EPERM: unlink '.next/static/...'`. Not a code fault. `rm -rf .next` and rebuild.
+`EPERM: unlink '.next/static/...'`. Not a code fault. `rm -rf .next` and
+rebuild. **Stop the server first** — `rm -rf .next` against a running server
+fails with "Device or resource busy", the build then silently uses stale
+output, and the audit that follows reports zeros.
+
+**Animate transforms, never layout properties.** A `top` keyframe in the boot
+flourish was the site's entire Cumulative Layout Shift. `top`/`left`/`width`/
+`height` drive layout every frame; `x`/`y`/`scale` compile to compositor
+transforms and cost nothing. Any keyframe touching a layout property is a bug.
+
+**Deferring work does not remove it.** Moving the decorative layer behind
+`requestIdleCallback` made TBT *worse*, because idle callbacks fire inside the
+very window TBT measures. Gate on `load` first if the intent is to leave the
+metric's window; better still, make the work cheaper.
 
 **Kill dev servers by port, not by name.** `pkill -f "next start"` does not work
 here; a stale server keeps serving the old build and you will debug a
@@ -126,6 +151,16 @@ decision, so it has not been taken autonomously.
 
 ## Next
 
-**Performance.** Baseline is 65, dragged by 490 ms Total Blocking Time and
-0.103 CLS. Main-thread script evaluation is 660 ms and roughly 91 kB of shipped
-JS goes unused. That is the highest-value engineering work outstanding.
+**Total Blocking Time is still the weakness** — ~950 ms desktop, ~2,080 ms on a
+4x-throttled mobile profile. Phase B eliminated CLS but did not move TBT.
+
+What Phase B ruled out: the particle field's O(n²) connection pass (now a
+spatial grid) and the decorative layer's position on the critical path (now
+deferred). Neither was the dominant cost.
+
+What remains unexamined: framer-motion's hydration cost across every section,
+GSAP + Lenis in `SmoothScroll`/`GsapProvider` (still eager, and scroll
+behaviour depends on them), and the ~91 kB of shipped-but-unused JS. The next
+attempt should profile a real trace and attribute the long tasks to modules
+before changing anything — Phase B changed code first and measured second, and
+two of its three changes turned out not to matter.

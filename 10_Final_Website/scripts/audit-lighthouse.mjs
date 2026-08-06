@@ -24,6 +24,49 @@ const OUT = join(ROOT, '.lighthouse');
 const URL = process.env.AUDIT_URL ?? 'http://localhost:3000';
 
 /**
+ * Lighthouse is run several times and the MEDIAN reported.
+ *
+ * A single run on a loaded desktop is not a measurement. Three consecutive
+ * runs of an unchanged build here produced Total Blocking Times of 230, 660
+ * and 430 ms — and one contended run reported 7,960 ms, which read as a
+ * catastrophic regression and was noise. Acting on a single sample means
+ * chasing the machine's mood.
+ *
+ * The median is reported rather than the mean because one contended run
+ * skews an average badly, and Lighthouse's own CLI does the same.
+ */
+const RUNS = Number(process.env.LH_RUNS ?? 3);
+
+/**
+ * The first run after a server start is always an outlier — Next is still
+ * warming its route cache and V8 has not tiered up. Measured back to back on
+ * an unchanged build, run 1 reported 11,121 ms of blocking time against 538–701
+ * ms for runs 2–5. Including it would let server warm-up masquerade as a
+ * frontend regression, so one warm-up pass is taken and discarded.
+ */
+const WARMUP = process.env.LH_WARMUP === 'false' ? 0 : 1;
+
+/**
+ * `desktop` is the default. `mobile` applies Lighthouse's standard 4x CPU
+ * slowdown and slow-4G profile, which is where main-thread cost actually hurts
+ * — an unthrottled desktop absorbs work that makes a mid-range phone stutter.
+ */
+const PRESET = process.env.LH_PRESET === 'mobile' ? 'mobile' : 'desktop';
+
+const PROFILES = {
+  desktop: {
+    formFactor: 'desktop',
+    screenEmulation: { mobile: false, width: 1350, height: 940, deviceScaleFactor: 1, disabled: false },
+    throttling: { rttMs: 40, throughputKbps: 10 * 1024, cpuSlowdownMultiplier: 1 },
+  },
+  mobile: {
+    formFactor: 'mobile',
+    screenEmulation: { mobile: true, width: 412, height: 823, deviceScaleFactor: 1.75, disabled: false },
+    throttling: { rttMs: 150, throughputKbps: 1638.4, cpuSlowdownMultiplier: 4 },
+  },
+};
+
+/**
  * Thresholds are a ratchet, not an aspiration: they start at the measured
  * baseline and only ever move up. A number here that has never been met is
  * a broken gate, and a broken gate gets ignored.
@@ -40,37 +83,54 @@ const PORT = 9222;
 const pct = (n) => (n === null || n === undefined ? '  n/a' : `${Math.round(n * 100)}`.padStart(5));
 const ms = (n) => (n === null || n === undefined ? 'n/a' : `${(n / 1000).toFixed(2)}s`);
 
-async function main() {
-  mkdirSync(OUT, { recursive: true });
-
-  const browser = await chromium.launch({
-    args: [`--remote-debugging-port=${PORT}`],
-  });
-
+/**
+ * One run, in its own browser.
+ *
+ * Reusing a single browser across runs let memory and GC pressure accumulate,
+ * so later runs measured progressively worse and the median drifted with run
+ * count rather than with the build. A cold browser per run also matches what a
+ * first-time visitor gets.
+ */
+async function runOnce(label) {
+  const browser = await chromium.launch({ args: [`--remote-debugging-port=${PORT}`] });
   try {
     const result = await lighthouse(
       URL,
-      {
-        port: PORT,
-        output: ['json', 'html'],
-        logLevel: 'error',
-        // Desktop: the hero carries video and 3D, and a throttled mobile run
-        // alone would hide which of the two dominates.
-        formFactor: 'desktop',
-        screenEmulation: { mobile: false, width: 1350, height: 940, deviceScaleFactor: 1, disabled: false },
-        throttling: { rttMs: 40, throughputKbps: 10 * 1024, cpuSlowdownMultiplier: 1 },
-      },
+      { port: PORT, output: ['json', 'html'], logLevel: 'error', ...PROFILES[PRESET] },
       undefined,
     );
-
     if (!result) throw new Error('Lighthouse returned no result');
+    process.stdout.write(
+      `  ${label}  perf ${Math.round((result.lhr.categories.performance?.score ?? 0) * 100)}` +
+        `  tbt ${Math.round(result.lhr.audits['total-blocking-time']?.numericValue ?? 0)}ms\n`,
+    );
+    return result;
+  } finally {
+    await browser.close();
+  }
+}
 
-    const { lhr, report } = result;
+async function main() {
+  mkdirSync(OUT, { recursive: true });
+
+  {
+    for (let i = 0; i < WARMUP; i++) await runOnce('warm-up (discarded)');
+
+    const runs = [];
+    for (let i = 0; i < RUNS; i++) runs.push(await runOnce(`run ${i + 1}/${RUNS}     `));
+
+    // Median by performance score; its report is the one kept on disk, so the
+    // saved HTML always corresponds to the numbers printed below.
+    const ordered = [...runs].sort(
+      (x, y) => (x.lhr.categories.performance?.score ?? 0) - (y.lhr.categories.performance?.score ?? 0),
+    );
+    const { lhr, report } = ordered[Math.floor(ordered.length / 2)];
+
     writeFileSync(join(OUT, 'report.json'), report[0], 'utf8');
     writeFileSync(join(OUT, 'report.html'), report[1], 'utf8');
 
     const a = lhr.audits;
-    console.log(`\nLighthouse — ${URL}  (desktop)\n`);
+    console.log(`\nLighthouse — ${URL}  (${PRESET}, median of ${RUNS})\n`);
     console.log('  category            score   min');
     console.log('  ─────────────────────────────────');
 
@@ -115,8 +175,6 @@ async function main() {
       console.error(`Lighthouse gate failed: ${failed.join(', ')}\n`);
       process.exitCode = 1;
     }
-  } finally {
-    await browser.close();
   }
 }
 

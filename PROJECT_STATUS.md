@@ -102,20 +102,24 @@ follow-up commit finalises `CHANGELOG.md` and this file.
 
 ## Current Lighthouse
 
-Measured **2026-08-06**, desktop, production build, via `npm run audit:lh`:
+Measured **2026-08-06**, production build, via `npm run audit:lh`
+(median of N, warm-up discarded, cold browser per run).
 
-| Category | Score |
-|---|---|
-| Performance | **65** |
-| Accessibility | **100** |
-| Best practices | **96** |
-| SEO | **100** |
+| Category | Desktop | Mobile (4x CPU) |
+|---|---|---|
+| Performance | **60** | **50** |
+| Accessibility | **100** | — |
+| Best practices | **96** | — |
+| SEO | **100** | — |
 
-FCP 0.4s · LCP 1.4s · **TBT 490ms** · **CLS 0.103** · SI 3.0s
+Desktop: FCP 0.4s · LCP 1.3s · **TBT ~950ms** · **CLS 0.000** · SI 3.7s
+Mobile: LCP 4.3s · TBT ~2,080ms · CLS 0.000
 
-Performance is the outstanding weakness: 660ms of main-thread script
-evaluation and ~91 kB of shipped-but-unused JS. `DEPLOYMENT.md`'s targets
-remain aspirations and should be read as such.
+**Read TBT with care.** Run-to-run spread on this machine is 443–1,223 ms for
+an unchanged build. Only differences larger than that are real. Phase B
+eliminated CLS but did not move TBT.
+
+`DEPLOYMENT.md`'s targets remain aspirations and should be read as such.
 
 ## Current Bundle Size
 

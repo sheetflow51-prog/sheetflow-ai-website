@@ -13,7 +13,8 @@
 | Lint | ESLint 9 (flat config) | `npm run lint` | ✅ 9 known warnings |
 | Build | Next.js 16.2.6 (Turbopack) | `npm run build` | ✅ 8/8 routes |
 | E2E + a11y | Playwright 1.62 + axe-core 4.12 | `npm run test:e2e` | ✅ 50 tests |
-| Lighthouse | lighthouse 13.4 | `npm run audit:lh` | ✅ |
+| Lighthouse | lighthouse 13.4 | `npm run audit:lh` | ✅ median of N |
+| CLS attribution | Playwright + PerformanceObserver | `node scripts/probe-cls.mjs` | ✅ |
 | Bundle budget | custom, gzip-accurate | `npm run audit:bundle` | ✅ |
 | Bundle treemap | `@next/bundle-analyzer` | `npm run analyze` | ✅ |
 | Brand assets | sharp 0.34 / libvips 8.17 | `npm run brand` | ✅ |
@@ -58,29 +59,37 @@ via `claude mcp` / `/mcp` in an interactive session. Not possible from here.
 First quantitative measurement in the project's history. Every prior figure in
 the repo was an aspiration.
 
-### Lighthouse (desktop, production build)
+### Lighthouse (production build, median of N, warm-up discarded)
 
-| Category | Score | Gate |
+| Category | Desktop | Mobile 4x | Gate |
+|---|---|---|---|
+| Performance | **60** | **50** | ≥50 |
+| Accessibility | **100** | — | ≥90 |
+| Best practices | **96** | — | ≥90 |
+| SEO | **100** | — | ≥90 |
+
+| Metric | Desktop | Mobile 4x |
 |---|---|---|
-| Performance | **65** | ≥50 |
-| Accessibility | **100** | ≥90 |
-| Best practices | **96** | ≥90 |
-| SEO | **100** | ≥90 |
+| First Contentful Paint | 0.4 s | — |
+| Largest Contentful Paint | 1.3 s | 4.3 s |
+| **Total Blocking Time** | **~950 ms** | **~2,080 ms** |
+| Cumulative Layout Shift | **0.000** | 0.000 |
+| Speed Index | 3.7 s | — |
 
-| Metric | Value |
-|---|---|
-| First Contentful Paint | 0.4 s |
-| Largest Contentful Paint | 1.4 s |
-| **Total Blocking Time** | **490 ms** |
-| **Cumulative Layout Shift** | **0.103** |
-| Speed Index | 3.0 s |
+**TBT is noisy on this machine** — 443–1,223 ms across runs of an unchanged
+build. Treat any delta under ~800 ms as unmeasurable. This is why the runner
+discards a warm-up and reports a median.
 
 ### Bundle
 
 | | gzip | raw | budget |
 |---|---|---|---|
-| JS (16 files) | **321.3 kB** | 1024 kB | 360 kB |
+| JS (17 files) | **327.4 kB** | 1031 kB | 360 kB |
 | CSS (1 file) | **9.6 kB** | 56 kB | 40 kB |
+
+Up 6 kB from Phase A: code-splitting the deferred atmosphere adds chunk
+overhead. The trade is deliberate — the largest single chunk fell from 96.9 kB
+to 69.2 kB, and the atmosphere is no longer on the critical path.
 | Largest chunk | 96.9 kB | — | 170 kB |
 
 ### Tests
