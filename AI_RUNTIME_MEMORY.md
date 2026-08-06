@@ -108,6 +108,12 @@ them. To test whether a library ships, grep for a distinctive runtime symbol
 
 ---
 
+**Unsaved editor buffers are detectable, not guessable.** VSCode persists dirty
+buffers to `%APPDATA%\Code\Backups\<workspace>\file\<hash>`, first line being
+the source URI plus metadata. To answer "is anything unsaved", enumerate those,
+extract the content after line 1, and diff it against disk — `git status` alone
+cannot see an unsaved buffer, and neither can any file read.
+
 ## Architecture notes
 
 **Proof architecture** — `src/config/features.ts` (env-backed flags, all

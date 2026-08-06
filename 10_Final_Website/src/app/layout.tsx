@@ -253,9 +253,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             an @id and references the others, so a consumer resolves the whole
             entity set — organisation, site, page, questions — in a single pass
             instead of guessing how separate blocks relate. */}
+        {/* `react/no-danger` is not enabled in eslint.config.mjs, so a disable
+            directive here is inert and ESLint reports it as unused. The content
+            is JSON.stringify of a local literal — no external input reaches it. */}
         <script
           type="application/ld+json"
-          // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
         <MotionProvider>

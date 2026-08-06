@@ -36,18 +36,28 @@ accessibility and performance numbers describe a build nobody ships.
 | GitHub | ✅ `gh` 2.96.0 | Repo ops, PRs |
 | **Vercel CLI** | ✅ **58.7.0, authenticated** | Logged in as `sheetflow51-prog`, scope `sheetflow51-progs-projects`. Project linked via `.vercel/project.json`. **This is the working path for deployments.** |
 | Vercel MCP | ⛔ **403 Forbidden** | Authenticated to a *different* account than the one owning this project: `Not authorized ... under scope "sheetflow51-progs-projects". You must re-authenticate to this scope.` Re-authorise the claude.ai Vercel connector against that scope to use it. Until then, use the CLI. |
-| Adobe, Figma, Canva | ✅ connected | Not used — DEC-302 makes `logo.png` canonical, so external design tooling would only add drift |
-| Notion, Slack, Gmail, Drive, Calendar, Airtable, Calendly | ✅ connected | Not used by the build |
-| ElevenLabs | ✅ connected | Candidate for the dormant audio system (`public/audio/`) |
+| **Calendly** | ✅ **used** | Verifies the site's primary conversion path. `contact.ts` points at `calendly.com/sheetflow51/30min`; the API confirms that exact `scheduling_url`, `active: true`, `duration: 30`, `is_paid: false`, name "Free Automation Audit". The CTA and the FAQ's "free 30-minute audit" answer are both factually true. |
+| Adobe, Figma, Canva | ✅ connected, **not used** | DEC-302 makes `logo.png` canonical and `public/brand/` generated. Routing brand assets through external design tooling would reintroduce exactly the drift DEC-301/302 exist to prevent. Figma would earn its place only if a Figma file became a design source; none exists. |
+| ElevenLabs | ✅ connected, **not used** | Could produce the five UI sounds `public/audio/README.md` specifies. Not done: the audio system is deliberately dormant, ships no files, and autoplays never. Adding ~285 kB of audio for a feature no visitor triggers fails the "every asset must justify its existence" test. Reconsider if audio is switched on. |
+| Notion, Slack, Gmail, Drive, Calendar, Airtable | ✅ connected, **not used** | No build or verification need. Using them would be tool theatre. |
 
 ### Requested but unavailable
 
 | Capability | Status | Substitute in use |
 |---|---|---|
-| Chrome DevTools MCP | not installed | Lighthouse + Playwright tracing |
-| Playwright MCP | not installed | Playwright directly — strictly more capable here |
-| Context7 | not installed | — |
-| 21st.dev | not installed | — |
+| Chrome DevTools MCP | not installed | Lighthouse (median-of-N) + Playwright tracing + `probe-cls.mjs`. These already produce the traces, CWV numbers and shift attribution the MCP would. Install: `claude mcp add chrome-devtools -- npx -y chrome-devtools-mcp@latest` |
+| Playwright MCP | not installed | Playwright directly — strictly more capable here, since the suite needs fixtures, projects and a `webServer`, none of which the MCP exposes |
+| Context7 | not installed | Would supply live framework docs. Not blocking: this is a single Next.js 16 app on a stable API surface, and no phase has stalled on documentation. Install: `claude mcp add context7 -- npx -y @upstash/context7-mcp@latest` |
+| 21st.dev | not installed | Supplies premium React components. **Deliberately declined**: the component language is already defined in `brand-os/03_component-language` and implemented against the design tokens. Importing third-party components would fork the design system, which is the drift DEC-302 exists to prevent. |
+
+### Skills
+
+`design-system` was used (Phase 4 token reconciliation). `ui-ux-pro-max`,
+`brand`, `design`, `banner-design`, `slides` and `ui-styling` are installed and
+**not used**: the visual language is frozen by `EXPERIENCE_GOVERNANCE.md`,
+`SHEETFLOW_VISUAL_DNA.md` and DEC-301/302, and a generic design database's
+recommendations would conflict with approved decisions rather than improve
+them. No banners or slide decks are required by this project.
 | Autodesk, Roboflow, Vaisala | ⚠️ unauthenticated | Not relevant to this project |
 
 Servers needing auth must be authorised from claude.ai connector settings, or
