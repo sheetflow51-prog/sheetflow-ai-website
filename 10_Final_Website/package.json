@@ -9,6 +9,7 @@
     "lint": "eslint src",
     "type-check": "tsc --noEmit",
     "analyze": "cross-env ANALYZE=true next build",
+    "brand": "node scripts/build-brand-assets.mjs",
     "preflight": "npm run type-check && npm run lint && npm run build"
   },
   "dependencies": {

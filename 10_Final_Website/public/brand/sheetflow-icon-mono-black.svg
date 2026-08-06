@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="SheetFlow">
+  <title>SheetFlow</title>
+  <defs><clipPath id="sfSphere"><circle cx="128" cy="128" r="86"/></clipPath></defs>
+  <circle cx="128" cy="128" r="124" fill="none" stroke="#070B14" stroke-width="8"/>
+  <g clip-path="url(#sfSphere)">
+    <path d="M200.14 174.80 A86 86 0 1 1 133.84 42.20 A76 76 0 1 0 200.14 174.80 Z" fill="#070B14" opacity="0.55"/>
+    <path d="M55.86 81.20 A86 86 0 1 1 122.16 213.80 A76 76 0 1 0 55.86 81.20 Z" fill="#070B14"/>
+  </g>
+  <circle cx="124" cy="124" r="26" fill="#070B14"/>
+</svg>

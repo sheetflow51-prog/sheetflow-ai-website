@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="SheetFlow">
+  <title>SheetFlow</title>
+  <defs>
+    <radialGradient id="sfBadge" cx="50%" cy="38%" r="75%">
+      <stop offset="0%" stop-color="#16294D"/>
+      <stop offset="100%" stop-color="#070B14"/>
+    </radialGradient>
+    <radialGradient id="sfHalo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.32"/>
+      <stop offset="100%" stop-color="#3B82F6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="sfBall" cx="34%" cy="28%" r="84%">
+      <stop offset="0%" stop-color="#31589F"/>
+      <stop offset="100%" stop-color="#0A1329"/>
+    </radialGradient>
+    <linearGradient id="sfGold" x1="196" y1="52" x2="118" y2="206" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F6D089"/>
+      <stop offset="52%" stop-color="#E9A23B"/>
+      <stop offset="100%" stop-color="#C4832A"/>
+    </linearGradient>
+    <linearGradient id="sfBlue" x1="60" y1="196" x2="150" y2="46" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="48%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#93C5FD"/>
+    </linearGradient>
+    <radialGradient id="sfCore" cx="40%" cy="36%" r="72%">
+      <stop offset="0%" stop-color="#F2F7FF"/>
+      <stop offset="60%" stop-color="#9CC4FA"/>
+      <stop offset="100%" stop-color="#3B82F6"/>
+    </radialGradient><clipPath id="sfSphere"><circle cx="128" cy="128" r="86"/></clipPath></defs>
+  <circle cx="128" cy="128" r="128" fill="url(#sfBadge)"/>
+  <circle cx="128" cy="124" r="112" fill="url(#sfHalo)"/>
+  <g clip-path="url(#sfSphere)">
+    <circle cx="128" cy="128" r="86" fill="url(#sfBall)"/>
+    <path d="M200.14 174.80 A86 86 0 1 1 133.84 42.20 A76 76 0 1 0 200.14 174.80 Z" fill="url(#sfBlue)"/>
+    <path d="M55.86 81.20 A86 86 0 1 1 122.16 213.80 A76 76 0 1 0 55.86 81.20 Z" fill="url(#sfGold)"/>
+    <circle cx="124" cy="124" r="30" fill="url(#sfCore)"/>
+  </g>
+</svg>

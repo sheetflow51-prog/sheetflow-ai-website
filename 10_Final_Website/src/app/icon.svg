@@ -1,40 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="SheetFlow">
+  <title>SheetFlow</title>
   <defs>
-    <radialGradient id="sfBg" cx="50%" cy="42%" r="72%">
-      <stop offset="0%" stop-color="#12203A"/>
+    <radialGradient id="sfBadge" cx="50%" cy="38%" r="75%">
+      <stop offset="0%" stop-color="#16294D"/>
       <stop offset="100%" stop-color="#070B14"/>
     </radialGradient>
-    <linearGradient id="sfGold" x1="0" y1="0" x2="64" y2="64">
+    <radialGradient id="sfHalo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.32"/>
+      <stop offset="100%" stop-color="#3B82F6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="sfBall" cx="34%" cy="28%" r="84%">
+      <stop offset="0%" stop-color="#31589F"/>
+      <stop offset="100%" stop-color="#0A1329"/>
+    </radialGradient>
+    <linearGradient id="sfGold" x1="196" y1="52" x2="118" y2="206" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#F6D089"/>
-      <stop offset="100%" stop-color="#E9A23B"/>
+      <stop offset="52%" stop-color="#E9A23B"/>
+      <stop offset="100%" stop-color="#C4832A"/>
     </linearGradient>
-    <linearGradient id="sfBlue" x1="0" y1="0" x2="64" y2="64">
-      <stop offset="0%" stop-color="#93C5FD"/>
+    <linearGradient id="sfBlue" x1="60" y1="196" x2="150" y2="46" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="48%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#93C5FD"/>
+    </linearGradient>
+    <radialGradient id="sfCore" cx="40%" cy="36%" r="72%">
+      <stop offset="0%" stop-color="#F2F7FF"/>
+      <stop offset="60%" stop-color="#9CC4FA"/>
       <stop offset="100%" stop-color="#3B82F6"/>
-    </linearGradient>
-  </defs>
-
-  <!-- Navy badge -->
-  <circle cx="32" cy="32" r="31" fill="url(#sfBg)"/>
-  <circle cx="32" cy="32" r="20" stroke="url(#sfBlue)" stroke-width="2" opacity="0.35" fill="none"/>
-
-  <!-- Rotating gold arc -->
-  <g>
-    <path d="M32 9 A23 23 0 0 1 55 32" stroke="url(#sfGold)" stroke-width="4.5" stroke-linecap="round" fill="none"/>
-    <animateTransform attributeName="transform" attributeType="XML" type="rotate"
-      from="0 32 32" to="360 32 32" dur="6s" repeatCount="indefinite"/>
+    </radialGradient><clipPath id="sfSphere"><circle cx="128" cy="128" r="86"/></clipPath></defs>
+  <circle cx="128" cy="128" r="128" fill="url(#sfBadge)"/>
+  <circle cx="128" cy="124" r="112" fill="url(#sfHalo)"/>
+  <g clip-path="url(#sfSphere)">
+    <circle cx="128" cy="128" r="86" fill="url(#sfBall)"/>
+    <path d="M200.14 174.80 A86 86 0 1 1 133.84 42.20 A76 76 0 1 0 200.14 174.80 Z" fill="url(#sfBlue)"/>
+    <path d="M55.86 81.20 A86 86 0 1 1 122.16 213.80 A76 76 0 1 0 55.86 81.20 Z" fill="url(#sfGold)"/>
+    <circle cx="124" cy="124" r="30" fill="url(#sfCore)"/>
   </g>
-
-  <!-- Counter-rotating blue arc -->
-  <g>
-    <path d="M32 55 A23 23 0 0 1 9 32" stroke="url(#sfBlue)" stroke-width="4.5" stroke-linecap="round" fill="none"/>
-    <animateTransform attributeName="transform" attributeType="XML" type="rotate"
-      from="360 32 32" to="0 32 32" dur="8s" repeatCount="indefinite"/>
-  </g>
-
-  <!-- Pulsing intelligence core -->
-  <circle cx="32" cy="32" r="6" fill="url(#sfBlue)">
-    <animate attributeName="r" values="5.5;7.2;5.5" dur="2.4s" repeatCount="indefinite"/>
-    <animate attributeName="opacity" values="0.85;1;0.85" dur="2.4s" repeatCount="indefinite"/>
-  </circle>
 </svg>

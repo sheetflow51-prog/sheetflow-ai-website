@@ -71,14 +71,16 @@ export default function LoadingScreen() {
                 }}
                 aria-hidden="true"
               />
+              {/* Primary lockup — the badge carries its own wordmark, which is
+                  what the boot moment should show. */}
               <Image
-                src="/logo.png"
+                src="/brand/sheetflow-primary.svg"
                 alt="SheetFlow"
                 width={112}
                 height={112}
                 priority
-                className="relative rounded-full"
-                style={{ height: 'auto' }}
+                unoptimized
+                className="relative"
               />
             </motion.div>
 

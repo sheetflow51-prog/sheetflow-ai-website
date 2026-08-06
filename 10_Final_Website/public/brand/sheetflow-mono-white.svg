@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" width="320" height="80" role="img" aria-label="SheetFlow">
+  <title>SheetFlow</title>
+  <defs><clipPath id="sfSphere"><circle cx="128" cy="128" r="86"/></clipPath></defs>
+  <g transform="translate(36 40) scale(0.25000) translate(-128 -128)">
+    <circle cx="128" cy="128" r="124" fill="none" stroke="#FFFFFF" stroke-width="8"/>
+  <g clip-path="url(#sfSphere)">
+    <path d="M200.14 174.80 A86 86 0 1 1 133.84 42.20 A76 76 0 1 0 200.14 174.80 Z" fill="#FFFFFF" opacity="0.55"/>
+    <path d="M55.86 81.20 A86 86 0 1 1 122.16 213.80 A76 76 0 1 0 55.86 81.20 Z" fill="#FFFFFF"/>
+  </g>
+  <circle cx="124" cy="124" r="26" fill="#FFFFFF"/>
+  </g>
+  <text x="82" y="52" text-anchor="start" fill="#FFFFFF"
+    font-family="Inter, 'Inter var', 'Helvetica Neue', Arial, sans-serif"
+    font-size="32" font-weight="700" letter-spacing="-0.64"
+  >SheetFlow</text>
+</svg>
