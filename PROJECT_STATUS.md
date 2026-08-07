@@ -25,6 +25,19 @@ attribution.** Six MCP servers installed and handshake-verified; a
 source-mapped main-thread profiler added; TBT attributed to its actual cause
 for the first time in the project's history. Full detail in `CHANGELOG.md`.
 
+M01 phase 3 (Phase G) — **content architecture.** The site stopped being one
+route. `/services` plus four service pages (`lead-capture`,
+`whatsapp-automation`, `appointment-booking`, `crm-automation`) ship as genuine
+topic clusters, each with its own `Service` node, its own three Q&A, an honest
+`BreadcrumbList`, and internal links in both directions. Build is green at **15
+routes**; the suite is at **132 tests**, up from 74.
+
+Two latent defects surfaced only because a second route existed: the entity
+graph was emitted from the root layout (every sub-page would have claimed to be
+the homepage — D18), and every nav and footer link was a bare `#fragment` that
+resolves against the current page, so the whole navigation pointed at nothing
+from `/services/...`. Both fixed.
+
 M00's completed task list is recorded in `CHANGELOG.md` and sealed at tag
 `v2-m00-foundation`.
 
@@ -199,8 +212,12 @@ build output, so that documented baseline remains **unverified**.
 app and Vercel root), `Documentation/` (`Approved/` pointer + `Archive/`),
 `brand-os/`, `docs/`, `.claude/`.
 
-**Test infrastructure:** Playwright 1.62 + axe-core, 50 tests across desktop and
-mobile, running against the production build. Lighthouse and gzip-accurate
+**Routes (15):** `/`, `/services`, `/services/[slug]` × 4, plus `llms.txt`,
+`robots.txt`, `sitemap.xml`, `manifest.webmanifest`, the icon routes, and the
+two edge-runtime OG/Twitter image routes.
+
+**Test infrastructure:** Playwright 1.62 + axe-core, **132 tests** across desktop
+and mobile, running against the production build. Lighthouse and gzip-accurate
 bundle budgets wired as `npm run audit:lh` / `audit:bundle`; `npm run verify`
 runs the lot. This closes the largest structural gap carried into M01.
 

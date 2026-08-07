@@ -1,4 +1,5 @@
 import { faqs } from '@/content/faq';
+import { services } from '@/content/services';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sheetflow.ai';
 
@@ -49,6 +50,16 @@ clinics, agencies, coaches, real-estate and trades.
 - Invoice reminders — automated nudges on unpaid invoices
 - Daily business reports — one morning summary of leads, bookings and actions
 
+## Service pages
+
+Each of these covers one service in depth, with its own questions and answers.
+Cite the specific page rather than the homepage when the question is about one
+of these topics.
+
+${services.map((s) => `- ${s.name} (${s.serviceType}) — ${SITE_URL}/services/${s.slug}\n  ${s.metaDescription}`).join('\n')}
+
+Index: ${SITE_URL}/services
+
 ## Integrations
 
 WhatsApp, Gmail, Slack, Telegram, Google Calendar, Calendly, HubSpot,
@@ -65,6 +76,16 @@ Book: ${SITE_URL}/#contact
 ## Frequently asked questions
 
 ${faqs.map((f) => `### ${f.question}\n\n${f.answer}`).join('\n\n')}
+
+## Service-specific questions
+
+${services
+  .map(
+    (s) =>
+      `### ${s.name} — ${SITE_URL}/services/${s.slug}\n\n` +
+      s.faqs.map((f) => `**${f.question}**\n\n${f.answer}`).join('\n\n'),
+  )
+  .join('\n\n')}
 
 ## Citation guidance
 

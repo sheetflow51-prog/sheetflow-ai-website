@@ -125,6 +125,22 @@ Install, verify with a real `initialize` + `tools/list` handshake, and use it
 next session. A server that starts is *configured*; only one that has answered
 a question is *usable*.
 
+**…and session timing was not why these were unusable.** The line above was
+written to explain why five installed servers could not be called, and it
+predicted they would work "next session". They did not. Two sessions later all
+six still reported `⏸ Pending approval`. The real gate is **folder trust**:
+`~/.claude.json` carries `hasTrustDialogAccepted: false` for this project, and
+Claude Code will not launch `.mcp.json` servers from an untrusted directory.
+`enabledMcpjsonServers` in `.claude/settings.local.json` does not override it —
+that was tested, not assumed. Only answering the trust prompt in an interactive
+`claude` session does.
+
+The generalisable lesson: **a plausible explanation that predicts an outcome is
+worth checking against that outcome.** "MCP attaches at session start" is true,
+and it was still the wrong diagnosis; it survived a session only because nobody
+re-ran `claude mcp list` to see whether the prediction came true. Verify the fix
+landed, not just that the reasoning sounded right.
+
 **A bimodal result is a broken instrument, not a noisy one.** Steady-state task
 time clustered at ~370 ms and ~1,300 ms with almost nothing between — two clean
 modes, not a spread. The cause was a race: `DeferredAtmosphere` mounts on `load`

@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { faqs } from '../../src/content/faq';
+import { services } from '../../src/content/services';
 
 /**
  * Structured data and discoverability.
@@ -173,5 +174,175 @@ test.describe('FAQ section', () => {
     await expect(first).not.toHaveAttribute('open', '');
     await first.locator('summary').press('Enter');
     await expect(first).toHaveAttribute('open', '');
+  });
+});
+
+/**
+ * Service sub-pages — the topic clusters.
+ *
+ * These assert the invariants that a multi-route site can break and a
+ * single-route one could not: a sub-page declaring the homepage canonical (and
+ * so asking to be de-indexed), a breadcrumb naming a URL that 404s, or a
+ * `Service` node advertising something no page describes.
+ */
+test.describe('service pages', () => {
+  test('the homepage still carries no BreadcrumbList', async ({ page }) => {
+    await page.goto('/');
+    const nodes = await graph(page);
+    // A breadcrumb trail for a page with no ancestors is schema spam. The
+    // sub-pages earned one; the homepage did not, and asserting the absence
+    // stops "add breadcrumbs everywhere" landing without a reason.
+    expect(byType(nodes, 'BreadcrumbList')).toBeFalsy();
+  });
+
+  test('the services index links to every service', async ({ page }) => {
+    await page.goto('/services');
+    for (const s of services) {
+      await expect(
+        page.locator(`a[href="/services/${s.slug}"]`).first(),
+        `index does not link to ${s.slug}`,
+      ).toBeVisible();
+    }
+  });
+
+  for (const service of services) {
+    test(`${service.slug}: graph carries Service, WebPage, BreadcrumbList and FAQPage`, async ({
+      page,
+    }) => {
+      await page.goto(`/services/${service.slug}`);
+      const nodes = await graph(page);
+
+      for (const type of ['Organization', 'WebSite', 'Service', 'WebPage', 'BreadcrumbList', 'FAQPage']) {
+        expect(byType(nodes, type), `missing ${type} node`).toBeTruthy();
+      }
+
+      const svc = byType(nodes, 'Service')!;
+      expect(svc.name).toBe(service.name);
+      expect(svc.serviceType).toBe(service.serviceType);
+      // The service must still be attributed to the organisation, or the page
+      // describes an offering with no provider.
+      const ids = new Set(nodes.map((n) => n['@id']).filter(Boolean));
+      expect(ids.has((svc.provider as { '@id': string })['@id'])).toBe(true);
+    });
+
+    test(`${service.slug}: breadcrumb is ordered and every crumb resolves`, async ({
+      page,
+      request,
+    }) => {
+      await page.goto(`/services/${service.slug}`);
+      const crumb = byType(await graph(page), 'BreadcrumbList')!;
+      const items = crumb.itemListElement as Array<{ position: number; name: string; item: string }>;
+
+      expect(items, 'expected Home / Services / <service>').toHaveLength(3);
+      expect(items.map((i) => i.position)).toEqual([1, 2, 3]);
+      expect(items[2].name).toBe(service.shortLabel);
+
+      // The failure this exists for: a trail that names a URL nobody built.
+      for (const item of items) {
+        const res = await request.get(new URL(item.item).pathname);
+        expect(res.status(), `breadcrumb target 404s: ${item.item}`).toBe(200);
+      }
+
+      // The visible trail must match the markup — schema without the rendered
+      // trail is what gets breadcrumb markup flagged.
+      const visible = await page.locator('nav[aria-label="Breadcrumb"]').innerText();
+      for (const item of items) expect(visible).toContain(item.name);
+    });
+
+    test(`${service.slug}: declares its own canonical, not the homepage's`, async ({ page }) => {
+      await page.goto(`/services/${service.slug}`);
+      const canonical = await page.locator('link[rel="canonical"]').getAttribute('href');
+      expect(canonical, 'no canonical emitted').toBeTruthy();
+      expect(new URL(canonical!).pathname).toBe(`/services/${service.slug}`);
+    });
+
+    test(`${service.slug}: FAQ markup matches the rendered answers`, async ({ page }) => {
+      await page.goto(`/services/${service.slug}`);
+      const faqNode = byType(await graph(page), 'FAQPage')!;
+      const questions = faqNode.mainEntity as Array<{
+        name: string;
+        acceptedAnswer: { text: string };
+      }>;
+
+      expect(questions).toHaveLength(service.faqs.length);
+
+      const text = await page.locator('#faq').evaluate((el) => el.textContent ?? '');
+      for (const q of questions) {
+        expect(text, `question not rendered: ${q.name}`).toContain(q.name);
+        expect(text, `answer not rendered: ${q.name}`).toContain(q.acceptedAnswer.text);
+      }
+    });
+
+    test(`${service.slug}: has exactly one h1 and no skipped heading levels`, async ({ page }) => {
+      await page.goto(`/services/${service.slug}`);
+      await expect(page.locator('h1')).toHaveCount(1);
+
+      const levels = await page.$$eval('h1,h2,h3,h4,h5,h6', (els) =>
+        els.map((e) => Number(e.tagName[1])),
+      );
+      let previous = levels[0];
+      for (const level of levels.slice(1)) {
+        expect(level - previous, `heading jumped from h${previous} to h${level}`).toBeLessThanOrEqual(1);
+        previous = level;
+      }
+    });
+  }
+
+  test('sitemap lists the index and every service route', async ({ request }) => {
+    const body = await (await request.get('/sitemap.xml')).text();
+    expect(body).toContain('/services</loc>');
+    for (const s of services) {
+      expect(body, `sitemap missing /services/${s.slug}`).toContain(`/services/${s.slug}</loc>`);
+    }
+  });
+
+  test('llms.txt points answer engines at the service pages', async ({ request }) => {
+    const body = await (await request.get('/llms.txt')).text();
+    for (const s of services) {
+      expect(body, `llms.txt missing ${s.slug}`).toContain(`/services/${s.slug}`);
+      for (const f of s.faqs) {
+        expect(body, `llms.txt missing question: ${f.question}`).toContain(f.question);
+      }
+    }
+  });
+});
+
+/**
+ * Content governance, asserted rather than trusted.
+ *
+ * Both of these are the kind of claim that gets added in passing during a copy
+ * edit and never reviewed: a service the graph advertises but no page
+ * describes, or an integration named on a service page that the site has never
+ * claimed anywhere else. Neither is visible in a diff review.
+ */
+test.describe('service content governance', () => {
+  test('every service page matches its entry in the offer catalogue', async ({ page }) => {
+    await page.goto('/');
+    const org = byType(await graph(page), 'Organization')!;
+    const offers = (org.hasOfferCatalog as { itemListElement: Array<{ itemOffered: Record<string, unknown> }> })
+      .itemListElement.map((o) => o.itemOffered);
+
+    for (const s of services) {
+      const match = offers.find((o) => o.serviceType === s.serviceType);
+      expect(match, `catalogue has no offer for serviceType "${s.serviceType}"`).toBeTruthy();
+      expect(match!.name, `name drift for ${s.slug}`).toBe(s.name);
+      expect(match!.url, `catalogue offer for ${s.slug} does not link to its page`).toContain(
+        `/services/${s.slug}`,
+      );
+    }
+  });
+
+  test('service pages name no integration the site has not already claimed', () => {
+    // The integrations answer on the homepage is the whole published list.
+    // Anything outside it is a new capability claim made in passing.
+    const published = faqs.find((f) => f.id === 'faq-integrations')!.answer;
+    for (const s of services) {
+      for (const tool of s.integrations) {
+        expect(
+          published,
+          `${s.slug} claims "${tool}", which is not in the published integrations list`,
+        ).toContain(tool);
+      }
+    }
   });
 });

@@ -9,13 +9,22 @@ import { useStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { BOOKING_URL } from '@/lib/contact';
 
+/**
+ * Root-relative, not bare fragments.
+ *
+ * `#faq` resolves against whatever page you are on, so on `/services/...` every
+ * one of these silently pointed at a section that route does not contain. The
+ * leading `/` makes them resolve against the homepage from anywhere. On the
+ * homepage itself the browser still treats `/#faq` as a same-document
+ * fragment, so nothing about the scroll behaviour there changes.
+ */
 const NAV_LINKS = [
-  { label: 'Services', href: '#workflows' },
-  { label: 'How we work', href: '#product' },
-  { label: 'Reports', href: '#reports' },
-  { label: 'Integrations', href: '#integrations' },
-  { label: 'Results', href: '#customers' },
-  { label: 'FAQ', href: '#faq' },
+  { label: 'Services', href: '/services' },
+  { label: 'How we work', href: '/#product' },
+  { label: 'Reports', href: '/#reports' },
+  { label: 'Integrations', href: '/#integrations' },
+  { label: 'Results', href: '/#customers' },
+  { label: 'FAQ', href: '/#faq' },
 ];
 
 export function Navigation() {

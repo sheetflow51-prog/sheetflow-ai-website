@@ -45,16 +45,54 @@ added to config.
 
 | Server | Version | Installed | Connected | Auth | Usable | Tools |
 |---|---|---|---|---|---|---|
-| **chrome-devtools** | 1.6.0 | ✅ | ✅ handshake | n/a | ⏳ next session | 29 |
-| **context7** | 3.2.5 | ✅ | ✅ handshake | none needed | ⏳ next session | 2 |
-| **sequential-thinking** | 0.2.0 | ✅ | ✅ handshake | n/a | ⏳ next session | 1 |
-| **playwright** | 1.63.0-alpha | ✅ | ✅ handshake | n/a | ⏳ next session | 24 |
-| **filesystem** | 0.2.0 | ✅ | ✅ handshake | n/a | ⏳ next session | 14 |
-| **github** (remote HTTP) | — | ✅ configured | ⛔ | ⛔ **needs OAuth** | ❌ | — |
+| **chrome-devtools** | 1.6.0 | ✅ | ⛔ pending approval | n/a | ❌ | 29 |
+| **context7** | 3.2.5 | ✅ | ⛔ pending approval | none needed | ❌ | 2 |
+| **sequential-thinking** | 0.2.0 | ✅ | ⛔ pending approval | n/a | ❌ | 1 |
+| **playwright** | 1.63.0-alpha | ✅ | ⛔ pending approval | n/a | ❌ | 24 |
+| **filesystem** | 0.2.0 | ✅ | ⛔ pending approval | n/a | ❌ | 14 |
+| **github** (remote HTTP) | — | ✅ configured | ⛔ pending approval | ⛔ **also needs OAuth** | ❌ | — |
 
-**⏳ is not a hedge — it is how MCP works.** Servers attach at session start.
-They were added mid-session, so the session that installed them could not call
-them. They are live from the next session onward; nothing further is required.
+> **⚠ Correction (2026-08-07).** The previous revision of this table said the
+> servers were "live from the next session onward; nothing further is
+> required." **That was wrong.** A later session confirmed all six still report
+> `⏸ Pending approval` in `claude mcp list`, and the cause is not session
+> timing.
+
+### Why they are not connected — root cause, measured
+
+The gate is **project trust**, not the `.mcp.json` config, which is correct.
+`~/.claude.json` records one entry per project directory:
+
+```
+untrusted  enabled=[]  c:/Users/pc/OneDrive/Desktop/AI_MASTER_WORKSPACE/SheetFlow_AI_Website
+```
+
+`hasTrustDialogAccepted: false`. Comparing every project entry on this machine,
+this is one of only two untrusted directories and the **only** one carrying a
+`.mcp.json` — so the correlation is exact. Claude Code will not start executable
+config from a folder whose trust prompt has never been answered, which is the
+right posture for `npx`-launched servers declared in a checked-in file.
+
+`.claude/settings.local.json` now carries `enabledMcpjsonServers` naming all
+six. That pre-answers *which* servers are approved, so no per-server prompt
+follows — but it does **not** substitute for folder trust, which was verified:
+adding the key left all six still pending.
+
+**To unblock — founder, one time, ~5 seconds.** The trust flag was deliberately
+not flipped programmatically. Its entire purpose is a human confirming they
+trust this folder's executable config; an agent setting its own execution
+permission by editing an internal state file defeats the control.
+
+```bash
+cd "c:/Users/pc/OneDrive/Desktop/AI_MASTER_WORKSPACE/SheetFlow_AI_Website"
+claude          # answer the trust prompt, then /mcp to authorise github
+```
+
+**The `⏳ next session` framing in AI_RUNTIME_MEMORY is also wrong** for the
+same reason and is corrected there. The original lesson — *a server that starts
+is configured; only one that has answered a question is usable* — stands, and
+this is a second illustration of it: five servers were recorded as installed and
+handshake-verified, and none of them has ever answered a question in this repo.
 
 ### Why each earns its place
 
@@ -144,6 +182,27 @@ Ask in this order, stopping at the first that applies:
 | 7 | **Context7** | Blocked on a library's current API | **Now installed.** |
 | 8 | **Adobe / Canva** | Raster or vector marketing assets | DEC-302 makes `logo.png` canonical. |
 | 9 | Hand-author | Nothing above applies | The usual outcome, because the design system is already defined in code and governed. |
+
+### Applied 2026-08-07 (Phase G — service pages)
+
+**Resolved to "hand-author", at gate 9, and the reasons are the recorded ones.**
+
+| # | Capability | Verdict for this work |
+|---|---|---|
+| 1 | Figma MCP | No SheetFlow design file exists. Nothing to read. |
+| 2 | `ui-ux-pro-max` | Not consulted for *layout*: the pages reuse `SectionHeader`, `Button`, `card`, `kicker`, `headline-cinematic` and the homepage's `<details>` FAQ pattern verbatim. No new visual pattern was introduced, so there was no new design decision for it to review. |
+| 3 | `design-system` skill | Tokens already reconciled; these pages consume them unchanged. |
+| 4 | **GitHub search** | **Still blocked — `gh auth status`: not logged in.** No repository research was performed. |
+| 5 | Component registries | Declined per D15. |
+| 6–7 | chrome-devtools / Context7 MCP | **Unusable — folder trust, see above.** Context7 would have been the natural check for Next 16's `generateStaticParams` + async `params` signature; `node_modules` types and a green `tsc` covered it instead. |
+| 9 | Hand-author | The outcome. |
+
+**One capability did earn its place and is worth recording: arithmetic.** The
+step numerals were written at `accent-bright/70`, which axe rejected. Rather
+than trying opacities until the tool went quiet, the composited ratios were
+computed — `/70` = 4.27:1 (fails), `/80` = 5.33:1 (passes) — and `/80` was
+chosen because `.kicker` already uses it. Measuring instead of guessing kept a
+one-off value out of the design system.
 
 ### Applied 2026-08-06 (session 2)
 
@@ -258,23 +317,47 @@ The remaining paint cost is diffuse: a dark page with several large translucent
 gradient layers is simply expensive to composite, with or without animation.
 Reducing it is a design question (A2), not a bug hunt.
 
-### Bundle
+### Bundle — re-measured 2026-08-07 after Phase G
 
 | | gzip | raw | budget |
 |---|---|---|---|
-| JS (17 files) | **327.4 kB** | 1031 kB | 360 kB |
-| CSS (1 file) | **9.6 kB** | 56 kB | 40 kB |
+| JS (27 files) | **334.0 kB** | 1046 kB | 360 kB |
+| CSS (1 file) | **10.0 kB** | 58 kB | 40 kB |
 | Largest chunk | 69.2 kB | — | 170 kB |
+
+**Five new routes cost 6.6 kB gzipped JS and 0.4 kB CSS.** Cheap because the
+service pages are server components reusing existing client components — the
+only new client code is what `Button` and the motion wrappers already shipped.
+All budgets still met with 26 kB of JS headroom.
 
 ### Tests
 
-70 passing — desktop + mobile. Smoke, heading order, metadata, anchor
-integrity, external-link safety, brand-asset serving, DEC-302 compliance,
-fabricated-content guard, axe WCAG 2.1 AA (default + reduced-motion), focus
-indicators, image alt text, 5 viewport overflow checks, tap-target sizing,
-JSON-LD graph parseability and `@id` resolution, FAQ markup/copy parity,
-answers present without interaction, per-answer anchors, keyboard disclosure,
-`/llms.txt`, `robots.txt` AI-crawler rules, sitemap well-formedness.
+**132 passing** — desktop + mobile, against the production build. Smoke,
+heading order, metadata, anchor integrity, external-link safety, brand-asset
+serving, DEC-302 compliance, fabricated-content guard, axe WCAG 2.1 AA (default
++ reduced-motion, homepage **and** service routes), focus indicators, image alt
+text, 5 viewport overflow checks, tap-target sizing, JSON-LD graph parseability
+and `@id` resolution, FAQ markup/copy parity, answers present without
+interaction, per-answer anchors, keyboard disclosure, `/llms.txt`, `robots.txt`
+AI-crawler rules, sitemap well-formedness.
+
+Added for the service routes: per-page graph shape (`Service`, `WebPage`,
+`BreadcrumbList`, `FAQPage` all present and cross-referenced), breadcrumb order
+plus **an HTTP fetch of every crumb target** so a trail cannot name a 404,
+per-page canonicals (a sub-page declaring the homepage canonical asks to be
+de-indexed), visible-trail/markup parity, per-page FAQ parity, single-`h1` and
+heading-order checks, sitemap coverage, `/llms.txt` coverage, and two
+content-governance assertions — catalogue parity and "no integration claim the
+site has not already published".
+
+### A `verify` flake to know about
+
+`npm run audit:bundle` immediately after `npm run test:e2e` once reported *"No
+JS or CSS emitted — the build looks empty"* against a `.next` that had 25
+chunks on disk; re-running it passed, and a later full `npm run verify` passed
+the identical sequence. Same Windows/OneDrive `.next` contention documented
+above, in a new place — and it sits at the end of `verify`. **Re-run a red
+`verify` once before believing it.**
 
 ---
 

@@ -1,32 +1,41 @@
 import { Logo } from '@/components/ui/Logo';
+import { services } from '@/content/services';
 
+/**
+ * Two things changed here when the service pages shipped.
+ *
+ * The Services group now points at the four real pages instead of sending
+ * every label to the same `#workflows` anchor — four links to one destination
+ * is a dark pattern for a crawler and useless for a reader.
+ *
+ * Every remaining fragment is root-relative. A bare `#faq` resolves against
+ * the current page, so from `/services/...` it pointed at nothing.
+ */
 const FOOTER_GROUPS = [
   {
     title: 'Services',
     links: [
-      { label: 'Lead Capture', href: '#workflows' },
-      { label: 'WhatsApp Automation', href: '#workflows' },
-      { label: 'Appointment Booking', href: '#workflows' },
-      { label: 'CRM Automation', href: '#workflows' },
-      { label: 'Reporting Dashboards', href: '#reports' },
+      ...services.map((s) => ({ label: s.shortLabel, href: `/services/${s.slug}` })),
+      { label: 'Reporting Dashboards', href: '/#reports' },
+      { label: 'All services', href: '/services' },
     ],
   },
   {
     title: 'Who it’s for',
     links: [
-      { label: 'Clinics', href: '#customers' },
-      { label: 'Agencies', href: '#customers' },
-      { label: 'Coaches', href: '#customers' },
-      { label: 'Real Estate', href: '#customers' },
-      { label: 'Service Businesses', href: '#customers' },
+      { label: 'Clinics', href: '/#customers' },
+      { label: 'Agencies', href: '/#customers' },
+      { label: 'Coaches', href: '/#customers' },
+      { label: 'Real Estate', href: '/#customers' },
+      { label: 'Service Businesses', href: '/#customers' },
     ],
   },
   {
     title: 'Resources',
     links: [
-      { label: 'Case Studies', href: '#customers' },
-      { label: 'Integrations', href: '#integrations' },
-      { label: 'FAQ', href: '#faq' },
+      { label: 'Case Studies', href: '/#customers' },
+      { label: 'Integrations', href: '/#integrations' },
+      { label: 'FAQ', href: '/#faq' },
       // Machine-readable brief for language models. Linked rather than left
       // to discovery so crawlers that never guess at /llms.txt still find it.
       { label: 'For AI assistants', href: '/llms.txt' },
@@ -35,8 +44,8 @@ const FOOTER_GROUPS = [
   {
     title: 'Company',
     links: [
-      { label: 'Contact', href: '#contact' },
-      { label: 'Book an Audit', href: '#contact' },
+      { label: 'Contact', href: '/#contact' },
+      { label: 'Book an Audit', href: '/#contact' },
     ],
   },
 ];

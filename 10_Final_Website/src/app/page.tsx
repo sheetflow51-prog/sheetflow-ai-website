@@ -9,10 +9,18 @@ import { AIInfrastructure } from '@/components/sections/AIInfrastructure';
 import { Faq } from '@/components/sections/Faq';
 import { FinalCTA } from '@/components/sections/FinalCTA';
 import { SectionHandoff } from '@/components/signature/SectionHandoff';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { homeGraph } from '@/lib/structured-data';
 
 export default function HomePage() {
   return (
     <>
+      {/* One linked @graph rather than four loose blocks. Every node carries an
+          @id and references the others, so a consumer resolves the whole entity
+          set — organisation, site, page, questions — in a single pass instead
+          of guessing how separate blocks relate. Emitted per route, not from
+          the layout: a sub-page needs its own WebPage and its own questions. */}
+      <JsonLd graph={homeGraph()} />
       <Hero />
       <SectionHandoff />
       <WorkflowUniverse />

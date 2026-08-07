@@ -79,6 +79,19 @@ being recorded as installed. `@modelcontextprotocol/server-github` was
 **rejected** — npm marks it `Package no longer supported`; the remote server at
 `api.githubcopilot.com/mcp/` replaces it.
 
+> **Amended 2026-08-07.** Project scope was the right call and is unchanged.
+> What was wrong was the belief that installation completed the job: all six
+> servers still report `⏸ Pending approval`, because the project folder's trust
+> dialog has never been answered (`hasTrustDialogAccepted: false` in
+> `~/.claude.json`). `enabledMcpjsonServers` has been added to
+> `.claude/settings.local.json` and verified **insufficient on its own** — it
+> pre-answers *which* servers, not *whether this folder is trusted*.
+>
+> The trust flag was **not** flipped programmatically. Its purpose is a human
+> confirming they trust this folder's executable config; an agent granting
+> itself that permission by editing an internal state file removes the control
+> rather than satisfying it. This is a deliberate stop, not an oversight.
+
 ### D15 — Third-party component registries are declined *(2026-08-06)*
 21st.dev, Magic UI, Aceternity, Origin UI, React Bits, Motion Primitives and
 HyperUI are **not installed**, despite being available.
@@ -101,6 +114,50 @@ build:profile` sets it.
 `sourceMappingURL` comment and writes sibling `.map` files. The JS is otherwise
 byte-identical, and browsers never fetch maps unless devtools is open. A
 profiling build therefore measures the code production ships.
+
+### D18 — The entity graph is emitted per route, not from the layout *(2026-08-07)*
+`lib/structured-data.ts` builds one `@graph` per page; `layout.tsx` emits none.
+
+**Why:** the graph lived in the root layout, which was correct while the site
+was one route and became wrong the instant it was not. Every sub-page would
+have inherited `@id: <site>/#webpage` — asserting that it *is* the homepage —
+plus the homepage's `FAQPage`. That is not a cosmetic error: it tells a
+consumer two URLs are the same entity.
+
+**What was preserved:** the "exactly one JSON-LD block per page" rule, and its
+reasoning — one linked graph resolves in a single pass, four loose blocks make
+a consumer guess how they relate. `seo.spec.ts` asserts it on every route now
+rather than only on `/`.
+
+`Organization` and `WebSite` repeat on every page. That is how schema.org
+graphs are meant to work: each page is independently resolvable, and identical
+`@id`s let a consumer merge them.
+
+### D19 — `BreadcrumbList` ships, and still not on the homepage *(2026-08-07)*
+Emitted on `/services` and the four service pages. **Not** on `/`.
+
+**Why the reversal is not a reversal:** the prior decision was that a breadcrumb
+for a page with no ancestors is schema spam. That reasoning was never about
+breadcrumbs being bad — it was about the site having no hierarchy. The service
+tree created one, so `Home › Services › WhatsApp Automation` names three pages
+that all exist and all return 200. The homepage still has no ancestors and still
+gets none, asserted by a test so "add breadcrumbs everywhere" cannot land
+without confronting this entry.
+
+`/services` exists partly to make the middle crumb real. A trail with a hole in
+it is worse than no trail.
+
+### D20 — Service-page claims are gated by test, not review *(2026-08-07)*
+Two assertions in `seo.spec.ts`: every service page's `name`/`serviceType` must
+match its `Offer` in the catalogue, and every integration it names must already
+appear in the published integrations answer in `content/faq.ts`.
+
+**Why type-level enforcement was not enough here.** D1 put fabricated *customer
+proof* beyond expression in the type system. These pages create a different
+hole: prose. A new tool name or a reworded service is valid TypeScript, reads as
+a copy edit in review, and quietly becomes a capability claim — on the pages
+*most* likely to be quoted verbatim, because each is narrowly on-topic. The test
+is the cheapest thing that fails when it happens.
 
 ---
 

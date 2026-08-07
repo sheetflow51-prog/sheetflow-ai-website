@@ -1,7 +1,7 @@
 # Project Health — SheetFlow v2
 
 > Single-snapshot dashboard. Regenerated after every phase.
-> **Last updated: 2026-08-07** · Phase F (product completion) · branch `feat/m01-foundation`
+> **Last updated: 2026-08-07** · Phase G (content architecture) · branch `feat/m01-foundation`
 
 Scores below are **measured or verifiable**, never estimated. Where a number
 cannot be measured honestly it says so — a confident percentage nobody computed
@@ -14,8 +14,8 @@ is how this project got a retracted performance finding.
 | | Status |
 |---|---|
 | **Production ready?** | ⚠️ **No — one hard blocker (B1) and one undeployed branch (D2)** |
-| **Build** | ✅ green, 10 routes |
-| **Verification** | ✅ 74 tests passing |
+| **Build** | ✅ green, **15 routes** (was 10) |
+| **Verification** | ✅ **132 tests passing** (was 74) |
 | **Deployed to production** | ❌ awaiting founder approval |
 
 **Completion is deliberately not given as a single %.** The build is
@@ -83,7 +83,7 @@ signature.
 | `sitemap.xml` | ✅ well-formed |
 | Semantic HTML / heading order | ✅ single H1, no skipped levels, asserted by test |
 | Image optimisation | ✅ AVIF + WebP via `next/image`, 30-day cache |
-| **BreadcrumbList** | ⛔ **N/A by design** — single-route site. A one-item breadcrumb is schema spam and a rich-result risk. Add only when real sub-pages ship. |
+| **BreadcrumbList** | ✅ **new** — emitted on `/services` and all four service pages, `Home › Services › <Service>`. Still deliberately **absent from the homepage**, which has no ancestors; a test asserts that absence. Every crumb target is fetched in-test and must return 200. |
 | **LocalBusiness** | ⛔ **Refused** — requires a `PostalAddress`; none is published. Inventing one violates the first standing rule *and* Google's policy. Asserted by test. |
 | **Review / AggregateRating** | ⛔ **Blocked by B1**, correctly. |
 
@@ -100,11 +100,18 @@ signature.
 | **`contactPoint`** | ✅ **new** — reachable sales contact + booking URL |
 | Clear service definitions | ✅ 6 named services with descriptions and `serviceType` |
 | Citation-friendly structure | ✅ answers are self-contained and quotable |
-| Topic clusters | ⚠️ single page — real clustering needs sub-pages (see next phase) |
+| **Topic clusters** | ✅ **new** — four service pages, each with its own `Service` node, its own 3 Q&A, and internal links both ways |
+| **Per-service `FAQPage`** | ✅ **new** — 12 further Q&A pairs, markup/copy parity asserted per page |
+| **`/llms.txt` names the sub-pages** | ✅ **new** — each service listed with its URL and its questions, with instructions to cite the specific page over the homepage |
 
-**Honest limit:** topical authority is thin because the site is one page. That
-is a content-architecture decision, not a markup gap — no amount of schema
-substitutes for pages that cover a topic.
+**What changed:** the previous revision said "topical authority is thin because
+the site is one page… no amount of schema substitutes for pages that cover a
+topic." Four pages that cover a topic now exist, which is the fix that entry
+asked for.
+
+**Remaining honest limit:** four clusters, one level deep. Depth beyond this
+needs either more services covered or a second tier below them, and neither is
+worth writing until there is evidence anyone is searching for it.
 
 ---
 
@@ -120,8 +127,29 @@ Scanned 2026-08-07.
 | `.orig` / `.rej` / backup artifacts in repo | ✅ none |
 | Git working tree | ✅ clean |
 | Local vs `origin` | ✅ in sync |
-| Orphaned VSCode editor backups | ✅ none |
-| **Dirty editor buffers** | ⚠️ **1, non-semantic** — `probe-cls.mjs` carries 59 leading blank lines; byte-identical ignoring whitespace, disk matches HEAD. **Recommend discarding the buffer in VSCode.** Not blocking, per the editor-buffer policy. |
+| Orphaned VSCode editor backups | ✅ none for this workspace |
+| **Dirty editor buffers** | ✅ **resolved** — see below |
+
+### The `probe-cls.mjs` save conflict — closed 2026-08-07
+
+The buffer carried **59 prepended blank lines** and LF endings against a CRLF
+file. Classified by extracting it from `%APPDATA%\Code\Backups\…` and diffing:
+after stripping the blanks and normalising endings it was **byte-identical** to
+disk (`sha256 f135f3b6…` both sides), so nothing semantic existed only in the
+editor and there was nothing to merge. Root cause of the *conflict* specifically:
+the disk file's mtime moved 35 minutes after the buffer snapshotted its base,
+which is exactly the condition VSCode refuses to save through.
+
+One residue outlived the discard. The file came back to disk as **LF** while
+`core.autocrlf=true` expects CRLF, which leaves git permanently stat-dirty:
+`git status` reported ` M` while `git diff HEAD` was empty, because the
+normalised blob (`bb1582c9…`) matched HEAD on both sides. `git checkout --` on
+the path restored the canonical CRLF worktree form. Working tree is clean and
+`node --check` passes.
+
+**Worth keeping:** *"`git status` says modified, `git diff` says nothing"* is
+the signature of an EOL mismatch, not of a content change. `git ls-files --eol`
+names it in one line — here, `i/lf w/lf` where `w/crlf` was expected.
 
 ---
 
@@ -136,8 +164,8 @@ Honesty matters more here than a long list.
 | **CDP via Playwright** | ✅ used | `Performance.getMetrics` paint attribution, CPU profiler |
 | **Calendly connector** | ✅ used (prior phase) | Verified the booking URL is real and active |
 | **Vercel CLI** | ✅ used (prior phase) | Preview deploys |
-| chrome-devtools MCP | ❌ **not usable** | Installed and handshake-verified, but MCP servers attach at *session start* — added mid-session, live next session |
-| context7 / sequential-thinking / filesystem / playwright MCP | ❌ same | as above |
+| chrome-devtools MCP | ❌ **not usable** | **Diagnosis corrected.** Not session timing — the project folder's trust prompt has never been answered (`hasTrustDialogAccepted: false`), so Claude Code will not launch any `.mcp.json` server here. See TOOLING_MANIFEST. Needs ~5 s of founder time. |
+| context7 / sequential-thinking / filesystem / playwright MCP | ❌ same | Same single root cause. `enabledMcpjsonServers` was added to `.claude/settings.local.json` and verified **not** sufficient on its own. |
 | **GitHub MCP + `gh` CLI** | ⛔ **blocked** | `gh auth status`: not logged in. **No GitHub repository research was performed.** |
 | **21st.dev / Magic MCP** | ❌ **not available** | Not installed; requires a 21st.dev API key. See D15. |
 | Figma / Adobe / Canva | ❌ not used | DEC-302 — `logo.png` is canonical, `public/brand/` is generated. Routing assets through external tools reintroduces the drift those decisions exist to prevent. |
@@ -155,10 +183,54 @@ token system and motion language, not from borrowed components.
 
 ---
 
+## Shipped this phase — Phase G, content architecture
+
+| What | Detail |
+|---|---|
+| `/services` index | `CollectionPage`, hub for the four pages, and the intermediate crumb that makes the breadcrumb honest |
+| `/services/[slug]` × 4 | Lead Capture, WhatsApp Automation, Appointment Booking, CRM Automation — statically generated, `dynamicParams = false` so an unknown slug 404s rather than rendering an empty shell |
+| `content/services.ts` | Typed content module; one source for pages, graph, sitemap and `/llms.txt` |
+| `lib/structured-data.ts` | The entity graph, moved out of the root layout |
+| 58 new tests | Graph shape, breadcrumb order and resolvability, per-page canonicals, FAQ parity, heading order, sitemap, `/llms.txt`, plus axe on the new routes |
+
+### The architectural change worth knowing about
+
+The entity graph used to be emitted from `layout.tsx`. That was correct for a
+one-route site and would have been **wrong the moment a second route existed**:
+every sub-page would have declared `@id: /#webpage` — claiming to *be* the
+homepage — and carried the homepage's FAQ. It moved to `lib/structured-data.ts`
+with a per-route builder, so each page emits one complete, self-consistent
+`@graph`. The "exactly one JSON-LD block" invariant is unchanged and still
+asserted, now on every route.
+
+Same class of latent bug in navigation: every nav and footer link was a bare
+fragment (`#faq`), which resolves against *the current page*. From
+`/services/...` all of them pointed at sections that route does not contain.
+Now root-relative (`/#faq`). On the homepage the browser still treats that as a
+same-document fragment, so scroll behaviour there is unchanged.
+
+### Governance, asserted rather than trusted
+
+Two tests exist because both failures are invisible in a diff review:
+
+- **Catalogue parity** — every service page's `name` and `serviceType` must
+  match its `Offer` in the organisation's catalogue, and the offer must link to
+  the page. Drift means the graph advertises services no page describes.
+- **No new integration claims** — every tool named on a service page must
+  already appear in the published integrations answer in `content/faq.ts`.
+  Adding one here would be a new capability claim made in passing, during what
+  looks like a copy edit.
+
+No prices, timelines, customer names, metrics or certifications were added.
+`symptoms` describe what the reader already observes in their own business —
+the one kind of specificity available without making a claim about our results.
+
 ## Fixed this phase
 
 | Fix | Severity | How it was found |
 |---|---|---|
+| **Step numerals failed AA contrast** | Medium (WCAG 1.4.3) | axe, on a component written this phase. `accent-bright/70` on void computes to **4.27:1**, under the 4.5:1 floor. Fixed at `/80` (**5.33:1**) — the opacity `.kicker` already uses, so no one-off value entered the system. Ratios computed, not eyeballed. |
+| **Every nav and footer link broke off the homepage** | Medium (navigation) | Building the first sub-page. Bare `#faq` fragments resolve against the current page, so on `/services/...` the whole nav pointed at nothing. Latent for as long as the site had one route. |
 | **Hero video ignored `prefers-reduced-motion`** | **High (WCAG 2.2.2)** | Manual audit — the global CSS reduced-motion rule neutralises CSS animation only, so a looping video kept playing for exactly the visitors who asked motion to stop. The one motion layer missed when every other was audited. |
 | **Hero core clipped to a visible rounded rectangle** | Medium (visual) | Screenshot review — the vignette never reached the container edge at 1440px, so the "ambient glow" terminated in a hard seam across the headline. Now masked to a radial falloff. |
 | **"One quietly run business."** | Medium (copy) | DOM heading extraction — ungrammatical H2 on a premium site. Now "One quietly running business." |
@@ -194,33 +266,47 @@ Recorded because "we checked and it was fine" is a result.
 
 ## Remaining work (not blocked)
 
-1. **Topic clusters / sub-pages** — the only real GEO gap. One page cannot carry
-   topical authority. Service pages would also give BreadcrumbList a genuine use.
+1. ~~**Topic clusters / sub-pages**~~ — **done this phase.** Four service pages
+   shipped; BreadcrumbList now has a legitimate use.
 2. **Hydration cost** — `next` 138 ms, `framer-motion` 90 ms in load phase. The
-   remaining performance lever that carries **no design consequence**.
-3. D9 `violet` token migration (34 usages, visually inert).
-4. D4 remove `raw-loader`; D5 remove inert `.eslintrc.json` (both need approval).
+   remaining performance lever that carries **no design consequence**, and now
+   the highest-value unblocked work.
+3. **The new routes have no measured performance baseline.** They are lighter
+   than the homepage — no atmosphere-heavy hero, fewer motion layers — but
+   "lighter" is a prediction, not a measurement. `npm run audit:lh` has not been
+   pointed at `/services/*`.
+4. **`npm run shots` has not been run against the new routes**, so nothing has
+   visually reviewed them at three breakpoints.
+5. D9 `violet` token migration (34 usages, visually inert).
+6. D4 remove `raw-loader`; D5 remove inert `.eslintrc.json` (both need approval).
+
+### A tooling flake worth naming
+
+`npm run audit:bundle` immediately after `npm run test:e2e` once reported *"No
+JS or CSS emitted — the build looks empty"* against a `.next` that demonstrably
+had 25 chunks; re-running it passed unchanged. This is the documented
+Windows/OneDrive `.next` contention, now seen in a new place — it sits inside
+`npm run verify`, whose last step is exactly that sequence. **A red `verify`
+should be re-run once before it is believed.** Not investigated further; it is
+environmental, not a code fault.
 
 ---
 
 ## Next recommended phase
 
-**Phase G — Content architecture.** Build 3–4 service sub-pages (Lead Capture,
-WhatsApp Automation, Appointment Booking, CRM Automation), each a genuine topic
-cluster with its own `Service` schema, FAQ block and internal links back to the
-homepage.
+**Phase H — Measure what shipped, then reduce hydration cost.**
 
-This is the highest-leverage work available: it is the only fix for the topical
-authority gap, it gives BreadcrumbList a legitimate purpose, it multiplies the
-surface AI engines can cite, and — unlike everything else on the list — **it is
-not blocked on anyone's permission.**
+Phase G added five routes and zero measurements of them. The order matters:
+baseline first, because the hydration work in step 2 needs a "before" taken
+with the same instrument (see the compare-like-with-like rule in
+AI_RUNTIME_MEMORY).
 
 ### Recommended next prompt
 
-> Build the service sub-page architecture. Create `/services/[slug]` with four
-> pages driven by a typed content module, each carrying its own `Service` +
-> `FAQPage` JSON-LD, a `BreadcrumbList` that is now genuinely accurate, and
-> internal links both ways. Reuse the existing section components and design
-> tokens — do not introduce new visual patterns. Extend `seo.spec.ts` to assert
-> breadcrumb correctness and per-page canonical URLs, then re-run `npm run
-> verify` and `npm run shots`.
+> Baseline the new routes, then attack hydration. Run `npm run audit:lh` against
+> `/services` and `/services/whatsapp-automation` (median of N, warm-up
+> discarded) and `npm run shots` at all three breakpoints for both, and record
+> both in TOOLING_MANIFEST. Then reduce load-phase hydration cost — `next`
+> 138 ms and `framer-motion` 90 ms are the two ranked entries — measuring the
+> previous commit with the identical method for the before. Do not touch the
+> decorative layers: D17 closed in the negative and A2 is a founder decision.

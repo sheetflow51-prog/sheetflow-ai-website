@@ -106,4 +106,37 @@ test.describe('accessibility', () => {
     );
     expect(missing, `images without alt:\n${missing.join('\n')}`).toEqual([]);
   });
+
+  /**
+   * The service routes.
+   *
+   * Every service page renders from one component with different content, so
+   * the *structure* under audit is identical across the four. Auditing all of
+   * them in both motion paths would be eight more axe runs re-testing the same
+   * DOM; the index plus one representative page covers the two distinct
+   * layouts, and the reduced-motion arm is run once for the same reason.
+   *
+   * The per-page markup that *does* differ — heading order, breadcrumb, FAQ
+   * disclosure — is asserted for all four in `seo.spec.ts`, which is cheap.
+   */
+  for (const path of ['/services', '/services/whatsapp-automation']) {
+    test(`${path} has no WCAG 2.1 AA violations`, async ({ page }) => {
+      await page.goto(path);
+      await settle(page);
+
+      const { violations } = await new AxeBuilder({ page }).withTags(TAGS).analyze();
+      expect(violations.length, `\n${summarise(violations)}\n`).toBe(0);
+    });
+  }
+
+  test('/services/whatsapp-automation has no violations under prefers-reduced-motion', async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/services/whatsapp-automation');
+    await settle(page);
+
+    const { violations } = await new AxeBuilder({ page }).withTags(TAGS).analyze();
+    expect(violations.length, `\n${summarise(violations)}\n`).toBe(0);
+  });
 });

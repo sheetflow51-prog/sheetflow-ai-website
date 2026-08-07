@@ -145,12 +145,12 @@ shipped, what shipped is authoritative.
 |---|---|
 | Next.js 14, TypeScript, Tailwind, GSAP, Three.js | Next.js **16.2.6**, TypeScript 5.6, Tailwind 3.4, GSAP, Lenis, Framer Motion |
 | Design System Implementation | Built. `brand-os/01_design-tokens` mirrored into `tailwind.config.ts`; drift reconciled 2026-08-06 |
-| Static Structure | Built — nine homepage sections |
+| Static Structure | Built — nine homepage sections, plus a **`/services` tree of five further routes** added 2026-08-07 (Phase G) |
 | 3D Scene Build (Spline + Three.js) | **Not shipped.** `src/components/three/` exists but is imported by nothing and the bundle carries zero Three.js symbols. See open decision A1 |
 | Motion Layer | Built with Framer Motion + GSAP |
 | Copy Integration | Built. Fabricated customer proof removed and replaced with a verification-enforcing content architecture |
-| Performance Optimization | In progress. First measured baseline 2026-08-06 |
-| QA & Polish | Playwright + axe + Lighthouse + bundle budgets, 50 tests |
+| Performance Optimization | In progress. First measured baseline 2026-08-06. **The `/services` routes have no measured baseline yet** — see PROJECT_HEALTH's next phase |
+| QA & Polish | Playwright + axe + Lighthouse + bundle budgets, **132 tests** |
 
 *Original plan: Technical Setup → Design System → Static Structure → 3D Scene
 Build → Motion Layer → Copy Integration → Performance → QA & Polish.*

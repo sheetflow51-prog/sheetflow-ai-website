@@ -1,5 +1,101 @@
 # SheetFlow v2 Changelog
 
+## Phase G — Content architecture (2026-08-07)
+
+The site stopped being one route. Build green at **15 routes**, suite at **132
+tests** (was 74), bundle **334.0 kB gzip JS** against a 360 kB budget.
+
+### Added
+
+- **`/services` and `/services/[slug]` × 4** — Lead Capture, WhatsApp
+  Automation, Appointment Booking, CRM Automation. Statically generated via
+  `generateStaticParams`, with `dynamicParams = false` so an unknown slug 404s
+  instead of rendering an empty shell at request time.
+
+  This is the fix for the one GEO gap the previous phase could name but not
+  close: *"topical authority is thin because the site is one page… no amount of
+  schema substitutes for pages that cover a topic."* Each page is a real topic
+  cluster — its own `Service` node, its own three Q&A, internal links to its
+  siblings and back up.
+
+- **`content/services.ts`** — one typed source feeding the pages, the entity
+  graph, the sitemap and `/llms.txt`. Four copies of the same facts would drift;
+  one cannot.
+
+- **`BreadcrumbList`, finally legitimate.** `Home › Services › <Service>` on the
+  five new routes. Still absent from the homepage, which has no ancestors — and
+  a test asserts that absence so it stays a decision rather than an oversight.
+  Every crumb target is fetched in-test and must return 200; a trail naming a
+  URL nobody built is worse than no trail.
+
+- **`/llms.txt` now names the sub-pages**, each with its URL, description and
+  questions, and tells a retriever to cite the specific page over the homepage.
+
+- **58 tests.** Per-page graph shape, breadcrumb order and resolvability,
+  per-page canonicals, visible-trail/markup parity, FAQ parity, single-`h1` and
+  heading order, sitemap and `/llms.txt` coverage, axe on the new routes in both
+  motion paths.
+
+- **Two content-governance assertions** (D20). Every service page's
+  `name`/`serviceType` must match its `Offer` in the catalogue, and every
+  integration it names must already appear in the published integrations answer.
+  D1 put fabricated *customer proof* beyond expression in the type system; prose
+  is the hole that leaves. A new tool name is valid TypeScript and reads as a
+  copy edit — on the pages most likely to be quoted verbatim.
+
+### Fixed
+
+- **Every nav and footer link broke off the homepage.** They were bare
+  fragments (`#faq`), which resolve against *the current page* — so from
+  `/services/...` the entire navigation pointed at sections that route does not
+  contain. Now root-relative (`/#faq`); on the homepage the browser still treats
+  that as a same-document fragment, so scroll behaviour there is unchanged.
+  Latent for as long as the site had one route, and invisible until it did not.
+
+- **The footer sent four different service labels to one `#workflows` anchor.**
+  They now point at the four real pages.
+
+- **Step numerals failed AA contrast** (WCAG 1.4.3), in a component written this
+  phase. `accent-bright/70` composited on void computes to **4.27:1**, under the
+  4.5:1 floor. The ratios were computed rather than guessed — `/80` is 5.33:1 —
+  and `/80` was chosen because `.kicker` already uses it, so no one-off value
+  entered the design system.
+
+### Changed
+
+- **The entity graph moved out of `layout.tsx`** into `lib/structured-data.ts`,
+  with a builder per route (**D18**). Emitting it from the layout was correct
+  for a one-route site and would have been actively wrong with a second: every
+  sub-page would have carried `@id: <site>/#webpage`, asserting that it *is* the
+  homepage, plus the homepage's FAQ. The "exactly one JSON-LD block per page"
+  rule is unchanged and is now asserted on every route.
+
+- **`sitemap.ts` generates from the content module** rather than a hand-written
+  list. A sitemap maintained separately from the routes goes stale.
+
+### Corrected
+
+- **The MCP servers were never going to become usable "next session".** The
+  previous manifest said they would and that nothing further was required. Two
+  sessions later all six still report `⏸ Pending approval`. The gate is folder
+  trust — `hasTrustDialogAccepted: false` in `~/.claude.json` — not session
+  timing. `enabledMcpjsonServers` was added to `.claude/settings.local.json` and
+  verified **insufficient on its own**. The trust flag was deliberately not
+  flipped programmatically; it exists for a human to answer.
+
+  The transferable lesson, recorded in AI_RUNTIME_MEMORY: a plausible
+  explanation that *predicts an outcome* is worth checking against that outcome.
+  "MCP attaches at session start" is true, and was still the wrong diagnosis.
+
+- **The `probe-cls.mjs` save conflict.** The buffer held 59 prepended blank
+  lines and LF endings; after normalising it was byte-identical to disk
+  (`sha256 f135f3b6…`), so nothing semantic lived only in the editor. A residue
+  outlived the discard — the file returned as LF under `core.autocrlf=true`,
+  leaving `git status` reporting ` M` while `git diff HEAD` was empty. That
+  combination is the signature of an EOL mismatch, not a content change;
+  `git ls-files --eol` names it, and `git checkout --` restored the canonical
+  CRLF form.
+
 ## Phase F — Product completion pass (2026-08-07)
 
 ### Fixed
