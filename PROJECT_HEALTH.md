@@ -314,6 +314,7 @@ Recorded because "we checked and it was fine" is a result.
 
 | # | Blocker | Owner | Unblocks |
 |---|---|---|---|
+| **B2** | **`sheetflow.ai` is not attached to this Vercel project.** `vercel domains ls` returns **0 domains**, and `NEXT_PUBLIC_SITE_URL` (set for Production *and* Preview) resolves to `sheetflow-ai-website.vercel.app` — verified on the preview, whose canonical reads `https://sheetflow-ai-website.vercel.app/services/whatsapp-automation`. **Every canonical, `og:url`, sitemap `<loc>`, `llms.txt` reference and JSON-LD `@id` therefore points at a vercel.app subdomain.** The code default is `https://sheetflow.ai` and every document here describes that as canonical; the deployment disagrees. Moving later re-hosts the whole entity graph and discards whatever authority accrued — which is precisely the cost the `@id` architecture exists to avoid. **Attach the domain and set the env var before any indexing is invited.** | **Founder** (domain purchase/DNS) | Correct canonicals, a stable entity graph, production launch |
 | **B1** | Portfolio permission — 3 engagements corroborated as real deployed sites, but nothing shows they are paying clients, that outcomes were measured, or that anyone consented to be named | **Founder** | Case studies, `Review`/`AggregateRating` schema, trust logos, the single biggest conversion lever on the page |
 | **D2** | `origin/main` diverged, 13 ahead / 1 behind, no fast-forward path | **Founder** | Production deploy |
 | — | Production deployment approval | **Founder** | Going live |
