@@ -14,8 +14,8 @@ is how this project got a retracted performance finding.
 | | Status |
 |---|---|
 | **Production ready?** | ⚠️ **No — one hard blocker (B1) and one undeployed branch (D2)** |
-| **Build** | ✅ green, **15 routes** (was 10) |
-| **Verification** | ✅ **132 tests passing** (was 74) |
+| **Build** | ✅ green, **19 routes** (was 10) |
+| **Verification** | ✅ **144 tests passing** (was 74) |
 | **Deployed to production** | ❌ awaiting founder approval |
 
 **Completion is deliberately not given as a single %.** The build is
@@ -30,27 +30,49 @@ and it is not.
 | Accessibility | ✅ AA | Lighthouse 100, axe 0 violations (default + reduced-motion) |
 | SEO | ✅ 100 | Lighthouse SEO 100 |
 | GEO / answer-engine | ✅ strong | see below |
-| Performance | ⚠️ 65 desktop / 50 mobile | paint-bound, structural — see A2 |
+| Performance | ⚠️ **homepage 59** desktop / 50 mobile · **service routes 96–97** | The new routes are near-perfect. The homepage cost is its specific decorative composition, not the brand language — see below |
 | Customer proof | ⛔ **blocked** | B1 — needs written permission |
 | Production deploy | ⛔ **blocked** | needs founder approval |
 
 ---
 
-## Lighthouse
+## Lighthouse — 2026-08-07, three routes measured in one batch
 
-Measured 2026-08-06, production build, `npm run audit:lh`, median of N.
+Production build, desktop, `npm run audit:lh`, **median of 5**, warm-up
+discarded. Run back-to-back on one machine, which is what makes them comparable
+to each other.
 
-| Category | Desktop | Mobile 4× | Gate |
-|---|---|---|---|
-| Performance | **65** | **50** | ≥50 ✅ |
-| Accessibility | **100** | — | ≥90 ✅ |
-| Best practices | **96** | — | ≥90 ✅ |
-| SEO | **100** | — | ≥90 ✅ |
+| Route | Perf | A11y | BP | SEO | LCP | **TBT** | CLS | SI |
+|---|---|---|---|---|---|---|---|---|
+| `/` | **59** | 100 | 96 | 100 | 1.2 s | **1,600 ms** | 0 | 3.9 s |
+| `/services` | **96** | 100 | 96 | 100 | 0.9 s | **30 ms** | 0 | 1.8 s |
+| `/services/whatsapp-automation` | **97** | 100 | 96 | 100 | 0.9 s | **10 ms** | 0 | 1.7 s |
 
-Desktop: FCP 0.4 s · LCP 1.2 s · TBT ~610 ms · **CLS 0.000** · SI 3.4 s
+Mobile 4× was last measured **50** on 2026-08-06 and has not been re-run.
 
-**Read TBT with care.** Spread is 270–6,049 ms on this machine. Only differences
-larger than that are real.
+### The finding: the brand language is not the cost
+
+**A page in the identical visual language scores 97 while the homepage scores
+59 — same machine, same build, minutes apart. TBT differs by over two orders of
+magnitude.**
+
+That exonerates everything the routes share: the tokens, the fonts, the glass
+and gradient treatments, `framer-motion`, `gsap`, Lenis, the cursor, and
+`DeferredAtmosphere` — which mounts from the root layout on **every** route,
+including the ones scoring 97. What is left is the homepage's specific
+decorative composition: the video hero, `ParticleField`, `AIDashboard`,
+`WorkflowUniverse`, and the large translucent gradient stack.
+
+**This reframes A2** (below) from *"how much visual identity do we give up"* to
+*"which specific components do we reconsider"* — a materially easier decision,
+and still the founder's.
+
+**Do not read `/` at 59 as a regression against yesterday's 65.** Nothing
+shipped this phase touches the homepage render path; the documented TBT spread
+on this machine is 270–6,049 ms; and this batch ran straight after a 5-minute
+Playwright suite. Absolute figures are depressed by load — **the within-batch
+comparison is the valid one**, which is precisely why `/` was re-measured
+alongside rather than quoted from yesterday.
 
 ---
 
@@ -78,7 +100,7 @@ signature.
 |---|---|
 | JSON-LD `@graph` | ✅ Organization, WebSite, WebPage, FAQPage, OfferCatalog, 6 × Offer/Service |
 | Title / description / canonical | ✅ |
-| OpenGraph + Twitter Cards | ✅ incl. dynamic OG and Twitter image routes |
+| OpenGraph + Twitter Cards | ✅ **on all 6 content routes** — per-service edge-rendered cards added 2026-08-07 after the sub-pages shipped without any. Every declared image is fetched in-test and must return 200 with an `image/*` type |
 | `robots.txt` | ✅ names AI crawlers explicitly, points at sitemap |
 | `sitemap.xml` | ✅ well-formed |
 | Semantic HTML / heading order | ✅ single H1, no skipped levels, asserted by test |
@@ -229,6 +251,7 @@ the one kind of specificity available without making a claim about our results.
 
 | Fix | Severity | How it was found |
 |---|---|---|
+| **All five new routes shipped with no social image** | **High (distribution)** | Grepping the prerendered HTML for `og:image` after building the routes. Next.js `opengraph-image` conventions are **not inherited by child segments**, so the root card covered `/` only — while the layout still announced `summary_large_image` everywhere. Any service link pasted into WhatsApp, Slack, LinkedIn or X would have rendered as a bare text card. Fixed with per-service cards; a test now fetches every declared image on every route and asserts 200 + `image/*`. |
 | **Step numerals failed AA contrast** | Medium (WCAG 1.4.3) | axe, on a component written this phase. `accent-bright/70` on void computes to **4.27:1**, under the 4.5:1 floor. Fixed at `/80` (**5.33:1**) — the opacity `.kicker` already uses, so no one-off value entered the system. Ratios computed, not eyeballed. |
 | **Every nav and footer link broke off the homepage** | Medium (navigation) | Building the first sub-page. Bare `#faq` fragments resolve against the current page, so on `/services/...` the whole nav pointed at nothing. Latent for as long as the site had one route. |
 | **Hero video ignored `prefers-reduced-motion`** | **High (WCAG 2.2.2)** | Manual audit — the global CSS reduced-motion rule neutralises CSS animation only, so a looping video kept playing for exactly the visitors who asked motion to stop. The one motion layer missed when every other was audited. |
@@ -271,14 +294,17 @@ Recorded because "we checked and it was fine" is a result.
 2. **Hydration cost** — `next` 138 ms, `framer-motion` 90 ms in load phase. The
    remaining performance lever that carries **no design consequence**, and now
    the highest-value unblocked work.
-3. **The new routes have no measured performance baseline.** They are lighter
-   than the homepage — no atmosphere-heavy hero, fewer motion layers — but
-   "lighter" is a prediction, not a measurement. `npm run audit:lh` has not been
-   pointed at `/services/*`.
-4. **`npm run shots` has not been run against the new routes**, so nothing has
-   visually reviewed them at three breakpoints.
-5. D9 `violet` token migration (34 usages, visually inert).
-6. D4 remove `raw-loader`; D5 remove inert `.eslintrc.json` (both need approval).
+3. ~~**The new routes have no measured performance baseline**~~ — **done.**
+   Measured 96 and 97; the prediction that they would be "lighter" understated
+   it considerably.
+4. ~~**`npm run shots` has not been run against the new routes**~~ — **done**,
+   desktop/tablet/mobile. It caught a defect no test would have: two controls
+   labelled "How we work" pointing at different anchors.
+5. **Mobile 4× has not been re-measured** since 2026-08-06 (last figure: 50),
+   and the service routes have no mobile number at all. Desktop 97 does not
+   imply a good mobile score — the homepage's desktop/mobile gap is 15 points.
+6. D9 `violet` token migration (34 usages, visually inert).
+7. D4 remove `raw-loader`; D5 remove inert `.eslintrc.json` (both need approval).
 
 ### A tooling flake worth naming
 
@@ -294,19 +320,28 @@ environmental, not a code fault.
 
 ## Next recommended phase
 
-**Phase H — Measure what shipped, then reduce hydration cost.**
+**Phase H — Take the A2 decision on evidence, and close the mobile gap.**
 
-Phase G added five routes and zero measurements of them. The order matters:
-baseline first, because the hydration work in step 2 needs a "before" taken
-with the same instrument (see the compare-like-with-like rule in
-AI_RUNTIME_MEMORY).
+The baseline is no longer the missing piece; it exists, and it changed the
+question. A2 has been the project's largest open design decision for three
+phases, and it was stuck because the cost looked inseparable from the identity.
+It is not — a page in the same visual language scores 97. Someone can now
+decide *which components* rather than *how much brand*.
+
+**That decision is the founder's and should be taken before more engineering.**
+Optimising components that may be removed is wasted work.
+
+The unblocked engineering meanwhile is mobile. Desktop 97 says nothing about
+mobile: the homepage's own desktop/mobile gap is 15 points, and mobile is where
+the audience actually is for a WhatsApp-automation business.
 
 ### Recommended next prompt
 
-> Baseline the new routes, then attack hydration. Run `npm run audit:lh` against
-> `/services` and `/services/whatsapp-automation` (median of N, warm-up
-> discarded) and `npm run shots` at all three breakpoints for both, and record
-> both in TOOLING_MANIFEST. Then reduce load-phase hydration cost — `next`
-> 138 ms and `framer-motion` 90 ms are the two ranked entries — measuring the
-> previous commit with the identical method for the before. Do not touch the
-> decorative layers: D17 closed in the negative and A2 is a founder decision.
+> Measure the mobile picture properly, then act on A2. Run `npm run audit:lh`
+> with `LH_PRESET=mobile` against `/`, `/services` and one service page, median
+> of 5 — the service routes have no mobile number at all and the homepage's is
+> from 2026-08-06. Report each with its spread and say plainly which deltas are
+> noise-bound. Then, if the founder has answered A2, act on the named
+> components; if not, take the hydration lever instead (`next` 138 ms,
+> `framer-motion` 90 ms), measuring the previous commit with the identical
+> method for the before.

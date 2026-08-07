@@ -182,6 +182,30 @@ the source URI plus metadata. To answer "is anything unsaved", enumerate those,
 extract the content after line 1, and diff it against disk — `git status` alone
 cannot see an unsaved buffer, and neither can any file read.
 
+**Next.js `opengraph-image` is NOT inherited by child route segments.** It
+applies to the segment that declares it. `app/opengraph-image.tsx` covered `/`
+and nothing else, so five new routes shipped announcing
+`twitter:card: summary_large_image` — inherited from the layout's `metadata`,
+which *is* inherited — with no image behind it. The pages rendered perfectly;
+the failure only exists in someone else's link preview. **Metadata and image
+conventions have different inheritance rules, and the mismatch is silent.**
+Grep the prerendered HTML in `.next/server/app/**.html` for `og:image` after
+adding any route; a test asserting the tag exists *and* fetches it is cheap.
+
+**A screenshot catches a class of defect no assertion will.** `npm run shots`
+surfaced two controls both labelled "How we work" pointing at different
+anchors. Every test passed — each link resolved, each had a focus ring, heading
+order was clean. Nothing in a suite compares *label text against destination*
+across components. Render it and look at it before believing it is done.
+
+**Two whole pages beat isolation arms as an experiment.** D17 died because
+every arm that removed work measured *higher* than baseline, so none could be
+trusted. The service pages settled the same question by accident: same tokens,
+fonts, motion libraries and `DeferredAtmosphere`, 97 against the homepage's 59.
+There were no arms to distrust — just two real pages built the same way. **When
+isolation is untrustworthy, look for a natural comparison already in the
+product.**
+
 **Check for a better capability before hand-authoring UI.** The order to try,
 and why each usually loses on this project, is in `TOOLING_MANIFEST.md` under
 "Capability selection for UI work". Record the choice — including when the
@@ -253,6 +277,16 @@ decision, so it has not been taken autonomously.
 ---
 
 ## Next
+
+**Measured 2026-08-07 — the homepage's cost is its composition, not the brand.**
+Desktop, median of 5, one batch: `/` **59** (TBT 1,600 ms), `/services` **96**
+(30 ms), `/services/whatsapp-automation` **97** (10 ms). Everything the routes
+share is exonerated — tokens, fonts, glass and gradients, `framer-motion`,
+`gsap`, Lenis, cursor, and `DeferredAtmosphere`, which mounts on every route
+including the ones scoring 97. **A2 is therefore "which components", not "how
+much identity".** Founder's call; see DECISIONS. The homepage's 59 vs
+yesterday's 65 is machine load, not regression — nothing this phase touched its
+render path and the spread here is 270–6,049 ms.
 
 **TBT is paint, not JavaScript. The decorative layers cost far less than one
 session of this project claimed.**

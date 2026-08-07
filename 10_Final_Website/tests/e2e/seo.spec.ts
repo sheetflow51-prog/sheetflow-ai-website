@@ -288,6 +288,45 @@ test.describe('service pages', () => {
     });
   }
 
+  /**
+   * Social cards.
+   *
+   * Next.js `opengraph-image` conventions apply to the segment that declares
+   * them and are **not** inherited by children. Phase G therefore shipped five
+   * routes announcing `summary_large_image` with no image behind it — a
+   * declared large-image card with nothing to show, which renders as a bare
+   * text link everywhere it is pasted and fails Twitter's validator.
+   *
+   * Asserted on every route, homepage included, because the failure is
+   * invisible on the page itself.
+   */
+  for (const path of ['/', '/services', ...services.map((s) => `/services/${s.slug}`)]) {
+    test(`${path}: declares an OG and Twitter image, and both are served`, async ({
+      page,
+      request,
+    }) => {
+      await page.goto(path);
+
+      const og = await page.locator('meta[property="og:image"]').first().getAttribute('content');
+      const tw = await page.locator('meta[name="twitter:image"]').first().getAttribute('content');
+      expect(og, `${path} declares no og:image`).toBeTruthy();
+      expect(tw, `${path} declares no twitter:image`).toBeTruthy();
+
+      // A declared image that 404s is the same failure with extra steps.
+      for (const url of [og!, tw!]) {
+        const res = await request.get(new URL(url).pathname + new URL(url).search);
+        expect(res.status(), `image does not resolve: ${url}`).toBe(200);
+        expect(res.headers()['content-type']).toContain('image/');
+      }
+
+      // summary_large_image is what the layout declares site-wide; if a route
+      // ever drops to `summary` this catches the mismatch rather than the card
+      // just looking wrong in someone's DM.
+      const card = await page.locator('meta[name="twitter:card"]').first().getAttribute('content');
+      expect(card).toBe('summary_large_image');
+    });
+  }
+
   test('sitemap lists the index and every service route', async ({ request }) => {
     const body = await (await request.get('/sitemap.xml')).text();
     expect(body).toContain('/services</loc>');

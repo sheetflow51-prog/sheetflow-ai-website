@@ -159,6 +159,38 @@ a copy edit in review, and quietly becomes a capability claim — on the pages
 *most* likely to be quoted verbatim, because each is narrowly on-topic. The test
 is the cheapest thing that fails when it happens.
 
+### D21 — No further MCP servers while the folder is untrusted *(2026-08-07)*
+Ten requested packages were verified to exist on npm — 21st.dev/Magic, Figma,
+Firecrawl, Exa, Browserbase, Supabase, Cloudflare, Browser MCP, Memory, and the
+already-declared Playwright. **None were added to `.mcp.json`.**
+
+**Why:** the six servers already declared there cannot start, because the
+project folder's trust prompt has never been answered. Adding eight more would
+produce a longer config file of things that do not run, and a manifest row
+saying "installed" for each — which is exactly the tool theatre this repo has
+written down twice that it will not do. The distinction the manifest already
+draws holds: *a server that starts is configured; only one that has answered a
+question is usable.* These would not even start.
+
+Three of them fail on their own merits regardless of trust — **Supabase** (no
+database, no API routes, no auth on a static marketing site), **Cloudflare**
+(deploys to Vercel; a second deployment control plane is the footgun already
+recorded for Netlify) and **Docker** (not installed on this machine, no
+containers in the project). Adding a server with no consumer is worse than not
+having it: it implies a capability the project does not use.
+
+**The correct order is trust first.** Availability, exact install commands and
+per-server auth requirements are recorded in `TOOLING_MANIFEST.md` so that
+granting trust is followed by one decision per server, not a fresh
+investigation.
+
+**Open sub-question — Memory MCP.** It was previously declined on the grounds
+that `AI_RUNTIME_MEMORY.md` is deliberately a *reviewable* memory, held in git
+where a wrong entry is caught in a diff, and that an opaque parallel store
+splits the source of truth. It now appears on a requested list. That may be a
+considered reversal or it may be one of the usual suspects; it has **not** been
+installed pending an explicit call. See `OPEN_SOURCE_MANIFEST.md`.
+
 ---
 
 ## Open — engineering
@@ -296,3 +328,33 @@ justify weakening the site's visual signature, and load-phase blocking is
 better attacked through hydration cost (`next` 138 ms, `framer-motion` 90 ms),
 which carries no design consequence at all. Revisit if mobile *field* data —
 not lab numbers — shows INP suffering.
+
+> **Reframed 2026-08-07 — the question was posed wrongly, and the service pages
+> proved it.**
+>
+> Measured in one batch, desktop, median of 5:
+>
+> | Route | Perf | TBT |
+> |---|---|---|
+> | `/` | 59 | 1,600 ms |
+> | `/services` | 96 | 30 ms |
+> | `/services/whatsapp-automation` | 97 | 10 ms |
+>
+> **A page in the identical visual language scores 97.** Same tokens, same
+> fonts, same glass and gradient treatments, same `framer-motion` and `gsap`,
+> same cursor — and the same `DeferredAtmosphere`, which mounts from the root
+> layout on every route including these. None of it is the cost.
+>
+> A2 asked *"does the cinematic identity survive its measured cost?"*, with the
+> implicit lever being how much identity to surrender. That framing was wrong.
+> The identity is not what costs; the homepage's **specific decorative
+> composition** is — the video hero, `ParticleField`, `AIDashboard`,
+> `WorkflowUniverse`, and the stacked translucent gradients.
+>
+> **The decision is now "which components", not "how much brand".** That is a
+> far smaller question, and the evidence for it is a like-for-like comparison
+> rather than an isolation experiment — which matters, because D17 closed in the
+> negative precisely *because* isolation arms could not be trusted here. This
+> comparison has no arms to distrust: it is two whole pages, built the same way.
+>
+> Still the founder's call, and still not taken autonomously.

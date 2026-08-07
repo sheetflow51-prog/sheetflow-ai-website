@@ -1,5 +1,120 @@
 # SheetFlow v2 Changelog
 
+## Phase G.1 — Social cards, and the environment audit (2026-08-07)
+
+Build green at **19 routes**, suite at **144 tests**.
+
+### Fixed
+
+- **Every route added in Phase G shipped without a social image.** Next.js
+  `opengraph-image` file conventions apply to the segment that declares them and
+  are **not inherited by child segments** — so the root card covered `/` and
+  nothing else, while all five new routes still announced
+  `twitter:card: summary_large_image` from the layout. A declared large-image
+  card with no image renders as a bare text link on WhatsApp, Slack, LinkedIn
+  and X, and fails Twitter's validator.
+
+  Fixed with `lib/og-card.tsx` plus `opengraph-image`/`twitter-image` routes
+  under `services/` and `services/[slug]/`, generating a per-service card from
+  the same content module the page reads. Verified in the prerendered HTML for
+  all five routes, and a test now fetches every declared image on every route —
+  homepage included — and asserts a 200 with an `image/*` content type. A
+  declared image that 404s is the same failure with extra steps.
+
+  **The root card was deliberately left untouched.** Its two-tone gradient
+  headline is a bespoke composition, and refactoring a working edge-rendered
+  image to share code risks silently changing the card the homepage has already
+  been shared with. What the two must not disagree on is brand, so the palette
+  values are exported as constants; the layouts are allowed to differ.
+
+- **First attempt did not build.** `generateStaticParams` on the `[slug]` image
+  route failed with *"Edge runtime is not supported with
+  `generateStaticParams`."* Dropping the enumeration and keeping edge matches
+  how the root card already behaves (`ƒ /opengraph-image`), so both cards work
+  the same way rather than one being a special case. The cost — a generic `alt`
+  instead of a per-service one — is recorded in the file rather than glossed.
+
+### Measured — and it reframes A2
+
+The new routes had no baseline, so all three were measured in **one batch**
+(desktop, median of 5, warm-up discarded), which is what makes them comparable:
+
+| Route | Perf | TBT |
+|---|---|---|
+| `/` | 59 | 1,600 ms |
+| `/services` | 96 | 30 ms |
+| `/services/whatsapp-automation` | **97** | **10 ms** |
+
+**A page in the identical visual language scores 97 while the homepage scores
+59.** That exonerates everything the routes share — tokens, fonts, glass and
+gradient treatments, `framer-motion`, `gsap`, Lenis, the cursor, and
+`DeferredAtmosphere`, which mounts from the root layout on every route including
+the ones scoring 97.
+
+A2 was posed as *"does the cinematic identity survive its measured cost"*, with
+the implied lever being how much identity to surrender. **That framing was
+wrong.** The brand language is not the cost; the homepage's specific decorative
+composition is. The decision becomes "which components", not "how much brand" —
+and unlike D17's isolation arms, which could not be trusted, this is a
+like-for-like comparison of two whole pages built the same way.
+
+`/` at 59 against yesterday's 65 is **not** a regression: nothing this phase
+touches the homepage render path, the documented TBT spread here is
+270–6,049 ms, and the batch ran straight after a 5-minute Playwright suite.
+Absolute figures are load-depressed; the within-batch comparison is the valid
+one, which is why `/` was re-measured alongside rather than quoted.
+
+### Also fixed, found by looking at the render
+
+- **Two controls with the same label went to different places.** The service
+  hero's secondary CTA read "How we work" and pointed at `/#faq`, while the
+  nav's "How we work" points at `/#product`. Caught by reading a captured
+  screenshot rather than by any test — worth noting, because no assertion in
+  the suite would ever have flagged it.
+
+- **The signature bracket motif now frames the service hero**, reusing
+  `signature/Brackets` rather than re-drawing it. `SHEETFLOW_VISUAL_DNA` §10.2
+  reserves it for regions meant to read as a *frame*, which is what a service
+  page's opening statement is. Verified visually at desktop, tablet and mobile
+  via `npm run shots`.
+
+### Audited
+
+- **Environment, every row verified by running the command.** Node 24.13.0, npm
+  11.6.2, Claude Code 2.1.220, Vercel CLI 58.7.0 authenticated as
+  `sheetflow51-prog`. **Docker is not installed.** `gh` still unauthenticated.
+
+- **Two connector changes since 2026-08-06**, which is why the check is re-run
+  rather than copied forward: **Vercel now connects** (was 403 — the account
+  mismatch behind D3 appears resolved at the connector layer), and **Calendly
+  now needs authentication** (was working, and was the connector that verified
+  the booking URL is real — so the site's primary conversion path can no longer
+  be re-verified programmatically).
+
+- **Claude Skills: 7 installed, all active, all byte-identical to their MIT
+  source repo** (`nextlevelbuilder/ui-ux-pro-max-skill` @ `14ddef5`). No drift,
+  nothing obsolete, nothing to activate. Two have been used on this project;
+  five are deliberately idle because the visual language is frozen.
+
+- **10 requested MCP packages confirmed to exist on npm**, versions read from
+  the registry rather than assumed. **None installed** — see D21.
+
+### Added
+
+- **`OPEN_SOURCE_MANIFEST.md`** — every third-party implementation the project
+  reuses, every one it declined and why, and the custom code written instead
+  with the alternative that was considered for each. It records the
+  uncomfortable part plainly: the GitHub search step of the open-source-first
+  order **has never been performed on this project**, because `gh` is
+  unauthenticated. "We reused nothing and here is why" is only credible if the
+  search actually happened.
+
+### Decided
+
+- **D21 — no MCP server is added while the folder is untrusted.** All six
+  already declared in `.mcp.json` are inert; adding eight more would grow a
+  config file of things that do not run.
+
 ## Phase G — Content architecture (2026-08-07)
 
 The site stopped being one route. Build green at **15 routes**, suite at **132

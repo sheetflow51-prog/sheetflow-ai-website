@@ -21,6 +21,7 @@ It contains brand strategy, design research, motion systems, 3D concepts, UX arc
 > |---|---|
 > | [AI_RUNTIME_MEMORY.md](AI_RUNTIME_MEMORY.md) | Durable engineering context and hard-won lessons. Read first. |
 > | [TOOLING_MANIFEST.md](TOOLING_MANIFEST.md) | Verified capabilities, measured baselines, known issues |
+> | [OPEN_SOURCE_MANIFEST.md](OPEN_SOURCE_MANIFEST.md) | What the project reuses, what it declined and why, and the custom code written instead |
 > | [PROJECT_STATUS.md](PROJECT_STATUS.md) | Where things stand, open decisions |
 > | [DECISIONS.md](DECISIONS.md) | Decision register — every constraint and the reasoning behind it |
 > | [PROJECT_HEALTH.md](PROJECT_HEALTH.md) | Single-snapshot dashboard — scores, blockers, next phase |
@@ -150,7 +151,7 @@ shipped, what shipped is authoritative.
 | Motion Layer | Built with Framer Motion + GSAP |
 | Copy Integration | Built. Fabricated customer proof removed and replaced with a verification-enforcing content architecture |
 | Performance Optimization | In progress. First measured baseline 2026-08-06. **The `/services` routes have no measured baseline yet** — see PROJECT_HEALTH's next phase |
-| QA & Polish | Playwright + axe + Lighthouse + bundle budgets, **132 tests** |
+| QA & Polish | Playwright + axe + Lighthouse + bundle budgets, **144 tests** |
 
 *Original plan: Technical Setup → Design System → Static Structure → 3D Scene
 Build → Motion Layer → Copy Integration → Performance → QA & Polish.*

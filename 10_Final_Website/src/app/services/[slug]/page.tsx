@@ -7,6 +7,7 @@ import { JsonLd } from '@/components/seo/JsonLd';
 import { ServiceBreadcrumb } from '@/components/sections/ServiceBreadcrumb';
 import { Button } from '@/components/ui/Button';
 import { SectionHandoff } from '@/components/signature/SectionHandoff';
+import { Brackets } from '@/components/signature/Brackets';
 import { getService, services, type ServicePage } from '@/content/services';
 import { serviceGraph } from '@/lib/structured-data';
 import { BOOKING_URL } from '@/lib/contact';
@@ -97,7 +98,14 @@ export default async function ServiceDetailPage({
             ]}
           />
 
-          <div className="max-w-4xl">
+          {/* The signature L-corner motif, from the same component the hero and
+              final CTA use. SHEETFLOW_VISUAL_DNA §10.2 reserves it for regions
+              the brand wants remembered as a *frame* rather than a card, which
+              is what a service page's opening statement is. Reused rather than
+              re-drawn: aria-hidden, pointer-events-none, sub-1KB, and
+              framer-motion is already in the bundle. */}
+          <div className="relative max-w-4xl py-6">
+            <Brackets inset={-8} size={22} />
             <span className="kicker">{service.kicker}</span>
             <h1
               id="service-heading"
@@ -112,7 +120,10 @@ export default async function ServiceDetailPage({
               <Button variant="primary" size="lg" href={BOOKING_URL}>
                 Book free audit
               </Button>
-              <Button variant="secondary" size="lg" href="/#faq" trailing={false}>
+              {/* `/#product`, matching where the nav's "How we work" goes. The
+                  first version pointed the same label at `/#faq`, so two
+                  controls with identical text led to different places. */}
+              <Button variant="secondary" size="lg" href="/#product" trailing={false}>
                 How we work
               </Button>
             </div>

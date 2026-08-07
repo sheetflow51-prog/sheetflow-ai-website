@@ -150,6 +150,60 @@ non-interactive run.
 
 ---
 
+## Environment audit — 2026-08-07
+
+Every row verified by running the command, not by inspecting config.
+
+| Capability | Version | State | Verified by |
+|---|---|---|---|
+| Node | v24.13.0 | ✅ | `node -v` |
+| npm | 11.6.2 | ✅ | `npm -v` |
+| Claude Code CLI | 2.1.220 | ✅ | `claude --version` |
+| **Vercel CLI** | 58.7.0 | ✅ **authenticated** as `sheetflow51-prog` | `vercel whoami` |
+| **`gh` CLI** | 2.96.0 | ⛔ **not authenticated** | `gh auth status` → *"not logged into any GitHub hosts"* |
+| Docker | — | ❌ **not installed** | `docker --version` → command not found |
+| Local MCP servers (6) | — | ⛔ **all pending approval** | `claude mcp list` |
+| claude.ai connectors | 18 | mixed — see below | `claude mcp list` |
+| Claude Skills | 7 | ✅ installed and active | `~/.claude/skills` |
+
+### claude.ai connectors — health-checked 2026-08-07
+
+Changes since the 2026-08-06 check are marked. This is why the check is re-run
+rather than copied forward.
+
+| Connector | State | Change |
+|---|---|---|
+| Vercel | ✅ Connected | **was 403** — the account mismatch behind D3 appears resolved at the connector layer |
+| Figma, Canva, Adobe, Notion, Slack, Airtable, Gmail, Drive, Calendar, SketchUp, Autodesk, Emergent, ElevenLabs | ✅ Connected | — |
+| **Calendly** | ⚠️ **Needs authentication** | **regressed** — was working and was the connector that verified the booking URL is real. The site's primary conversion path can no longer be re-verified programmatically |
+| Netlify | ⛔ HTTP 502 | upstream outage; irrelevant, the project deploys to Vercel |
+| Roboflow, Vaisala Xweather | ⚠️ needs auth | not relevant to this project |
+
+## MCP availability matrix — verified against npm, 2026-08-07
+
+Every package below was confirmed to exist and its version read from the
+registry (`npm view <pkg> version`). **None were added to `.mcp.json`**, and the
+reason is the same for all of them: the six servers already declared there
+cannot start, so adding more would grow a config file of things that do not run.
+That is the "tool theatre" this manifest exists to prevent.
+
+| Requested | Package | Exists | Why not installed |
+|---|---|---|---|
+| 21st.dev / Magic MCP | `@21st-dev/magic` | ✅ 0.2.2 | Declined by **D15**; also needs `TWENTY_FIRST_API_KEY` |
+| Figma | `figma-developer-mcp` | ✅ 0.13.2 | No SheetFlow design file exists; account is starter tier / View seat. Nothing to read |
+| Firecrawl | `firecrawl-mcp` | ✅ 3.23.4 | `WebFetch` covers current needs; paid key required |
+| Exa | `exa-mcp-server` | ✅ 3.4.0 | `WebSearch` covers current needs; paid key required |
+| Browserbase | `@browserbasehq/mcp-server-browserbase` | ✅ 2.4.3 | Redundant — Playwright already runs locally against the production build |
+| Supabase | `@supabase/mcp-server-supabase` | ✅ 0.9.0 | **No consumer** — static site, no database, no API routes, no auth |
+| Cloudflare | `@cloudflare/mcp-server-cloudflare` | ✅ 0.2.0 | **No consumer** — deploys to Vercel; a second control plane is a footgun |
+| Docker | — | n/a | `docker` is not installed on this machine and the project has no containers |
+| Browser MCP | `@browsermcp/mcp` | ✅ 0.1.3 | Needs a Chrome extension plus a local bridge — too much machinery to install unattended |
+| Memory MCP | `@modelcontextprotocol/server-memory` | ✅ 2026.7.4 | **Conflict — needs a founder decision.** Previously declined because `AI_RUNTIME_MEMORY.md` is deliberately a *reviewable* memory in git; an opaque parallel store splits the source of truth. It appears on the latest requested list. Not installed pending an explicit call |
+
+**The ordering that matters:** grant folder trust first. Until then every one of
+these — and the six already configured — is inert regardless of what the config
+says.
+
 ## Requested but deliberately not installed
 
 | Capability | Decision | Reasoning |
@@ -215,29 +269,88 @@ is only logged when it fires is a gate nobody trusts.
 satisfied. That review is what made the reduced-motion profiling arm below
 possible — every decorative layer already gates on `prefersReducedMotion()`.
 
-### Skills
+### Skills — inventory verified 2026-08-07
 
-`design-system` was used (Phase 4 token reconciliation). `ui-ux-pro-max` was
-used for review. `brand`, `design`, `banner-design`, `slides` and `ui-styling`
-are installed and **not used**: the visual language is frozen by
-`EXPERIENCE_GOVERNANCE.md`, `SHEETFLOW_VISUAL_DNA.md` and DEC-301/302, and a
-generic design database's recommendations would conflict with approved
-decisions rather than improve them.
+All seven come from one MIT-licensed source,
+[`nextlevelbuilder/ui-ux-pro-max-skill`](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)
+(cloned at `C:/Users/pc/Claude_Skills/repo`, commit `14ddef5`), installed to
+`~/.claude/skills/`. **Every installed copy was diffed against the repo and is
+byte-identical — no local drift, and nothing to re-activate.** Full licensing
+detail is in `OPEN_SOURCE_MANIFEST.md`.
+
+| Skill | Active | Used on this project |
+|---|---|---|
+| `ui-ux-pro-max` | ✅ | ✅ session 1 — reviewed the homepage against WCAG/UX rules |
+| `design-system` | ✅ | ✅ Phase 4 — token reconciliation |
+| `design`, `brand`, `banner-design`, `slides`, `ui-styling` | ✅ | ❌ never |
+
+**The five unused ones are installed, compatible and deliberately idle.** The
+visual language is frozen by `EXPERIENCE_GOVERNANCE.md`,
+`SHEETFLOW_VISUAL_DNA.md` and DEC-301/302; a generic design database's
+recommendations would conflict with approved decisions rather than improve them.
+None are obsolete — there is simply no work here they are the right tool for.
+That is a correct outcome, not a gap to close.
 
 ---
 
-## Baseline — 2026-08-06
+## Baseline — 2026-08-07, all three routes in one batch
 
-### Lighthouse (production build, median of N, warm-up discarded)
+Production build, desktop preset, **median of 5**, warm-up discarded, cold
+browser per run. Run back-to-back on one machine within a few minutes, which is
+what makes the three **comparable to each other**.
 
-| Category | Desktop | Mobile 4x | Gate |
-|---|---|---|---|
-| Performance | **65** | **50** | ≥50 |
-| Accessibility | **100** | — | ≥90 |
-| Best practices | **96** | — | ≥90 |
-| SEO | **100** | — | ≥90 |
+| Route | Perf | A11y | BP | SEO | FCP | LCP | **TBT** | CLS | SI |
+|---|---|---|---|---|---|---|---|---|---|
+| `/` | **59** | 100 | 96 | 100 | 0.4 s | 1.2 s | **1,600 ms** | 0 | 3.9 s |
+| `/services` | **96** | 100 | 96 | 100 | 0.3 s | 0.9 s | **30 ms** | 0 | 1.8 s |
+| `/services/whatsapp-automation` | **97** | 100 | 96 | 100 | 0.3 s | 0.9 s | **10 ms** | 0 | 1.7 s |
 
-Desktop: FCP 0.4 s · LCP 1.2 s · **TBT ~610 ms** · **CLS 0.000** · SI 3.4 s
+### This is the strongest evidence yet on A2, and it arrived sideways
+
+**A page in the identical visual language scores 97 while the homepage scores
+59, on the same machine, minutes apart, from the same build.** TBT differs by
+**more than two orders of magnitude** — 1,600 ms against 10 ms.
+
+Everything the two share is therefore exonerated: the design tokens, the fonts,
+the glass and gradient treatments, `framer-motion`, `gsap`, Lenis, the custom
+cursor, and — critically — **`DeferredAtmosphere`, which mounts from the root
+layout on every route including these**. None of it is what costs 1,600 ms.
+
+What the homepage has and these do not is its specific decorative composition:
+the video hero, `ParticleField`, `AIDashboard`, `WorkflowUniverse` and the large
+translucent gradient layers stacked over a dark canvas.
+
+**Why this reframes A2.** The decision was posed as *"does the cinematic
+identity survive its measured cost"*, with the implied lever being "weaken the
+visual signature". These numbers say the brand language is not the cost — a
+handful of specific heavy components are, and a page can look unmistakably
+SheetFlow at 97. The question becomes *which components*, not *how much
+identity to give up*. **That is a materially different, and much easier,
+decision.** It remains the founder's.
+
+### Reading the homepage number honestly
+
+`/` measured **59 here against 65 on 2026-08-06**. Do **not** read that as a
+regression:
+
+- Nothing shipped this phase touches the homepage's render path. The changes
+  were link `href`s and moving the JSON-LD from the layout into the page — the
+  same bytes, emitted from a different component.
+- The documented run-to-run TBT spread on this machine is **270–6,049 ms**. A
+  6-point score delta sits well inside it.
+- This batch ran immediately after a 5-minute Playwright suite, with OneDrive
+  active. The absolute figures are depressed by machine load.
+
+**Cross-session absolute comparison is not valid here; the within-batch
+comparison is.** That is exactly why `/` was re-measured in the same batch
+rather than quoting yesterday's 65 — and it is the compare-like-with-like rule
+being applied rather than recited.
+
+### Superseded
+
+The 2026-08-06 desktop baseline was **65** (FCP 0.4 s · LCP 1.2 s · TBT ~610 ms
+· CLS 0.000 · SI 3.4 s); mobile 4× was **50** and has **not** been re-run this
+phase, so it remains the last measured mobile figure.
 
 ### Main-thread attribution
 
@@ -317,22 +430,25 @@ The remaining paint cost is diffuse: a dark page with several large translucent
 gradient layers is simply expensive to composite, with or without animation.
 Reducing it is a design question (A2), not a bug hunt.
 
-### Bundle — re-measured 2026-08-07 after Phase G
+### Bundle — re-measured 2026-08-07 after Phase G.1
 
 | | gzip | raw | budget |
 |---|---|---|---|
-| JS (27 files) | **334.0 kB** | 1046 kB | 360 kB |
+| JS (28 files) | **338.4 kB** | 1057 kB | 360 kB |
 | CSS (1 file) | **10.0 kB** | 58 kB | 40 kB |
 | Largest chunk | 69.2 kB | — | 170 kB |
 
-**Five new routes cost 6.6 kB gzipped JS and 0.4 kB CSS.** Cheap because the
-service pages are server components reusing existing client components — the
-only new client code is what `Button` and the motion wrappers already shipped.
-All budgets still met with 26 kB of JS headroom.
+**The whole `/services` tree costs 11 kB gzipped JS** against the 327.4 kB
+pre-Phase-G baseline — 6.6 kB for the four pages and the index, then 4.4 kB more
+for the bracket motif. Cheap because the pages are server components reusing
+existing client components; the OG card renderers add nothing to the client
+bundle at all, since they run at the edge.
+
+All budgets met, 21.6 kB of JS headroom.
 
 ### Tests
 
-**132 passing** — desktop + mobile, against the production build. Smoke,
+**144 passing** — desktop + mobile, against the production build. Smoke,
 heading order, metadata, anchor integrity, external-link safety, brand-asset
 serving, DEC-302 compliance, fabricated-content guard, axe WCAG 2.1 AA (default
 + reduced-motion, homepage **and** service routes), focus indicators, image alt
@@ -340,6 +456,10 @@ text, 5 viewport overflow checks, tap-target sizing, JSON-LD graph parseability
 and `@id` resolution, FAQ markup/copy parity, answers present without
 interaction, per-answer anchors, keyboard disclosure, `/llms.txt`, `robots.txt`
 AI-crawler rules, sitemap well-formedness.
+
+Added in G.1: every route's declared `og:image` and `twitter:image` is **fetched
+and asserted to return 200 with an `image/*` type**, homepage included — a
+declared image that 404s is the same failure as no image, with extra steps.
 
 Added for the service routes: per-page graph shape (`Service`, `WebPage`,
 `BreadcrumbList`, `FAQPage` all present and cross-referenced), breadcrumb order

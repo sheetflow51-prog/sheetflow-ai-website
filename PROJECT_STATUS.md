@@ -29,8 +29,14 @@ M01 phase 3 (Phase G) — **content architecture.** The site stopped being one
 route. `/services` plus four service pages (`lead-capture`,
 `whatsapp-automation`, `appointment-booking`, `crm-automation`) ship as genuine
 topic clusters, each with its own `Service` node, its own three Q&A, an honest
-`BreadcrumbList`, and internal links in both directions. Build is green at **15
-routes**; the suite is at **132 tests**, up from 74.
+`BreadcrumbList`, and internal links in both directions. Build is green at **19
+routes**; the suite is at **144 tests**, up from 74.
+
+A follow-up pass (G.1) caught that all five new routes had shipped **without any
+social image** — Next.js `opengraph-image` conventions are not inherited by
+child segments, so the root card covered `/` alone while the layout still
+announced `summary_large_image` everywhere. Per-service edge-rendered cards were
+added, and every declared image is now fetched in-test.
 
 Two latent defects surfaced only because a second route existed: the entity
 graph was emitted from the root layout (every sub-page would have claimed to be
@@ -212,11 +218,12 @@ build output, so that documented baseline remains **unverified**.
 app and Vercel root), `Documentation/` (`Approved/` pointer + `Archive/`),
 `brand-os/`, `docs/`, `.claude/`.
 
-**Routes (15):** `/`, `/services`, `/services/[slug]` × 4, plus `llms.txt`,
-`robots.txt`, `sitemap.xml`, `manifest.webmanifest`, the icon routes, and the
-two edge-runtime OG/Twitter image routes.
+**Routes (19):** `/`, `/services`, `/services/[slug]` × 4, plus `llms.txt`,
+`robots.txt`, `sitemap.xml`, `manifest.webmanifest`, the icon routes, and
+**six** edge-runtime OG/Twitter image routes (root, `/services`, and
+`/services/[slug]`).
 
-**Test infrastructure:** Playwright 1.62 + axe-core, **132 tests** across desktop
+**Test infrastructure:** Playwright 1.62 + axe-core, **144 tests** across desktop
 and mobile, running against the production build. Lighthouse and gzip-accurate
 bundle budgets wired as `npm run audit:lh` / `audit:bundle`; `npm run verify`
 runs the lot. This closes the largest structural gap carried into M01.
