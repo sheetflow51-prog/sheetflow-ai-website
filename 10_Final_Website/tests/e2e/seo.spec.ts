@@ -371,6 +371,38 @@ test.describe('service content governance', () => {
     }
   });
 
+  test('every catalogued service has a page — the other direction', async ({ page }) => {
+    /**
+     * The assertion above walks pages → catalogue, so it can only catch a page
+     * that drifted from its offer. It is blind to the opposite failure, and
+     * that failure had actually shipped: `Daily Business Reports` and
+     * `Invoice Reminders` sat in `hasOfferCatalog` for two phases with **no
+     * page behind them**. A consumer following the catalogue found an `Offer`
+     * with no `url` and nothing to cite — the schema equivalent of a dead link,
+     * and invisible to every test that started from the pages.
+     */
+    await page.goto('/');
+    const org = byType(await graph(page), 'Organization')!;
+    const offers = (org.hasOfferCatalog as { itemListElement: Array<{ itemOffered: Record<string, unknown> }> })
+      .itemListElement.map((o) => o.itemOffered);
+
+    const pagedTypes = new Set(services.map((s) => s.serviceType));
+    const orphans = offers
+      .filter((o) => !pagedTypes.has(o.serviceType as string))
+      .map((o) => `${o.name} (${o.serviceType})`);
+
+    expect(
+      orphans,
+      `catalogue advertises services with no page:\n  ${orphans.join('\n  ')}`,
+    ).toEqual([]);
+
+    // Every offer must also carry a resolvable url, which only holds once the
+    // page exists — the two conditions are separate and both are required.
+    for (const offer of offers) {
+      expect(offer.url, `catalogue offer "${offer.name}" has no url`).toBeTruthy();
+    }
+  });
+
   test('service pages name no integration the site has not already claimed', () => {
     // The integrations answer on the homepage is the whole published list.
     // Anything outside it is a new capability claim made in passing.

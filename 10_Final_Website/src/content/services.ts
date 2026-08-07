@@ -5,9 +5,21 @@
  *
  * The homepage is a single route, which caps how much topical authority the
  * site can carry: one page cannot be the best answer to six different
- * questions. These entries turn four of the six catalogued services into
- * genuine topic clusters, each with its own URL, its own `Service` node, and
- * its own questions.
+ * questions. These entries turn **all six** catalogued services into genuine
+ * topic clusters, each with its own URL, its own `Service` node, and its own
+ * questions.
+ *
+ * ## Catalogue parity — why the last two were not optional
+ *
+ * Four of the six shipped in Phase G; `Daily Business Reports` and
+ * `Invoice Reminders` did not. That left the entity graph advertising two
+ * services with **no page behind them** — `hasOfferCatalog` named them, and a
+ * consumer following the catalogue found an `Offer` with no `url`, no
+ * description beyond one line, and nothing to cite. An advertised service with
+ * no page is the schema equivalent of a dead link.
+ *
+ * The parity is now total and `seo.spec.ts` asserts it in both directions: every
+ * catalogue entry has a page, and every page has a catalogue entry.
  *
  * It is also what finally makes `BreadcrumbList` honest. A breadcrumb on a
  * one-route site is schema spam; `Home › Services › WhatsApp Automation` is a
@@ -320,7 +332,131 @@ export const services: ServicePage[] = [
           'It removes the mechanical part — the entry that follows automatically from a form, a booking or a message. Notes that require a judgement call are still worth a person writing, and those stay with your team.',
       },
     ],
-    related: ['lead-capture', 'appointment-booking'],
+    related: ['lead-capture', 'business-reports'],
+  },
+
+  {
+    slug: 'business-reports',
+    name: 'Daily Business Reports',
+    serviceType: 'Business reporting automation',
+    shortLabel: 'Business Reports',
+    metaTitle: 'Automated business reports — one morning email instead of five dashboards',
+    metaDescription:
+      'Leads, bookings, revenue and what needs your attention today, assembled overnight and delivered as one email. No dashboard to remember to open.',
+    kicker: 'Business reporting',
+    headline: 'A dashboard nobody opens is not reporting.',
+    lede: 'Every tool you run has its own dashboard, and checking five of them is a job nobody has time for. SheetFlow assembles the handful of numbers that change a decision and sends them to you once, in the place you already look first.',
+    symptoms: [
+      'The numbers exist in four tools and have never been in one place.',
+      'You find out something went wrong when a customer tells you.',
+      'Someone spends an hour every Monday rebuilding the same spreadsheet.',
+    ],
+    steps: [
+      {
+        title: 'The sources are read where they already live',
+        detail:
+          'Bookings from the calendar, enquiries from the intake, deals from the CRM, payments from the payment tool — pulled from the systems that already hold them rather than re-entered anywhere.',
+      },
+      {
+        title: 'Only what changes a decision is included',
+        detail:
+          'A report that lists everything gets skimmed. This carries the figures worth acting on and the exceptions that need you, and leaves the rest in the tools that own it.',
+      },
+      {
+        title: 'It arrives where you already look',
+        detail:
+          'Email, Slack or WhatsApp — delivered to the surface you open anyway, so reading it is not a separate habit you have to build.',
+      },
+      {
+        title: 'Exceptions are called out, not buried',
+        detail:
+          'An enquiry with no reply, a booking with no confirmation, an invoice past its date. The report names what is stuck instead of leaving you to notice its absence.',
+      },
+    ],
+    integrations: ['Gmail', 'Slack', 'WhatsApp', 'Google Sheets', 'Airtable', 'Notion', 'HubSpot', 'Pipedrive', 'Google Calendar', 'Stripe'],
+    faqs: [
+      {
+        id: 'faq-reports-whats-in-it',
+        question: 'What is actually in the daily report?',
+        answer:
+          'The figures that change a decision — new enquiries, bookings made, deals moved, payments received — followed by the exceptions that need you: an enquiry with no reply, a booking unconfirmed, an invoice past its date. It is built around what your business tracks, so the exact contents are agreed during the audit rather than fixed in advance.',
+      },
+      {
+        id: 'faq-reports-where',
+        question: 'Where does the report arrive?',
+        answer:
+          'Wherever you already look first — email, Slack or WhatsApp. The point of the report is that reading it does not require a new habit, so it goes to a surface you open anyway rather than to a dashboard you would have to remember.',
+      },
+      {
+        id: 'faq-reports-frequency',
+        question: 'Can I get it more or less often than daily?',
+        answer:
+          'Yes. Daily suits most service businesses because it matches the rhythm of enquiries and bookings, but the same assembly runs weekly or on a schedule you choose. Exception alerts can also fire immediately rather than waiting for the next report.',
+      },
+    ],
+    related: ['crm-automation', 'lead-capture'],
+  },
+
+  {
+    slug: 'invoice-reminders',
+    name: 'Invoice Reminders',
+    serviceType: 'Invoice reminder automation',
+    shortLabel: 'Invoice Reminders',
+    metaTitle: 'Automated invoice reminders — get paid without chasing anyone',
+    metaDescription:
+      'Polite, automatic follow-ups on unpaid invoices, sent on a schedule and stopped the moment payment lands. Nobody has to decide whether today is the day to chase.',
+    kicker: 'Invoice reminders',
+    headline: 'Most unpaid invoices are not refused. They are forgotten.',
+    lede: 'Chasing payment is uncomfortable, so it gets postponed, and the longer it waits the more uncomfortable it becomes. Automating the reminder removes the decision entirely — the follow-up goes on schedule, in your tone, and stops the moment the money arrives.',
+    symptoms: [
+      'You are not sure which invoices are currently unpaid without going to look.',
+      'Chasing feels rude, so it happens late or not at all.',
+      'A client has paid and someone chased them anyway.',
+    ],
+    steps: [
+      {
+        title: 'Unpaid invoices are tracked automatically',
+        detail:
+          'Status is read from the tool that issued the invoice, so what counts as outstanding is the payment system’s answer rather than someone’s recollection.',
+      },
+      {
+        title: 'Reminders go on a schedule you set',
+        detail:
+          'A sequence agreed once — before the due date, on it, and after — so the timing is a decision you made calmly rather than one made every time under discomfort.',
+      },
+      {
+        title: 'The wording stays yours',
+        detail:
+          'Reminders read as your business, not as a collections notice. The tone is agreed up front, because a reminder that damages the relationship costs more than the invoice.',
+      },
+      {
+        title: 'Payment stops the sequence immediately',
+        detail:
+          'The moment an invoice is marked paid the follow-ups stop. Chasing someone who has already paid is the failure mode that makes businesses abandon reminders entirely.',
+      },
+    ],
+    integrations: ['Stripe', 'QuickBooks', 'WhatsApp', 'Gmail', 'Google Sheets', 'Make'],
+    faqs: [
+      {
+        id: 'faq-invoices-tone',
+        question: 'Will automated reminders annoy my clients?',
+        answer:
+          'That depends entirely on the wording and the schedule, which is why both are agreed with you rather than defaulted. Reminders read as your business rather than as a collections notice, and the sequence stops the instant an invoice is marked paid — chasing someone who has already paid is what actually damages a relationship.',
+      },
+      {
+        id: 'faq-invoices-tools',
+        question: 'Which invoicing tools does this work with?',
+        answer:
+          'Stripe and QuickBooks are the ones most commonly connected. Where invoices are tracked in Google Sheets instead, that works the same way. Anything exposing an API or webhook can be connected, and the payment status is always read from the system that issued the invoice rather than maintained separately.',
+      },
+      {
+        id: 'faq-invoices-control',
+        question: 'Can I stop a reminder for a specific client?',
+        answer:
+          'Yes. Individual clients or invoices can be excluded from the sequence, which matters when a payment plan has been agreed or a conversation is already underway. The automation handles the default case so that your attention goes to the exceptions.',
+      },
+    ],
+    related: ['business-reports', 'crm-automation'],
   },
 ];
 

@@ -9,6 +9,7 @@ import { SectionHandoff } from '@/components/signature/SectionHandoff';
 import { RecoveryCalculator } from '@/components/pricing/RecoveryCalculator';
 import { tiers, comparison, pricingFaqs, formatPrice } from '@/content/pricing';
 import { pricingGraph } from '@/lib/structured-data';
+import { WHATSAPP_URL } from '@/lib/contact';
 
 /**
  * `/pricing`.
@@ -43,6 +44,23 @@ export const metadata: Metadata = {
     type: 'website',
   },
 };
+
+/**
+ * Enterprise scope points.
+ *
+ * Every line describes **what is scoped**, not a service level. "Priority
+ * support", "dedicated success manager" and "SLA" are the usual contents of a
+ * band like this and all three are absent: none is offered, and inventing a
+ * support tier to make the section look substantial is the same class of
+ * fabrication as inventing a metric.
+ */
+const ENTERPRISE_POINTS = [
+  'Each location keeps its own calendar, numbers and intake',
+  'Enquiries route to the team that owns them, not to a shared inbox',
+  'Reporting rolls up across locations and breaks down by each',
+  'Integrations built against any API or webhook in your stack',
+  'Scope agreed in writing before any build starts',
+];
 
 /** Availability marker for the comparison grid. */
 function Availability({ included, capability, tier }: { included: boolean; capability: string; tier: string }) {
@@ -272,6 +290,70 @@ export default function PricingPage() {
 
           <div className="mt-12">
             <RecoveryCalculator />
+          </div>
+        </div>
+      </section>
+
+      <SectionHandoff />
+
+      {/* ------------------------------------------------------ Enterprise */}
+      <section className="section" aria-labelledby="enterprise-heading">
+        <div className="container-edge">
+          <div className="relative overflow-hidden rounded-2xl glass-strong p-8 md:p-14">
+            {/* Decorative only; the section reads correctly without it. */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_15%_0%,rgba(59,130,246,0.14),transparent_65%)]"
+            />
+
+            <div className="relative grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-16">
+              <div>
+                <span className="kicker">Enterprise &amp; multi-location</span>
+                <h2
+                  id="enterprise-heading"
+                  className="headline-section text-fade text-balance mt-5"
+                >
+                  More than one location, one team, or one system.
+                </h2>
+                <p className="mt-6 max-w-xl text-[16px] leading-relaxed text-ink-200 text-pretty">
+                  Branches with their own calendars, enquiries that must route to the right team,
+                  a stack with something in it nobody else integrates. These do not fit a tier,
+                  and pricing them from a page would be a number invented to fill a column.
+                </p>
+                <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-ink-300 text-pretty">
+                  The audit is the same 30 minutes. What changes is that we map every location and
+                  system before quoting, and you get the scope in writing.
+                </p>
+
+                <div className="mt-10 flex flex-wrap items-center gap-3">
+                  <Button variant="primary" size="lg" href="/book">
+                    Talk to us about scope
+                  </Button>
+                  <a
+                    href={WHATSAPP_URL}
+                    className="inline-flex min-h-[24px] items-center text-[14px] text-ink-300 transition-colors hover:text-white"
+                    data-cursor="hover"
+                  >
+                    Or message on WhatsApp
+                  </a>
+                </div>
+              </div>
+
+              <ul className="flex flex-col gap-4 border-t border-white/[0.08] pt-8 lg:border-l lg:border-t-0 lg:pl-16 lg:pt-0">
+                {ENTERPRISE_POINTS.map((point) => (
+                  <li key={point} className="flex items-start gap-3">
+                    <Check
+                      className="mt-1 h-4 w-4 shrink-0 text-accent-bright/80"
+                      strokeWidth={2.6}
+                      aria-hidden="true"
+                    />
+                    <span className="text-[15px] leading-relaxed text-ink-100 text-pretty">
+                      {point}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
       </section>
