@@ -52,6 +52,30 @@ const Awakening = dynamic(() => import('@/components/signature/Awakening'), { ss
  */
 function useDeferredMount() {
   const [ready, setReady] = useState(false);
+  /**
+   * Whether this device gets the site-wide particle canvas.
+   *
+   * `ParticleField` is mounted `reactive` — its per-particle inner loop is a
+   * cursor-repulsion force. On a touch device there is no cursor, so that
+   * force never fires and what remains is a full-viewport canvas clearing and
+   * repainting 130 particles plus their connection lines at 30fps, forever,
+   * to render a drift nobody can interact with.
+   *
+   * The precedent for gating on this is already in the codebase and already
+   * accepted: `CustomCursor` early-returns on `pointer: coarse`. This applies
+   * the same test to the other pointer-driven decoration rather than inventing
+   * a new position on how much atmosphere the brand keeps — the effect is
+   * untouched everywhere it can actually be interacted with.
+   *
+   * It matters more here than the reasoning alone suggests, because mobile
+   * runs Lighthouse's 4× CPU throttle and canvas repaint lands in "Other",
+   * which measured **8,179 ms of a 14,200 ms main thread** on this route.
+   *
+   * This sits at the edge of A2 (which decorative components the site keeps)
+   * and is flagged for founder review, not smuggled in: it changes what a
+   * phone sees. It does not change what any desktop visitor sees.
+   */
+  const [canvasOk, setCanvasOk] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -64,6 +88,10 @@ function useDeferredMount() {
     // visitor, including the ones this component then renders nothing for.
     const arm = () => {
       if (cancelled || prefersReducedMotion()) return;
+      setCanvasOk(
+        window.matchMedia('(pointer: fine)').matches &&
+          window.matchMedia('(min-width: 768px)').matches,
+      );
       setReady(true);
     };
 
@@ -89,13 +117,13 @@ function useDeferredMount() {
     };
   }, []);
 
-  return ready;
+  return { ready, canvasOk };
 }
 
 export default function DeferredAtmosphere() {
   // Resolves only when the page has loaded, the browser is idle, and the
   // visitor has not asked for reduced motion.
-  const ready = useDeferredMount();
+  const { ready, canvasOk } = useDeferredMount();
 
   if (!ready) return null;
 
@@ -106,8 +134,10 @@ export default function DeferredAtmosphere() {
       <AmbientBackground />
       {/* Site-wide living wallpaper: the geometric data-network that drifts on
           a flow-field and reacts to the cursor. One fixed canvas behind every
-          section. */}
-      <ParticleField fixed reactive className="z-0 opacity-80" />
+          section. Pointer devices only — see `canvasOk`: the cursor reaction is
+          the component's reason to be reactive, and its chunk is never even
+          requested where there is no cursor to react to. */}
+      {canvasOk && <ParticleField fixed reactive className="z-0 opacity-80" />}
       <NoiseTexture />
       <ScrollProgress />
       {/* Not a context provider despite the name — it renders its children

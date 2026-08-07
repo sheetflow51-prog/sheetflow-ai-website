@@ -15,7 +15,7 @@ is how this project got a retracted performance finding.
 |---|---|
 | **Production ready?** | ⚠️ **No — one hard blocker (B1) and one undeployed branch (D2)** |
 | **Build** | ✅ green, **19 routes** (was 10) |
-| **Verification** | ✅ **144 tests passing** (was 74) |
+| **Verification** | ✅ **152 tests passing** (was 144) |
 | **Deployed to production** | ❌ awaiting founder approval |
 
 **Completion is deliberately not given as a single %.** The build is
@@ -30,7 +30,7 @@ and it is not.
 | Accessibility | ✅ AA | Lighthouse 100, axe 0 violations (default + reduced-motion) |
 | SEO | ✅ 100 | Lighthouse SEO 100 |
 | GEO / answer-engine | ✅ strong | see below |
-| Performance | ⚠️ **homepage 59** desktop / 50 mobile · **service routes 96–97** | The new routes are near-perfect. The homepage cost is its specific decorative composition, not the brand language — see below |
+| Performance | ⚠️ **homepage 59 desktop / 50 mobile** (was 45) · **service routes 96–97** | Mobile now clears its ≥50 gate, by exactly one point and with no headroom. The new routes are near-perfect. The homepage cost is its specific decorative composition, not the brand language — see below |
 | Customer proof | ⛔ **blocked** | B1 — needs written permission |
 | Production deploy | ⛔ **blocked** | needs founder approval |
 
@@ -48,26 +48,43 @@ to each other.
 | `/services` | **96** | 100 | 96 | 100 | 0.9 s | **30 ms** | 0 | 1.8 s |
 | `/services/whatsapp-automation` | **97** | 100 | 96 | 100 | 0.9 s | **10 ms** | 0 | 1.7 s |
 
-### Mobile — first full baseline, and it is the weak surface
+### Mobile — the gate now passes, by exactly one point
 
-Mobile preset (4× CPU **and** simulated Slow 4G), median of 5.
+Mobile preset (4× CPU **and** simulated Slow 4G), median of 5. **Before and
+after measured back to back on one machine in one session**, which is what makes
+them comparable; the 2026-08-07 figures below are from a different batch and
+should not be differenced against these.
+
+| `/` mobile | Perf | LCP | TBT | SI | Transfer |
+|---|---|---|---|---|---|
+| Before (2026-08-07, this batch) | **45** | 4.8 s | 5,240 ms | 7.9 s | 591 KiB |
+| After (2026-08-07, this batch) | **50 — passes** | 4.2 s | 3,180 ms | 6.7 s | 508 KiB |
+
+**The improvement is real and the margin is not.** Per-run scores were 44/46/43/
+45/46 before and 49/51/48/50/53 after: the two distributions do **not overlap**,
+so the direction is not in doubt. But the median lands *exactly* on the ≥50 gate,
+and single runs dip to 48. Treat this as "the gate stopped failing", not as
+headroom. Read the score rather than TBT — TBT's spread here was 5,237–11,146 ms
+before and included a 66,271 ms outlier after, while the score moved 3 points.
+
+Earlier batch, retained for the route comparison (2026-08-07, not re-run):
 
 | Route | Perf | LCP | TBT | SI |
 |---|---|---|---|---|
-| `/` | **48 — fails the ≥50 gate** | 4.5 s | 4,170 ms | 7.2 s |
 | `/services` | pass | 4.3 s | 570 ms | 4.8 s |
 | `/services/whatsapp-automation` | 59 | 4.4 s | 970 ms | 4.9 s |
 
-**Desktop 97 implied nothing about mobile** — the same page drops to 59, and the
-homepage fails its own gate.
+**Desktop 97 implied nothing about mobile** — the same page drops to 59.
 
-**Mobile is bandwidth-bound; desktop is paint-bound (D23).** Slow 4G at
-1.6 Mbps against ~340 kB gzipped JS plus 228 kB of preloaded fonts is ≈2.9 s of
-transfer before anything paints. LCP measured 4.3–4.5 s across three routes
-whose payloads differ by an order of magnitude — a metric that will not move
-with content is not measuring content. **The desktop conclusion does not
-transfer:** resolving A2 toward a lighter composition helps desktop and does
-comparatively little here, where the lever is bytes.
+**D23 amended: mobile is bandwidth-bound *and* paint-bound.** The bytes half
+stands — Slow 4G at 1.6 Mbps against the JS and font payload is seconds of
+transfer before anything paints, and cutting 83 KiB moved LCP 4.8 → 4.2 s and SI
+7.9 → 6.7 s. But `mainthread-work-breakdown` on the mobile preset reads **"Other"
+8,179 ms and Style & Layout 2,604 ms against Script Evaluation 2,476 ms** of a
+14,200 ms main thread. That is the desktop paint-bound finding amplified by the
+4× CPU throttle, not a separate disease. **Bytes move LCP and Speed Index; paint
+moves TBT; the score needs both** — which is why this phase had to do one of
+each to clear five points.
 
 ### The finding: the brand language is not the cost
 

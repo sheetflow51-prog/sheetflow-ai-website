@@ -51,12 +51,34 @@ const inter = Inter({
 
 // A distinct editorial serif for headlines — separates "display" from "sans"
 // (both were Inter before) and reads closer to a premium studio brand than a SaaS dashboard.
+/**
+ * Roman only — and unlike the weight trim above, this one is worth 81.7 kB.
+ *
+ * `style: ['normal', 'italic']` was declared here; italic is rendered **nowhere**
+ * in the codebase. Audited 2026-08-07 across `src`: the only occurrence of the
+ * string "italic" was this line. No `italic` Tailwind utility, no `font-style`
+ * declaration, no `<em>` styled to the display face.
+ *
+ * **Styles are not weights, and the distinction is the whole point.** The note
+ * on Inter above records that trimming *weights* changed nothing, because
+ * `next/font` emits one file per **subset**. That is true and still true — but
+ * it does not generalise to styles. A style is a separate `@font-face` with a
+ * separate `src`, so declaring italic emitted a second Fraunces file and, being
+ * a layout-declared font, Next **preloaded** it.
+ *
+ * Measured in the build before this change: `8010b10db0d5feb2` — `font-family:
+ * Fraunces; font-style: italic` — was **81,704 bytes and `rel="preload"`**, the
+ * largest of the four preloaded fonts and 36% of the 228,864-byte preloaded
+ * font payload. On the Lighthouse mobile profile (1.6 Mbps) that is ~0.4 s of
+ * critical-path transfer spent on a face nothing on the site can render.
+ *
+ * Restoring italic is one line, and costs that 81.7 kB back.
+ */
 const display = Fraunces({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-display',
   weight: 'variable',
-  style: ['normal', 'italic'],
   // Just optical size — refined hairline contrast at monument headline scale,
   // sturdier at small sizes. Skipping the SOFT/WONK axes to stay premium, not playful.
   axes: ['opsz'],

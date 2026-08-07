@@ -36,8 +36,54 @@ export function Hero() {
   // Continuous ambient motion mounts only after hydration and only when the
   // visitor hasn't requested reduced motion.
   const [runMotion, setRunMotion] = useState(false);
+
+  /**
+   * The ambient core video is desktop-only. This helps real phones and **does
+   * not move the Lighthouse score** — the distinction is the point.
+   *
+   * `/videos/cta-core.mp4` is 2,716,480 bytes, the largest asset the site owns
+   * by two orders of magnitude. The obvious inference — that mobile pays 2.7 MB
+   * and that removing it is the mobile fix — was measured and is **wrong**. In
+   * the mobile Lighthouse run the request completes with **627 bytes
+   * transferred** (HTTP 206, a metadata range against a 134 kB moov). Two things
+   * hold it there: `preload="metadata"`, and `autoPlay` being applied after
+   * hydration rather than in the server HTML, so playback never begins inside
+   * the measured window. Total page transfer is 591 KiB, video included.
+   *
+   * **What the metric misses is still real.** Lighthouse stops observing at
+   * load; a phone does not. Once the page settles, autoplay begins and the clip
+   * streams and `loop`s — 2.7 MB against a metered mobile plan, for decoration
+   * sitting behind a radial mask at 50% opacity, blurred 2px and dimmed to 60%.
+   * That cost belongs to the visitor rather than to the audit, which is exactly
+   * why no score will argue for fixing it.
+   *
+   * So this is kept on its own merits and **must not be cited as the reason any
+   * mobile number improved.** The levers that move the number are the font and
+   * the atmosphere gate; see `layout.tsx` and `DeferredAtmosphere`.
+   *
+   * Nothing leaves the composition: the poster (`spline_hero_v1.0.svg`, 2,282
+   * bytes) is the same artwork this element already renders under reduced motion
+   * and before the first frame decodes. Mobile loses the drift inside the blur.
+   * Desktop is unchanged. Save-Data and 2G land on the poster at any width.
+   */
+  const [showVideo, setShowVideo] = useState(false);
+
   useEffect(() => {
-    setRunMotion(!prefersReducedMotion());
+    const motionOk = !prefersReducedMotion();
+    setRunMotion(motionOk);
+
+    // `connection` is Chromium-only; absent elsewhere, which reads as "no
+    // reason to hold back" rather than as a reason to assume the worst.
+    const conn = (
+      navigator as Navigator & {
+        connection?: { saveData?: boolean; effectiveType?: string };
+      }
+    ).connection;
+    const thrifty = conn?.saveData === true || /(^|-)2g$/.test(conn?.effectiveType ?? '');
+
+    setShowVideo(
+      motionOk && !thrifty && window.matchMedia('(min-width: 768px)').matches,
+    );
   }, []);
 
   return (
@@ -67,24 +113,37 @@ export function Hero() {
             WebkitMaskImage: 'radial-gradient(ellipse at center, #000 38%, transparent 72%)',
           }}
         >
-          <video
-            className="h-full w-full object-cover blur-[2px] brightness-[0.6]"
-            src="/videos/cta-core.mp4"
-            poster="/posters/spline_hero_v1.0.svg"
-            /* Not autoplayed under reduced motion. The global CSS rule in
-               globals.css neutralises CSS animation and transition only — it has
-               no effect on video playback, so a looping clip kept running for
-               exactly the visitors who asked motion to stop. That is WCAG 2.2.2
-               (moving content over five seconds with no mechanism to pause), and
-               it was the one motion layer missed when every other one was
-               audited. The poster still renders, so the composition is intact. */
-            autoPlay={runMotion}
-            loop={runMotion}
-            muted
-            playsInline
-            preload="metadata"
-            aria-hidden="true"
-          />
+          {/* Reduced motion, a narrow viewport, Save-Data or a 2G link all land
+              here: the poster alone, which is what the video element rendered
+              for those visitors anyway. Rendering it as an <img> rather than as
+              a paused <video poster> is the part that saves the bytes — a
+              <video> with a src still opens a media fetch. WCAG 2.2.2 is
+              satisfied by construction, since there is no moving content to
+              pause rather than a clip we remembered to stop. */}
+          {showVideo ? (
+            <video
+              className="h-full w-full object-cover blur-[2px] brightness-[0.6]"
+              src="/videos/cta-core.mp4"
+              poster="/posters/spline_hero_v1.0.svg"
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="metadata"
+              aria-hidden="true"
+            />
+          ) : (
+            /* eslint-disable-next-line @next/next/no-img-element --
+               next/image would rewrite this through the optimiser; the source is
+               a 2.3 kB SVG that is already smaller than any raster it could
+               produce, and it is decorative rather than content. */
+            <img
+              className="h-full w-full object-cover blur-[2px] brightness-[0.6]"
+              src="/posters/spline_hero_v1.0.svg"
+              alt=""
+              aria-hidden="true"
+            />
+          )}
         </div>
       </Parallax>
 

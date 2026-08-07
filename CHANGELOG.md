@@ -1,5 +1,87 @@
 # SheetFlow v2 Changelog
 
+## Phase I — The mobile gate closes, on a font nobody could see (2026-08-07)
+
+Phase H left the homepage failing its own ≥50 mobile gate and named the lever as
+"bytes". Both halves needed correcting: the biggest byte was not the one anyone
+was looking at, and bytes alone were not enough.
+
+### Shipped
+
+- **Dropped the italic style from Fraunces.** `layout.tsx` declared
+  `style: ['normal', 'italic']`; the only occurrence of "italic" anywhere in
+  `src/` was that declaration. Because the font is layout-declared, Next
+  **preloaded** the italic face: **81,704 bytes, `rel="preload"`, the largest of
+  four preloaded fonts and 36% of the 228,864-byte preloaded payload**, for a
+  face with no way to reach the screen. Result: **19 → 16 woff2, 607,148 →
+  431,728 bytes; preloads 4 → 3, 228,864 → 147,160 bytes.**
+- **The site-wide particle canvas no longer mounts on touch devices.**
+  `ParticleField` is mounted `reactive` — its per-particle inner loop is cursor
+  repulsion. Without a pointer that force never fires, leaving a full-viewport
+  canvas repainting 130 particles and their links at 30fps for a drift nobody
+  can interact with. `CustomCursor` already early-returns on `pointer: coarse`;
+  this applies the same established test to the other pointer-driven layer. The
+  chunk is now never requested where there is no cursor.
+- **The hero's 2.7 MB ambient clip is desktop-only**, with Save-Data and 2G
+  honoured at any width. Mobile gets the poster it already showed under reduced
+  motion. **This does not move the Lighthouse score and is not claimed to** —
+  see below.
+- **8 new payload tests** (152 total, was 144), asserting each saving in *both*
+  directions: no italic face and ≤3 preloads; the clip absent on mobile **and
+  still present on desktop**; the canvas absent on touch **and still mounting on
+  desktop**. A one-line revert of any of these looks like tidying in a diff.
+
+### Measured — before and after, one machine, one batch
+
+Mobile preset, median of 5, warm-up discarded.
+
+| `/` mobile | Perf | LCP | TBT | SI | Transfer |
+|---|---|---|---|---|---|
+| Before | **45** | 4.8 s | 5,240 ms | 7.9 s | 591 KiB |
+| After | **50 — passes** | 4.2 s | 3,180 ms | 6.7 s | 508 KiB |
+
+Per-run scores 44/46/43/45/46 → 49/51/48/50/53. **The distributions do not
+overlap**, so the direction is not in doubt — but the median sits *exactly* on
+the gate and single runs still dip to 48. This is "stopped failing", not
+headroom.
+
+### Two corrections to Phase H
+
+- **The 2.7 MB video is not the mobile bottleneck**, and assuming it was would
+  have credited it with the font's work. Lighthouse's `network-requests` records
+  **627 bytes transferred** for it (HTTP 206 metadata range): `preload="metadata"`
+  holds, and `autoPlay` is applied post-hydration so playback never begins inside
+  the measured window. Total transfer was 591 KiB *including* the video. The
+  gate is kept anyway — Lighthouse stops observing at load and a phone does not,
+  so a real visitor still streams and loops 2.7 MB of decoration on a metered
+  plan. A true cost that no score will ever argue for.
+- **D23 is amended: mobile is paint-bound as well as bandwidth-bound.**
+  `mainthread-work-breakdown` reads **"Other" 8,179 ms and Style & Layout
+  2,604 ms against Script Evaluation 2,476 ms** of a 14,200 ms main thread —
+  the desktop finding amplified by the 4× CPU throttle. Bytes move LCP and Speed
+  Index; paint moves TBT. Clearing five points needed one of each.
+
+### The lesson worth keeping
+
+Phase H established that trimming font *weights* changes nothing, because
+`next/font` emits one file per **subset**. That is true, and it is what hid this
+win for a phase: a **style is a separate `@font-face` with its own `src`**, so
+styles behave nothing like weights. *"X changed nothing" is a fact about X, not
+about the category X belongs to.*
+
+### Not done, and why
+
+- **Unused JavaScript (0.45 s, 44 KiB)** — the only remaining opportunity
+  Lighthouse reports. Reaching it means code-splitting the motion libraries:
+  a refactor with real regression surface for a fraction of the last change,
+  and speculative until something says which chunk hurts.
+- **The 1,850 ms boot overlay on mobile** — the largest remaining LCP lever on
+  this route, and squarely brand identity (first impression, once per session).
+  Shortening or skipping it on phones is a founder call under
+  `EXPERIENCE_GOVERNANCE.md`, not an optimisation to take quietly.
+- **A2 is untouched.** The particle gate sits at its edge and is flagged rather
+  than smuggled: it changes what a phone sees, and nothing about desktop.
+
 ## Phase H — Mobile measured, and two hypotheses killed (2026-08-07)
 
 ### Unblocked

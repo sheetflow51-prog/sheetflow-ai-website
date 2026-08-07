@@ -200,6 +200,45 @@ guessing at it.
 six weights to three produced a byte-identical build: 607,148 bytes, 19 files, 4
 preloads. Verified, not assumed — and it was assumed first.
 
+**…but a *style* is not a weight, and that one was worth 81.7 kB.** The lesson
+above is true and does not generalise, which is how it hid the adjacent win for
+a phase. A weight is an axis inside one variable file; a **style is a separate
+`@font-face` with its own `src`**, so `style: ['normal', 'italic']` emitted a
+second Fraunces file per subset — and because the font is declared in the root
+layout, Next **preloaded** it. Measured in the build: `font-style: italic` was
+`rel="preload"`, **81,704 bytes, the largest of four preloaded fonts and 36% of
+the 228,864-byte preloaded payload**, for a face rendered nowhere — the only
+occurrence of the string "italic" in `src/` was the declaration itself. Removing
+it: **19 → 16 files, 607,148 → 431,728 bytes; preloads 4 → 3, 228,864 →
+147,160.** The generalisable form: *"X changed nothing" is a fact about X, not
+about the category X belongs to.* Re-derive for each knob rather than
+transferring the conclusion.
+
+**Read the network table before blaming the biggest file.** The hero's ambient
+clip is 2,716,480 bytes and the obvious inference was that mobile pays it. It
+does not: Lighthouse's own `network-requests` records **627 bytes transferred**
+(HTTP 206 metadata range), because `preload="metadata"` holds and `autoPlay` is
+applied post-hydration, so playback never starts inside the measured window.
+Total mobile transfer was 591 KiB, video included. Had that gone unchecked, the
+video gate would have shipped as "the mobile fix" and taken credit for a font's
+work. **The cost is still real for a real phone** — Lighthouse stops observing
+at load and a visitor does not — which is the useful shape of the result: a true
+user-facing cost that no score will ever argue for.
+
+**On mobile this site is paint-bound too, not only bandwidth-bound.** D23 framed
+mobile as a bytes problem. Half right: `mainthread-work-breakdown` on the mobile
+preset reads **"Other" 8,179 ms and Style & Layout 2,604 ms against Script
+Evaluation 2,476 ms** of a 14,200 ms main thread. That is the desktop
+paint-bound finding amplified by the 4× CPU throttle, not a different disease.
+Bytes move LCP and Speed Index; paint moves TBT; the score needs both.
+
+**The Lighthouse *score* is far steadier than TBT on this machine.** Across five
+mobile runs the score spread was 3 points (43–46) while TBT spread 2× (5,237–
+11,146 ms), and one later run recorded 66,271 ms. Comparing medians of the
+score, with the two distributions non-overlapping, is a defensible claim;
+comparing two TBT samples is not. Report the metric whose noise floor is below
+the effect you are claiming.
+
 **Next.js `opengraph-image` is NOT inherited by child route segments.** It
 applies to the segment that declares it. `app/opengraph-image.tsx` covered `/`
 and nothing else, so five new routes shipped announcing
