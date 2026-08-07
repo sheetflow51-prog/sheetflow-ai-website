@@ -1,7 +1,7 @@
 # Project Health — SheetFlow v2
 
 > Single-snapshot dashboard. Regenerated after every phase.
-> **Last updated: 2026-08-08** · Phase K (portfolio, pricing, booking) · branch `feat/m01-foundation`
+> **Last updated: 2026-08-08** · Phase L (catalogue parity, ROI messaging) · branch `feat/m01-foundation`
 
 Scores below are **measured or verifiable**, never estimated. Where a number
 cannot be measured honestly it says so — a confident percentage nobody computed
@@ -14,8 +14,8 @@ is how this project got a retracted performance finding.
 | | Status |
 |---|---|
 | **Production ready?** | ⚠️ **Engineering complete — two founder blockers remain (B2 domain, D2 branch)** |
-| **Build** | ✅ green, **28 routes** (was 19) |
-| **Verification** | ✅ **264 tests passing** (was 152) |
+| **Build** | ✅ green, **30 routes** (was 19) |
+| **Verification** | ✅ **290 tests passing** (was 152) |
 | **Deployed to production** | ❌ awaiting founder approval |
 
 **Completion is deliberately not given as a single %.** Everything that is
@@ -27,9 +27,10 @@ remainder is work I can do, and it is not.
 | Area | State | Evidence |
 |---|---|---|
 | Homepage build | ✅ complete | 10 sections, 3 breakpoints verified via `npm run shots` |
+| **Service pages** | ✅ **complete** | **6 of 6 catalogued services have a page.** Parity now asserted in both directions — the reverse check is what was missing while two offers had no page |
 | Design system | ✅ complete | `brand-os/`, tokens mirrored in `tailwind.config.ts` |
 | **Portfolio / case studies** | ✅ **complete** | **B1 closed (D24).** 3 case studies at `/work`, each linking to a live deployment. Elevate WPC omitted — no verifiable artifact (D27) |
-| **Pricing** | ✅ **complete** | `/pricing` — ₹19,999 / ₹4,999-mo published under D25, machine-readable, comparison table, 7 FAQs, honest calculator |
+| **Pricing** | ✅ **complete** | `/pricing` — ₹19,999 / ₹4,999-mo published under D25, machine-readable, comparison table, enterprise band, 7 FAQs, and a break-even line built from our published price and the visitor's own figure |
 | **Booking** | ✅ **complete** | `/book` — 4-question qualification → Calendly prefill, **zero third-party JS**, works without JavaScript (D26) |
 | Accessibility | ✅ AA | Lighthouse 100 on every route, axe 0 violations across 6 route/motion combinations |
 | SEO | ✅ 100 | Lighthouse SEO 100 on every route |
@@ -103,12 +104,12 @@ without a new mechanism.
 
 | Surface | State |
 |---|---|
-| JSON-LD `@graph` | ✅ Organization, WebSite, WebPage, FAQPage, OfferCatalog, 6 × Offer/Service — **exactly one block per route**, asserted on all 9 content routes |
+| JSON-LD `@graph` | ✅ Organization, WebSite, WebPage, FAQPage, OfferCatalog, 6 × Offer/Service — **exactly one block per route**, asserted on all 11 content routes |
 | **`OfferCatalog` with real prices** | ✅ **new** — `minPrice` for the "from" tier (a floor, not a fixed fee), `UnitPriceSpecification` for the monthly, **no price node** for the quoted tier. A test asserts the schema price equals the rendered price per tier |
 | **`CreativeWork` per case study** | ✅ **new** — `creator` SheetFlow, `about` the client, `url` the live deployment. **Typed `CreativeWork`, not `WebSite`**, after the rendered graph showed two `WebSite` nodes competing to name the site |
 | **`Service` + zero-price `Offer` on `/book`** | ✅ **new** — "free" stated machine-readably rather than left to be inferred from the word, plus a `ReserveAction` naming the booking surface |
 | Title / description / canonical | ✅ per route, asserted |
-| OpenGraph + Twitter Cards | ✅ **on all 9 content routes** — per-project and per-service edge-rendered cards. Every declared image is fetched in-test and must return 200 with an `image/*` type |
+| OpenGraph + Twitter Cards | ✅ **on all 11 content routes** — per-project and per-service edge-rendered cards. Every declared image is fetched in-test and must return 200 with an `image/*` type |
 | `robots.txt` | ✅ names AI crawlers explicitly, points at sitemap |
 | `sitemap.xml` | ✅ generated from the content modules; `/book/confirmed` deliberately excluded |
 | Semantic HTML / heading order | ✅ single H1 per route, no skipped levels, asserted |
@@ -123,14 +124,14 @@ without a new mechanism.
 |---|---|
 | `/llms.txt` | ✅ served, **rewritten this phase** — see below |
 | AI crawler rules | ✅ GPTBot, ClaudeBot, PerplexityBot, Google-Extended, Applebot-Extended named |
-| FAQ coverage | ✅ 8 site + 12 service + **9 project + 7 pricing = 36 Q&A**, markup/copy parity asserted per page |
+| FAQ coverage | ✅ 8 site + **18 service** + 9 project + 7 pricing = **42 Q&A**, markup/copy parity asserted per page |
 | Per-answer deep links | ✅ each answer individually linkable |
 | Entity graph | ✅ linked `@graph` with resolvable `@id` |
 | `knowsAbout` expertise signal | ✅ 9 entities, each mapped to a service actually sold |
 | `contactPoint` | ✅ reachable sales contact + booking URL |
 | **Published prices in structured data** | ✅ **new, and the highest-value GEO surface on the site.** "How much does WhatsApp automation cost" is a question assistants are asked constantly and can almost never answer, because agencies publish "contact us" |
 | **Named client work** | ✅ **new** — 3 case studies with resolvable live URLs, giving assistants something citable about delivered work |
-| Topic clusters | ✅ 4 service pages + 3 case studies, each with its own questions and two-way internal links |
+| Topic clusters | ✅ **6 service pages** (full catalogue parity) + 3 case studies, each with its own questions and two-way internal links |
 
 ### The `llms.txt` defect this phase caught
 
@@ -302,7 +303,7 @@ Four tests exist because all four failures are invisible in a diff review:
 |---|---|---|---|
 | **B2** | **`sheetflow.ai` is not attached.** `vercel domains ls` returns **0 domains**; `NEXT_PUBLIC_SITE_URL` resolves to a `vercel.app` subdomain. Every canonical, `og:url`, sitemap `<loc>`, `llms.txt` reference and JSON-LD `@id` points at the wrong host — **now including the case-study `@id`s that carry client names**. Moving later re-hosts the entity graph and discards accrued authority. **Attach the domain and set the env var before any indexing is invited.** | **Founder** (domain purchase/DNS) | Correct canonicals, a stable entity graph, production launch |
 | **D2** | `origin/main` diverged, 13 ahead / 1 behind, no fast-forward path | **Founder** | Production deploy |
-| — | Production deployment approval | **Founder** | Going live |
+| — | **Production deployment** — `vercel --prod` was attempted and **blocked by the session permission policy** on both Phase K and Phase L. The Vercel MCP alternative was rejected: `deploy_to_vercel` creates a *new* project from a file tree, so it would fork a duplicate rather than deploy the linked one. Must be run by the founder | **Founder** | Going live |
 | — | **Calendly redirect to `/book/confirmed`** — set in the Calendly dashboard after deploy, not from this codebase (D26) | **Founder** | Post-booking analytics and the confirmation experience |
 | — | **GA4 / Search Console / Clarity IDs** | **Founder** (credentials) | Analytics beyond Vercel's built-in |
 | **D12** | Preview deployments are SSO-protected | **Founder** (security setting) | Automated verification against a preview URL |

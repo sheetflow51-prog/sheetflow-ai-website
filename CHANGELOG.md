@@ -1,5 +1,87 @@
 # SheetFlow v2 Changelog
 
+## Phase L — Catalogue parity, and return messaging that is arithmetic (2026-08-08)
+
+Build green at **30 routes** (was 28), suite at **290 tests** (was 264).
+
+### Two catalogued services had no page, and had not for two phases
+
+`hasOfferCatalog` has advertised six services since Phase G. Only four had
+pages. **`Daily Business Reports` and `Invoice Reminders` sat in the entity
+graph with nothing behind them** — an `Offer` carrying one line of description,
+no `url`, and nothing for a consumer to cite. That is the schema equivalent of a
+dead link, and it was being served to every crawler and answer engine that read
+the organisation node.
+
+Both pages now exist, to the same governance as the other four: integrations are
+a strict subset of the published integrations answer, no prices, no timelines,
+no metrics, and `symptoms` describe what the reader already observes in their
+own business rather than anything we claim about ours.
+
+**Why the existing parity test was blind to it.** `seo.spec.ts` walked
+pages → catalogue, so it could catch a page that drifted from its offer and
+nothing else. The failure mode it could not see was an offer with no page. The
+new assertion walks catalogue → pages, and additionally requires every offer to
+carry a `url` — which only becomes true once the page exists. Both directions
+are now asserted.
+
+Clusters are bidirectional: `crm-automation` links to `business-reports`, and
+both new pages link back into the set.
+
+### Return messaging, constructed so it cannot become a claim
+
+The recovery calculator gains a break-even line:
+
+> At ₹5,000 per customer, recovering **1 customer** a month covers the ₹4,999
+> retainer.
+
+This is the only return-on-investment messaging on the site, and its
+construction is the entire point: it divides **our own published price** — a
+fact, D25 — by **the visitor's own figure** for what a customer is worth.
+Nothing SheetFlow has achieved enters the arithmetic, so the output cannot be an
+assertion about it. Contrast the usual agency calculator, which hard-codes the
+flattering variable ("recover 40% of missed leads!") and presents a fabricated
+outcome as a projection.
+
+`Math.ceil`, not `Math.round`: recovering 1.2 customers does not cover the
+retainer, and rounding down would overstate the case in our own favour.
+
+The retainer figure is read from `content/pricing.ts` rather than retyped, so a
+price change moves the break-even with it. A hard-coded copy is how a page ends
+up quoting two different prices.
+
+### Enterprise band
+
+A dedicated multi-location section with its own CTA and scope points.
+
+Every line describes **what is scoped**, not a service level. "Priority
+support", "dedicated success manager" and "SLA" are the usual contents of a band
+like this, and all three are absent because none is offered. Inventing a support
+tier to make the section look substantial is the same class of fabrication as
+inventing a metric — it is just harder to notice.
+
+### Verified
+
+- **290 tests**, up from 264. Type-check and lint clean, 0 errors.
+- Lighthouse mobile, median of 5: `/pricing` **65** (was 66 — inside noise; the
+  band is static markup), `/services/invoice-reminders` **68**. Accessibility
+  **100** and SEO **100** on both.
+- Sitemap carries all **14** content URLs; both new service pages resolve, with
+  their own OG cards.
+- Bundle **356.6 kB gzipped** against a 360 kB budget. **Headroom is now 3.4 kB**
+  — worth knowing before the next client component is added.
+
+### Production deployment — attempted, blocked
+
+`vercel --prod` was blocked by the session's permission policy on both attempts,
+as the preview deploy was in Phase K. The Vercel MCP's `deploy_to_vercel` was
+evaluated as an alternative and **rejected**: it creates a *new* project from a
+file tree, so it would have forked a duplicate rather than deploying the linked
+`sheetflow-ai-website`.
+
+Deployment therefore remains outstanding and needs to be run by the founder.
+**B2 should be settled first** — see the blocker table in `PROJECT_HEALTH.md`.
+
 ## Phase K — The site becomes a business (2026-08-08)
 
 Three commercial surfaces the site has never had: a portfolio, published

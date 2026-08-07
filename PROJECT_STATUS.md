@@ -9,8 +9,8 @@ M01
 **Engineering complete for this milestone — awaiting founder decisions.**
 
 Phase K shipped the three commercial surfaces the site had never had: a
-portfolio, published prices, and a booking flow. Build is green at **28
-routes**, the suite is at **264 tests**, and every new route scores
+portfolio, published prices, and a booking flow. Build is green at **30
+routes**, the suite is at **290 tests**, and every new route scores
 accessibility 100 and SEO 100.
 
 What remains is not engineering. It is a domain nobody has bought (B2), a branch
@@ -39,6 +39,12 @@ M01 phase 6 (Phase K) — **the site becomes a business.** `/work` with three
 case studies, `/pricing` with real published figures, `/book` with a
 qualification step that ships zero third-party JavaScript. **B1 is closed.**
 Full detail in `CHANGELOG.md`.
+
+M01 phase 7 (Phase L) — **catalogue parity and return messaging.** The two
+catalogued services that had no page — `Daily Business Reports` and
+`Invoice Reminders` — now have one, closing a gap where the entity graph
+advertised services with nothing behind them. The pricing calculator gained a
+break-even line built from our published price and the visitor's own figure.
 
 ## The blocker that had to be resolved before any of Phase K
 
@@ -165,8 +171,8 @@ M02 — not defined in this repository.
 
 ## Latest Commit
 
-`6e2d752` — `feat(work,pricing,booking): publish the portfolio, the prices, and
-a booking flow`
+`c285052` — `feat(services,pricing): close the catalogue gap, and add break-even
+ROI messaging`
 
 Branch `feat/m01-foundation`.
 
@@ -217,12 +223,12 @@ budget, which is worth knowing before the next feature.
 
 ## Notes
 
-**Routes (28):** `/`, `/book`, `/book/confirmed`, `/pricing`, `/services`,
-`/services/[slug]` × 4, `/work`, `/work/[slug]` × 3, plus `llms.txt`,
+**Routes (30):** `/`, `/book`, `/book/confirmed`, `/pricing`, `/services`,
+`/services/[slug]` × 6, `/work`, `/work/[slug]` × 3, plus `llms.txt`,
 `robots.txt`, `sitemap.xml`, `manifest.webmanifest`, the icon routes, and
 **eight** edge-runtime OG/Twitter image routes.
 
-**Test infrastructure:** Playwright 1.62 + axe-core, **264 tests** across desktop
+**Test infrastructure:** Playwright 1.62 + axe-core, **290 tests** across desktop
 and mobile, running against the production build.
 
 **Accessibility:** axe reports zero WCAG 2.1 AA violations across 6 route/motion
