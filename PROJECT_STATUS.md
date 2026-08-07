@@ -216,15 +216,23 @@ Measured **2026-08-07** on commit `dbea5f4`, production build, via
 Run locally against the identical build, because the preview is SSO-gated
 (D12) and cannot be audited anonymously.
 
+Re-measured at **median of 9** on 2026-08-07 for the freeze (Phase J). These
+supersede the median-of-5 figures previously recorded here.
+
 | Category | Desktop | Mobile (4× CPU + Slow 4G) |
 |---|---|---|
-| Performance | **62** | **50** |
+| Performance | **65** | **52** |
 | Accessibility | **100** | **100** |
 | Best practices | **96** | **96** |
 | SEO | **100** | **100** |
 
-Desktop: FCP 0.4s · LCP 1.1s · **TBT 980ms** · **CLS 0.000** · SI 3.5s
-Mobile: FCP 0.9s · LCP 4.2s · **TBT 3,180ms** · **CLS 0.000** · SI 6.7s
+Desktop: FCP 0.3s · LCP 1.1s · **TBT 660ms** · **CLS 0.000**
+Mobile: FCP 0.9s · LCP 4.1s · **TBT 2,590ms** · **CLS 0.000**
+
+Per-run, desktop 58/58/58/60/**65**/66/66/67/67 · mobile
+48/49/49/50/**52**/52/53/53/54. Nothing changed in the build between the
+median-of-5 figures and these — the difference is sample size and machine load,
+which is the point of recording the runs.
 
 **Mobile went 45 → 50 this session** (before/after in one batch; per-run
 44/46/43/45/46 → 49/51/48/50/53, non-overlapping). It sits *exactly* on the

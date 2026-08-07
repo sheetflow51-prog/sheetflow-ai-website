@@ -232,6 +232,31 @@ Evaluation 2,476 ms** of a 14,200 ms main thread. That is the desktop
 paint-bound finding amplified by the 4× CPU throttle, not a different disease.
 Bytes move LCP and Speed Index; paint moves TBT; the score needs both.
 
+**A trend *inside* a batch invalidates a comparison *between* batches.** A
+candidate optimisation measured +3 at median-of-5 and +1 at median-of-9, the
+second being non-significant. The tell was in the baseline's own run order:
+48/49/49/50 then 52/52/53/53/54. The machine quietened partway through, and the
+candidate had been measured during the quiet half. "Median of N" is not a
+defence against drift — only interleaving arms, or re-measuring both arms
+adjacently, is. Check whether run *k* correlates with score before differencing
+two batches.
+
+**Optimising the minority cost cannot move a majority-cost metric.**
+`mainthread-work-breakdown` on the mobile preset: Script Evaluation 2,476 ms and
+Parsing 198 ms against Style & Layout 2,604 ms and "Other" 8,179 ms, of 14,200
+ms. Every JavaScript lever — unused JS, hydration, lazy loading, dynamic
+imports, render scheduling, bundle splitting — acts on that ~2.5 s fifth. Read
+the breakdown *before* accepting a scope restricted to JS, because the honest
+answer may be that the requested target is unreachable inside it.
+
+**`next/dynamic` with `ssr: true` splits the build, not the load.** Nine
+below-the-fold sections were code-split and total page transfer moved 508 → 510
+KiB. Every lazy boundary sat in the server-rendered tree and hydrated
+immediately, so all chunks were still fetched inside the load window. Deferring
+real work needs the boundary gated on intersection — which costs the SSR content
+unless the sections are rebuilt as server components with lazily-hydrated
+interactive shells.
+
 **The Lighthouse *score* is far steadier than TBT on this machine.** Across five
 mobile runs the score spread was 3 points (43–46) while TBT spread 2× (5,237–
 11,146 ms), and one later run recorded 66,271 ms. Comparing medians of the

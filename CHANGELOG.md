@@ -1,5 +1,79 @@
 # SheetFlow v2 Changelog
 
+## Phase J — The JavaScript levers are spent (2026-08-07)
+
+**Nothing shipped. That is the finding.** A final optimisation phase was run
+against a 55–60 mobile target, restricted to unused JavaScript, hydration cost,
+lazy loading, dynamic imports, render scheduling and bundle splitting. One
+candidate was built and measured; it did not clear the noise floor and was
+rejected. No code from this phase is in the tree.
+
+### The candidate
+
+Two changes, both pure loading strategy with no visual or animation effect:
+
+- `GsapProvider` wraps the tree from the root layout and statically imported
+  `@/lib/gsap`, putting gsap, ScrollTrigger and CustomEase in the initial chunk
+  of **every route** — including the service pages, which use no gsap. Profiled
+  at 4× CPU, gsap cost **94.5 ms of load-phase self time**. Moved to a dynamic
+  `import()` inside the effect that already did the registration.
+- The nine below-the-fold sections were code-split with `next/dynamic`, `ssr`
+  left at `true` so the server HTML — FAQ answers, headings, all the content the
+  structured-data tests assert — stayed byte-identical.
+
+### Why it was rejected
+
+| `/` mobile, median of 9 | Score | TBT |
+|---|---|---|
+| Baseline (`a31065a`) | **52** | 2,590 ms |
+| Candidate | **53** | 2,484 ms |
+
+Per-run: 48/49/49/50/52/52/53/53/54 against 51/52/52/53/53/53/53/53/54.
+**Mann-Whitney U = 57.5 against a critical 62 at n=9 — not significant.**
+
+An earlier n=5 pass read **+3** and was wrong. The cause is visible inside the
+baseline batch itself: runs 1–4 scored 48–50 and runs 5–9 scored 52–54, because
+the machine quietened partway through. The candidate had been measured during
+the quiet half. **A within-batch trend invalidates a between-batch comparison
+even when both batches are "median of N".** Interleave or re-measure both.
+
+### Why no lever in scope could have hit 55–60
+
+`mainthread-work-breakdown`, mobile preset:
+
+| | Baseline | Candidate |
+|---|---|---|
+| Other | 8,179 ms | 5,577 ms |
+| Style & Layout | 2,604 ms | 2,938 ms |
+| **Script Evaluation** | **2,476 ms** | **2,294 ms** |
+| Script Parsing & Compilation | 198 ms | 209 ms |
+| Total | 14,200 ms | 11,700 ms |
+
+**Script evaluation and parsing are ~2.5 s of an 11.7–14.2 s main thread.** The
+six permitted levers all act on that fifth. Style & Layout plus "Other" — paint
+and compositing, the same cost D17 and the trace work identified on desktop —
+are ~8.5 s, and reducing them means fewer or smaller translucent layers, which
+constraints 2, 3 and 4 correctly forbid.
+
+The candidate also demonstrates the ceiling directly: total page transfer was
+**510 KiB against the baseline's 508 KiB**. Splitting the bundle changed *which*
+chunks exist, not what the browser fetches inside the load window, because every
+lazy boundary sits in the server-rendered tree and hydrates immediately. To
+actually defer that work, hydration would have to be gated on intersection —
+which needs the sections rebuilt as server components with lazily-hydrated
+interactive shells. That is a refactor of all nine, and it would strip the
+`whileInView` reveals that are the animation quality being protected.
+
+**The project is at its practical optimisation limit within the stated scope.**
+
+### Kept for the founder
+
+The candidate is preserved as `git stash@{0}` (*"arm1: gsap defer + section
+code-split"*). It is ~1 point and ~400 ms of TBT — real but unprovable at this
+sample size, and it measurably tightened TBT spread (1,958–2,956 ms against the
+baseline's 2,586–6,994 ms). Worth revisiting only if the noise floor improves or
+CI gains a quiet machine; not worth carrying into a freeze on the evidence here.
+
 ## Phase I — The mobile gate closes, on a font nobody could see (2026-08-07)
 
 Phase H left the homepage failing its own ≥50 mobile gate and named the lever as
