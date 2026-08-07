@@ -24,6 +24,8 @@
 
 import { faqs } from '@/content/faq';
 import { services, type ServicePage } from '@/content/services';
+import { projects, type WorkProject } from '@/content/work';
+import { tiers, pricingFaqs } from '@/content/pricing';
 import { BOOKING_URL, WHATSAPP_NUMBER } from '@/lib/contact';
 
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sheetflow.ai';
@@ -254,6 +256,285 @@ export function servicesIndexGraph(): Node[] {
       { name: 'Home', url: `${SITE_URL}/` },
       { name: 'Services', url },
     ]),
+  ];
+}
+
+/* ------------------------------------------------------------------ */
+/* Pricing                                                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * `/pricing` — an OfferCatalog carrying real prices, plus the pricing FAQ.
+ *
+ * ## Why the prices are in the graph at all
+ *
+ * This is the highest-value GEO surface on the site. "How much does WhatsApp
+ * automation cost" is a question assistants are asked constantly and can
+ * almost never answer, because agencies publish "contact us". A machine-
+ * readable `priceSpecification` is the difference between being quoted and
+ * being skipped.
+ *
+ * ## The two price shapes are typed differently, deliberately
+ *
+ * A one-time build fee and a monthly retainer are not the same object.
+ * Foundation carries a `PriceSpecification` with `minPrice` — it is a floor,
+ * not a fixed price, and `price` would assert otherwise. Automation carries a
+ * `UnitPriceSpecification` billed per month. Bespoke carries **no price node**:
+ * it is quoted after an audit, and an invented figure to fill the slot is
+ * exactly what this codebase refuses to do elsewhere.
+ */
+export function pricingGraph(): Node[] {
+  const url = `${SITE_URL}/pricing`;
+
+  const offers = tiers.map((tier) => {
+    const base: Node = {
+      '@type': 'Offer',
+      '@id': `${url}#${tier.id}`,
+      name: `${tier.name} — ${'SheetFlow AI'}`,
+      description: tier.summary,
+      url,
+      category: tier.name,
+      seller: { '@id': ORG_ID },
+      availability: 'https://schema.org/InStock',
+    };
+
+    if (tier.price.kind === 'from') {
+      return {
+        ...base,
+        priceSpecification: {
+          '@type': 'PriceSpecification',
+          // minPrice, not price: ₹19,999 is a starting point and the page says
+          // so. Publishing it as `price` would advertise a fixed fee.
+          minPrice: tier.price.amount,
+          priceCurrency: tier.price.currency,
+          valueAddedTaxIncluded: false,
+        },
+      };
+    }
+
+    if (tier.price.kind === 'recurring') {
+      return {
+        ...base,
+        priceSpecification: {
+          '@type': 'UnitPriceSpecification',
+          price: tier.price.amount,
+          priceCurrency: tier.price.currency,
+          unitCode: 'MON',
+          billingIncrement: 1,
+          valueAddedTaxIncluded: false,
+        },
+      };
+    }
+
+    return base;
+  });
+
+  const webPage: Node = {
+    '@type': 'WebPage',
+    '@id': `${url}#webpage`,
+    url,
+    name: 'Pricing',
+    description:
+      'SheetFlow pricing — websites and lead capture from ₹19,999 one-time, ongoing automation from ₹4,999 per month, and scoped bespoke engagements.',
+    isPartOf: { '@id': SITE_ID },
+    about: { '@id': ORG_ID },
+    inLanguage: 'en',
+  };
+
+  const catalogue: Node = {
+    '@type': 'OfferCatalog',
+    '@id': `${url}#catalog`,
+    name: 'SheetFlow pricing',
+    provider: { '@id': ORG_ID },
+    itemListElement: offers,
+  };
+
+  return [
+    organizationNode,
+    websiteNode,
+    webPage,
+    catalogue,
+    breadcrumbNode(url, [
+      { name: 'Home', url: `${SITE_URL}/` },
+      { name: 'Pricing', url },
+    ]),
+    faqNode(url, pricingFaqs),
+  ];
+}
+
+/* ------------------------------------------------------------------ */
+/* Booking                                                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * `/book` — the audit as a `Service` with a zero-price offer, plus a
+ * `ReserveAction` naming the booking surface.
+ *
+ * The free audit is the site's single conversion goal, and "free" is a claim a
+ * consumer should be able to read rather than infer from the word. A `price: 0`
+ * offer states it unambiguously.
+ */
+export function bookingGraph(): Node[] {
+  const url = `${SITE_URL}/book`;
+
+  const auditService: Node = {
+    '@type': 'Service',
+    '@id': `${url}#audit`,
+    name: 'Free automation audit',
+    serviceType: 'Business automation consultation',
+    description:
+      'A 30-minute call mapping where enquiries arrive, where they stall, and which steps are worth automating first. No commitment.',
+    provider: { '@id': ORG_ID },
+    url,
+    offers: {
+      '@type': 'Offer',
+      price: 0,
+      priceCurrency: 'INR',
+      availability: 'https://schema.org/InStock',
+      url: BOOKING_URL,
+    },
+  };
+
+  const webPage: Node = {
+    '@type': 'WebPage',
+    '@id': `${url}#webpage`,
+    url,
+    name: 'Book a free automation audit',
+    description:
+      'Book a free 30-minute automation audit with SheetFlow. We map where your enquiries arrive, where they stall, and what is worth automating first.',
+    isPartOf: { '@id': SITE_ID },
+    about: { '@id': `${url}#audit` },
+    inLanguage: 'en',
+    potentialAction: {
+      '@type': 'ReserveAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: BOOKING_URL,
+        actionPlatform: [
+          'https://schema.org/DesktopWebPlatform',
+          'https://schema.org/MobileWebPlatform',
+        ],
+      },
+      result: { '@type': 'Reservation', name: 'Free automation audit' },
+    },
+  };
+
+  return [
+    organizationNode,
+    websiteNode,
+    auditService,
+    webPage,
+    breadcrumbNode(url, [
+      { name: 'Home', url: `${SITE_URL}/` },
+      { name: 'Book an audit', url },
+    ]),
+  ];
+}
+
+/* ------------------------------------------------------------------ */
+/* Work / case studies                                                 */
+/* ------------------------------------------------------------------ */
+
+/**
+ * `/work` — a CollectionPage whose members are the case studies.
+ *
+ * Note what is deliberately **absent**: no `Review`, no `AggregateRating`, no
+ * `Rating` anywhere in this subtree. Both types assert an evaluation, and
+ * SheetFlow has published no measured outcome for any of these projects. A
+ * `Review` node with no review behind it is exactly the fabricated trust signal
+ * the proof architecture exists to prevent — and Google's structured-data
+ * policy treats self-serving review markup as a manual-action risk. A test
+ * asserts these types never appear.
+ */
+export function workIndexGraph(): Node[] {
+  const url = `${SITE_URL}/work`;
+  const collection: Node = {
+    '@type': 'CollectionPage',
+    '@id': `${url}#webpage`,
+    url,
+    name: 'Client work',
+    description:
+      'Production websites and automation systems SheetFlow has built and deployed, with the architecture and engineering decisions behind each.',
+    isPartOf: { '@id': SITE_ID },
+    about: { '@id': ORG_ID },
+    inLanguage: 'en',
+    hasPart: projects.map((p) => ({ '@id': `${SITE_URL}/work/${p.slug}#project` })),
+  };
+  return [
+    organizationNode,
+    websiteNode,
+    collection,
+    breadcrumbNode(url, [
+      { name: 'Home', url: `${SITE_URL}/` },
+      { name: 'Work', url },
+    ]),
+  ];
+}
+
+/**
+ * `/work/[slug]` — CreativeWork + WebPage + BreadcrumbList + the page's FAQs.
+ *
+ * ## Why the project is a `CreativeWork` and not a `WebSite`
+ *
+ * `WebSite` is the more precise type for the thing delivered — it is, literally,
+ * a website. It was rejected because the page **already carries a `WebSite`
+ * node**: SheetFlow's own, pinned to `SITE_ID`. Emitting a second one puts two
+ * `WebSite` entities in one graph, and Google reads `WebSite` to resolve the
+ * site name and the sitelinks searchbox. Handing it a choice between
+ * "SheetFlow AI" and "Saraswati Dental Clinic — website" is a risk with no
+ * upside, and it was visible in the rendered graph as `WebSite, WebSite`.
+ *
+ * `CreativeWork` carries everything that matters here without the collision:
+ * `creator` is SheetFlow, `about` is the client organisation, and `url` is the
+ * live deployment.
+ *
+ * `mainEntityOfPage` points at the case study, not the client's site — the page
+ * is about the build, and the build's own URL is carried by `url`.
+ */
+export function workProjectGraph(project: WorkProject): Node[] {
+  const url = `${SITE_URL}/work/${project.slug}`;
+  const projectNode: Node = {
+    '@type': 'CreativeWork',
+    '@id': `${url}#project`,
+    name: `${project.client} — website`,
+    description: project.metaDescription,
+    url: project.liveUrl,
+    inLanguage: 'en',
+    creator: { '@id': ORG_ID },
+    mainEntityOfPage: { '@id': `${url}#webpage` },
+    image: `${SITE_URL}${project.shot.src}`,
+    about: {
+      '@type': 'Organization',
+      name: project.client,
+      // The client's own deployment is the authoritative reference for the
+      // client entity. No address, phone or rating is restated here: those are
+      // the client's facts to publish, and mirroring them would make this site
+      // a second, drifting source for someone else's business data.
+      url: project.liveUrl,
+    },
+  };
+  const webPage: Node = {
+    '@type': 'WebPage',
+    '@id': `${url}#webpage`,
+    url,
+    name: project.metaTitle,
+    description: project.metaDescription,
+    isPartOf: { '@id': SITE_ID },
+    about: { '@id': `${url}#project` },
+    primaryImageOfPage: `${SITE_URL}${project.shot.src}`,
+    inLanguage: 'en',
+  };
+  return [
+    organizationNode,
+    websiteNode,
+    projectNode,
+    webPage,
+    breadcrumbNode(url, [
+      { name: 'Home', url: `${SITE_URL}/` },
+      { name: 'Work', url: `${SITE_URL}/work` },
+      { name: project.shortLabel, url },
+    ]),
+    faqNode(url, project.faqs),
   ];
 }
 

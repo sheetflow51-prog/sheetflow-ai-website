@@ -86,7 +86,7 @@ test.describe('homepage', () => {
     }
   });
 
-  test('external links are safe and the booking CTA points at Calendly', async ({ page }) => {
+  test('external links are safe and the booking path reaches Calendly', async ({ page }) => {
     await page.goto('/');
 
     // target=_blank without rel=noopener leaks window.opener to the target.
@@ -97,7 +97,22 @@ test.describe('homepage', () => {
     );
     expect(unsafe, `missing rel=noopener:\n${unsafe.join('\n')}`).toEqual([]);
 
-    await expect(page.locator('a[href*="calendly.com"]').first()).toBeAttached();
+    /**
+     * This used to assert a `calendly.com` link on the homepage. Every CTA now
+     * routes through `/book`, which qualifies the visitor and *then* hands off
+     * to Calendly with the answers prefilled — so a direct Calendly link on the
+     * homepage would be the regression, not the requirement.
+     *
+     * The check therefore walks the real path rather than pattern-matching one
+     * href: homepage CTA → /book → a form whose action is Calendly. That is
+     * what "booking works" means now, and it fails if any link in the chain
+     * breaks.
+     */
+    const cta = page.locator('a[href="/book"]').first();
+    await expect(cta, 'no CTA routing to /book').toBeAttached();
+
+    await page.goto('/book');
+    await expect(page.locator('form')).toHaveAttribute('action', /calendly\.com/);
   });
 });
 

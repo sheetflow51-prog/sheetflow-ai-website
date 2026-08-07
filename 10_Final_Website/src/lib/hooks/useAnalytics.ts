@@ -23,7 +23,13 @@ type EventName =
   | 'form_submit'           // Inquiry form submission
   | 'audio_enabled'         // User enables audio
   | 'nav_cta_click'         // Nav bar CTA
-  | 'mobile_menu_open';     // Mobile nav opened
+  | 'mobile_menu_open'      // Mobile nav opened
+  // The booking funnel's one measurable step on our side. Everything after
+  // this happens on Calendly, so this is the last event we can observe —
+  // `booking_qualified` over `/book` views is the conversion rate we own.
+  // Properties carry the two select answers, never the name or email:
+  // attribution is not identity, and PII must not enter the analytics stream.
+  | 'booking_qualified';
 
 type EventProperties = Record<string, string | number | boolean>;
 

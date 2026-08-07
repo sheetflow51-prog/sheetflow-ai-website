@@ -8,7 +8,6 @@ import { Magnetic } from '@/components/motion/Magnetic';
 import { Brackets } from '@/components/signature/Brackets';
 import { Trace } from '@/components/signature/Trace';
 import { useAnalytics } from '@/lib/hooks/useAnalytics';
-import { BOOKING_URL } from '@/lib/contact';
 import { prefersReducedMotion } from '@/lib/utils';
 
 export function FinalCTA() {
@@ -175,7 +174,7 @@ export function FinalCTA() {
                 <Button
                   variant="primary"
                   size="lg"
-                  href={BOOKING_URL}
+                  href="/book"
                   onClick={() => track('final_cta_click', { variant: 'audit' })}
                 >
                   Book a free automation audit

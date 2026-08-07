@@ -10,7 +10,6 @@ import { SectionHandoff } from '@/components/signature/SectionHandoff';
 import { Brackets } from '@/components/signature/Brackets';
 import { getService, services, type ServicePage } from '@/content/services';
 import { serviceGraph } from '@/lib/structured-data';
-import { BOOKING_URL } from '@/lib/contact';
 
 /**
  * `/services/[slug]` — one page per catalogued service.
@@ -117,7 +116,7 @@ export default async function ServiceDetailPage({
               {service.lede}
             </p>
             <div className="mt-10 flex flex-wrap items-center gap-3">
-              <Button variant="primary" size="lg" href={BOOKING_URL}>
+              <Button variant="primary" size="lg" href="/book">
                 Book free audit
               </Button>
               {/* `/#product`, matching where the nav's "How we work" goes. The
@@ -298,7 +297,7 @@ export default async function ServiceDetailPage({
           </div>
 
           <div className="mt-12 flex flex-wrap items-center gap-3">
-            <Button variant="primary" size="lg" href={BOOKING_URL}>
+            <Button variant="primary" size="lg" href="/book">
               Book free audit
             </Button>
             <Link

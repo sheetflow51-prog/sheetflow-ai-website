@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/Button';
 import { SectionHandoff } from '@/components/signature/SectionHandoff';
 import { services } from '@/content/services';
 import { servicesIndexGraph } from '@/lib/structured-data';
-import { BOOKING_URL } from '@/lib/contact';
 
 /**
  * `/services` — the index.
@@ -107,7 +106,7 @@ export default function ServicesIndexPage() {
             the map whether or not you work with us.
           </p>
           <div className="mt-10 flex flex-wrap items-center gap-3">
-            <Button variant="primary" size="lg" href={BOOKING_URL}>
+            <Button variant="primary" size="lg" href="/book">
               Book free audit
             </Button>
             <Link

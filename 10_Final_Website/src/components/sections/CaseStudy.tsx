@@ -1,119 +1,139 @@
 'use client';
 
-import { ArrowUpRight } from 'lucide-react';
-import { GlassCard } from '@/components/ui/GlassCard';
+import Link from 'next/link';
+import Image from 'next/image';
+import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { ProofPlaceholder } from '@/components/ui/ProofPlaceholder';
 import { ScrollReveal } from '@/components/motion/ScrollReveal';
 import { publishedCaseStudies } from '@/content/proof';
+import { projects } from '@/content/work';
 
-/* Colour washes are presentation, not content, so they live here and are
-   assigned by position rather than stored against a customer record. */
-const ACCENTS = [
-  'from-accent-bright/15 via-transparent to-transparent',
-  'from-violet/15 via-transparent to-transparent',
-  'from-violet/15 via-transparent to-transparent',
-];
+/**
+ * The homepage work section.
+ *
+ * ## What changed, and the distinction that drives it
+ *
+ * This section used to render a placeholder reading "we publish results only
+ * once we can prove them", because no customer evidence had been permissioned.
+ * Publication permission arrived on 2026-08-07 (D24) — but **only for the work,
+ * not for outcomes**. Those are two different claims and the section now treats
+ * them as such:
+ *
+ *   - **The builds are shown.** Real clients, real screenshots, links to
+ *     running deployments. A visitor can verify every one by clicking it.
+ *   - **The metrics are still absent**, and the section still says so. No
+ *     outcome has been measured against a stated method and confirmed with a
+ *     client, so `publishedCaseStudies()` still returns nothing and the
+ *     measured-results block below still does not render.
+ *
+ * When a verified case study does arrive, `publishedCaseStudies()` starts
+ * returning it and the metric strip appears with no change here — which is the
+ * property `content/proof.ts` exists to guarantee.
+ */
 
 export function CaseStudy() {
-  const studies = publishedCaseStudies();
-  const hasStudies = studies.length > 0;
+  // Verified, permissioned *outcome* entries — still empty, deliberately.
+  const measured = publishedCaseStudies();
+  const hasMeasured = measured.length > 0;
 
   return (
     <section id="customers" className="section relative">
       <div className="container-edge">
         <div className="mb-12 max-w-3xl md:mb-16">
           <SectionHeader
-            kicker={hasStudies ? 'Customer Results' : 'Proof, When It Is Real'}
+            kicker="Selected work"
             title={
-              hasStudies ? (
-                <>
-                  Quiet automations.{' '}
-                  <span className="text-ink-300">Loud results.</span>
-                </>
-              ) : (
-                <>
-                  We publish results{' '}
-                  <span className="text-ink-300">only once we can prove them.</span>
-                </>
-              )
+              <>
+                Built, deployed,{' '}
+                <span className="text-ink-300">and still running.</span>
+              </>
             }
-            description={
-              hasStudies
-                ? 'Clinics, agencies, coaches and service businesses use SheetFlow to capture more leads, book more clients, and reclaim hours every week.'
-                : 'Every number on this site is measured and confirmed with the customer before it appears. Nothing here is illustrative, projected, or borrowed from an industry average.'
-            }
+            description="Production sites and automation systems for clinics, physiotherapy and real estate. Each one links to the live deployment — nothing here has to be taken on trust."
           />
         </div>
 
-        {hasStudies ? (
-          <ScrollReveal className="grid gap-3.5 md:grid-cols-3" y={30} duration={0.7} stagger={0.1}>
-            {studies.map((s, i) => (
-              <div key={s.slug}>
-                <GlassCard variant="feature" className="group h-full" interactive>
-                  <div className="flex h-full flex-col gap-6">
-                    {/* Living colour wash — a slow opacity breathe keeps a faint
-                        pulse after reveal (opacity-only, reduced-motion gated). */}
-                    <div
-                      className={`pointer-events-none absolute inset-0 animate-glow-breathe bg-gradient-to-br ${ACCENTS[i % ACCENTS.length]} opacity-50`}
-                      style={{ animationDuration: '7.5s', animationDelay: `${i * 1.1}s` }}
+        <ScrollReveal className="grid gap-4 md:grid-cols-3" y={30} duration={0.7} stagger={0.1}>
+          {projects.map((p) => (
+            <div key={p.slug}>
+              <Link
+                href={`/work/${p.slug}`}
+                className="card-interactive group flex h-full flex-col overflow-hidden p-0"
+                data-cursor="hover"
+              >
+                <div className="relative aspect-[16/10] w-full overflow-hidden border-b border-white/[0.06]">
+                  <Image
+                    src={p.shot.src}
+                    alt={p.shot.alt}
+                    fill
+                    sizes="(min-width: 768px) 30vw, 92vw"
+                    className="object-cover object-top transition-transform duration-700 ease-cinematic group-hover:scale-[1.03]"
+                  />
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 bg-gradient-to-t from-void/75 via-transparent to-transparent"
+                  />
+                </div>
+
+                <div className="flex flex-1 flex-col gap-2 p-6">
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="font-display text-[18px] font-semibold leading-snug text-white">
+                      {p.client}
+                    </h3>
+                    <ArrowUpRight
+                      className="mt-0.5 h-5 w-5 shrink-0 text-ink-400 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent-bright"
+                      strokeWidth={1.6}
                       aria-hidden="true"
                     />
-
-                    {/* Refined "running" highlight on hover — one travelling sheen
-                        along the top edge. */}
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-x-0 top-0 h-px overflow-hidden opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                    >
-                      <div className="h-full w-full animate-none bg-[linear-gradient(90deg,transparent_0%,rgba(147,197,253,0.7)_50%,transparent_100%)] bg-[length:200%_100%] group-hover:animate-shimmer" />
-                    </div>
-
-                    <div className="relative flex items-center justify-between">
-                      <div>
-                        <h3 className="font-display text-[18px] font-semibold text-white">
-                          {s.company}
-                        </h3>
-                        <p className="font-mono text-[10px] uppercase tracking-widest text-ink-400">
-                          {s.sector} · {s.context}
-                        </p>
-                      </div>
-                      <ArrowUpRight
-                        className="h-5 w-5 text-ink-400 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent-bright"
-                        strokeWidth={1.6}
-                        aria-hidden="true"
-                      />
-                    </div>
-
-                    <p className="relative text-[15px] leading-relaxed text-white/85 text-balance">
-                      {s.summary}
-                    </p>
-
-                    <div className="relative mt-auto border-t border-white/[0.06] pt-5">
-                      <div className="font-display text-3xl font-semibold text-accent-gradient">
-                        {s.metric}
-                      </div>
-                      <p className="mt-1 text-[12px] text-ink-300">{s.metricLabel}</p>
-                      {/* The measurement basis travels with the number. A metric
-                          that cannot state its methodology does not ship.
-                          ink-300 for AA at this size (ink-400 measures 4.26:1). */}
-                      <p className="mt-2 text-[11px] leading-snug text-ink-300">
-                        {s.verification.methodology}
-                      </p>
-                    </div>
                   </div>
-                </GlassCard>
+                  <p className="font-mono text-[10px] uppercase tracking-widest text-ink-400">
+                    {p.sector} · {p.location}
+                  </p>
+                </div>
+              </Link>
+            </div>
+          ))}
+        </ScrollReveal>
+
+        {/* The measured-outcome strip. Renders only when a verified,
+            permissioned figure exists — which today it does not. */}
+        {hasMeasured && (
+          <ScrollReveal className="mt-4 grid gap-4 md:grid-cols-3" y={30} duration={0.7}>
+            {measured.map((s) => (
+              <div key={s.slug} className="rounded-2xl glass p-7">
+                <div className="font-display text-3xl font-semibold text-accent-gradient">
+                  {s.metric}
+                </div>
+                <p className="mt-1 text-[12px] text-ink-300">{s.metricLabel}</p>
+                <p className="mt-2 text-[11px] leading-snug text-ink-300">
+                  {s.verification.methodology}
+                </p>
               </div>
             ))}
           </ScrollReveal>
-        ) : (
-          <ScrollReveal y={30} duration={0.7}>
-            <ProofPlaceholder
-              title="Customer results"
-              body="We are early, and the businesses we work with are still measuring. When the first results are confirmed — and we have written permission to share them — they will appear here with the method behind every figure."
-            />
-          </ScrollReveal>
         )}
+
+        <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3">
+          <Link
+            href="/work"
+            className="group inline-flex min-h-[24px] items-center gap-2 text-[14px] text-white transition-colors"
+            data-cursor="hover"
+          >
+            Read the case studies
+            <ArrowRight
+              className="h-4 w-4 transition-transform duration-300 ease-cinematic group-hover:translate-x-1"
+              strokeWidth={2.2}
+              aria-hidden="true"
+            />
+          </Link>
+
+          {!hasMeasured && (
+            <p className="max-w-xl text-[13px] leading-relaxed text-ink-300">
+              You will not find percentages on those pages. We publish a result only once it is
+              measured against a stated method and confirmed with the client — until then each
+              case study says so plainly.
+            </p>
+          )}
+        </div>
       </div>
     </section>
   );

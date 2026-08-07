@@ -1,12 +1,17 @@
 import { Logo } from '@/components/ui/Logo';
 import { services } from '@/content/services';
+import { projects } from '@/content/work';
 
 /**
- * Two things changed here when the service pages shipped.
+ * The Services group points at the four real pages rather than sending every
+ * label to the same anchor — several links to one destination is a dark
+ * pattern for a crawler and useless for a reader.
  *
- * The Services group now points at the four real pages instead of sending
- * every label to the same `#workflows` anchor — four links to one destination
- * is a dark pattern for a crawler and useless for a reader.
+ * **That same defect was still present in the old "Who it's for" group**, whose
+ * five labels all resolved to `/#customers`, and in "Case Studies", which was a
+ * sixth link to it. The group is now Work, and every entry is a distinct page
+ * that exists. Fixing it in one place and leaving it in another is how the
+ * pattern survives a review.
  *
  * Every remaining fragment is root-relative. A bare `#faq` resolves against
  * the current page, so from `/services/...` it pointed at nothing.
@@ -21,19 +26,16 @@ const FOOTER_GROUPS = [
     ],
   },
   {
-    title: 'Who it’s for',
+    title: 'Work',
     links: [
-      { label: 'Clinics', href: '/#customers' },
-      { label: 'Agencies', href: '/#customers' },
-      { label: 'Coaches', href: '/#customers' },
-      { label: 'Real Estate', href: '/#customers' },
-      { label: 'Service Businesses', href: '/#customers' },
+      ...projects.map((p) => ({ label: p.shortLabel, href: `/work/${p.slug}` })),
+      { label: 'All work', href: '/work' },
     ],
   },
   {
     title: 'Resources',
     links: [
-      { label: 'Case Studies', href: '/#customers' },
+      { label: 'Pricing', href: '/pricing' },
       { label: 'Integrations', href: '/#integrations' },
       { label: 'FAQ', href: '/#faq' },
       // Machine-readable brief for language models. Linked rather than left
@@ -44,8 +46,8 @@ const FOOTER_GROUPS = [
   {
     title: 'Company',
     links: [
+      { label: 'Book an audit', href: '/book' },
       { label: 'Contact', href: '/#contact' },
-      { label: 'Book an Audit', href: '/#contact' },
     ],
   },
 ];

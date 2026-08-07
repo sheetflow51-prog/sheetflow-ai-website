@@ -7,7 +7,6 @@ import { Logo } from '@/components/ui/Logo';
 import { Button } from '@/components/ui/Button';
 import { useStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
-import { BOOKING_URL } from '@/lib/contact';
 
 /**
  * Root-relative, not bare fragments.
@@ -18,12 +17,22 @@ import { BOOKING_URL } from '@/lib/contact';
  * homepage itself the browser still treats `/#faq` as a same-document
  * fragment, so nothing about the scroll behaviour there changes.
  */
+/**
+ * Six items, and the two that changed earn their place.
+ *
+ * `Work` and `Pricing` are the two questions a visitor evaluating an agency
+ * asks first — "what have you built" and "what does it cost" — and both are now
+ * real pages rather than anchors. They displaced `Reports` (a homepage section
+ * still reachable from the footer) and `Results` (which pointed at
+ * `/#customers`, the placeholder explaining that no results are published —
+ * a nav item promising results and delivering their absence).
+ */
 const NAV_LINKS = [
   { label: 'Services', href: '/services' },
+  { label: 'Work', href: '/work' },
+  { label: 'Pricing', href: '/pricing' },
   { label: 'How we work', href: '/#product' },
-  { label: 'Reports', href: '/#reports' },
   { label: 'Integrations', href: '/#integrations' },
-  { label: 'Results', href: '/#customers' },
   { label: 'FAQ', href: '/#faq' },
 ];
 
@@ -85,7 +94,7 @@ export function Navigation() {
             <Button
               variant="primary"
               size="sm"
-              href={BOOKING_URL}
+              href="/book"
               className="hidden sm:inline-flex"
             >
               Book free audit
@@ -157,7 +166,7 @@ export function Navigation() {
                 <Button
                   variant="primary"
                   size="lg"
-                  href={BOOKING_URL}
+                  href="/book"
                   className="w-full justify-center"
                   onClick={() => setOpen(false)}
                 >

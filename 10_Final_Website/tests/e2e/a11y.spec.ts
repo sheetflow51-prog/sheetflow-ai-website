@@ -139,4 +139,79 @@ test.describe('accessibility', () => {
     const { violations } = await new AxeBuilder({ page }).withTags(TAGS).analyze();
     expect(violations.length, `\n${summarise(violations)}\n`).toBe(0);
   });
+
+  /**
+   * The work, pricing and booking routes.
+   *
+   * Unlike the four service pages, these are four genuinely different layouts:
+   * an image grid, a long-form case study, a pricing table, and a form. None
+   * of them re-tests another's DOM, so all four are audited.
+   *
+   * `/book` matters most. It is the only page on the site with real form
+   * controls, and form accessibility failures — an unlabelled input, a select
+   * with no accessible name, an error nobody announces — are the class axe
+   * catches best and reviewers catch worst.
+   */
+  for (const path of ['/work', '/work/saraswati-dental-clinic', '/pricing', '/book']) {
+    test(`${path} has no WCAG 2.1 AA violations`, async ({ page }) => {
+      await page.goto(path);
+      await settle(page);
+
+      const { violations } = await new AxeBuilder({ page }).withTags(TAGS).analyze();
+      expect(violations.length, `\n${summarise(violations)}\n`).toBe(0);
+    });
+  }
+
+  test('/pricing has no violations under prefers-reduced-motion', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/pricing');
+    await settle(page);
+
+    const { violations } = await new AxeBuilder({ page }).withTags(TAGS).analyze();
+    expect(violations.length, `\n${summarise(violations)}\n`).toBe(0);
+  });
+
+  test('every booking control has an accessible name', async ({ page }) => {
+    // axe catches a missing label; it does not catch a label that is present
+    // but attached to the wrong control, which reads correctly in a review and
+    // is wrong in a screen reader. Resolving each control by its visible text
+    // asserts the association rather than the existence.
+    await page.goto('/book');
+
+    const named = [
+      'Your name',
+      'Email',
+      'What kind of business?',
+      'Where are you losing the most?',
+    ];
+    for (const label of named) {
+      await expect(
+        page.getByLabel(label, { exact: false }),
+        `no control resolves from the label "${label}"`,
+      ).toHaveCount(1);
+    }
+  });
+
+  test('the calculator announces its result', async ({ page }) => {
+    // The figure changes without any DOM the user navigated to, so without a
+    // live region a screen-reader user gets silence while the number moves.
+    await page.goto('/pricing');
+    const live = page.locator('[aria-live="polite"]');
+    await expect(live).toHaveCount(1);
+    await expect(live).toHaveAttribute('aria-atomic', 'true');
+  });
+
+  test('case study images carry descriptive alt text, not filenames', async ({ page }) => {
+    // These images are the evidence the page rests on. An empty or filename
+    // alt makes the entire argument invisible to a screen reader.
+    await page.goto('/work');
+    const alts = await page.$$eval('main img', (imgs) =>
+      imgs.map((i) => i.getAttribute('alt') ?? ''),
+    );
+    expect(alts.length).toBeGreaterThan(0);
+    for (const alt of alts) {
+      expect(alt.length, 'an empty alt on a content image').toBeGreaterThan(20);
+      expect(alt, 'alt text looks like a filename').not.toMatch(/\.(jpg|png|webp|avif)$/i);
+    }
+  });
 });

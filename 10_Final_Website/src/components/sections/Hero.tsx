@@ -11,7 +11,6 @@ import { Parallax } from '@/components/motion/Parallax';
 import { Brackets } from '@/components/signature/Brackets';
 import { Trace } from '@/components/signature/Trace';
 import { useAnalytics } from '@/lib/hooks/useAnalytics';
-import { BOOKING_URL } from '@/lib/contact';
 import { prefersReducedMotion } from '@/lib/utils';
 import { publishedTrustLogos } from '@/content/proof';
 
@@ -200,7 +199,7 @@ export function Hero() {
               <Button
                 variant="primary"
                 size="lg"
-                href={BOOKING_URL}
+                href="/book"
                 onClick={() => track('hero_cta_click', { variant: 'audit' })}
               >
                 Book a free automation audit
