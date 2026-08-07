@@ -190,29 +190,54 @@ M02 — not defined in this repository.
 
 ## Latest Commit
 
-`e5cbb3b` — `fix(a11y): raise label contrast to AA in the new proof components`
+`dbea5f4` — `perf(mobile): clear the ≥50 gate, on a font that could never render`
 
-Branch `feat/m01-foundation`, pushed to `origin/feat/m01-foundation`. A
-follow-up commit finalises `CHANGELOG.md` and this file.
+Branch `feat/m01-foundation`.
+
+## Latest Preview
+
+`https://sheetflow-ai-website-3moimh5xb-sheetflow51-progs-projects.vercel.app`
+— deployed 2026-08-07 from `dbea5f4`, state READY.
+
+**It requires a Vercel login (D12).** Anonymous requests to every route return
+302 to `vercel.com/sso-api`; an authenticated `vercel curl` serves the page
+normally. Verified on the deployed artifact through that channel: 3 font
+preloads (was 4), zero italic `@font-face`, exactly one JSON-LD block carrying
+Organization / WebSite / WebPage / FAQPage (8 Q&A) / OfferCatalog / 6 × Service
++ Offer / ContactPoint.
+
+**B2 is visible on this deployment**: the canonical and `og:url` both read
+`https://sheetflow-ai-website.vercel.app`, not `sheetflow.ai`.
 
 ## Current Lighthouse
 
-Measured **2026-08-06**, production build, via `npm run audit:lh`
-(median of N, warm-up discarded, cold browser per run).
+Measured **2026-08-07** on commit `dbea5f4`, production build, via
+`npm run audit:lh` (median of 5, warm-up discarded, cold browser per run).
+Run locally against the identical build, because the preview is SSO-gated
+(D12) and cannot be audited anonymously.
 
-| Category | Desktop | Mobile (4x CPU) |
+| Category | Desktop | Mobile (4× CPU + Slow 4G) |
 |---|---|---|
-| Performance | **65** | **50** |
-| Accessibility | **100** | — |
-| Best practices | **96** | — |
-| SEO | **100** | — |
+| Performance | **62** | **50** |
+| Accessibility | **100** | **100** |
+| Best practices | **96** | **96** |
+| SEO | **100** | **100** |
 
-Desktop: FCP 0.4s · LCP 1.2s · **TBT ~610ms** · **CLS 0.000** · SI 3.4s
-Mobile: LCP 4.3s · TBT ~2,080ms · CLS 0.000 (measured Phase B; not re-run)
+Desktop: FCP 0.4s · LCP 1.1s · **TBT 980ms** · **CLS 0.000** · SI 3.5s
+Mobile: FCP 0.9s · LCP 4.2s · **TBT 3,180ms** · **CLS 0.000** · SI 6.7s
 
-**Read TBT with care.** Run-to-run spread on this machine is 443–1,223 ms for
-an unchanged build. Only differences larger than that are real. Phase B
-eliminated CLS but did not move TBT.
+**Mobile went 45 → 50 this session** (before/after in one batch; per-run
+44/46/43/45/46 → 49/51/48/50/53, non-overlapping). It sits *exactly* on the
+gate with no headroom — single runs still dip to 48.
+
+**Desktop 62 is not a change.** The documented band for this build is 59–65 and
+nothing this session touched the desktop render path. Do not read it as an
+improvement on 59 or a regression from 65.
+
+**Read TBT with care.** Run-to-run spread on this machine is 443–1,223 ms
+desktop and 5,237–11,146 ms mobile for an unchanged build, with one 66,271 ms
+outlier observed. The *score* is far steadier than TBT — 3 points across five
+runs — so claims should rest on it.
 
 `DEPLOYMENT.md`'s targets remain aspirations and should be read as such.
 
@@ -237,7 +262,7 @@ app and Vercel root), `Documentation/` (`Approved/` pointer + `Archive/`),
 **six** edge-runtime OG/Twitter image routes (root, `/services`, and
 `/services/[slug]`).
 
-**Test infrastructure:** Playwright 1.62 + axe-core, **144 tests** across desktop
+**Test infrastructure:** Playwright 1.62 + axe-core, **152 tests** across desktop
 and mobile, running against the production build. Lighthouse and gzip-accurate
 bundle budgets wired as `npm run audit:lh` / `audit:bundle`; `npm run verify`
 runs the lot. This closes the largest structural gap carried into M01.
