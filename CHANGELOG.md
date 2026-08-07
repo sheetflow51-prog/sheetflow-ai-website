@@ -1,5 +1,137 @@
 # SheetFlow v2 Changelog
 
+## Phase K — The site becomes a business (2026-08-08)
+
+Three commercial surfaces the site has never had: a portfolio, published
+prices, and a booking flow. Build green at **28 routes** (was 19), suite at
+**264 tests** (was 152).
+
+### The blocker that had to be resolved first
+
+The execution contract opened with *"client permissions have now been granted"*.
+The founder's own CRM ledger — brief #17, dated 2026-07-31, seven days earlier —
+reported **0 clients closed in 2026, ₹0 pipeline, no demos booked, no agreements
+signed**. One of the three sites carries the founder's own email as its contact.
+The sites name real third parties with real credentials: a BDS registration
+number, an IAP professional registration.
+
+Those two things cannot both be true, and the gap mattered because publishing
+would assert a commercial relationship about **named real people** who had not
+been asked. It was raised as a legal-permission question with the evidence
+attached, before a single page was written. The founder reaffirmed and drew a
+boundary: names, screenshots, links, architecture and implementation detail are
+publishable; revenue, conversion, ROI, metrics, testimonials and timelines are
+not; where an outcome is unavailable, say *"Not publicly disclosed."*
+
+That is **D24**, and everything below derives from it.
+
+### The type system had to change, because the docs were wrong about it
+
+`PROJECT_STATUS.md` stated: *"The architecture already supports the second case
+— a case study can carry a summary without a metric."*
+
+It did not. `VerifiedCaseStudy` **required** `metric` and `metricLabel`, so a
+permissioned-but-unmeasured project could not be typed at all. The claim had
+been true of the intent and never of the code.
+
+`ProjectOutcome` in `src/content/work.ts` fixes it in the same spirit as D1:
+
+```
+| { disclosure: 'measured'; metric; metricLabel; verification: Verification }
+| { disclosure: 'not-disclosed' }
+```
+
+The `not-disclosed` variant has **nowhere to put a number**. Publishing a figure
+requires a full `Verification` carrying its methodology and confirmation date.
+The boundary is enforced by `tsc`, not by whoever reviews the next commit.
+
+### /work — three case studies that sell on engineering
+
+Results are the one thing these pages may not sell on, so they sell on the thing
+that *is* verifiable: how the build works. Each page carries the problem, the
+data flow, the observed stack, the decisions — and, for every decision, **how
+the reader can confirm it themselves** on the live site. A figure asks for
+trust; *"open the booking form and view source"* does not.
+
+Every technical statement was read off the live deployment on 2026-08-07:
+
+| | Read from the deployment |
+|---|---|
+| Saraswati Dental | Static HTML; GSAP 3.12.5 + ScrollTrigger; Indian-mobile validation pattern; **an off-screen honeypot rather than a CAPTCHA**; required consent tick; Noto Sans Devanagari loaded as a first-class face beside the Latin stack; Dentist + FAQPage + OpeningHoursSpecification + GeoCoordinates |
+| SPARC Physiotherapy | Static HTML; **form submits into WhatsApp, and says so above the fields**; `novalidate` with results announced through `role="status"`; inline SVG sprite via `<use>`; MedicalBusiness + Person + EducationalOccupationalCredential linked to the awarding institution |
+| R³S Realty | React SPA on Vite/Rolldown; four cache-independent chunks (app 30.7 kB, vendor 178.4 kB, motion 125.9 kB, charts 372.9 kB); RealEstateAgent **and** LocalBusiness; Product with a currency-denominated Offer; Search Console token shipped in the document |
+
+**Elevate WPC is absent (D27).** Named by the founder, but it has no verifiable
+artifact — not among the account's 5 Vercel projects, no resolving domain under
+any tested spelling, nothing in the workspace. D24 permits publishing
+architecture; it cannot be exercised for a build nobody can observe. Omitted
+rather than guessed.
+
+### /pricing — the numbers, before the call
+
+₹19,999 one-time and ₹4,999/month (**D25**). Neither figure is new: both already
+appear in the founder's own outreach material, so this is disclosure of a
+standing quote rather than a fresh commitment.
+
+Refused, each for a stated reason: delivery timelines (never timed), ROI figures
+(never measured), anchor pricing (invents a price nobody paid), "most popular"
+badging (a sales statistic nobody has — the featured tier reads *what we
+recommend*).
+
+The recovery calculator takes **every** input from the visitor, the recovery
+rate included. That is the whole difference between it and a fabricated
+projection, and the page says so instead of footnoting it.
+
+Prices are machine-readable and typed by shape: `minPrice` for the "from" tier
+because ₹19,999 is a floor, `UnitPriceSpecification` for the monthly, and **no
+price node at all** for the quoted tier.
+
+### /book — a conversion step that ships no third-party JavaScript
+
+Every CTA used to jump straight to Calendly. That works, and it throws away two
+things: the call opens cold, and the funnel has no observable step on our side.
+
+`/book` adds four questions and prefills Calendly by URL — parameter names
+verified against the live event type (`Free Automation Audit`, 30 min, Google
+Meet, one custom question at position 0), not assumed. The inline widget was
+**rejected** (D26): a third-party script and iframe on the highest-intent page
+of a site whose measured constraint is mobile bandwidth, plus a tracking surface
+handed over before anyone agreed to anything.
+
+The form is a real `<form method="get">` whose inputs are named as Calendly's
+own parameters, so **the conversion path survives with JavaScript disabled**.
+Both properties are asserted by test.
+
+### Fixed — each found by building the above, not by looking for it
+
+| Fix | Severity | How it surfaced |
+|---|---|---|
+| **Comparison table unreachable by keyboard** | **Serious (WCAG 2.1.1)** | axe on the *mobile* profile, where the table actually overflows. A horizontally scrollable container that cannot receive focus is unreachable without a mouse. Now a focusable named region. Desktop passed throughout — the defect only exists at the width where the scroll appears. |
+| **Two `WebSite` nodes on every case study** | Medium (SEO) | Reading the rendered graph rather than the source. The project node was typed `WebSite`, colliding with the site's own — Google reads that type to resolve site name and sitelinks. Retyped `CreativeWork`; a test asserts exactly one. |
+| **`llms.txt` asserted two things that had just become false** | **High (GEO)** | It told AI engines *"SheetFlow publishes no customer names, outcome metrics… or pricing"*. Both false the moment `/work` and `/pricing` shipped. A stale directive in that file is worse than no file: it is addressed to the systems most likely to obey it. Rewritten to separate what is published from what must never be inferred. |
+| **Footer sent five labels to one anchor** | Medium (navigation) | The "Who it's for" group pointed all five entries at `/#customers` — the exact dark pattern a comment three lines above criticised in the Services group. Fixing it in one place and leaving it in another is how a pattern survives review. Replaced with Work, where every entry is a page. |
+
+### Verified
+
+- **264 tests**, up from 152. Type-check and lint clean, 0 errors.
+- Lighthouse mobile, median of 5: `/` **52**, `/work` **65**, `/pricing` **66**,
+  `/book` **76**. Accessibility **100** and SEO **100** on every route.
+- **The homepage did not regress.** It gained three case-study images and
+  measured 52 — the centre of its documented 48–54 band, against a median-of-9
+  baseline of 52. Stated as *no detectable change*, not as an improvement:
+  a one-point move on this machine is noise (see Phase J).
+- Bundle **355.7 kB gzipped** against a 360 kB budget. All budgets met.
+
+### Still blocked, and still the founder's
+
+**B2 is unchanged and now matters more.** `vercel domains ls` returns **0
+domains**; `NEXT_PUBLIC_SITE_URL` resolves to a `vercel.app` subdomain. Every
+canonical, `og:url`, sitemap entry, `llms.txt` reference and JSON-LD `@id` on
+the new routes therefore points at the wrong host — including the case-study
+`@id`s that now carry client names. Moving later re-hosts the entity graph and
+discards whatever authority accrued. **Attach the domain before inviting
+indexing.**
+
 ## Phase J — The JavaScript levers are spent (2026-08-07)
 
 **Nothing shipped. That is the finding.** A final optimisation phase was run

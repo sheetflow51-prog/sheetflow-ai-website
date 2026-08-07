@@ -6,183 +6,158 @@ M01
 
 ## Current Status
 
-**In progress — awaiting review.**
+**Engineering complete for this milestone — awaiting founder decisions.**
 
-M01 was authorised by the founder and scoped as the production-foundation
-rebuild. The first execution phase is complete, verified, committed, and pushed
-to `origin/feat/m01-foundation`. Working tree clean apart from an untracked
-`.gitignore` edit not made by this milestone.
+Phase K shipped the three commercial surfaces the site had never had: a
+portfolio, published prices, and a booking flow. Build is green at **28
+routes**, the suite is at **264 tests**, and every new route scores
+accessibility 100 and SEO 100.
+
+What remains is not engineering. It is a domain nobody has bought (B2), a branch
+nobody has reconciled (D2), and a deployment nobody has approved.
 
 Production deployment has **not** been performed and awaits explicit approval.
 
 ## Completed Tasks
 
-M01 phase 1 — proof architecture, design-token reconciliation, and an
-accessibility pass.
+M01 phase 1 — proof architecture, design-token reconciliation, accessibility.
 
-M01 phase 2 — **toolchain build-out and the first real performance
-attribution.** Six MCP servers installed and handshake-verified; a
-source-mapped main-thread profiler added; TBT attributed to its actual cause
-for the first time in the project's history. Full detail in `CHANGELOG.md`.
+M01 phase 2 — toolchain build-out and the first real performance attribution.
+TBT attributed to paint rather than JavaScript for the first time.
 
-M01 phase 3 (Phase G) — **content architecture.** The site stopped being one
-route. `/services` plus four service pages (`lead-capture`,
-`whatsapp-automation`, `appointment-booking`, `crm-automation`) ship as genuine
-topic clusters, each with its own `Service` node, its own three Q&A, an honest
-`BreadcrumbList`, and internal links in both directions. Build is green at **19
-routes**; the suite is at **144 tests**, up from 74.
+M01 phase 3 (Phase G) — content architecture. `/services` plus four service
+pages as genuine topic clusters.
 
-M01 phase 4 (Phase H) — **mobile measured for the first time, and the toolchain
-unblocked.** `gh` is authenticated and five of six MCP servers now connect. The
-open-source-first search finally ran and found that **Origin UI is AGPL-3.0**
-(its repo now redirects to Cal.com's design system) and **React Bits' licence is
-unverifiable** — both previously recorded as "mixed MIT" on reputation.
+M01 phase 4 (Phase H) — mobile measured for the first time; the open-source
+audit found two registries materially mislabelled.
 
-Mobile is the weak surface: **the homepage fails its own ≥50 gate at 48**, and
-the service page that scores 97 on desktop scores 59 on mobile. The two form
-factors are different problems (**D23**) — desktop is paint-bound, mobile is
-bandwidth-bound at 1.6 Mbps against ~570 kB of JS and fonts. Two hypotheses were
-tested and rejected before the real constraint was read out of the Lighthouse
-report rather than guessed. The boot sequence is now homepage-only (**D22**),
-worth 1.6 s of Speed Index and a better search-landing experience.
+M01 phase 5 (Phase J) — **nothing shipped, and that was the finding.** The
+JavaScript optimisation arm was built, measured at n=9, and rejected as not
+significant (Mann-Whitney U = 57.5 against a critical 62).
 
-A follow-up pass (G.1) caught that all five new routes had shipped **without any
-social image** — Next.js `opengraph-image` conventions are not inherited by
-child segments, so the root card covered `/` alone while the layout still
-announced `summary_large_image` everywhere. Per-service edge-rendered cards were
-added, and every declared image is now fetched in-test.
+M01 phase 6 (Phase K) — **the site becomes a business.** `/work` with three
+case studies, `/pricing` with real published figures, `/book` with a
+qualification step that ships zero third-party JavaScript. **B1 is closed.**
+Full detail in `CHANGELOG.md`.
 
-Two latent defects surfaced only because a second route existed: the entity
-graph was emitted from the root layout (every sub-page would have claimed to be
-the homepage — D18), and every nav and footer link was a bare `#fragment` that
-resolves against the current page, so the whole navigation pointed at nothing
-from `/services/...`. Both fixed.
+## The blocker that had to be resolved before any of Phase K
 
-M00's completed task list is recorded in `CHANGELOG.md` and sealed at tag
-`v2-m00-foundation`.
+The execution contract stated that client permission had been granted. The
+founder's **own CRM ledger** — `AAA-Client-Work/daily-log.md`, brief #17, dated
+2026-07-31 — reported *"Clients closed in 2026 to date: 0"* and *"₹0 active — no
+demos booked, no proposals out, no agreements signed"*. One of the three sites
+carries the founder's own email as its contact address. All three name **real
+third parties with real credentials**, including a BDS registration number and
+an IAP professional registration.
+
+Those cannot both be true, and it mattered because publishing would assert a
+commercial relationship about **named real people who had not been asked**. It
+was raised as a legal-permission question with the evidence attached, before any
+page was written. The founder reaffirmed and set a boundary: names, screenshots,
+links, architecture and implementation detail are publishable; revenue,
+conversion, ROI, metrics, testimonials and timelines are not.
+
+That is **D24**. It is the founder's call and it was made with the evidence in
+front of them. **Reopen it if any named client objects**, since consent came
+from the founder rather than from the clients directly.
+
+## Correction — a claim in the previous revision of this file was false
+
+The previous revision stated:
+
+> The architecture already supports the second case — a case study can carry a
+> summary without a metric.
+
+**It did not.** `VerifiedCaseStudy` in `src/content/proof.ts` *required*
+`metric` and `metricLabel`, so a permissioned-but-unmeasured project could not
+be typed at all. The claim was true of the intent and never of the code, and it
+was discovered by trying to use it.
+
+`ProjectOutcome` in `src/content/work.ts` now provides what that sentence
+promised: a `not-disclosed` variant with **no field a number can be typed
+into**, and a `measured` variant that cannot exist without a full `Verification`
+carrying methodology and confirmation date.
 
 ## Headline finding — TBT is paint, not JavaScript
 
-Measured with `npm run trace` (CDP `Performance.getMetrics` counters — no
-sampling, no observer effect), 4 s idle, atmosphere confirmed mounted:
+Measured with `npm run trace` (CDP `Performance.getMetrics` counters), 4 s idle:
 
 | Arm | Total main-thread task | Paint & composite |
 |---|---|---|
 | Motion on (ships today) | 374 ms | 272 ms (73%) |
 | Reduced motion (no atmosphere) | 246 ms | 224 ms (91%) |
 
-**Paint and compositing are 73–91% of steady state and 76% of load phase.**
-JavaScript is the minority cost — which is why three previous optimisation
-phases, all of which targeted JavaScript, never moved the number.
+**Paint and compositing are 73–91% of steady state.** JavaScript is the minority
+cost — which is why three optimisation phases targeting JavaScript never moved
+the number, and why Phase J's JavaScript arm was rejected on measurement.
 
-The decorative atmosphere costs **~128 ms per 4 s, about a 9% duty cycle**. The
-page spends 246 ms per 4 s with no atmosphere at all.
-
-**D17 is RESOLVED — in the negative.** There is no single expensive effect. On
-the corrected instrument every isolating arm measured *higher* than baseline,
-which is impossible if any removed real work; the blend-mode hypothesis is
-unsupported. The cost is diffuse and structural, so reducing it is a design
-question (**A2**), not a bug hunt. Current recommendation on A2: **do nothing
-yet** — 9% does not justify weakening the visual signature.
-
-> **⚠ Retraction (2026-08-07).** The previous revision of this section claimed
-> "1,232 ms of steady-state blocking, 0 ms under reduced motion" and "100% of
-> steady-state blocking". That was an instrument artifact — a mount race plus
-> profiler observer effect, both now fixed. Full detail in `TOOLING_MANIFEST.md`.
+**D17 is RESOLVED — in the negative.** There is no single expensive effect. The
+cost is diffuse and structural, so reducing it is a design question (**A2**).
+Current recommendation on A2: **do nothing yet**.
 
 ## Current Blockers
 
-**B1 — Engagements corroborated; permission still required.** Vercel access
-(gained 2026-08-06) confirms three of the four named projects are real, deployed
-sites under the founder's own account: `sparc-physiotherapy.vercel.app`,
-`saraswati-dental-clinic.vercel.app` and `r3s-realty.vercel.app`, all returning
-HTTP 200. `r3s-realty-agra.vercel.app` is unreachable; "Elevate WPC" is not on
-Vercel.
+**B1 — CLOSED (2026-08-08).** Permission granted with a boundary (D24). Three
+case studies ship. Elevate WPC does not: it has **no verifiable artifact** —
+absent from the account's 5 Vercel projects, no resolving domain under any
+tested spelling, nothing in the workspace (D27). Adding it later is a data-only
+change.
 
-This resolves the *existence* question that blocked B1 — these are not invented.
-It does not resolve publication. Nothing shows these are paying clients, that
-any outcome was measured, or that anyone consented to be named. Both "customer
-proof" and "portfolio permission" are founder decisions, so the entries remain
-`pending` and render nothing.
+**Outcome metrics remain blocked**, and that is a different question from B1. No
+engagement has a measured, client-confirmed result, so every case study reads
+*"Not publicly disclosed."* and `Review`/`AggregateRating` stay absent —
+now asserted by test on every content route.
 
-**To unblock:** for each project, written permission to name it publicly, plus
-either a measured outcome with stated methodology or agreement to show the work
-with no metric attached. The architecture already supports the second case —
-a case study can carry a summary without a metric.
-
-## Decision Register
-
-Decisions now live in **`DECISIONS.md`** (new this session), which consolidates
-what was scattered across this file and `brand-os/07_governance/`. The summary
-below is retained for continuity; `DECISIONS.md` is authoritative.
-
-New this session: **D13** (`.gitignore` negation — resolved), **D14** (MCP
-servers project-scoped), **D15** (component registries declined), **D16**
-(source maps profiling-only), **D17** (which paint effect costs — open), **A2**
-(does the cinematic identity survive its measured cost — founder call).
+**B2 — `sheetflow.ai` is not attached, and it now matters more.** `vercel
+domains ls` returns **0 domains**; `NEXT_PUBLIC_SITE_URL` resolves to a
+`vercel.app` subdomain. Every canonical, `og:url`, sitemap `<loc>`, `llms.txt`
+reference and JSON-LD `@id` points at the wrong host — **including the three
+case-study `@id`s that now carry client names**. Moving later re-hosts the whole
+entity graph and discards whatever authority accrued, which is precisely the
+cost the `@id` architecture exists to avoid. **Attach the domain before
+inviting indexing.**
 
 ## Open Decisions
 
-**D1 — RESOLVED.** Every fabricated trust signal has been removed and replaced
-with an architecture that cannot publish an unverified claim. Enforcement lives
-in the type system, not in reviewer discipline: `src/content/proof.ts` gives
-`pending` entries nowhere to put a metric. Production still serves the old
-build until a deployment is approved.
+**D2 — Deployment reconciliation.** `origin/main` and the M01 branch remain
+diverged: 13 ahead, 1 behind. No fast-forward path. Resolution strategy is
+undecided; a force push would be required and has not been attempted.
 
-**D2 — Deployment reconciliation.** `origin/main` (`92057ca`) and the M00 branch
-remain diverged: 13 ahead, 1 behind. No fast-forward path exists. Resolution
-strategy (merge / rebase / discard `92057ca`) is undecided. A force push would
-be required to overwrite `origin/main` and has not been attempted.
+**D3 — No Vercel control-plane access via MCP.** The CLI works and was used this
+phase; the MCP integration is authenticated to the wrong account.
 
-**D3 — No Vercel control-plane access.** `list_teams` returns empty and
-`list_projects` fails, so the deployment cannot be disabled, rolled back, or
-reconfigured programmatically. Any Vercel-side change is manual.
+**D4 — `raw-loader` is an unused devDependency.** Removal needs approval.
 
-**D4 — `raw-loader` is now an unused devDependency.** Its only consumer was the
-webpack rule deleted in M00. Removal requires founder approval for package
-changes.
+**D5 — `.eslintrc.json`** retained but inert under ESLint 9 flat config.
 
-**D5 — `.eslintrc.json`** retained per founder decision, but inert: ESLint
-9.39.4 uses flat config and ignores it. Slated for the tooling milestone.
+**D6 — `typescript.ignoreBuildErrors: true`** remains set in `next.config.mjs`.
+`npm run type-check` is the real gate and passes independently.
 
-**D6 — `typescript.ignoreBuildErrors: true`** remains set in `next.config.mjs`,
-so `next build` does not gate on type errors. `npm run type-check` is the real
-gate and passes independently.
-
-**D7 — Stray `C:\Users\pc\package-lock.json`** (81 bytes) makes Next infer the
-wrong workspace root. Outside the repository; deletion is the founder's call.
+**D7 — Stray `C:\Users\pc\package-lock.json`** makes Next infer the wrong
+workspace root. Outside the repository.
 
 **D8 — `.claude/` directory** is untracked and not ignored.
 
-**D12 — Preview deployments are SSO-protected.** Latest preview
-`sheetflow-ai-website-muphh4vl9-sheetflow51-progs-projects.vercel.app`
-(Ready, 2026-08-06). Like the first, it returns 302 to
-`vercel.com/sso-api` for anonymous requests. A logged-in Vercel session opens
-it normally. Automated verification against a preview URL would need either a
-protection-bypass secret or protection relaxed — both are security settings and
-therefore founder decisions. Verification is currently run against the
-identical production build locally.
+**D9 — `violet` token migration.** 34 usages on a deprecated alias. Mechanical
+and visually inert.
 
-**D9 — `violet` token migration.** `violet` is now a deprecated alias holding
-gold values. 34 usages remain on the old name. Migration is mechanical and
-visually inert (both names resolve to identical hex), but has not been done.
+**D12 — Preview deployments are SSO-protected.** Automated verification against
+a preview URL needs a bypass secret or relaxed protection — both security
+settings, both founder decisions.
 
-**D10 — RESOLVED.** `ink.400` retuned from `#6B7490` (4.26:1) to `#717B98`
-(4.81:1 on void, 4.70:1 on glass), fixing all usages at the token. Lighthouse
-accessibility is 100 and axe reports zero WCAG 2.1 AA violations in both the
-default and reduced-motion paths.
+**D26 follow-up — Calendly's post-booking redirect is unset.** `/book/confirmed`
+is built but unwired. Setting it before deployment would send real bookers to a
+URL that does not exist yet. Founder action in the Calendly dashboard after
+deploy.
 
-**A1 — Is the Spline/3D direction still live?** `src/components/three/`
-(`AICore`, `IntelligenceCore`, `SplineScene`) is imported by no rendered code,
-and the shipped bundle contains zero Three.js symbols. Six dependencies —
-`three`, `@react-three/{fiber,drei,postprocessing}`,
-`@splinetool/{react-spline,runtime}` — exist only for it, and their peer
-conflict (`drei@9` wants `fiber@^8`, project pins `^9`) is what forces
-`--legacy-peer-deps` on every install. Removing them retires the direction
-documented in `SPLINE_SCENE_BRIEF.md`, so it is a founder decision.
+**A1 — Is the Spline/3D direction still live?** `src/components/three/` is
+imported by no rendered code and the bundle contains zero Three.js symbols, yet
+six dependencies exist for it and their peer conflict forces
+`--legacy-peer-deps` on every install.
 
-**D11 — `.gitignore` was modified outside this milestone** (adding `.vercel`
-and `.env*`) and is left unstaged. Sensible, but unattributed.
+**A2 — Does the homepage's decorative composition survive its measured cost?**
+Now framed as *which components*, not *how much brand* — a page in the identical
+visual language scores far higher.
 
 ## Next Milestone
 
@@ -190,99 +165,76 @@ M02 — not defined in this repository.
 
 ## Latest Commit
 
-`dbea5f4` — `perf(mobile): clear the ≥50 gate, on a font that could never render`
+`6e2d752` — `feat(work,pricing,booking): publish the portfolio, the prices, and
+a booking flow`
 
 Branch `feat/m01-foundation`.
 
 ## Latest Preview
 
+**Not deployed this phase.** The preview deploy was attempted and blocked by the
+session's permission policy, which treats deploying as an outward-facing action.
+Verification was therefore run against the identical production build locally —
+the same channel used in earlier phases because previews are SSO-gated (D12)
+and cannot be audited anonymously.
+
+The last recorded preview remains
 `https://sheetflow-ai-website-3moimh5xb-sheetflow51-progs-projects.vercel.app`
-— deployed 2026-08-07 from `dbea5f4`, state READY.
-
-**It requires a Vercel login (D12).** Anonymous requests to every route return
-302 to `vercel.com/sso-api`; an authenticated `vercel curl` serves the page
-normally. Verified on the deployed artifact through that channel: 3 font
-preloads (was 4), zero italic `@font-face`, exactly one JSON-LD block carrying
-Organization / WebSite / WebPage / FAQPage (8 Q&A) / OfferCatalog / 6 × Service
-+ Offer / ContactPoint.
-
-**B2 is visible on this deployment**: the canonical and `og:url` both read
-`https://sheetflow-ai-website.vercel.app`, not `sheetflow.ai`.
+(2026-08-07, commit `dbea5f4`) and **predates every route in Phase K**.
 
 ## Current Lighthouse
 
-Measured **2026-08-07** on commit `dbea5f4`, production build, via
-`npm run audit:lh` (median of 5, warm-up discarded, cold browser per run).
-Run locally against the identical build, because the preview is SSO-gated
-(D12) and cannot be audited anonymously.
+Measured **2026-08-08** on commit `6e2d752`, production build, `npm run
+audit:lh` with `LH_PRESET=mobile`, median of 5, warm-up discarded.
 
-Re-measured at **median of 9** on 2026-08-07 for the freeze (Phase J). These
-supersede the median-of-5 figures previously recorded here.
+| Route | Perf | A11y | BP | SEO |
+|---|---|---|---|---|
+| `/` | **52** | 100 | 96 | 100 |
+| `/work` | **65** | 100 | 96 | 100 |
+| `/pricing` | **66** | 100 | 96 | 100 |
+| `/book` | **76** | 100 | 96 | 100 |
 
-| Category | Desktop | Mobile (4× CPU + Slow 4G) |
-|---|---|---|
-| Performance | **65** | **52** |
-| Accessibility | **100** | **100** |
-| Best practices | **96** | **96** |
-| SEO | **100** | **100** |
+**The homepage did not regress** despite gaining three case-study images: 52
+against a median-of-9 baseline of 52, inside its documented 48–54 band. Read as
+*no detectable change*, not as evidence that images are free.
 
-Desktop: FCP 0.3s · LCP 1.1s · **TBT 660ms** · **CLS 0.000**
-Mobile: FCP 0.9s · LCP 4.1s · **TBT 2,590ms** · **CLS 0.000**
+**Read single runs with care.** `/pricing` scored 55/58/66/67/74 across five
+runs of one unchanged build. The median is trustworthy; any single run is not.
 
-Per-run, desktop 58/58/58/60/**65**/66/66/67/67 · mobile
-48/49/49/50/**52**/52/53/53/54. Nothing changed in the build between the
-median-of-5 figures and these — the difference is sample size and machine load,
-which is the point of recording the runs.
-
-**Mobile went 45 → 50 this session** (before/after in one batch; per-run
-44/46/43/45/46 → 49/51/48/50/53, non-overlapping). It sits *exactly* on the
-gate with no headroom — single runs still dip to 48.
-
-**Desktop 62 is not a change.** The documented band for this build is 59–65 and
-nothing this session touched the desktop render path. Do not read it as an
-improvement on 59 or a regression from 65.
-
-**Read TBT with care.** Run-to-run spread on this machine is 443–1,223 ms
-desktop and 5,237–11,146 ms mobile for an unchanged build, with one 66,271 ms
-outlier observed. The *score* is far steadier than TBT — 3 points across five
-runs — so claims should rest on it.
-
-`DEPLOYMENT.md`'s targets remain aspirations and should be read as such.
+Desktop was not re-measured; the documented band is 59–65 and nothing this phase
+touches the desktop render path. Quoting a fresh desktop number from a different
+batch would invite the invalid between-batch comparison Phase J was retracted
+for.
 
 ## Current Bundle Size
 
-**13 client JS chunks, 1,048,349 bytes raw (1.00 MB), 321 kB gzipped** in
-`.next/static/chunks`, from the green Turbopack build. Byte-identical to the
-M00 baseline after M01 phase 1.
+**355.7 kB gzipped JS** (31 files, 1,101 kB raw) plus 10.5 kB gzipped CSS,
+against budgets of 360 kB and 40 kB. **All budgets met.**
 
-Not comparable to the ~165 kB "First Load JS" figure in `DEPLOYMENT.md`, which is
-a per-route gzipped metric. Next 16 no longer prints per-route sizes in default
-build output, so that documented baseline remains **unverified**.
+Up from 321 kB gzipped before Phase K — four new routes, a client-side
+calculator and a client-side form. 4.3 kB of headroom remains against the JS
+budget, which is worth knowing before the next feature.
 
 ## Notes
 
-**Repository shape:** root holds 5 directories — `10_Final_Website/` (the Next.js
-app and Vercel root), `Documentation/` (`Approved/` pointer + `Archive/`),
-`brand-os/`, `docs/`, `.claude/`.
-
-**Routes (19):** `/`, `/services`, `/services/[slug]` × 4, plus `llms.txt`,
+**Routes (28):** `/`, `/book`, `/book/confirmed`, `/pricing`, `/services`,
+`/services/[slug]` × 4, `/work`, `/work/[slug]` × 3, plus `llms.txt`,
 `robots.txt`, `sitemap.xml`, `manifest.webmanifest`, the icon routes, and
-**six** edge-runtime OG/Twitter image routes (root, `/services`, and
-`/services/[slug]`).
+**eight** edge-runtime OG/Twitter image routes.
 
-**Test infrastructure:** Playwright 1.62 + axe-core, **152 tests** across desktop
-and mobile, running against the production build. Lighthouse and gzip-accurate
-bundle budgets wired as `npm run audit:lh` / `audit:bundle`; `npm run verify`
-runs the lot. This closes the largest structural gap carried into M01.
+**Test infrastructure:** Playwright 1.62 + axe-core, **264 tests** across desktop
+and mobile, running against the production build.
 
-**Accessibility:** the M00 Hero change lifted subhead contrast on `void #060608`
-from ~8.4:1 to ~14.9:1. No systematic audit has been performed.
+**Accessibility:** axe reports zero WCAG 2.1 AA violations across 6 route/motion
+combinations. One serious defect (WCAG 2.1.1) was found and fixed this phase,
+visible only on the mobile profile.
 
-**Lint debt:** 9 warnings — 7 `react-hooks/set-state-in-effect` (deliberately
-downgraded with documented rationale in `eslint.config.mjs`) and 2 unused disable
+**Lint debt:** 9 warnings, 0 errors — 7 `react-hooks/set-state-in-effect`
+(deliberately downgraded with documented rationale) and 2 unused disable
 directives in `layout.tsx`.
 
 ---
 
-*No conflict with the Constitution or Decision Register was detected during M00.
-M01 not begun; awaiting founder authorisation.*
+*No conflict with the Constitution or Decision Register was detected during
+Phase K. The one apparent conflict — portfolio permission against the CRM
+ledger — was escalated to the founder and resolved as D24.*

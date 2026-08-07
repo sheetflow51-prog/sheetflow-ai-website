@@ -242,6 +242,94 @@ favour of a lighter composition would help desktop and do comparatively little
 for mobile, where the lever is bytes — typefaces, subsets, unused JavaScript.
 Do not treat one number as a proxy for the other.
 
+### D24 — Portfolio permission granted, with a boundary *(2026-08-08)*
+**This closes B1**, and the boundary is as important as the grant.
+
+The founder authorised publishing the named engagements. Recorded verbatim,
+because every downstream constraint derives from it:
+
+> Client permission has now been granted. Publish the projects as named case
+> studies. You may use company names, screenshots, project links, architecture
+> diagrams and implementation details. Do NOT fabricate: revenue, conversion
+> improvements, ROI, customer metrics, testimonials, timelines. If measurable
+> business outcomes are unavailable, clearly label them as "Not publicly
+> disclosed."
+
+**The conflict that preceded it, recorded because it will recur.** The founder's
+own CRM ledger (`AAA-Client-Work/daily-log.md`, brief #17, 2026-07-31) reports
+*"Clients closed in 2026 to date: 0"* and *"₹0 active — no demos booked, no
+proposals out, no agreements signed"*, and one of the three sites carries the
+founder's own email as its contact. Those facts are not consistent with paying
+engagements, and the sites name **real third parties with real credentials**
+(a BDS registration, an IAP registration number). Publishing them as clients was
+therefore raised as a legal-permission question before any page was written,
+rather than assumed either way. The founder reaffirmed. That is their call to
+make, and it was made with the evidence in front of them.
+
+**What the grant does not cover, and how that is enforced.** `ProjectOutcome` in
+`src/content/work.ts` is a discriminated union whose `not-disclosed` variant has
+**no field a number can be typed into**; a metric requires a full `Verification`
+carrying methodology and confirmation date. Same mechanism as D1, extended to
+the case D1's types could not express — `VerifiedCaseStudy` *required* a metric,
+so a permissioned-but-unmeasured project was literally unpublishable.
+`PROJECT_STATUS.md` had claimed the architecture already supported this; it did
+not, and that claim was wrong until this change.
+
+`Review` and `AggregateRating` remain absent sitewide, asserted by test on every
+content route. Permission to be named is not a review.
+
+### D25 — Prices are published *(2026-08-08)*
+₹19,999 one-time and ₹4,999/month, authorised by the founder.
+
+**Neither figure is new.** Both already appear in the founder's own outreach
+material — `call-script-simple.txt` quotes ₹20,000 for a website, and the
+pipeline ledger carries ₹19,999 + ₹4,999/month as the standing targets.
+Publishing them is disclosure of an existing quote, not a new commitment, which
+is why it was answerable at all.
+
+**What stays unpublished, and why each:** delivery timelines (no engagement has
+ever been timed, so any figure is a guess dressed as a commitment); return or
+ROI figures (no outcome measured — D24); anchor or struck-through pricing
+(invents a price nobody was charged); "most popular" badging (a sales statistic
+nobody here has — the featured tier is labelled *what we recommend*).
+
+The recovery calculator on `/pricing` takes **every** input from the visitor,
+including the recovery rate. That is the entire difference between it and a
+fabricated ROI projection, and the page states it rather than footnoting it.
+
+### D26 — The booking hand-off prefills by URL, and never embeds *(2026-08-08)*
+`/book` qualifies in four questions and hands off to Calendly with `name`,
+`email` and `a1` prefilled — parameter names verified against the live event
+type, not assumed.
+
+**Rejected: the Calendly inline widget.** It loads a third-party script and an
+iframe running its own React tree, onto the page a visitor reaches with the
+highest intent, on a site whose measured constraint is mobile bandwidth (D23).
+It also hands a tracking surface to a third party before anyone has agreed to
+anything. Prefilling by URL achieves the same outcome for zero third-party
+JavaScript, asserted by a test that fails if any external script appears.
+
+**Consequence worth knowing:** the form is a real `<form method="get">` whose
+inputs are named as Calendly's own parameters, so the conversion path survives
+with JavaScript disabled. JavaScript only enriches it. Renaming those inputs
+silently breaks the no-JS path — hence the test that pins them.
+
+**Not done, deliberately:** Calendly's post-booking redirect to
+`/book/confirmed` was left unset. The API can set it; doing so before this
+branch is deployed would send real bookers to a URL that does not exist. Founder
+action after deploy.
+
+### D27 — Elevate WPC is not published *(2026-08-08)*
+Named by the founder among the permitted case studies. It has **no verifiable
+artifact**: absent from the Vercel account (5 projects; not among them), no
+resolving domain under any tested spelling, and nothing in the workspace.
+
+D24 permits publishing architecture and implementation detail. It cannot be
+exercised for a build nobody can observe — writing its stack and decisions would
+be precisely the invention the same sentence forbids. Omitted rather than
+guessed. Adding it is a data-only change to `content/work.ts` once a URL or
+repository exists.
+
 ---
 
 ## Open — engineering
@@ -334,20 +422,25 @@ layers, which is **A2**, a design decision.
 
 ## Open — needs the founder
 
-### B1 — Portfolio permission *(blocker)*
-Three of four named engagements are **corroborated as real**: they are deployed
-projects under the founder's own Vercel account, and `sparc-physiotherapy`,
-`saraswati-dental-clinic` and `r3s-realty` all return HTTP 200.
+### B1 — Portfolio permission — **CLOSED 2026-08-08**
+Granted by the founder, with the boundary recorded in **D24**. Three case
+studies ship at `/work`; Elevate WPC does not, for the reason in **D27**.
 
-**This establishes existence, not permission.** Nothing shows they are paying
-clients, that any outcome was measured, or that anyone consented to be named.
-Entries stay `pending` and render nothing.
+**What B1 asked for, against what arrived.** B1 required, per project, written
+permission to name publicly *plus* either a measured outcome with methodology or
+agreement to show the work with no metric. The founder granted the permission
+and chose the second option explicitly — outcomes are labelled *"Not publicly
+disclosed."* That is the case B1 anticipated, and it is now the published state.
 
-**To unblock, per project:** written permission to name it publicly, plus
-either a measured outcome with stated methodology, or agreement to show the work
-with no metric attached. The architecture already supports the second case.
+**What remains blocked, and is a different question.** No outcome has been
+measured for any engagement. `Review` and `AggregateRating` therefore stay
+absent sitewide — now asserted by test on every content route rather than left
+to discipline. Publishing a result still requires what it always did: a figure
+measured against a stated method and confirmed with the client in writing.
 
-Until then `Review` and `AggregateRating` schema stay absent — correctly.
+**Reopen this** if any named client objects to publication, since consent here
+came from the founder rather than from the clients directly (see the conflict
+recorded in D24).
 
 ### A1 — Is the Spline/3D direction still live?
 `src/components/three/` is imported by no rendered code and the bundle contains

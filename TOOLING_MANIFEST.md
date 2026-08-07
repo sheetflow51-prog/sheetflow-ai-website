@@ -1,12 +1,71 @@
 # Tooling Manifest
 
 > What this project can actually do, verified rather than assumed.
-> Maintained automatically. Last verified: **2026-08-06**.
+> Maintained automatically. Last verified: **2026-08-08** (Phase K).
 
 Every row below was tested in the session that wrote it. "Connected" means a
 health check passed. **"Usable" means a capability was exercised and returned
 real data** — a server that starts but has never answered a question is
 `configured`, not `usable`.
+
+---
+
+## Phase K — what was exercised, 2026-08-08
+
+The standard applied here is the one at the top of this file: **"usable" means a
+capability was exercised and returned real data.** A server that merely connects
+is `configured`.
+
+### Used, and load-bearing
+
+| Capability | What it actually did | Why it mattered |
+|---|---|---|
+| **Calendly MCP** (`users-get_current_user`, `event_types-list_event_types`) | Read the live event type: `Free Automation Audit`, slug `30min`, 30 minutes, Google Meet, free, active — and **one custom question at position 0**, type `text`, optional | The position-0 fact is what makes `a1` the correct prefill parameter. Everything in `lib/booking.ts` rests on it. Without this call the hand-off would have been built on a guess, and a wrong parameter fails **silently** — Calendly renders its normal page with the field empty, so there is no error to observe |
+| **Vercel CLI** (`projects ls`, `env ls`, `domains ls`) | Enumerated **5 projects**; established that **Elevate WPC is not among them**. Confirmed `NEXT_PUBLIC_SITE_URL` is set for Production and Preview. Confirmed **0 domains** | `projects ls` is the evidence behind **D27** — the reason Elevate WPC was omitted rather than invented. `domains ls` re-confirmed **B2** |
+| **Playwright, direct** | Captured three third-party deployments for `public/work/`; rendered and screenshotted the four new routes; ran the 264-test suite | The capture script waits on real content and `document.fonts.ready` rather than a timer, because one of the three is a client-rendered SPA where `networkidle` fires with an empty root |
+| **axe-core via Playwright** | 6 route/motion combinations | Found the **serious WCAG 2.1.1** defect on `/pricing`, visible only on the mobile profile |
+| **Lighthouse** (`scripts/audit-lighthouse.mjs`) | 4 routes × 5 runs, mobile preset | Confirmed the homepage did not regress after gaining three images |
+| **Direct HTTP (`curl`) + Node parsing** | Read every technical claim in the case studies off the live deployments; measured the R³S chunk sizes byte-exactly | The alternative was describing what a build of that kind "would" contain, which is the failure mode the case studies exist to avoid |
+| **PowerShell (`Get-NetTCPConnection`)** | Stopped the Next server by listening port | See "The `pkill` trap" below — the Bash tool could not do this |
+
+### Available, deliberately not used
+
+Recorded because an unexplained absence is indistinguishable from an oversight.
+
+| Capability | Why not |
+|---|---|
+| **chrome-devtools MCP** | This project already drives CDP through Playwright in its own tooling (`npm run trace`, `npm run profile`), and those instruments are calibrated — one of them was rebuilt in Phase D specifically to remove an observer effect. A second path to the same protocol would produce numbers that cannot be compared with the recorded baselines |
+| **context7 MCP** | Its value is current documentation for unfamiliar APIs. Everything touched here — `next/image`, `opengraph-image` conventions, schema.org `Offer`/`PriceSpecification`, Calendly prefill — was either already documented in-repo from prior phases or read directly from the live Calendly API, which is more authoritative than any doc |
+| **sequential-thinking MCP** | The work decomposed cleanly into vertical slices. Reaching for a reasoning scaffold on a well-understood task is tool theatre |
+| **filesystem MCP** | Native Read/Write/Edit cover it, with better diff behaviour |
+| **Figma / Adobe / Canva** | DEC-302 — `logo.png` is canonical and `public/brand/` is generated. Routing assets through an external editor reintroduces exactly the drift those decisions exist to prevent. The case-study imagery is captured from live deployments, which is a measurement, not a design task |
+| **Airtable / Notion / Slack / Gmail / Drive / ElevenLabs** | No build or verification need arose |
+
+### Failing, with the actual reason
+
+| Server | Status | Detail |
+|---|---|---|
+| **GitHub MCP** | ⛔ fails | *"Incompatible auth server: does not support dynamic client registration."* This is an OAuth capability mismatch, **not** a missing login and **not** the folder-trust gate that blocked earlier phases. `gh` covers GitHub work meanwhile |
+| **Netlify MCP** | ⛔ fails | HTTP 502 from the origin (`netlify-mcp.netlify.app`). Irrelevant to this project, which deploys to Vercel |
+| **Roboflow, Vaisala Xweather, Autodesk Product Help** | ⛔ need authentication | Non-interactive session; OAuth cannot be completed here. None is relevant to this project, so none was pursued |
+| **Vercel MCP** | ⚠️ connected, wrong account (D3) | `list_teams` returns empty. The **CLI** works and was used instead |
+
+### The `pkill` trap — worth keeping
+
+`pkill -f "next-server"` reports success and **does not stop the Next server on
+Windows**. The consequence is worse than a no-op: the surviving process keeps
+serving the *previous* build, so a rebuilt schema change is invisible over HTTP.
+
+This presented as three failing tests asserting a `CreativeWork` node that was
+demonstrably present in source and absent from the response — which reads as a
+code defect and is not one. It also produced the `EPERM … unlink
+'.next/server/app/book'` build failure, because the live process held the
+directory.
+
+**Fix:** stop the listener by port
+(`Get-NetTCPConnection -LocalPort 3000 | Stop-Process`), then rebuild. **Tell:**
+if a rendered-output assertion contradicts the source, check what the server is
+serving before debugging the code.
 
 ---
 

@@ -1,7 +1,7 @@
 # Project Health — SheetFlow v2
 
 > Single-snapshot dashboard. Regenerated after every phase.
-> **Last updated: 2026-08-07** · Phase G (content architecture) · branch `feat/m01-foundation`
+> **Last updated: 2026-08-08** · Phase K (portfolio, pricing, booking) · branch `feat/m01-foundation`
 
 Scores below are **measured or verifiable**, never estimated. Where a number
 cannot be measured honestly it says so — a confident percentage nobody computed
@@ -13,102 +13,68 @@ is how this project got a retracted performance finding.
 
 | | Status |
 |---|---|
-| **Production ready?** | ⚠️ **No — one hard blocker (B1) and one undeployed branch (D2)** |
-| **Build** | ✅ green, **19 routes** (was 10) |
-| **Verification** | ✅ **152 tests passing** (was 144) |
+| **Production ready?** | ⚠️ **Engineering complete — two founder blockers remain (B2 domain, D2 branch)** |
+| **Build** | ✅ green, **28 routes** (was 19) |
+| **Verification** | ✅ **264 tests passing** (was 152) |
 | **Deployed to production** | ❌ awaiting founder approval |
 
-**Completion is deliberately not given as a single %.** The build is
-functionally complete; what is missing is *permission-gated*, not
-engineering-gated. A "94%" here would imply the remaining 6% is work I can do,
-and it is not.
+**Completion is deliberately not given as a single %.** Everything that is
+engineering-gated is done. What remains is **permission-gated and
+credential-gated**: a domain nobody has bought, a branch nobody has reconciled,
+and a deployment nobody has approved. A percentage here would imply the
+remainder is work I can do, and it is not.
 
 | Area | State | Evidence |
 |---|---|---|
 | Homepage build | ✅ complete | 10 sections, 3 breakpoints verified via `npm run shots` |
 | Design system | ✅ complete | `brand-os/`, tokens mirrored in `tailwind.config.ts` |
-| Accessibility | ✅ AA | Lighthouse 100, axe 0 violations (default + reduced-motion) |
-| SEO | ✅ 100 | Lighthouse SEO 100 |
+| **Portfolio / case studies** | ✅ **complete** | **B1 closed (D24).** 3 case studies at `/work`, each linking to a live deployment. Elevate WPC omitted — no verifiable artifact (D27) |
+| **Pricing** | ✅ **complete** | `/pricing` — ₹19,999 / ₹4,999-mo published under D25, machine-readable, comparison table, 7 FAQs, honest calculator |
+| **Booking** | ✅ **complete** | `/book` — 4-question qualification → Calendly prefill, **zero third-party JS**, works without JavaScript (D26) |
+| Accessibility | ✅ AA | Lighthouse 100 on every route, axe 0 violations across 6 route/motion combinations |
+| SEO | ✅ 100 | Lighthouse SEO 100 on every route |
 | GEO / answer-engine | ✅ strong | see below |
-| Performance | ⚠️ **homepage 59 desktop / 50 mobile** (was 45) · **service routes 96–97** | Mobile now clears its ≥50 gate, by exactly one point and with no headroom. The new routes are near-perfect. The homepage cost is its specific decorative composition, not the brand language — see below |
-| Customer proof | ⛔ **blocked** | B1 — needs written permission |
+| Performance | ⚠️ **homepage 52 mobile / ~59–65 desktop** · **new routes 65–76 mobile** | Homepage unchanged despite gaining 3 images. New routes are the fast ones. See below |
+| Customer **outcome** metrics | ⛔ **still blocked** | No engagement has a measured, client-confirmed result. Correctly absent |
 | Production deploy | ⛔ **blocked** | needs founder approval |
 
 ---
 
-## Lighthouse — 2026-08-07, three routes measured in one batch
+## Lighthouse — 2026-08-08, mobile preset, median of 5
 
-Production build, desktop, `npm run audit:lh`, **median of 5**, warm-up
-discarded. Run back-to-back on one machine, which is what makes them comparable
-to each other.
+Production build, `npm run audit:lh` with `LH_PRESET=mobile` (4× CPU **and**
+simulated Slow 4G), warm-up discarded, run back to back on one machine.
 
-| Route | Perf | A11y | BP | SEO | LCP | **TBT** | CLS | SI |
-|---|---|---|---|---|---|---|---|---|
-| `/` | **59** | 100 | 96 | 100 | 1.2 s | **1,600 ms** | 0 | 3.9 s |
-| `/services` | **96** | 100 | 96 | 100 | 0.9 s | **30 ms** | 0 | 1.8 s |
-| `/services/whatsapp-automation` | **97** | 100 | 96 | 100 | 0.9 s | **10 ms** | 0 | 1.7 s |
+Mobile is reported first this phase because it is the stricter test and it is
+where the audience for a WhatsApp-automation business actually is.
 
-### Mobile — the gate now passes, by exactly one point
+| Route | Perf | A11y | BP | SEO | FCP | LCP | TBT | CLS | SI |
+|---|---|---|---|---|---|---|---|---|---|
+| `/` | **52** | 100 | 96 | 100 | 0.9 s | 3.9 s | 4,300 ms | 0 | 7.1 s |
+| `/work` | **65** | 100 | 96 | 100 | 0.9 s | 4.2 s | 910 ms | 0 | 2.8 s |
+| `/pricing` | **66** | 100 | 96 | 100 | 2.1 s | 5.0 s | 480 ms | 0 | 3.4 s |
+| `/book` | **76** | 100 | 96 | 100 | 1.3 s | 3.7 s | 510 ms | 0 | 2.8 s |
 
-Mobile preset (4× CPU **and** simulated Slow 4G), median of 5. **Before and
-after measured back to back on one machine in one session**, which is what makes
-them comparable; the 2026-08-07 figures below are from a different batch and
-should not be differenced against these.
+**The homepage did not regress, and that was the risk worth measuring.** It
+gained three case-study images this phase and scored **52** — the exact
+median-of-9 baseline recorded in Phase J, and the centre of its documented
+48–54 band. Read this as *no detectable change*, **not** as confirmation that
+images are free: a one-point move on this machine is noise, and the honest claim
+is that any cost is below what this instrument can resolve.
 
-| `/` mobile | Perf | LCP | TBT | SI | Transfer |
-|---|---|---|---|---|---|
-| Before (2026-08-07, this batch) | **45** | 4.8 s | 5,240 ms | 7.9 s | 591 KiB |
-| After (2026-08-07, this batch) | **50 — passes** | 4.2 s | 3,180 ms | 6.7 s | 508 KiB |
+**`/pricing` per-run: 55/58/66/67/74.** A 19-point spread on an unchanged build
+in one batch. The median is trustworthy; any single run is not. This is the same
+machine-load effect documented in Phase J and it has not gone away.
 
-**The improvement is real and the margin is not.** Per-run scores were 44/46/43/
-45/46 before and 49/51/48/50/53 after: the two distributions do **not overlap**,
-so the direction is not in doubt. But the median lands *exactly* on the ≥50 gate,
-and single runs dip to 48. Treat this as "the gate stopped failing", not as
-headroom. Read the score rather than TBT — TBT's spread here was 5,237–11,146 ms
-before and included a 66,271 ms outlier after, while the score moved 3 points.
+**The new routes are the fast ones**, as the service routes were. Everything
+they share with the homepage — tokens, fonts, glass, `framer-motion`, `gsap`,
+Lenis, cursor, `DeferredAtmosphere` — is exonerated again. The homepage cost
+remains its own decorative composition (A2).
 
-Earlier batch, retained for the route comparison (2026-08-07, not re-run):
-
-| Route | Perf | LCP | TBT | SI |
-|---|---|---|---|---|
-| `/services` | pass | 4.3 s | 570 ms | 4.8 s |
-| `/services/whatsapp-automation` | 59 | 4.4 s | 970 ms | 4.9 s |
-
-**Desktop 97 implied nothing about mobile** — the same page drops to 59.
-
-**D23 amended: mobile is bandwidth-bound *and* paint-bound.** The bytes half
-stands — Slow 4G at 1.6 Mbps against the JS and font payload is seconds of
-transfer before anything paints, and cutting 83 KiB moved LCP 4.8 → 4.2 s and SI
-7.9 → 6.7 s. But `mainthread-work-breakdown` on the mobile preset reads **"Other"
-8,179 ms and Style & Layout 2,604 ms against Script Evaluation 2,476 ms** of a
-14,200 ms main thread. That is the desktop paint-bound finding amplified by the
-4× CPU throttle, not a separate disease. **Bytes move LCP and Speed Index; paint
-moves TBT; the score needs both** — which is why this phase had to do one of
-each to clear five points.
-
-### The finding: the brand language is not the cost
-
-**A page in the identical visual language scores 97 while the homepage scores
-59 — same machine, same build, minutes apart. TBT differs by over two orders of
-magnitude.**
-
-That exonerates everything the routes share: the tokens, the fonts, the glass
-and gradient treatments, `framer-motion`, `gsap`, Lenis, the cursor, and
-`DeferredAtmosphere` — which mounts from the root layout on **every** route,
-including the ones scoring 97. What is left is the homepage's specific
-decorative composition: the video hero, `ParticleField`, `AIDashboard`,
-`WorkflowUniverse`, and the large translucent gradient stack.
-
-**This reframes A2** (below) from *"how much visual identity do we give up"* to
-*"which specific components do we reconsider"* — a materially easier decision,
-and still the founder's.
-
-**Do not read `/` at 59 as a regression against yesterday's 65.** Nothing
-shipped this phase touches the homepage render path; the documented TBT spread
-on this machine is 270–6,049 ms; and this batch ran straight after a 5-minute
-Playwright suite. Absolute figures are depressed by load — **the within-batch
-comparison is the valid one**, which is precisely why `/` was re-measured
-alongside rather than quoted from yesterday.
+Desktop was not re-measured this phase. The documented band is 59–65 and nothing
+shipped here touches the desktop render path; quoting a fresh number from a
+different batch would invite exactly the invalid between-batch comparison Phase J
+was retracted for.
 
 ---
 
@@ -122,11 +88,14 @@ alongside rather than quoted from yesterday.
 **Paint and compositing are 73–91% of the main thread.** JavaScript is the
 minority cost. The decorative atmosphere costs ~128 ms per 4 s (~9% duty cycle).
 
-**D17 is closed in the negative:** no single expensive effect exists. Every
-isolating arm measured *higher* than baseline, which invalidated all of them.
-Reducing paint means fewer/smaller translucent layers — a design decision (A2),
-currently **recommended: do nothing**. 9% does not justify weakening the visual
-signature.
+**D17 is closed in the negative:** no single expensive effect exists. Reducing
+paint means fewer/smaller translucent layers — a design decision (A2), currently
+**recommended: do nothing**. 9% does not justify weakening the visual signature.
+
+**Phase J closed the JavaScript arm.** Dynamic-importing gsap and code-splitting
+nine sections moved the homepage 52 → 53 (Mann-Whitney U = 57.5 against a
+critical 62 at n=9 — not significant) and was rejected. Do not re-propose it
+without a new mechanism.
 
 ---
 
@@ -134,80 +103,108 @@ signature.
 
 | Surface | State |
 |---|---|
-| JSON-LD `@graph` | ✅ Organization, WebSite, WebPage, FAQPage, OfferCatalog, 6 × Offer/Service |
-| Title / description / canonical | ✅ |
-| OpenGraph + Twitter Cards | ✅ **on all 6 content routes** — per-service edge-rendered cards added 2026-08-07 after the sub-pages shipped without any. Every declared image is fetched in-test and must return 200 with an `image/*` type |
+| JSON-LD `@graph` | ✅ Organization, WebSite, WebPage, FAQPage, OfferCatalog, 6 × Offer/Service — **exactly one block per route**, asserted on all 9 content routes |
+| **`OfferCatalog` with real prices** | ✅ **new** — `minPrice` for the "from" tier (a floor, not a fixed fee), `UnitPriceSpecification` for the monthly, **no price node** for the quoted tier. A test asserts the schema price equals the rendered price per tier |
+| **`CreativeWork` per case study** | ✅ **new** — `creator` SheetFlow, `about` the client, `url` the live deployment. **Typed `CreativeWork`, not `WebSite`**, after the rendered graph showed two `WebSite` nodes competing to name the site |
+| **`Service` + zero-price `Offer` on `/book`** | ✅ **new** — "free" stated machine-readably rather than left to be inferred from the word, plus a `ReserveAction` naming the booking surface |
+| Title / description / canonical | ✅ per route, asserted |
+| OpenGraph + Twitter Cards | ✅ **on all 9 content routes** — per-project and per-service edge-rendered cards. Every declared image is fetched in-test and must return 200 with an `image/*` type |
 | `robots.txt` | ✅ names AI crawlers explicitly, points at sitemap |
-| `sitemap.xml` | ✅ well-formed |
-| Semantic HTML / heading order | ✅ single H1, no skipped levels, asserted by test |
+| `sitemap.xml` | ✅ generated from the content modules; `/book/confirmed` deliberately excluded |
+| Semantic HTML / heading order | ✅ single H1 per route, no skipped levels, asserted |
 | Image optimisation | ✅ AVIF + WebP via `next/image`, 30-day cache |
-| **BreadcrumbList** | ✅ **new** — emitted on `/services` and all four service pages, `Home › Services › <Service>`. Still deliberately **absent from the homepage**, which has no ancestors; a test asserts that absence. Every crumb target is fetched in-test and must return 200. |
-| **LocalBusiness** | ⛔ **Refused** — requires a `PostalAddress`; none is published. Inventing one violates the first standing rule *and* Google's policy. Asserted by test. |
-| **Review / AggregateRating** | ⛔ **Blocked by B1**, correctly. |
+| **BreadcrumbList** | ✅ on `/services`, `/work` and all sub-pages; every crumb target fetched in-test. Still absent from the homepage, which has no ancestors — asserted |
+| **LocalBusiness** | ⛔ **Refused** — requires a `PostalAddress`; none is published. Inventing one violates the first standing rule *and* Google's policy. Asserted by test |
+| **Review / AggregateRating** | ⛔ **Absent by design, now asserted on every content route.** Permission to be named is not a review, and no review has been collected |
 
 ## GEO — generative engine optimisation
 
 | Signal | State |
 |---|---|
-| `/llms.txt` | ✅ served, with explicit citation guidance |
+| `/llms.txt` | ✅ served, **rewritten this phase** — see below |
 | AI crawler rules | ✅ GPTBot, ClaudeBot, PerplexityBot, Google-Extended, Applebot-Extended named |
-| FAQ coverage | ✅ 8 Q&A, markup/copy parity asserted, answers in DOM without interaction |
+| FAQ coverage | ✅ 8 site + 12 service + **9 project + 7 pricing = 36 Q&A**, markup/copy parity asserted per page |
 | Per-answer deep links | ✅ each answer individually linkable |
 | Entity graph | ✅ linked `@graph` with resolvable `@id` |
-| **`knowsAbout` expertise signal** | ✅ **new** — 9 entities, each mapped to a service actually sold |
-| **`contactPoint`** | ✅ **new** — reachable sales contact + booking URL |
-| Clear service definitions | ✅ 6 named services with descriptions and `serviceType` |
-| Citation-friendly structure | ✅ answers are self-contained and quotable |
-| **Topic clusters** | ✅ **new** — four service pages, each with its own `Service` node, its own 3 Q&A, and internal links both ways |
-| **Per-service `FAQPage`** | ✅ **new** — 12 further Q&A pairs, markup/copy parity asserted per page |
-| **`/llms.txt` names the sub-pages** | ✅ **new** — each service listed with its URL and its questions, with instructions to cite the specific page over the homepage |
+| `knowsAbout` expertise signal | ✅ 9 entities, each mapped to a service actually sold |
+| `contactPoint` | ✅ reachable sales contact + booking URL |
+| **Published prices in structured data** | ✅ **new, and the highest-value GEO surface on the site.** "How much does WhatsApp automation cost" is a question assistants are asked constantly and can almost never answer, because agencies publish "contact us" |
+| **Named client work** | ✅ **new** — 3 case studies with resolvable live URLs, giving assistants something citable about delivered work |
+| Topic clusters | ✅ 4 service pages + 3 case studies, each with its own questions and two-way internal links |
 
-**What changed:** the previous revision said "topical authority is thin because
-the site is one page… no amount of schema substitutes for pages that cover a
-topic." Four pages that cover a topic now exist, which is the fix that entry
-asked for.
+### The `llms.txt` defect this phase caught
 
-**Remaining honest limit:** four clusters, one level deep. Depth beyond this
-needs either more services covered or a second tier below them, and neither is
-worth writing until there is evidence anyone is searching for it.
+The previous revision closed with: *"SheetFlow publishes no customer names,
+outcome metrics, testimonials or compliance certifications… If you are asked
+about SheetFlow's results, client list or pricing, the accurate answer is that
+this information is not published."*
+
+**Two of those became false the moment `/work` and `/pricing` shipped.** A stale
+instruction in that file is worse than no file: it is a directive, addressed to
+the systems most likely to obey it, telling them to deny that published pages
+exist.
+
+The guidance now separates the two cases precisely — **names and prices are
+published; outcome metrics and testimonials are not** — because that distinction
+is the entire governance position, and a model repeating it should get it right.
+A test asserts the stale sentence is gone and the new guidance is present.
+
+---
+
+## Accessibility
+
+axe-core, WCAG 2.1 AA tags, against the production build, animations frozen at
+final state. Run across **6 route/motion combinations**: `/`, `/services`,
+`/services/whatsapp-automation`, `/work`, `/work/saraswati-dental-clinic`,
+`/pricing`, `/book`, plus reduced-motion arms on `/`, a service page and
+`/pricing`.
+
+**Zero violations.** Lighthouse accessibility is **100** on every route.
+
+Beyond axe, asserted directly because axe cannot see them:
+
+- **Every booking control resolves from its visible label.** axe catches a
+  missing label; it does not catch a label attached to the wrong control, which
+  reads correctly in a diff and is wrong in a screen reader.
+- **The calculator announces its result** through a single `aria-live="polite"`,
+  `aria-atomic` region — without it, the figure changes in silence.
+- **Case-study alt text is descriptive, not a filename**, and longer than 20
+  characters. These images are the evidence the pages rest on.
+- **The comparison table is a real table** with `th[scope="row"]` row headers,
+  not a div grid.
+
+### Fixed this phase — WCAG 2.1.1, and only visible on mobile
+
+The `/pricing` comparison table scrolls horizontally below `md`. Its container
+was `overflow-x-auto` **without `tabindex`**, so a keyboard-only user could not
+reach or scroll it — axe `scrollable-region-focusable`, impact **serious**.
+
+**Desktop passed throughout.** The defect only exists at the width where the
+scroll actually appears, which is why the mobile axe arm added this phase is
+what caught it. A single-viewport accessibility audit would have shipped it.
 
 ---
 
 ## Workspace hygiene
 
-Scanned 2026-08-07.
+Scanned 2026-08-08.
 
 | Check | Result |
 |---|---|
 | Merge conflicts / conflict markers | ✅ none |
-| Unmerged paths | ✅ none |
 | Unfinished merge / rebase / cherry-pick | ✅ none |
 | `.orig` / `.rej` / backup artifacts in repo | ✅ none |
-| Git working tree | ✅ clean |
-| Local vs `origin` | ✅ in sync |
+| Git working tree | ✅ clean at commit time |
 | Orphaned VSCode editor backups | ✅ none for this workspace |
-| **Dirty editor buffers** | ✅ **resolved** — see below |
 
-### The `probe-cls.mjs` save conflict — closed 2026-08-07
-
-The buffer carried **59 prepended blank lines** and LF endings against a CRLF
-file. Classified by extracting it from `%APPDATA%\Code\Backups\…` and diffing:
-after stripping the blanks and normalising endings it was **byte-identical** to
-disk (`sha256 f135f3b6…` both sides), so nothing semantic existed only in the
-editor and there was nothing to merge. Root cause of the *conflict* specifically:
-the disk file's mtime moved 35 minutes after the buffer snapshotted its base,
-which is exactly the condition VSCode refuses to save through.
-
-One residue outlived the discard. The file came back to disk as **LF** while
-`core.autocrlf=true` expects CRLF, which leaves git permanently stat-dirty:
-`git status` reported ` M` while `git diff HEAD` was empty, because the
-normalised blob (`bb1582c9…`) matched HEAD on both sides. `git checkout --` on
-the path restored the canonical CRLF worktree form. Working tree is clean and
-`node --check` passes.
-
-**Worth keeping:** *"`git status` says modified, `git diff` says nothing"* is
-the signature of an EOL mismatch, not of a content change. `git ls-files --eol`
-names it in one line — here, `i/lf w/lf` where `w/crlf` was expected.
+**A Windows/OneDrive `.next` contention recurred and is worth naming.** Two
+consecutive builds failed with `EPERM … unlink '.next/server/app/book'` while
+`next start` held the directory. `pkill -f` does **not** stop the Next server on
+Windows — the process survived and kept serving a stale build, which briefly
+looked like a code defect (three tests failed asserting a schema change that was
+present in source and absent from the response). Stopping the listener by port
+and removing `.next` cleared it. **If a schema assertion fails but the source is
+right, check what the server is actually serving before debugging the code.**
 
 ---
 
@@ -217,109 +214,81 @@ Honesty matters more here than a long list.
 
 | Capability | Used? | Note |
 |---|---|---|
-| **Claude Skills — `ui-ux-pro-max`** | ✅ **used** | Matched the site to the *Trust & Authority + Conversion* pattern; drove the sticky-nav and anchor-offset checks below |
-| **Playwright (direct)** | ✅ used | Screenshot capture, anchor-offset probe, touch-emulation probe, 72-test suite |
-| **CDP via Playwright** | ✅ used | `Performance.getMetrics` paint attribution, CPU profiler |
-| **Calendly connector** | ✅ used (prior phase) | Verified the booking URL is real and active |
-| **Vercel CLI** | ✅ used (prior phase) | Preview deploys |
-| chrome-devtools MCP | ⏳ **connected, live next session** | **Trust granted — resolved.** `claude mcp list` reports `✔ Connected`. Not callable in the session that observed it, because servers attach at startup; unlike the earlier claim, the gate that invalidated it is now actually gone. |
-| context7 / sequential-thinking / filesystem / playwright MCP | ⏳ same | All four `✔ Connected`. |
-| **`gh` CLI** | ✅ **authenticated** | `sheetflow51-prog`. **The open-source-first search finally ran** — and found two registries materially mislabelled. See OPEN_SOURCE_MANIFEST. |
-| GitHub MCP | ⛔ **fails, new error** | *"Incompatible auth server: does not support dynamic client registration."* Not the trust gate, not a missing login — an OAuth capability mismatch needing its own investigation. `gh` covers GitHub work meanwhile. |
-| **GitHub MCP + `gh` CLI** | ⛔ **blocked** | `gh auth status`: not logged in. **No GitHub repository research was performed.** |
-| **21st.dev / Magic MCP** | ❌ **not available** | Not installed; requires a 21st.dev API key. See D15. |
-| Figma / Adobe / Canva | ❌ not used | DEC-302 — `logo.png` is canonical, `public/brand/` is generated. Routing assets through external tools reintroduces the drift those decisions exist to prevent. |
-| ElevenLabs, Notion, Slack, Gmail, Drive, Airtable | ❌ not used | No build or verification need. Using them would be tool theatre. |
+| **Calendly MCP** | ✅ **used, decisively** | `users-get_current_user` + `event_types-list_event_types` read the live event type: `Free Automation Audit`, 30 min, Google Meet, free, **one custom question at position 0**. That last fact is what makes `a1` the correct prefill parameter. Without it the hand-off would have been built on a guess |
+| **Vercel CLI** | ✅ used | `projects ls` established there are **5 projects and Elevate WPC is not among them** — the evidence behind D27. `domains ls` re-confirmed B2 at 0 domains |
+| **Playwright (direct)** | ✅ used | Case-study screenshot capture from three third-party deployments; render verification; the 264-test suite |
+| **axe-core via Playwright** | ✅ used | Found the WCAG 2.1.1 defect above |
+| **Lighthouse** | ✅ used | 4 routes × 5 runs on the mobile preset |
+| **`curl` / direct HTTP** | ✅ used | Every technical claim in the case studies was read off the live deployments this way, plus asset-size measurement of the R³S chunks |
+| chrome-devtools MCP | ❌ not used | Playwright already drives CDP in this project's own tooling (`npm run trace`, `npm run profile`). A second path to the same protocol would be tool theatre |
+| context7 MCP | ❌ not used | No unfamiliar library API was involved. Next.js `opengraph-image`, `next/image` and schema.org were already documented in-repo from prior phases |
+| sequential-thinking / filesystem MCP | ❌ not used | Native tools cover both |
+| **GitHub MCP** | ⛔ **fails** | *"Incompatible auth server: does not support dynamic client registration."* An OAuth capability mismatch, not a login gate. `gh` covers GitHub work |
+| **Netlify MCP** | ⛔ **fails** | HTTP 502 from the origin. Irrelevant — the project deploys to Vercel |
+| Roboflow / Vaisala / Autodesk MCP | ⛔ need auth | None is relevant to this project |
+| **21st.dev / Magic MCP** | ❌ not available | Not installed; requires an API key. See D15 |
+| Figma / Adobe / Canva | ❌ not used | DEC-302 — `logo.png` is canonical, `public/brand/` is generated. Routing assets through external tools reintroduces the drift those decisions prevent |
+| ElevenLabs, Notion, Slack, Gmail, Drive, Airtable | ❌ not used | No build or verification need |
 
 ### Components reused from GitHub / 21st.dev
 
-**Zero — and the reason is now evidence rather than an excuse.**
+**Zero again, and the reason is specific to this phase rather than general.**
 
-The earlier version of this entry gave two reasons, one of which was that `gh`
-was unauthenticated so the search never happened. **It has now happened.** The
-seven named registries were looked up on GitHub directly, and the result is in
-`OPEN_SOURCE_MANIFEST.md`:
+The registries audited in Phase H stand: Origin UI is **AGPL-3.0**, React Bits is
+**NOASSERTION**, `21st-dev/magic-mcp` ships no LICENSE; shadcn/ui, Magic UI,
+Radix and Motion Primitives are confirmed **MIT**.
 
-- **Origin UI** — repo now redirects to Cal.com's `cosscom/coss`, **AGPL-3.0**.
-  Strong copyleft; a legal question, not a developer's judgement.
-- **React Bits** — **NOASSERTION**; licence unverifiable.
-- **`21st-dev/magic-mcp`** — no LICENSE file at all.
-- shadcn/ui, Magic UI, Radix, Motion Primitives — confirmed **MIT**.
-
-All three of those problems were previously recorded here as "mixed MIT" on
-reputation. Finding out is what the search was for.
-
-Nothing was imported, for a reason specific to this phase: every registry ships
-*visual components*, and the page in question fails its mobile gate because it
-already sends too much. Adding components to fix a bandwidth problem moves the
-number the wrong way.
+What this phase needed was a pricing table, a comparison grid, a form and an
+architecture diagram. Every one is ~60 lines of markup whose value is entirely in
+the *content governance* — which capability maps to which catalogued service,
+which price shape is a floor versus a fixed fee, which input is the visitor's
+estimate rather than our claim. An imported component supplies the markup and
+none of that, while adding a dependency to a page whose measured constraint is
+bytes. The architecture diagram is the clearest case: the obvious library choice
+is an SVG flowchart, and an SVG flowchart is **an image to a screen reader**. An
+ordered list *is* the semantics.
 
 ---
 
-## Shipped this phase — Phase G, content architecture
+## Shipped this phase — Phase K
 
 | What | Detail |
 |---|---|
-| `/services` index | `CollectionPage`, hub for the four pages, and the intermediate crumb that makes the breadcrumb honest |
-| `/services/[slug]` × 4 | Lead Capture, WhatsApp Automation, Appointment Booking, CRM Automation — statically generated, `dynamicParams = false` so an unknown slug 404s rather than rendering an empty shell |
-| `content/services.ts` | Typed content module; one source for pages, graph, sitemap and `/llms.txt` |
-| `lib/structured-data.ts` | The entity graph, moved out of the root layout |
-| 58 new tests | Graph shape, breadcrumb order and resolvability, per-page canonicals, FAQ parity, heading order, sitemap, `/llms.txt`, plus axe on the new routes |
-
-### The architectural change worth knowing about
-
-The entity graph used to be emitted from `layout.tsx`. That was correct for a
-one-route site and would have been **wrong the moment a second route existed**:
-every sub-page would have declared `@id: /#webpage` — claiming to *be* the
-homepage — and carried the homepage's FAQ. It moved to `lib/structured-data.ts`
-with a per-route builder, so each page emits one complete, self-consistent
-`@graph`. The "exactly one JSON-LD block" invariant is unchanged and still
-asserted, now on every route.
-
-Same class of latent bug in navigation: every nav and footer link was a bare
-fragment (`#faq`), which resolves against *the current page*. From
-`/services/...` all of them pointed at sections that route does not contain.
-Now root-relative (`/#faq`). On the homepage the browser still treats that as a
-same-document fragment, so scroll behaviour there is unchanged.
+| `/work` + `/work/[slug]` × 3 | Case studies with problem, architecture, observed stack, engineering decisions, and a verification note per decision |
+| `/pricing` | 3 tiers, 11-row comparison table, 7 FAQs, recovery calculator |
+| `/book` + `/book/confirmed` | 4-question qualification → Calendly prefill; confirmation page built but unwired |
+| `content/work.ts` | `ProjectOutcome` union — the type-level enforcement of D24 |
+| `content/pricing.ts` | Tiers, comparison and FAQs, with the refusals documented inline |
+| `lib/booking.ts` | Pure URL builder; Calendly parameter names pinned and explained |
+| `components/work/ArchitectureFlow.tsx` | Server component, zero JS, ordered list rather than an SVG |
+| `scripts/capture-work-shots.mjs` | Deterministic capture of the three client deployments |
+| **112 new tests** | Case-study structure, graph shape, breadcrumb resolvability, canonicals, OG fetch, FAQ parity, price/schema agreement, no-JS booking path, third-party-script absence, calculator arithmetic, and the governance invariants |
 
 ### Governance, asserted rather than trusted
 
-Two tests exist because both failures are invisible in a diff review:
+Four tests exist because all four failures are invisible in a diff review:
 
-- **Catalogue parity** — every service page's `name` and `serviceType` must
-  match its `Offer` in the organisation's catalogue, and the offer must link to
-  the page. Drift means the graph advertises services no page describes.
-- **No new integration claims** — every tool named on a service page must
-  already appear in the published integrations answer in `content/faq.ts`.
-  Adding one here would be a new capability claim made in passing, during what
-  looks like a copy edit.
+- **No outcome figure without a measurement.** Each case study is scanned for
+  signed percentages, multiplier claims, outcome verbs, "ROI", and volume
+  claims. A heuristic, deliberately loud.
+- **No `Review` / `Rating` / `AggregateRating`** on any content route.
+- **Every service a project claims to use exists.** Drift means a case study
+  advertising a service with no page.
+- **Every published live URL returns 200.** These are third-party deployments
+  named on our site; if one goes down, the case study describes something that
+  is no longer there.
 
-No prices, timelines, customer names, metrics or certifications were added.
-`symptoms` describe what the reader already observes in their own business —
-the one kind of specificity available without making a claim about our results.
+---
 
 ## Fixed this phase
 
 | Fix | Severity | How it was found |
 |---|---|---|
-| **All five new routes shipped with no social image** | **High (distribution)** | Grepping the prerendered HTML for `og:image` after building the routes. Next.js `opengraph-image` conventions are **not inherited by child segments**, so the root card covered `/` only — while the layout still announced `summary_large_image` everywhere. Any service link pasted into WhatsApp, Slack, LinkedIn or X would have rendered as a bare text card. Fixed with per-service cards; a test now fetches every declared image on every route and asserts 200 + `image/*`. |
-| **Step numerals failed AA contrast** | Medium (WCAG 1.4.3) | axe, on a component written this phase. `accent-bright/70` on void computes to **4.27:1**, under the 4.5:1 floor. Fixed at `/80` (**5.33:1**) — the opacity `.kicker` already uses, so no one-off value entered the system. Ratios computed, not eyeballed. |
-| **Every nav and footer link broke off the homepage** | Medium (navigation) | Building the first sub-page. Bare `#faq` fragments resolve against the current page, so on `/services/...` the whole nav pointed at nothing. Latent for as long as the site had one route. |
-| **Hero video ignored `prefers-reduced-motion`** | **High (WCAG 2.2.2)** | Manual audit — the global CSS reduced-motion rule neutralises CSS animation only, so a looping video kept playing for exactly the visitors who asked motion to stop. The one motion layer missed when every other was audited. |
-| **Hero core clipped to a visible rounded rectangle** | Medium (visual) | Screenshot review — the vignette never reached the container edge at 1440px, so the "ambient glow" terminated in a hard seam across the headline. Now masked to a radial falloff. |
-| **"One quietly run business."** | Medium (copy) | DOM heading extraction — ungrammatical H2 on a premium site. Now "One quietly running business." |
-| Capture script reported false mobile rendering | Medium (tooling) | A 390px desktop viewport is not a phone — it reports `pointer: fine`, so the custom cursor mounted and parked a dot over the copy. Looked like a site bug; was a script bug. Now uses real device descriptors. |
-
-### Verified and already correct
-
-Recorded because "we checked and it was fine" is a result.
-
-- **Anchor targets clear the fixed nav.** No `scroll-margin-top` is declared
-  anywhere, which usually means anchors land under a fixed header. Measured all
-  6 nav anchors: every one lands at 182px against a 64px nav, because sections
-  carry their own top padding. No change needed.
-- **`CustomCursor` correctly disabled on touch** — `pointer: coarse` guard
-  confirmed live; `cursor-none-all` never applied on a real device profile.
+| **Comparison table unreachable by keyboard** | **Serious (WCAG 2.1.1)** | axe on the mobile profile — the width where the scroll actually appears |
+| **Two `WebSite` nodes per case study** | Medium (SEO) | Reading the rendered graph rather than the source. Google uses `WebSite` to resolve site name and sitelinks |
+| **`llms.txt` denied that published pages exist** | **High (GEO)** | Re-reading the file after shipping the routes it describes |
+| **Footer sent 5 labels to 1 anchor** | Medium (navigation) | Rewriting the group — the exact pattern a comment 3 lines above already criticised elsewhere in the same file |
+| **`PROJECT_STATUS.md` claimed the type system supported metric-free case studies** | Medium (documentation) | Attempting to use it. `VerifiedCaseStudy` *required* a metric; the claim was true of the intent and never of the code |
 
 ---
 
@@ -331,101 +300,53 @@ Recorded because "we checked and it was fine" is a result.
 
 | # | Blocker | Owner | Unblocks |
 |---|---|---|---|
-| **B2** | **`sheetflow.ai` is not attached to this Vercel project.** `vercel domains ls` returns **0 domains**, and `NEXT_PUBLIC_SITE_URL` (set for Production *and* Preview) resolves to `sheetflow-ai-website.vercel.app` — verified on the preview, whose canonical reads `https://sheetflow-ai-website.vercel.app/services/whatsapp-automation`. **Every canonical, `og:url`, sitemap `<loc>`, `llms.txt` reference and JSON-LD `@id` therefore points at a vercel.app subdomain.** The code default is `https://sheetflow.ai` and every document here describes that as canonical; the deployment disagrees. Moving later re-hosts the whole entity graph and discards whatever authority accrued — which is precisely the cost the `@id` architecture exists to avoid. **Attach the domain and set the env var before any indexing is invited.** | **Founder** (domain purchase/DNS) | Correct canonicals, a stable entity graph, production launch |
-| **B1** | Portfolio permission — 3 engagements corroborated as real deployed sites, but nothing shows they are paying clients, that outcomes were measured, or that anyone consented to be named | **Founder** | Case studies, `Review`/`AggregateRating` schema, trust logos, the single biggest conversion lever on the page |
+| **B2** | **`sheetflow.ai` is not attached.** `vercel domains ls` returns **0 domains**; `NEXT_PUBLIC_SITE_URL` resolves to a `vercel.app` subdomain. Every canonical, `og:url`, sitemap `<loc>`, `llms.txt` reference and JSON-LD `@id` points at the wrong host — **now including the case-study `@id`s that carry client names**. Moving later re-hosts the entity graph and discards accrued authority. **Attach the domain and set the env var before any indexing is invited.** | **Founder** (domain purchase/DNS) | Correct canonicals, a stable entity graph, production launch |
 | **D2** | `origin/main` diverged, 13 ahead / 1 behind, no fast-forward path | **Founder** | Production deploy |
 | — | Production deployment approval | **Founder** | Going live |
-| — | `gh auth login` | **Founder** (credentials) | GitHub research, GitHub MCP |
+| — | **Calendly redirect to `/book/confirmed`** — set in the Calendly dashboard after deploy, not from this codebase (D26) | **Founder** | Post-booking analytics and the confirmation experience |
+| — | **GA4 / Search Console / Clarity IDs** | **Founder** (credentials) | Analytics beyond Vercel's built-in |
 | **D12** | Preview deployments are SSO-protected | **Founder** (security setting) | Automated verification against a preview URL |
 | **A1** | Is the Spline/3D direction still live? 6 unused deps force `--legacy-peer-deps` | **Founder** (architecture) | Dependency cleanup, resolves D6 |
+| **A2** | Does the homepage's decorative composition survive its measured cost? | **Founder** (design) | The only remaining homepage performance lever |
 
 ## Remaining work (not blocked)
 
-1. ~~**Topic clusters / sub-pages**~~ — **done this phase.** Four service pages
-   shipped; BreadcrumbList now has a legitimate use.
-2. **Hydration cost** — `next` 138 ms, `framer-motion` 90 ms in load phase. The
-   remaining performance lever that carries **no design consequence**, and now
-   the highest-value unblocked work.
-3. ~~**The new routes have no measured performance baseline**~~ — **done.**
-   Measured 96 and 97; the prediction that they would be "lighter" understated
-   it considerably.
-4. ~~**`npm run shots` has not been run against the new routes**~~ — **done**,
-   desktop/tablet/mobile. It caught a defect no test would have: two controls
-   labelled "How we work" pointing at different anchors.
-5. **Mobile 4× has not been re-measured** since 2026-08-06 (last figure: 50),
-   and the service routes have no mobile number at all. Desktop 97 does not
-   imply a good mobile score — the homepage's desktop/mobile gap is 15 points.
-6. D9 `violet` token migration (34 usages, visually inert).
-7. D4 remove `raw-loader`; D5 remove inert `.eslintrc.json` (both need approval).
+**Very little, and none of it is high-value.** Named honestly rather than padded:
 
-### A tooling flake worth naming
+1. **D9 `violet` token migration** — 34 usages on a deprecated alias. Mechanical,
+   visually inert (both names resolve to identical hex).
+2. **D4 remove `raw-loader`; D5 remove inert `.eslintrc.json`** — both need
+   founder approval for package changes.
+3. **Desktop Lighthouse for the four new routes** — mobile is measured; desktop
+   is not. Low value: the service routes' desktop/mobile relationship is already
+   documented, and desktop is the easier profile.
+4. **9 lint warnings** — 7 `react-hooks/set-state-in-effect` deliberately
+   downgraded with rationale, 2 unused disable directives in `layout.tsx`.
 
-`npm run audit:bundle` immediately after `npm run test:e2e` once reported *"No
-JS or CSS emitted — the build looks empty"* against a `.next` that demonstrably
-had 25 chunks; re-running it passed unchanged. This is the documented
-Windows/OneDrive `.next` contention, now seen in a new place — it sits inside
-`npm run verify`, whose last step is exactly that sequence. **A red `verify`
-should be re-run once before it is believed.** Not investigated further; it is
-environmental, not a code fault.
+**What is not on this list, deliberately:** more pages. The site now has 9
+content routes covering services, work, pricing and booking. Adding a blog or a
+second tier of service pages is a *marketing* decision that needs evidence
+someone is searching for it — not an engineering gap.
 
 ---
 
 ## Next recommended phase
 
-**Phase I — Reduce mobile bytes, and take the A2 decision.**
+**There isn't an engineering one worth running.** That is the honest read.
 
-Phase H established the constraint: **mobile is bandwidth-bound (D23)**, and the
-homepage fails its own ≥50 gate at 48. The lever is bytes — 19 woff2 files
-totalling 607 kB with 228 kB preloaded, plus Lighthouse's own "reduce unused
-JavaScript" at 0.64 s.
+The remaining levers are: a design decision the founder owns (A2), an
+architecture decision the founder owns (A1), a domain purchase (B2), a branch
+reconciliation (D2), and a deployment approval. Every one is outside what
+engineering can resolve, and three of them — B2 especially — should be settled
+*before* more work is built on top of the current host.
 
-**Two cautions carried forward from this phase**, where two plausible
-hypotheses were both falsified by measurement:
-
-- Font *weight* trimming does nothing — `next/font` emits per **subset**, not
-  per weight. The lever is typefaces and subsets, not weights.
-- Read the LCP element from `report.json` before theorising about it.
-
-Reducing typefaces is a design decision under `SHEETFLOW_VISUAL_DNA.md`, so it
-needs the founder. A2 is still open and now answerable on evidence.
+If work must continue while those are pending, the highest-value item is
+**desktop Lighthouse on the four new routes**, purely to complete the record.
 
 ### Recommended next prompt
 
-> Cut mobile bytes, measuring each change on its own. Start by reporting what
-> the three typefaces actually cost — per typeface and per subset — and what
-> Lighthouse's "unused JavaScript" 0.64 s resolves to by chunk. Propose the
-> smallest change that moves the homepage above the 50 gate, measure it in
-> isolation (mobile preset, median of 5, same route before and after), and
-> report the delta with its spread — including if it is noise. Do not trim font
-> weights: verified to change nothing. Do not touch typeface *choice* without
-> founder sign-off; that is `SHEETFLOW_VISUAL_DNA.md` territory.
-
----
-
-## Superseded — Phase H as originally scoped
-
-**Take the A2 decision on evidence, and close the mobile gap.**
-
-The baseline is no longer the missing piece; it exists, and it changed the
-question. A2 has been the project's largest open design decision for three
-phases, and it was stuck because the cost looked inseparable from the identity.
-It is not — a page in the same visual language scores 97. Someone can now
-decide *which components* rather than *how much brand*.
-
-**That decision is the founder's and should be taken before more engineering.**
-Optimising components that may be removed is wasted work.
-
-The unblocked engineering meanwhile is mobile. Desktop 97 says nothing about
-mobile: the homepage's own desktop/mobile gap is 15 points, and mobile is where
-the audience actually is for a WhatsApp-automation business.
-
-### Recommended next prompt
-
-> Measure the mobile picture properly, then act on A2. Run `npm run audit:lh`
-> with `LH_PRESET=mobile` against `/`, `/services` and one service page, median
-> of 5 — the service routes have no mobile number at all and the homepage's is
-> from 2026-08-06. Report each with its spread and say plainly which deltas are
-> noise-bound. Then, if the founder has answered A2, act on the named
-> components; if not, take the hydration lever instead (`next` 138 ms,
-> `framer-motion` 90 ms), measuring the previous commit with the identical
-> method for the before.
+> Attach `sheetflow.ai`, set `NEXT_PUBLIC_SITE_URL` to it, redeploy, and verify
+> on the deployed artifact that every canonical, `og:url`, sitemap `<loc>`,
+> `llms.txt` reference and JSON-LD `@id` resolves to the new host — including
+> the three case-study `@id`s. Then reconcile `origin/main` (D2) and take the
+> production deployment decision.
