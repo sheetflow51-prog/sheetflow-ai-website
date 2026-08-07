@@ -32,6 +32,20 @@ topic clusters, each with its own `Service` node, its own three Q&A, an honest
 `BreadcrumbList`, and internal links in both directions. Build is green at **19
 routes**; the suite is at **144 tests**, up from 74.
 
+M01 phase 4 (Phase H) — **mobile measured for the first time, and the toolchain
+unblocked.** `gh` is authenticated and five of six MCP servers now connect. The
+open-source-first search finally ran and found that **Origin UI is AGPL-3.0**
+(its repo now redirects to Cal.com's design system) and **React Bits' licence is
+unverifiable** — both previously recorded as "mixed MIT" on reputation.
+
+Mobile is the weak surface: **the homepage fails its own ≥50 gate at 48**, and
+the service page that scores 97 on desktop scores 59 on mobile. The two form
+factors are different problems (**D23**) — desktop is paint-bound, mobile is
+bandwidth-bound at 1.6 Mbps against ~570 kB of JS and fonts. Two hypotheses were
+tested and rejected before the real constraint was read out of the Lighthouse
+report rather than guessed. The boot sequence is now homepage-only (**D22**),
+worth 1.6 s of Speed Index and a better search-landing experience.
+
 A follow-up pass (G.1) caught that all five new routes had shipped **without any
 social image** — Next.js `opengraph-image` conventions are not inherited by
 child segments, so the root card covered `/` alone while the layout still

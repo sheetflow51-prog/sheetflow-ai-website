@@ -1,5 +1,77 @@
 # SheetFlow v2 Changelog
 
+## Phase H — Mobile measured, and two hypotheses killed (2026-08-07)
+
+### Unblocked
+
+- **`gh` is authenticated** (`sheetflow51-prog`) and **the five stdio MCP
+  servers now report `✔ Connected`.** The folder-trust gate is cleared. The MCP
+  *tools* still are not callable in the session that observed it — servers
+  attach at startup — but this time "live next session" is the correct claim
+  rather than the wrong one recorded twice before.
+- **GitHub MCP still fails**, now with a different and more specific error:
+  *"Incompatible auth server: does not support dynamic client registration."*
+  That is not the trust gate; it needs its own investigation.
+
+### Searched — the open-source-first order, finally run
+
+With `gh` working, the seven named registries were looked up rather than
+recalled. **Two are materially different from their reputation:**
+
+- **Origin UI** — `origin-space/originui` now redirects to `cosscom/coss`,
+  Cal.com's design system, licensed **AGPL-3.0**. Strong copyleft. Copying from
+  it into a commercial site is a legal question, not a developer's judgement.
+- **React Bits** — GitHub reports **NOASSERTION**; its licence could not be
+  verified. Unverified terms are a stop for commercial reuse.
+- `21st-dev/magic-mcp` has **no LICENSE file** at all.
+- shadcn/ui, Magic UI, Radix and Motion Primitives are confirmed **MIT**.
+
+This file previously described all of them as "mixed MIT" on reputation. That
+was wrong, and finding out is what the search was for. Nothing was imported —
+every registry ships *visual components*, and the page in question fails its
+mobile gate because it already sends too much.
+
+### Measured — first mobile baseline for the service routes
+
+| Route | Perf | LCP | TBT | SI |
+|---|---|---|---|---|
+| `/` | **48 — fails the ≥50 gate** | 4.5 s | 4,170 ms | 7.2 s |
+| `/services` | pass | 4.3 s | 570 ms | 4.8 s |
+| `/services/whatsapp-automation` | 59 | 4.4 s | 970 ms | 4.9 s |
+
+**Desktop 97 implied nothing about mobile** — the same page drops to 59.
+
+**Mobile is bandwidth-bound; desktop is paint-bound (D23).** The mobile preset
+simulates Slow 4G at 1.6 Mbps, and ~340 kB gzipped JS plus 228 kB of preloaded
+fonts is ≈2.9 s of transfer before anything paints. LCP sat at 4.3–4.5 s across
+three routes whose payloads differ by an order of magnitude — a metric that will
+not move with content is not measuring content.
+
+### Two hypotheses tested and rejected
+
+Recorded because a wrong guess that was checked is worth more than a right one
+that was not.
+
+1. **"Six declared Inter weights are six files on the critical path."** Trimmed
+   300/700/800, all verified unused. Result: **byte-identical** — 607,148 bytes,
+   19 files, 4 preloads, before and after. Inter is a *variable* font, so
+   `next/font` emits one file per **subset**, not per weight. Kept as hygiene,
+   explicitly not claimed as an optimisation.
+
+2. **"The full-screen boot overlay pins LCP."** Plausible — it ran ~1,850 ms on
+   every route from the root layout, and a fixed timer would explain an LCP that
+   ignores content. Gated to the homepage, same route re-measured:
+   **Speed Index 4.9 s → 3.3 s. LCP unmoved.** The overlay delayed *visual
+   progress*, not the largest paint.
+
+### Changed
+
+- **The boot sequence runs on the homepage only (D22).** Kept on the Speed Index
+  result and on an experience argument that needs no metric: a service page is a
+  search landing surface, and nobody arriving from a query should watch a brand
+  boot animation first. Untouched on the homepage. **Touches the brand
+  experience — flagged for review, reversible in one line.**
+
 ## Phase G.1 — Social cards, and the environment audit (2026-08-07)
 
 Build green at **19 routes**, suite at **144 tests**.

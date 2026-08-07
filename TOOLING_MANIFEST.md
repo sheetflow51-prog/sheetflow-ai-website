@@ -45,12 +45,29 @@ added to config.
 
 | Server | Version | Installed | Connected | Auth | Usable | Tools |
 |---|---|---|---|---|---|---|
-| **chrome-devtools** | 1.6.0 | ✅ | ⛔ pending approval | n/a | ❌ | 29 |
-| **context7** | 3.2.5 | ✅ | ⛔ pending approval | none needed | ❌ | 2 |
-| **sequential-thinking** | 0.2.0 | ✅ | ⛔ pending approval | n/a | ❌ | 1 |
-| **playwright** | 1.63.0-alpha | ✅ | ⛔ pending approval | n/a | ❌ | 24 |
-| **filesystem** | 0.2.0 | ✅ | ⛔ pending approval | n/a | ❌ | 14 |
-| **github** (remote HTTP) | — | ✅ configured | ⛔ pending approval | ⛔ **also needs OAuth** | ❌ | — |
+| **chrome-devtools** | 1.6.0 | ✅ | ✅ **Connected** | n/a | ⏳ next session | 29 |
+| **context7** | 3.2.5 | ✅ | ✅ **Connected** | none needed | ⏳ next session | 2 |
+| **sequential-thinking** | 0.2.0 | ✅ | ✅ **Connected** | n/a | ⏳ next session | 1 |
+| **playwright** | 1.63.0-alpha | ✅ | ✅ **Connected** | n/a | ⏳ next session | 24 |
+| **filesystem** | 0.2.0 | ✅ | ✅ **Connected** | n/a | ⏳ next session | 14 |
+| **github** (remote HTTP) | — | ✅ configured | ⛔ **fails** | ⛔ see below | ❌ | — |
+
+> **Resolved 2026-08-07 (later).** The trust gate is cleared and all five stdio
+> servers now report `✔ Connected` in `claude mcp list`. **`gh` is also
+> authenticated** as `sheetflow51-prog`.
+>
+> The `⏳` above is the *original* correct claim finally being true: servers
+> attach at session start, and the session that observed them connecting had
+> begun while they were still blocked. Unlike the earlier version of this file,
+> this is not a prediction being asserted as a fact — the gate that invalidated
+> it last time is gone, and `claude mcp list` confirms the connection today.
+>
+> **GitHub MCP still fails, with a new and more specific error:**
+> *"Incompatible auth server: does not support dynamic client registration."*
+> That is not the trust gate and not a missing login — it is an OAuth
+> capability mismatch against `api.githubcopilot.com/mcp/`, and it needs its own
+> investigation. **`gh` CLI covers GitHub work in the meantime and is what the
+> registry licence audit was run through.**
 
 > **⚠ Correction (2026-08-07).** The previous revision of this table said the
 > servers were "live from the next session onward; nothing further is
@@ -160,9 +177,9 @@ Every row verified by running the command, not by inspecting config.
 | npm | 11.6.2 | ✅ | `npm -v` |
 | Claude Code CLI | 2.1.220 | ✅ | `claude --version` |
 | **Vercel CLI** | 58.7.0 | ✅ **authenticated** as `sheetflow51-prog` | `vercel whoami` |
-| **`gh` CLI** | 2.96.0 | ⛔ **not authenticated** | `gh auth status` → *"not logged into any GitHub hosts"* |
+| **`gh` CLI** | 2.96.0 | ✅ **authenticated** as `sheetflow51-prog` | `gh api user`, 4995/5000 rate limit remaining |
 | Docker | — | ❌ **not installed** | `docker --version` → command not found |
-| Local MCP servers (6) | — | ⛔ **all pending approval** | `claude mcp list` |
+| Local MCP servers | — | ✅ **5 of 6 Connected**; github fails on OAuth capability | `claude mcp list` |
 | claude.ai connectors | 18 | mixed — see below | `claude mcp list` |
 | Claude Skills | 7 | ✅ installed and active | `~/.claude/skills` |
 
@@ -200,9 +217,12 @@ That is the "tool theatre" this manifest exists to prevent.
 | Browser MCP | `@browsermcp/mcp` | ✅ 0.1.3 | Needs a Chrome extension plus a local bridge — too much machinery to install unattended |
 | Memory MCP | `@modelcontextprotocol/server-memory` | ✅ 2026.7.4 | **Conflict — needs a founder decision.** Previously declined because `AI_RUNTIME_MEMORY.md` is deliberately a *reviewable* memory in git; an opaque parallel store splits the source of truth. It appears on the latest requested list. Not installed pending an explicit call |
 
-**The ordering that matters:** grant folder trust first. Until then every one of
-these — and the six already configured — is inert regardless of what the config
-says.
+**Update — trust is now granted, and the conclusion is unchanged.** Five of the
+six configured servers connect. The "they cannot start" argument is gone; the
+merits argument was always the stronger one and still holds. Supabase,
+Cloudflare and Docker have no consumer here. Firecrawl, Exa, 21st.dev and Figma
+need paid keys or a design file that does not exist. **Revisit per-server when a
+real need appears, not as a batch.**
 
 ## Requested but deliberately not installed
 
@@ -345,6 +365,81 @@ regression:
 comparison is.** That is exactly why `/` was re-measured in the same batch
 rather than quoting yesterday's 65 — and it is the compare-like-with-like rule
 being applied rather than recited.
+
+## Mobile — first full baseline, 2026-08-07
+
+Mobile preset (4× CPU **and** simulated Slow 4G), median of 5. The service
+routes had never been measured on mobile at all.
+
+| Route | Perf | FCP | LCP | TBT | CLS | SI |
+|---|---|---|---|---|---|---|
+| `/` | **48 — fails the ≥50 gate** | 0.9 s | 4.5 s | 4,170 ms | 0 | 7.2 s |
+| `/services` | pass | 0.8 s | 4.3 s | 570 ms | 0 | 4.8 s |
+| `/services/whatsapp-automation` | **59** | 0.9 s | 4.4 s | 970 ms | 0 | 4.9 s |
+
+**The homepage fails its own mobile gate.** Desktop 97 implied nothing about
+mobile, exactly as suspected — the service page drops 97 → 59 across form
+factors.
+
+### Mobile is bandwidth-bound. Desktop is paint-bound. They are different problems.
+
+This took two falsified hypotheses to establish, both recorded below because a
+wrong guess that was *checked* is worth more than a right one that was not.
+
+LCP measured **4.3–4.5 s on all three routes** despite payloads that differ by
+an order of magnitude. A metric that will not move with content is not measuring
+content. Reading the report rather than guessing again: the LCP element on the
+service page is the lede `<p>`, and the mobile preset simulates Slow 4G at
+1.6 Mbps. **~340 kB gzipped JS plus 228 kB of preloaded fonts is roughly 2.9 s
+of pure transfer before anything can paint.**
+
+That is a different constraint from the desktop finding, and it means the
+desktop conclusion does **not** transfer: on mobile the lever is bytes, not
+composition.
+
+### Two hypotheses tested and rejected
+
+**1. "Six declared Inter weights are six woff2 files on the critical path."**
+Trimmed 300/700/800 — all verified unused across `src`, with the only
+`fontWeight: 700` living in the Satori OG routes that never touch this font.
+Result: **607,148 bytes across 19 files, 4 preloaded totalling 228,864 bytes —
+byte-identical before and after.** Inter is a *variable* font on Google Fonts,
+so `next/font` emits one file per **subset**, not per weight. The weight array
+never affected what shipped. The change was kept as hygiene and is explicitly
+**not** claimed as an optimisation.
+
+**2. "The full-screen boot overlay is what pins LCP."** It genuinely was
+plausible: `LoadingScreen` renders `fixed inset-0 bg-void` for ~1,850 ms from
+the root layout, so it played on every route, and a fixed timer would explain an
+LCP that ignores content. Gated it to the homepage and re-measured the same
+route with the same instrument:
+
+| `/services/whatsapp-automation`, mobile | Before | After |
+|---|---|---|
+| Performance | 59 | 60 |
+| **Speed Index** | 4.9 s | **3.3 s** |
+| LCP | 4.4 s | 4.5 s |
+| TBT | 970 ms | 1,190 ms |
+
+**Speed Index improved 1.6 s — real and user-visible. LCP did not move.** So the
+overlay was delaying *visual progress*, not the largest paint. The score change
+(+1) and the TBT change are both inside this machine's spread and are noise.
+
+**The change was kept**, on the Speed Index result and on an experience argument
+that stands without any metric: a service page is a search landing surface, and
+someone arriving from a query for "whatsapp automation" should not sit through a
+brand boot animation before reading the answer they clicked for. The sequence is
+untouched on the homepage, where it was designed to live.
+
+### The next mobile lever, named but not taken
+
+Bytes. Three typefaces (Inter, Fraunces, JetBrains Mono) produce **19 woff2
+files, 607 kB total, 228 kB preloaded**, and Lighthouse's own top opportunity is
+"reduce unused JavaScript" at 0.64 s. Reducing typefaces or subsets is a design
+decision under `SHEETFLOW_VISUAL_DNA.md`, so it is **not** taken autonomously —
+and after two falsified hypotheses in one session, the honest position is that
+it should be *measured* before it is believed, not assumed because it sounds
+right.
 
 ### Superseded
 

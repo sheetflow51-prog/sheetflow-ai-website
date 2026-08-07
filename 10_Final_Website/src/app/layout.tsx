@@ -17,11 +17,36 @@ import DeferredAtmosphere from '@/components/providers/DeferredAtmosphere';
 import { Navigation } from '@/components/layout/Navigation';
 import { Footer } from '@/components/layout/Footer';
 
+/**
+ * Three weights, not six.
+ *
+ * The original six (300–800) were declared before anything used them. Audited
+ * 2026-08-07 across `src`: `font-light` (300), `font-bold` (700) and
+ * `font-extrabold` (800) have **zero** usages — no Tailwind utility, no
+ * arbitrary `font-[700]`, no raw declaration. The only `fontWeight: 700` in the
+ * codebase is inside the OG image routes, which render through Satori with
+ * `fontFamily: 'sans-serif'` and never touch this font.
+ *
+ * Headlines are unaffected either way: `.headline-*` uses `--font-display`
+ * (Fraunces), not this.
+ *
+ * **This is hygiene, not a performance win, and the difference was measured.**
+ * The change was made expecting a smaller font payload — each declared weight
+ * looked like another woff2 on the critical path. The build says otherwise:
+ * 607,148 bytes across 19 files, 4 preloaded totalling 228,864 bytes, **byte
+ * for byte identical before and after**. Inter is a variable font on Google
+ * Fonts, so `next/font` emits one file per *subset*, not per weight; the weight
+ * array never affected what shipped.
+ *
+ * Kept anyway, because declaring three weights that exist beats declaring six
+ * where half are fiction. But do not cite it as an optimisation — it moved
+ * nothing, and the real shared cost turned out to be `LoadingScreen`.
+ */
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-sans',
-  weight: ['300', '400', '500', '600', '700', '800'],
+  weight: ['400', '500', '600'],
 });
 
 // A distinct editorial serif for headlines — separates "display" from "sans"

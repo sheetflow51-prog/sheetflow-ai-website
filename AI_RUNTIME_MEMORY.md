@@ -182,6 +182,24 @@ the source URI plus metadata. To answer "is anything unsaved", enumerate those,
 extract the content after line 1, and diff it against disk — `git status` alone
 cannot see an unsaved buffer, and neither can any file read.
 
+**Mobile and desktop are different problems here — do not use one as a proxy.**
+Desktop is paint-bound; **mobile is bandwidth-bound**, because the Lighthouse
+mobile preset simulates Slow 4G at 1.6 Mbps and this site sends ~340 kB gzipped
+JS plus 228 kB of preloaded fonts — ≈2.9 s of transfer before anything paints. A
+page scoring 97 on desktop scored 59 on mobile. Fixing the composition helps one
+and barely touches the other.
+
+**A metric that will not move with content is not measuring content.** LCP sat
+at 4.3–4.5 s across three routes whose payloads differ by an order of magnitude.
+That flatness was the signal — it said "this is a fixed cost, stop looking at
+the pages" — and reading the LCP element out of `report.json` beat two rounds of
+guessing at it.
+
+**Declaring fewer weights of a variable Google font changes nothing.**
+`next/font` emits one file per **subset**, not per weight. Trimming Inter from
+six weights to three produced a byte-identical build: 607,148 bytes, 19 files, 4
+preloads. Verified, not assumed — and it was assumed first.
+
 **Next.js `opengraph-image` is NOT inherited by child route segments.** It
 applies to the segment that declares it. `app/opengraph-image.tsx` covered `/`
 and nothing else, so five new routes shipped announcing

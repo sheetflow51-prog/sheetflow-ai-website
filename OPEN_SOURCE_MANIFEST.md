@@ -87,7 +87,9 @@ it ourselves" is indistinguishable from not having looked.
 | Source | Licence | Verdict | Reason |
 |---|---|---|---|
 | **21st.dev / Magic MCP** (`@21st-dev/magic@0.2.2`) | — | **Declined (D15)**, and separately blocked | Importing components built on someone else's tokens forks the design system — the exact drift DEC-302 exists to prevent. Also needs a `TWENTY_FIRST_API_KEY` and cannot start until folder trust is granted |
-| **Magic UI, Aceternity, Origin UI, React Bits, Motion Primitives, HyperUI** | mixed MIT | **Declined (D15)** | Same reasoning. `brand-os/03_component-language` already defines the component language, implemented against the project's tokens |
+| **Magic UI, Aceternity, HyperUI, Motion Primitives** | MIT (verified for Magic UI and Motion Primitives) | **Declined (D15)** | Same reasoning. `brand-os/03_component-language` already defines the component language, implemented against the project's tokens |
+| **Origin UI** | ⛔ **AGPL-3.0** | **Declined on licence, independently of D15** | Its repo now redirects to Cal.com's `cosscom/coss`. Strong copyleft — needs legal review, not developer judgement. See the verified table above |
+| **React Bits** | ⚠️ **NOASSERTION** | **Declined on licence, independently of D15** | Terms could not be verified. Unverified terms are a stop for commercial reuse |
 | **shadcn/ui** | MIT | **Declined for now (D15)** | Copy-in rather than a dependency, so it would not fork the build — but every component still arrives with opinions the tokens then have to override. Its Accordion and Breadcrumb are the two that would apply, and both lost on merit above |
 | **Radix UI** | MIT | **Declined for now, with a named trigger** | Genuinely the right answer for one thing: focus management in a modal or combobox. **The site has no such surface.** Adopt the moment one is built — do not pre-install |
 | **Tailwind UI** | Commercial | Not evaluated | Paid licence; no entitlement recorded for this project |
@@ -115,15 +117,53 @@ on the list as one of the usual suspects, the existing decision stands.
 
 ---
 
-## The one gap this manifest cannot close
+## The GitHub search — performed 2026-08-07
 
-**`gh auth status`: not logged into any GitHub hosts.**
+**`gh` is authenticated** (`sheetflow51-prog`), so the gap recorded in the first
+revision of this file is closed. The named registries were looked up on GitHub
+directly rather than from memory, and **two of the seven turned out to be
+materially different from their reputation.**
 
-Steps 4 and onward of the open-source-first order — search GitHub, evaluate
-licences, reuse production implementations — **have not been performed on this
-project, in any phase.** Everything above is an evaluation against libraries
-already known, not the result of a repository search.
+| Registry | Repo | ★ | **Licence (verified)** | Last push |
+|---|---|---|---|---|
+| shadcn/ui | `shadcn-ui/ui` | 120.7k | **MIT** | 2026-08-06 |
+| Magic UI | `magicuidesign/magicui` | 21.8k | **MIT** | 2026-07-31 |
+| Radix UI | `radix-ui/primitives` | 19.1k | **MIT** | 2026-07-31 |
+| Motion Primitives | `ibelick/motion-primitives` | 5.9k | **MIT** | 2026-03-19 |
+| **React Bits** | `DavidHDev/react-bits` | 45.0k | ⚠️ **NOASSERTION** | 2026-08-06 |
+| **Origin UI** | `origin-space/originui` → **`cosscom/coss`** | 10.4k | ⛔ **AGPL-3.0** | 2026-08-04 |
+| 21st.dev Magic MCP | `21st-dev/magic-mcp` | 5.6k | ⚠️ **no LICENSE file** | 2026-07-31 |
 
-That distinction matters, because "we reused nothing and here is why" is only
-credible if the search actually happened. It has not. One `gh auth login`
-closes it.
+### The two that matter
+
+**Origin UI — `origin-space/originui` now redirects to `cosscom/coss`, which is
+Cal.com's design system and is licensed AGPL-3.0.** That is strong copyleft.
+Whatever the provenance story, the repository sitting at that path today is not
+an MIT component registry, and copying from it into a commercial marketing site
+would need legal review rather than a developer's judgement. **Do not copy from
+Origin UI without re-verifying what you are actually looking at.**
+
+**React Bits reports `NOASSERTION`** — GitHub could not match its LICENSE to a
+standard licence, and the file did not decode through the API. That is not the
+same as "no licence", but it *is* "terms unverified", and unverified terms are a
+stop for commercial reuse until someone reads them.
+
+**`21st-dev/magic-mcp` has no LICENSE file at all** (`/license` → 404). The npm
+package is separate from the repo, but a component *generator* whose repo
+carries no licence is worth knowing about before its output is pasted into a
+codebase.
+
+These three were previously listed in this file as "mixed MIT" on reputation.
+That was wrong, and it is exactly what the search was for.
+
+### What the search concluded for the work in hand
+
+**Nothing was imported, and for a reason specific to this phase rather than the
+standing D15 objection.** Phase H is performance work: the homepage fails its
+own mobile gate at 48. Every registry above ships *visual components* — reusing
+one adds JavaScript to a page whose problem is that it renders too much. The
+lever these numbers point at is `content-visibility`, a CSS platform feature
+with no package behind it.
+
+Radix remains the named exception with a named trigger: adopt it the moment a
+modal, combobox or command palette exists. The site still has none.

@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useStore } from '@/lib/store';
 import { prefersReducedMotion } from '@/lib/utils';
@@ -14,6 +15,31 @@ import { prefersReducedMotion } from '@/lib/utils';
  *   2 — status text cycles + progress fills (700ms)
  *   3 — clip-path reveal (300ms)
  * Total ≈ 1600ms.
+ *
+ * ## Homepage only — and this was a measured decision, not a taste one
+ *
+ * This renders `fixed inset-0 z-[100] bg-void`: an opaque overlay across the
+ * whole viewport, held ~1,850 ms before the reveal starts. It lived in the root
+ * layout, so once the site gained routes it played on **every** one of them.
+ *
+ * That pinned Largest Contentful Paint to a timer instead of to content. Mobile
+ * LCP measured **4.3–4.5 s on three routes with wildly different payloads** —
+ * the homepage and two service pages, one of which scores 97 on desktop. A
+ * metric that refuses to move with content is not measuring content. FCP stayed
+ * fast (0.8–0.9 s) throughout, because the thing painting quickly *was* this
+ * overlay.
+ *
+ * It is also the wrong experience off the homepage. A service page is a search
+ * landing surface; someone arriving from a Google result for "whatsapp
+ * automation" should not sit through a brand boot animation before reading the
+ * answer they clicked for.
+ *
+ * The sequence is kept exactly as designed where it was designed to live — the
+ * homepage, first impression, once per session. Everywhere else it marks the
+ * app booted immediately and renders nothing.
+ *
+ * Reverting is one line: drop the `isHome` guard. Doing so also reverts the
+ * measured LCP improvement recorded in TOOLING_MANIFEST.
  */
 const STATUS_LINES = [
   'Loading automations...',
@@ -26,9 +52,13 @@ export default function LoadingScreen() {
   const [statusIndex, setStatusIndex] = useState(0);
   const setBooted = useStore((s) => s.setBooted);
   const hasBooted = useStore((s) => s.hasBooted);
+  const isHome = usePathname() === '/';
 
   useEffect(() => {
     if (hasBooted) return;
+    // Off the homepage there is no boot sequence — mark the app booted so any
+    // consumer gated on `hasBooted` proceeds immediately.
+    if (!isHome) { setBooted(true); return; }
     // Reduced-motion: skip the cinematic boot sequence entirely.
     if (prefersReducedMotion()) { setBooted(true); return; }
     const t1 = setTimeout(() => setStage(1), 600);
@@ -38,7 +68,13 @@ export default function LoadingScreen() {
     const t5 = setTimeout(() => setStage(3), 1500);
     const t6 = setTimeout(() => setBooted(true), 1850);
     return () => [t1, t2, t3, t4, t5, t6].forEach(clearTimeout);
-  }, [hasBooted, setBooted]);
+  }, [hasBooted, setBooted, isHome]);
+
+  // Short-circuit the render, not just the timers. The effect above runs after
+  // the first paint, so relying on it alone would flash a full-screen opaque
+  // overlay for one frame on every sub-page — which is the exact thing being
+  // removed, briefly.
+  if (!isHome) return null;
 
   return (
     <AnimatePresence>

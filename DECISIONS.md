@@ -184,12 +184,63 @@ per-server auth requirements are recorded in `TOOLING_MANIFEST.md` so that
 granting trust is followed by one decision per server, not a fresh
 investigation.
 
+> **Updated same day — trust is granted and the premise has changed.** Five of
+> the six now report `✔ Connected`. **The decision itself stands**, but its
+> reasoning narrows: "they cannot start" is no longer true, so what remains is
+> the merits, which were always the stronger half. Supabase, Cloudflare and
+> Docker still have **no consumer** on a static marketing site with no database,
+> no API routes and a Vercel deployment. Firecrawl, Exa, 21st.dev and Figma
+> still need paid keys or a design file that does not exist.
+>
+> **Adding a server with no consumer is worse than not having it**: it implies a
+> capability the project does not use, which is the thing this file exists to
+> stop. Revisit per-server when a real need appears, not as a batch.
+
 **Open sub-question — Memory MCP.** It was previously declined on the grounds
 that `AI_RUNTIME_MEMORY.md` is deliberately a *reviewable* memory, held in git
 where a wrong entry is caught in a diff, and that an opaque parallel store
 splits the source of truth. It now appears on a requested list. That may be a
 considered reversal or it may be one of the usual suspects; it has **not** been
 installed pending an explicit call. See `OPEN_SOURCE_MANIFEST.md`.
+
+### D22 — The boot sequence runs on the homepage only *(2026-08-07)*
+`LoadingScreen` lived in the root layout, so once the site gained routes it
+played its ~1,850 ms full-screen overlay on every one of them. It is now gated
+to `/`.
+
+**Measured, same route, same instrument, median of 5, mobile:** Speed Index
+**4.9 s → 3.3 s**. LCP did not move (4.4 → 4.5 s) and the score change (59 → 60)
+is inside this machine's spread. So the honest claim is narrow: the overlay was
+delaying *visual progress*, not the largest paint.
+
+**The experience argument is the stronger one and needs no metric.** A service
+page is a search landing surface. Someone arriving from a query for "whatsapp
+automation" should not watch a brand boot animation before reading the answer
+they clicked for. The sequence is untouched where it was designed to live — the
+homepage, first impression.
+
+**This touches the brand experience, so flag it for review.** It is reversible
+in one line (drop the `isHome` guard), which also reverts the Speed Index
+result. If `LOADING_PHILOSOPHY` intends the boot on every surface, say so and it
+comes back.
+
+### D23 — Mobile and desktop are different problems *(2026-08-07)*
+Not a choice so much as a finding that constrains future work, recorded so it is
+not re-derived.
+
+**Desktop is paint-bound** — 73–91% of main-thread time, and the homepage's
+specific decorative composition (see A2).
+
+**Mobile is bandwidth-bound.** The mobile preset simulates Slow 4G at 1.6 Mbps;
+~340 kB gzipped JS plus 228 kB of preloaded fonts is ≈2.9 s of transfer before
+anything paints. LCP measured 4.3–4.5 s on three routes whose payloads differ by
+an order of magnitude — a metric that will not move with content is not
+measuring content.
+
+**Consequence: the desktop conclusion does not transfer.** Resolving A2 in
+favour of a lighter composition would help desktop and do comparatively little
+for mobile, where the lever is bytes — typefaces, subsets, unused JavaScript.
+Do not treat one number as a proxy for the other.
 
 ---
 

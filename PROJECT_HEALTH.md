@@ -48,7 +48,26 @@ to each other.
 | `/services` | **96** | 100 | 96 | 100 | 0.9 s | **30 ms** | 0 | 1.8 s |
 | `/services/whatsapp-automation` | **97** | 100 | 96 | 100 | 0.9 s | **10 ms** | 0 | 1.7 s |
 
-Mobile 4× was last measured **50** on 2026-08-06 and has not been re-run.
+### Mobile — first full baseline, and it is the weak surface
+
+Mobile preset (4× CPU **and** simulated Slow 4G), median of 5.
+
+| Route | Perf | LCP | TBT | SI |
+|---|---|---|---|---|
+| `/` | **48 — fails the ≥50 gate** | 4.5 s | 4,170 ms | 7.2 s |
+| `/services` | pass | 4.3 s | 570 ms | 4.8 s |
+| `/services/whatsapp-automation` | 59 | 4.4 s | 970 ms | 4.9 s |
+
+**Desktop 97 implied nothing about mobile** — the same page drops to 59, and the
+homepage fails its own gate.
+
+**Mobile is bandwidth-bound; desktop is paint-bound (D23).** Slow 4G at
+1.6 Mbps against ~340 kB gzipped JS plus 228 kB of preloaded fonts is ≈2.9 s of
+transfer before anything paints. LCP measured 4.3–4.5 s across three routes
+whose payloads differ by an order of magnitude — a metric that will not move
+with content is not measuring content. **The desktop conclusion does not
+transfer:** resolving A2 toward a lighter composition helps desktop and does
+comparatively little here, where the lever is bytes.
 
 ### The finding: the brand language is not the cost
 
@@ -186,8 +205,10 @@ Honesty matters more here than a long list.
 | **CDP via Playwright** | ✅ used | `Performance.getMetrics` paint attribution, CPU profiler |
 | **Calendly connector** | ✅ used (prior phase) | Verified the booking URL is real and active |
 | **Vercel CLI** | ✅ used (prior phase) | Preview deploys |
-| chrome-devtools MCP | ❌ **not usable** | **Diagnosis corrected.** Not session timing — the project folder's trust prompt has never been answered (`hasTrustDialogAccepted: false`), so Claude Code will not launch any `.mcp.json` server here. See TOOLING_MANIFEST. Needs ~5 s of founder time. |
-| context7 / sequential-thinking / filesystem / playwright MCP | ❌ same | Same single root cause. `enabledMcpjsonServers` was added to `.claude/settings.local.json` and verified **not** sufficient on its own. |
+| chrome-devtools MCP | ⏳ **connected, live next session** | **Trust granted — resolved.** `claude mcp list` reports `✔ Connected`. Not callable in the session that observed it, because servers attach at startup; unlike the earlier claim, the gate that invalidated it is now actually gone. |
+| context7 / sequential-thinking / filesystem / playwright MCP | ⏳ same | All four `✔ Connected`. |
+| **`gh` CLI** | ✅ **authenticated** | `sheetflow51-prog`. **The open-source-first search finally ran** — and found two registries materially mislabelled. See OPEN_SOURCE_MANIFEST. |
+| GitHub MCP | ⛔ **fails, new error** | *"Incompatible auth server: does not support dynamic client registration."* Not the trust gate, not a missing login — an OAuth capability mismatch needing its own investigation. `gh` covers GitHub work meanwhile. |
 | **GitHub MCP + `gh` CLI** | ⛔ **blocked** | `gh auth status`: not logged in. **No GitHub repository research was performed.** |
 | **21st.dev / Magic MCP** | ❌ **not available** | Not installed; requires a 21st.dev API key. See D15. |
 | Figma / Adobe / Canva | ❌ not used | DEC-302 — `logo.png` is canonical, `public/brand/` is generated. Routing assets through external tools reintroduces the drift those decisions exist to prevent. |
@@ -195,13 +216,26 @@ Honesty matters more here than a long list.
 
 ### Components reused from GitHub / 21st.dev
 
-**Zero — and that is the correct outcome, not a gap.**
+**Zero — and the reason is now evidence rather than an excuse.**
 
-Two independent reasons: `gh` is unauthenticated so GitHub search was
-unavailable, and D15 records that importing third-party component libraries
-forks a design system already defined in `brand-os/03_component-language` and
-implemented against the project's tokens. The premium look here comes from the
-token system and motion language, not from borrowed components.
+The earlier version of this entry gave two reasons, one of which was that `gh`
+was unauthenticated so the search never happened. **It has now happened.** The
+seven named registries were looked up on GitHub directly, and the result is in
+`OPEN_SOURCE_MANIFEST.md`:
+
+- **Origin UI** — repo now redirects to Cal.com's `cosscom/coss`, **AGPL-3.0**.
+  Strong copyleft; a legal question, not a developer's judgement.
+- **React Bits** — **NOASSERTION**; licence unverifiable.
+- **`21st-dev/magic-mcp`** — no LICENSE file at all.
+- shadcn/ui, Magic UI, Radix, Motion Primitives — confirmed **MIT**.
+
+All three of those problems were previously recorded here as "mixed MIT" on
+reputation. Finding out is what the search was for.
+
+Nothing was imported, for a reason specific to this phase: every registry ships
+*visual components*, and the page in question fails its mobile gate because it
+already sends too much. Adding components to fix a bandwidth problem moves the
+number the wrong way.
 
 ---
 
@@ -320,7 +354,39 @@ environmental, not a code fault.
 
 ## Next recommended phase
 
-**Phase H — Take the A2 decision on evidence, and close the mobile gap.**
+**Phase I — Reduce mobile bytes, and take the A2 decision.**
+
+Phase H established the constraint: **mobile is bandwidth-bound (D23)**, and the
+homepage fails its own ≥50 gate at 48. The lever is bytes — 19 woff2 files
+totalling 607 kB with 228 kB preloaded, plus Lighthouse's own "reduce unused
+JavaScript" at 0.64 s.
+
+**Two cautions carried forward from this phase**, where two plausible
+hypotheses were both falsified by measurement:
+
+- Font *weight* trimming does nothing — `next/font` emits per **subset**, not
+  per weight. The lever is typefaces and subsets, not weights.
+- Read the LCP element from `report.json` before theorising about it.
+
+Reducing typefaces is a design decision under `SHEETFLOW_VISUAL_DNA.md`, so it
+needs the founder. A2 is still open and now answerable on evidence.
+
+### Recommended next prompt
+
+> Cut mobile bytes, measuring each change on its own. Start by reporting what
+> the three typefaces actually cost — per typeface and per subset — and what
+> Lighthouse's "unused JavaScript" 0.64 s resolves to by chunk. Propose the
+> smallest change that moves the homepage above the 50 gate, measure it in
+> isolation (mobile preset, median of 5, same route before and after), and
+> report the delta with its spread — including if it is noise. Do not trim font
+> weights: verified to change nothing. Do not touch typeface *choice* without
+> founder sign-off; that is `SHEETFLOW_VISUAL_DNA.md` territory.
+
+---
+
+## Superseded — Phase H as originally scoped
+
+**Take the A2 decision on evidence, and close the mobile gap.**
 
 The baseline is no longer the missing piece; it exists, and it changed the
 question. A2 has been the project's largest open design decision for three
