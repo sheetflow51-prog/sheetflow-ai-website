@@ -46,6 +46,59 @@ catalogued services that had no page — `Daily Business Reports` and
 advertised services with nothing behind them. The pricing calculator gained a
 break-even line built from our published price and the visitor's own figure.
 
+M01 phase 8 (Phase M) — **the evidence re-audit.** The founder supplied a full
+project inventory and instructed that it be treated as verified. It was
+re-verified anyway, artifact by artifact, because "treat as verified" is an
+instruction about *permission*, not about whether a URL resolves. The result is
+`docs/EVIDENCE_MATRIX.md`, built before any case study was written, and
+`docs/MCP_EXECUTION_REPORT.md`. Four findings changed what may be published —
+see below. Excel-first repositioning shipped.
+
+## Phase M — what the re-audit found
+
+Five things were true that the inventory did not say. Each one would have put a
+false claim on the site.
+
+1. **The two Saraswati builds are byte-identical** — md5
+   `baf6589c1b7ff9cb185e0fe178b48674` on both hosts. The one listed as the
+   "Older Saraswati Build" is not older; it is **the same file mirrored**.
+   Publishing both as separate entries would have implied an iteration history
+   that never happened.
+2. **The Saraswati dashboard runs on fictional seed data** — a hardcoded `LEADS`
+   array with placeholder names and sequential fake numbers. It is a real CRM
+   surface (Chart.js, six-column Kanban, appointments) and it must be described
+   as a **demonstration**. Separately: shipping it with fictional data was the
+   *correct* call, because the page is publicly reachable with **no
+   authentication** and real patient records there would be a DPDP exposure.
+3. **WPC Design Automation is strong work and is not a client engagement.**
+   2,446 lines of Python compiling one image into a 15-size CNC door matrix,
+   with atomic staged delivery and bundle verification. But
+   `SamplePass_Outreach.md` is a **prospecting kit** with `[Name]` placeholders —
+   a sales asset to a prospect who has not replied. Publishable as SheetFlow's
+   own capability; **not** as delivered client work.
+4. **Elevate WPC — D27 is half wrong and half right.** The business is real and
+   live (Google Sites, four product lines, Agra). The Manus prototype is
+   **dead** — DNS does not resolve. And **SheetFlow's authorship is unverified**:
+   the live site is Google Sites, matching nothing in this account.
+5. **`sheetflow-ai-ca` is a README.** A private repo with a genuinely compelling
+   description and **1 KB of content — no code**. Excluded.
+
+## 🔐 Security — needs founder action
+
+The Airtable base `Saraswati Dental Clinic CRM` stores **`WhatsApp Access
+Token`** and **`n8n Webhook URL`** in its `Settings` table as plain
+`singleLineText`.
+
+An anonymous fetch of that base showed **no token-shaped string**, so nothing is
+leaking publicly and **there is no live incident**. But a Meta WhatsApp Business
+API token in a CRM table is readable by every base collaborator and every
+automation holding base scope. It belongs in n8n's credential store.
+
+**The URL supplied in the founder's inventory points directly at that table.**
+It is an authenticated workspace URL, not a public share — it auth-walls for
+visitors, which is also why it **cannot be used as portfolio proof**. Worth
+knowing before it is shared with anyone again.
+
 ## The blocker that had to be resolved before any of Phase K
 
 The execution contract stated that client permission had been granted. The
@@ -104,10 +157,31 @@ Current recommendation on A2: **do nothing yet**.
 ## Current Blockers
 
 **B1 — CLOSED (2026-08-08).** Permission granted with a boundary (D24). Three
-case studies ship. Elevate WPC does not: it has **no verifiable artifact** —
-absent from the account's 5 Vercel projects, no resolving domain under any
-tested spelling, nothing in the workspace (D27). Adding it later is a data-only
-change.
+case studies ship.
+
+**D27 — CORRECTED (Phase M).** The previous entry said Elevate WPC had "no
+verifiable artifact … nothing in the workspace". **Both halves were wrong, and
+in opposite directions:**
+
+- A live artifact *does* exist — `sites.google.com/view/elevate-wpc/elevatewpc`,
+  200, 257,632 bytes. Earlier phases tested domain spellings and Vercel, and
+  never tested the Google Sites URL.
+- Work *does* exist in the workspace — `C:\Users\pc\Desktop\WPCDesign_Automation`,
+  2,446 lines. Earlier searches missed it because it sits on the **plain
+  Desktop**, not under OneDrive, and every prior sweep was scoped to OneDrive.
+
+What remains true is that **SheetFlow's authorship of the Elevate WPC site is
+unverified** — it is a Google Sites build matching nothing in this account. A
+case study claiming SheetFlow built it is still unsupported. The WPC automation
+pipeline is a separate and much stronger candidate.
+
+**New in the inventory, not previously assessed:** two further named clinics
+with live demo builds — **Dr. A.K Gupta Dental** (`ak-dental-demo.netlify.app`)
+and **Krishna Dental Clinic** (`keen-griffin-feb211.netlify.app`) — plus
+`align-dental` (`sheetflow51-prog.github.io/dental-demo/`). All live. Both
+clinic URLs signal **demo status** (one is named `-demo`; the other still sits
+on Netlify's auto-generated subdomain), so neither is evidence of a delivered
+engagement. Full detail in `docs/EVIDENCE_MATRIX.md`.
 
 **Outcome metrics remain blocked**, and that is a different question from B1. No
 engagement has a measured, client-confirmed result, so every case study reads
@@ -164,6 +238,25 @@ six dependencies exist for it and their peer conflict forces
 **A2 — Does the homepage's decorative composition survive its measured cost?**
 Now framed as *which components*, not *how much brand* — a page in the identical
 visual language scores far higher.
+
+## Next engineering task — the one Phase M deliberately did not do
+
+**The WPC Design Automation case study needs a type change before it can exist.**
+
+`WorkProject.liveUrl` is required and documented *"Must return HTTP 200"*, and a
+test asserts exactly that against every published project. WPC has **no live
+URL** — it is Internal Only.
+
+Adding it therefore means a discriminated union on evidence, mirroring what
+`ProjectOutcome` already does for unmeasured outcomes: a `live` variant carrying
+a fetchable `liveUrl`, and an `internal` variant with **no field a URL can be
+typed into**. That keeps the guarantee the current type provides — that nothing
+on `/work` links to something a visitor cannot open — instead of weakening it to
+fit one project in.
+
+Queued with it: the **Saraswati dashboard and CRM showcase** (described as a
+demonstration on seeded data), screenshot capture for both, and a Lighthouse
+rerun once a render path actually changes.
 
 ## Next Milestone
 

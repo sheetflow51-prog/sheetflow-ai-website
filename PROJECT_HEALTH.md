@@ -1,7 +1,13 @@
 # Project Health — SheetFlow v2
 
 > Single-snapshot dashboard. Regenerated after every phase.
-> **Last updated: 2026-08-08** · Phase L (catalogue parity, ROI messaging) · branch `feat/m01-foundation`
+> **Last updated: 2026-08-08** · Phase M (evidence re-audit, Excel-first) · branch `feat/m01-foundation`
+>
+> Phase M verification: `type-check` clean · build green at **30 routes** ·
+> **290 Playwright tests passed, 0 failed** · all bundle budgets met (355.7 kB
+> gzip JS / 360 kB, CSS 10.6 kB / 40 kB). **Lighthouse not rerun** — no render
+> path changed, and a fresh batch quoted against Phase L's would invite the
+> between-batch comparison Phase J was retracted for.
 
 Scores below are **measured or verifiable**, never estimated. Where a number
 cannot be measured honestly it says so — a confident percentage nobody computed
@@ -208,6 +214,49 @@ and removing `.next` cleared it. **If a schema assertion fails but the source is
 right, check what the server is actually serving before debugging the code.**
 
 ---
+
+## Phase M — evidence re-audit
+
+Full accounting in `docs/EVIDENCE_MATRIX.md` and `docs/MCP_EXECUTION_REPORT.md`.
+
+| Discovery source | Method | Result |
+|---|---|---|
+| Vercel | `vercel projects ls` | 5 projects, all accounted for |
+| GitHub | `gh repo list` | 6 repos — surfaced `sheetflow-ai-ca`, **excluded: 1 KB, README only, no code** |
+| GitHub Pages | fetch ×2 | one is a **byte-identical mirror**, not a second project |
+| Netlify | fetch ×3 | 3 live, all distinct — ⚠️ **account never enumerated**, see gap below |
+| Airtable | MCP `list_bases` → `list_tables_for_base` | **exactly one base**; 4 tables; 🔐 plaintext credential found |
+| Local workspace | `find` over `C:\Users\pc` depth 6 | **`WPCDesign_Automation` found on plain Desktop, not OneDrive** — which is why every prior sweep missed it |
+
+**Named coverage gap: Netlify was never enumerated.** The MCP returns 502 and no
+CLI exists in this environment. The three Netlify URLs were verified
+individually by fetch, but if further Netlify deployments exist that the founder
+did not list, **this session did not find them.** Everything else was enumerated
+at the account level.
+
+**Excel-first repositioning shipped.** Before: 9 "Google Sheets" references and
+**zero** "Excel". Now every integration list leads with **Microsoft Excel**,
+Google Sheets is retained in the optional trailing position, and two service
+FAQs state the actual adoption argument — Excel works from OneDrive, SharePoint
+or a plain file and needs **no Google Workspace account**. `llms.txt` updated so
+answer engines repeat the Excel-first ordering.
+
+### A test failure that was infrastructure, not code — again
+
+The first suite run after the content edits reported **18 failures, all on `/`**,
+every other route green. The cause was not the edits: a `next start` from before
+the rebuild (PID 19056) was still holding port 3000, serving HTML that
+referenced chunk `0jqq1sy61063z.js` — **a file the new build had replaced and
+which no longer existed on disk**, returning 500 as `text/plain`.
+
+This is the **same Windows/OneDrive `.next` contention** documented in Phase L,
+and it presented the same way: a plausible-looking code failure that was
+entirely a stale listener. `pkill -f` does not stop it. Stopping the process **by
+PID from `netstat`**, removing `.next` and rebuilding cleared it.
+
+**The Phase L note was right and is worth promoting to a rule:** when a
+homepage-wide assertion fails but the source is correct, check what the server
+is actually serving *before* debugging the code.
 
 ## Capabilities actually used this phase
 

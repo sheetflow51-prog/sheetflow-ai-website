@@ -60,7 +60,7 @@ export const faqs: FaqEntry[] = [
     id: 'faq-integrations',
     question: 'Which tools does SheetFlow integrate with?',
     answer:
-      'SheetFlow connects to the tools most small businesses already run: WhatsApp, Gmail, Slack and Telegram for messaging; Google Calendar and Calendly for scheduling; HubSpot, Pipedrive and GoHighLevel for CRM; Google Sheets, Airtable and Notion for records; Stripe and QuickBooks for payments and invoicing; and Make for orchestration. Anything with an API or a webhook can be connected.',
+      'SheetFlow connects to the tools most small businesses already run: WhatsApp, Gmail, Slack and Telegram for messaging; Google Calendar and Calendly for scheduling; HubSpot, Pipedrive and GoHighLevel for CRM; Microsoft Excel, Airtable, Notion and Google Sheets for records — Excel first, because almost every Indian business already has it and it needs no Google Workspace subscription; Stripe and QuickBooks for payments and invoicing; and Make for orchestration. Anything with an API or a webhook can be connected.',
   },
   {
     id: 'faq-replace-my-team',

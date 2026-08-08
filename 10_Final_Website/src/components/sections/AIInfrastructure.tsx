@@ -46,7 +46,7 @@ const BRANCHES: Branch[] = [
     label: 'Automation & AI',
     Icon: Workflow,
     tint: 'text-accent',
-    tools: ['n8n', 'Zapier', 'Make', 'Claude', 'Google Sheets'],
+    tools: ['n8n', 'Zapier', 'Make', 'Claude', 'Microsoft Excel'],
   },
   {
     id: 'payments',

@@ -128,7 +128,7 @@ export const services: ServicePage[] = [
           'An enquiry that has not been answered stays visible instead of disappearing below the fold of an inbox.',
       },
     ],
-    integrations: ['WhatsApp', 'Gmail', 'Slack', 'Telegram', 'Google Sheets', 'Airtable', 'Notion'],
+    integrations: ['WhatsApp', 'Gmail', 'Slack', 'Telegram', 'Microsoft Excel', 'Airtable', 'Notion', 'Google Sheets'],
     faqs: [
       {
         id: 'faq-lead-capture-channels',
@@ -311,13 +311,13 @@ export const services: ServicePage[] = [
           'Because the pipeline is written by the system that did the work, the daily summary is describing the business rather than the data-entry backlog.',
       },
     ],
-    integrations: ['HubSpot', 'Pipedrive', 'GoHighLevel', 'Google Sheets', 'Airtable', 'Notion', 'Gmail', 'WhatsApp'],
+    integrations: ['HubSpot', 'Pipedrive', 'GoHighLevel', 'Microsoft Excel', 'Airtable', 'Notion', 'Gmail', 'WhatsApp', 'Google Sheets'],
     faqs: [
       {
         id: 'faq-crm-which',
         question: 'Which CRMs are supported?',
         answer:
-          'HubSpot, Pipedrive and GoHighLevel are the ones most commonly connected. Anything exposing an API or webhook can be connected, and where a business keeps records in Google Sheets, Airtable or Notion instead, those are wired the same way.',
+          'HubSpot, Pipedrive and GoHighLevel are the ones most commonly connected. Where a business keeps its records in Microsoft Excel instead — on OneDrive, SharePoint or a plain file — that is wired the same way and needs no Google Workspace account. Airtable, Notion and Google Sheets are supported equally. Anything exposing an API or webhook can be connected.',
       },
       {
         id: 'faq-crm-migrate',
@@ -373,7 +373,7 @@ export const services: ServicePage[] = [
           'An enquiry with no reply, a booking with no confirmation, an invoice past its date. The report names what is stuck instead of leaving you to notice its absence.',
       },
     ],
-    integrations: ['Gmail', 'Slack', 'WhatsApp', 'Google Sheets', 'Airtable', 'Notion', 'HubSpot', 'Pipedrive', 'Google Calendar', 'Stripe'],
+    integrations: ['Gmail', 'Slack', 'WhatsApp', 'Microsoft Excel', 'Airtable', 'Notion', 'HubSpot', 'Pipedrive', 'Google Calendar', 'Stripe', 'Google Sheets'],
     faqs: [
       {
         id: 'faq-reports-whats-in-it',
@@ -435,7 +435,7 @@ export const services: ServicePage[] = [
           'The moment an invoice is marked paid the follow-ups stop. Chasing someone who has already paid is the failure mode that makes businesses abandon reminders entirely.',
       },
     ],
-    integrations: ['Stripe', 'QuickBooks', 'WhatsApp', 'Gmail', 'Google Sheets', 'Make'],
+    integrations: ['Stripe', 'QuickBooks', 'WhatsApp', 'Gmail', 'Microsoft Excel', 'Make', 'Google Sheets'],
     faqs: [
       {
         id: 'faq-invoices-tone',
@@ -447,7 +447,7 @@ export const services: ServicePage[] = [
         id: 'faq-invoices-tools',
         question: 'Which invoicing tools does this work with?',
         answer:
-          'Stripe and QuickBooks are the ones most commonly connected. Where invoices are tracked in Google Sheets instead, that works the same way. Anything exposing an API or webhook can be connected, and the payment status is always read from the system that issued the invoice rather than maintained separately.',
+          'Stripe and QuickBooks are the ones most commonly connected. Where invoices are tracked in a Microsoft Excel workbook instead — which is where most Indian businesses already keep them — that works the same way, with no Google Workspace account required. Google Sheets is supported on the same footing. Anything exposing an API or webhook can be connected, and the payment status is always read from the system that issued the invoice rather than maintained separately.',
       },
       {
         id: 'faq-invoices-control',

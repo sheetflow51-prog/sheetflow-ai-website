@@ -109,7 +109,7 @@ Index: ${SITE_URL}/work
 ## Integrations
 
 WhatsApp, Gmail, Slack, Telegram, Google Calendar, Calendly, HubSpot,
-Pipedrive, GoHighLevel, Google Sheets, Airtable, Notion, Stripe, QuickBooks,
+Pipedrive, GoHighLevel, Microsoft Excel, Airtable, Notion, Google Sheets, Stripe, QuickBooks,
 Make. Anything exposing an API or webhook can be connected.
 
 ## How engagements start
