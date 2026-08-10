@@ -63,17 +63,19 @@ traces.
 
 ## 3. Screenshots
 
-Captured from a production build whose `BUILD_ID` was matched against the served
-HTML first, at 1440×900 and Pixel 7.
+In `10_Final_Website/release-preview-vos/`. Captured from a production build
+whose `BUILD_ID` was matched against the served HTML first, at 1440×900 and
+Pixel 7. Gitignored under the existing `release-preview*/` rule — these are
+regenerable review artifacts, not source.
 
 | Frame | What it shows |
 |---|---|
 | `before/desktop.png` | Five identical cards, cramped titles, near-invisible connectors |
-| `final/desktop-view-1.png` | The held chapter beside stages 01–02 |
-| `final/desktop-view-2.png` | The chapter still held; the gold booked slot is the only focal point on screen |
-| `final/desktop-view-3.png` | End of the sequence |
-| `final/desktop-full.png` | The whole section as one still |
-| `final/mobile-view-*.png` | The sticky column collapsed to normal flow; spine and artifacts intact at 412px |
+| `after/desktop-view-1.png` | The held chapter beside stages 01–02 |
+| `after/desktop-view-2.png` | The chapter still held; the gold booked slot is the only focal point on screen |
+| `after/desktop-view-3.png` | End of the sequence |
+| `after/desktop-full.png` | The whole section as one still |
+| `after/mobile-view-*.png` | The sticky column collapsed to normal flow; spine and artifacts intact at 412px |
 
 **The capture harness needed fixing before it could tell the truth**, and that is
 worth recording because the first pass lied twice:
