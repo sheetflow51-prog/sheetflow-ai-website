@@ -2,11 +2,60 @@
 
 ## Current Milestone
 
-M01 · **Release Candidate 2 — Visual Polish & Launch Candidate**
+M01 · **Release Candidate 4 — The Blueprint and the Stage**
 
 ## Current Status
 
-**RC2 is complete and running locally. Awaiting founder decisions to ship.**
+**RC4 is complete and running locally. Awaiting founder decisions to ship.**
+
+Full write-up: [`docs/RC4_SUMMARY.md`](docs/RC4_SUMMARY.md). Design rules:
+[`docs/DESIGN_OS.md`](docs/DESIGN_OS.md).
+
+RC4 paid the debt RC3 wrote down by name — the `AIInfrastructure` trunk diagram,
+whose six branches wrapped to two rows so a distribution bus could only reach the
+first — and took the next section with it. `AIInfrastructure` is now a bilateral
+tree (hub left, six connected branch rows right) and `DigitalCraft` is a browser
+frame that switches between four kinds of build.
+
+**Both ship zero JavaScript.** Neither holds state, so neither needs a client
+boundary: the tree's connectors are CSS pseudo-elements and the device stage is
+four visually-hidden radios driving `:checked ~` selectors. Between them they
+dropped `framer-motion` from two client components.
+
+```
+  js    gzip   351.6 kB  →  349.1 kB   −2.5 kB   (budget 360)
+  css   gzip    12.8 kB  →   14.0 kB   +1.2 kB   (budget  40)
+  largest chunk 69.2 kB  →   69.2 kB   unchanged (budget 170)
+```
+
+Verified this build: types clean · lint 0 errors / 8 pre-existing warnings ·
+build green · **axe 0 violations, 34/34** · **full 418-test Playwright suite:
+408 passed, 10 skipped, 0 failed in 8.5 minutes** · zero new dependencies.
+
+That retires an RC3 caveat by measurement: RC3's suite took 3.0 hours and ended
+with two timeouts it *argued* were machine-load artifacts. Same suite, 8.5
+minutes, zero failures.
+
+**Running count on RC3's diagnosis:** five homepage sections were literally the
+same object; **three are now replaced**. `WorkflowPipeline` and
+`FeatureStorytelling` remain, and are the RC5 list.
+
+**One conflict resolved in the open.** The RC4 brief asked for nine visual
+styles; `SHEETFLOW_VISUAL_DNA.md` § 9 rejects three by name and § 7 rules out a
+fourth. Each was split into the structural principle it encodes and the surface
+treatment it usually arrives with — principles used, surfaces refused — with a
+one-sentence founder override left open in `DESIGN_OS.md` § 1.
+
+**Also this session:** the entire RC2 and RC3 programme had never been
+committed. 35 modified and 16 untracked files, verified against a production
+build and absent from git. The full gate was re-run rather than trusted; every
+number reproduced. Commit `a81ded0`.
+
+---
+
+## Previous — Release Candidate 2
+
+**RC2 is complete and running locally.**
 
 RC2 was a visual polish pass on finished engineering — no architecture changes,
 no section rebuilds, and **no client JavaScript**, because the phase opened with

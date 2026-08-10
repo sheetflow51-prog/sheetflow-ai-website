@@ -212,19 +212,34 @@ Recorded so the next session does not rediscover them — and, more usefully,
 **re-tests them**, because this phase proved that a recorded unavailability can
 be stale.
 
-| Capability | State | Consequence |
+**Re-tested in RC4 (2026-08-10). Two rows changed, and one of them changed for
+the worse — see the note under the table.**
+
+| Capability | State (RC4) | Consequence |
 |---|---|---|
-| **GitHub MCP** | ⛔ auth — *"Incompatible auth server: does not support dynamic client registration"* | An OAuth capability mismatch, not a login gate. Non-interactive sessions cannot complete it. **Fully substituted** by `gh` CLI and direct HTTP |
-| **Netlify MCP** | ✅ **WORKED THIS PHASE** | Recorded as ⛔ 502 by two prior phases. The 502 was transient. **This is the entry that justifies the whole table being re-tested** |
-| **Context7 MCP** | ✅ available, not needed | No unfamiliar library API was touched — a third variant on an existing union, typed content, Markdown |
-| **21st.dev / Magic MCP** | ⛔ not installed, needs an API key | See D15. Zero components were wanted from it this phase anyway; see `OPEN_SOURCE_MANIFEST.md` |
-| **chrome-devtools MCP** | ❌ not exposed | No impact — the repo's own CDP tooling (`npm run trace`, `npm run profile`) covers it |
-| **Vercel MCP** | ⛔ authenticated to the wrong account (D3) | CLI used instead where needed |
+| **GitHub MCP** | ⛔ auth | Unchanged. Non-interactive sessions cannot complete OAuth. **Fully substituted** by `gh` CLI and direct HTTP |
+| **Netlify MCP** | ✅ available | Still connected. Not needed this phase |
+| **Context7 MCP** | ⛔ **did not connect** — *was ✅ in Phase Z* | Configured in `.mcp.json`; no tools surfaced. Substituted by `WebFetch` against the Magic UI shadcn registry, which is how `Safari`'s source was read |
+| **21st.dev / Magic MCP** | ⛔ not installed, needs an API key | Unchanged. Nothing was wanted from it |
+| **chrome-devtools MCP** | ⛔ **configured, did not connect** | Sharper than the old *"not exposed"*: it **is** in `.mcp.json` and still unavailable. No impact — `npm run trace` / `npm run profile` cover it |
+| **playwright MCP** | ⛔ **did not connect** | No impact at all. The repo's own `@playwright/test` ran all 198 tests and every capture this phase |
+| **sequential-thinking MCP** | ⛔ did not connect | No impact |
+| **filesystem MCP** | ⛔ did not connect | No impact — built-in file tools cover it |
+| **Vercel MCP** | ⛔ authenticated to the wrong account (D3) | Unchanged. CLI used instead where needed |
+| Figma / Canva / Notion / Slack / Airtable / Calendly / Adobe / ElevenLabs / Google Workspace | ✅ available | **Deliberately unused.** The deliverable is production React and CSS in this repository, not a design file or a message |
 | Roboflow / Vaisala / Autodesk | ⛔ need auth | None relevant to this project |
 
-**Standing instruction for the next phase:** re-test every ⛔ row before
-repeating its conclusion. A capability recorded as unavailable in a past session
-is a hypothesis, not a fact.
+**The finding worth carrying forward: every stdio MCP this project configures is
+currently dead** — all five of them, `context7` included, which a previous phase
+recorded as working. None blocked anything, because five of the six were already
+substituted by tooling that lives in the repo. That is the argument for the
+repo's own `scripts/` directory existing, and it is why no phase here has ever
+depended on an MCP to verify a claim.
+
+**Standing instruction, reaffirmed:** re-test every row before repeating its
+conclusion — in **both** directions. Phase Z proved an unavailable capability can
+come back (Netlify). RC4 proved an available one can go away (Context7). A
+recorded capability state is a hypothesis with a date on it, not a fact.
 
 ---
 

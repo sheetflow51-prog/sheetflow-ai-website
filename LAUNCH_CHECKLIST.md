@@ -1,7 +1,7 @@
 # Launch Checklist
 
-> **Release Candidate 2 — Visual Polish & Launch Candidate.**
-> Last verified 2026-08-09 against a production build on branch
+> **Release Candidate 4 — The Blueprint and the Stage.**
+> Last verified 2026-08-10 against a production build on branch
 > `feat/m01-foundation`.
 >
 > **This checklist does not deploy anything.** Every item marked ⛔ needs a
@@ -19,21 +19,28 @@
 |---|---|---|---|
 | A1 | TypeScript | ✅ clean | `tsc --noEmit`, 0 errors |
 | A2 | Lint | ✅ 0 errors | 8 warnings, all pre-existing in `components/three/` |
-| A3 | Production build | ✅ green | 37 routes |
-| A4 | JS bundle | ✅ **351.0 kB** gzip / 360 kB | `scripts/audit-bundle.mjs` |
-| A5 | CSS bundle | ✅ **11.6 kB** gzip / 40 kB | same |
-| A6 | Largest chunk | ✅ 69.2 kB / 170 kB | same |
-| A7 | Playwright suite | ✅ see `RC2_SUMMARY.md` | full run, this build |
-| A8 | axe — WCAG 2.1 AA | ✅ 0 violations | 12 route/motion combinations |
-| A9 | CLS | ✅ **0.0000, 0 shifts** on `/work` and `/work/whatsapp-accounting-os` | `scripts/probe-cls.mjs`, live `PerformanceObserver`, this build |
-| A9b | Lighthouse, changed routes | ✅ perf **64 / 64**, a11y **100 / 100**, SEO **100 / 100** | mobile preset, median of 5, one batch with an unchanged control route |
-| A10 | Responsive | ✅ 360–1440 px | 10 routes × 5 breakpoints captured |
-| A11 | Reduced motion | ✅ honoured | 21 guarded files + global CSS rule; glyph delay gap closed in RC2 |
+| A3 | Production build | ✅ green | 30 static pages, 37 routes |
+| A4 | JS bundle | ✅ **349.1 kB** gzip / 360 kB | `scripts/audit-bundle.mjs`, RC4 |
+| A5 | CSS bundle | ✅ **14.0 kB** gzip / 40 kB | same |
+| A6 | Largest chunk | ✅ 69.2 kB / 170 kB | same, unchanged since RC2 |
+| A7 | Playwright suite | ✅ **408 passed / 10 skipped / 0 failed** | full suite, 418 tests, 8.5 min, this build |
+| A8 | axe — WCAG 2.1 AA | ✅ **0 violations, 34/34** | route × motion combinations, this build |
+| A9 | CLS | ✅ **0.0000, 0 shifts** on `/work` and `/work/whatsapp-accounting-os` | `scripts/probe-cls.mjs`, live `PerformanceObserver`, RC1 build |
+| A9b | Lighthouse, changed routes | ⚠️ **not re-measured in RC4** | RC2 recorded perf 64/64, a11y 100/100, SEO 100/100. RC4 changed two homepage sections; see the note below |
+| A10 | Responsive | ✅ 360–1440 px | 10 routes × 5 breakpoints captured (RC1 matrix); RC4 sections re-captured at 1440 and Pixel 7 |
+| A11 | Reduced motion | ✅ honoured | 21 guarded files + global CSS rule; RC4's two new signals and the hub glow added to the kill-switch block |
 
-**A4 note, stated rather than rounded away:** RC2 opened at 350.9 kB and closed
-at 351.0 kB. The +0.1 kB is `lib/motion.ts`, a constants module. The phase's
-own target was "no increase"; it increased by one tenth of a kilobyte. Recorded
-because a target that quietly moves is not a target.
+**A4 note — the direction of travel changed.** RC2 closed at 351.0 kB and RC3 at
+351.6 kB, both increases. **RC4 closed at 349.1 kB, a 2.5 kB reduction**, because
+`AIInfrastructure` and `DigitalCraft` both became server components and dropped
+`framer-motion` with them. CSS rose 12.8 → 14.0 kB, which is the trade: the
+motion moved from the JS budget to the CSS budget, where there is 26 kB spare.
+
+**A9b note, stated rather than assumed.** Lighthouse was **not** re-run in RC4.
+The homepage's known 52 mobile score (§ G) is untouched, and RC4 removed
+JavaScript and added no network requests, so there is no mechanism for a
+regression — but that is an argument, not a measurement, and it is not recorded
+as one. Re-run it as a fresh batch before deploying (§ E).
 
 ---
 

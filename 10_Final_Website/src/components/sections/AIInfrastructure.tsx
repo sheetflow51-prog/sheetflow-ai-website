@@ -1,25 +1,78 @@
-'use client';
-
-import { useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
 import { MessageCircle, Users, CalendarClock, Workflow, CreditCard, Boxes } from 'lucide-react';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { Breathing } from '@/components/motion/Breathing';
-import { prefersReducedMotion } from '@/lib/utils';
-import { EASE } from '@/lib/motion';
+
+/**
+ * AI Infrastructure — the distribution bus.
+ *
+ * ## What this replaces, and why it was the top of the RC4 list
+ *
+ * RC3 planned this section as "Move 4" and **did not deliver it**, for a reason
+ * it recorded honestly (`docs/RC3_SUMMARY.md` § 7): the six branches wrapped to
+ * two rows at `lg:grid-cols-3`, so a distribution bus could only connect the
+ * first row. A half-connected diagram reads worse than a clean grid, so the
+ * clean grid stayed and the debt was written down.
+ *
+ * The fix is the one RC3 named: a **bilateral tree** — hub on the left,
+ * branches on the right, one row per branch. That is a layout change rather
+ * than a polish change, which is why it needed its own phase.
+ *
+ * ## Why every connector is CSS, and there is no SVG
+ *
+ * The obvious implementation is an SVG bus in a gutter column, with one curve
+ * per branch. It was written and rejected on a specific defect: branch rows are
+ * content-sized (a category with six tool chips is taller than one with two),
+ * so the curve endpoints are unknown until layout runs. Every escape from that
+ * costs something real:
+ *
+ *   - Measure at runtime → `getBoundingClientRect` in an effect under a
+ *     `ResizeObserver`, which is precisely the Magic UI `AnimatedBeam` cost
+ *     model RC3 rejected for the Automation Universe.
+ *   - Fix the row heights → chips overflow at the `md` breakpoint, where the
+ *     branch column is at its narrowest.
+ *   - `preserveAspectRatio="none"` with proportional geometry → correct, and it
+ *     was the near-miss. Non-uniform scale distorts the travelling signal: a
+ *     4px dot renders as a 1.35:1 ellipse in the gutter's real aspect ratio.
+ *     `vector-effect` fixes strokes, not shapes.
+ *
+ * A vertical spine with horizontal stubs needs **no coordinate system at all**.
+ * It is also the canonical way this diagram is drawn everywhere it is drawn for
+ * real — n8n, Zapier and AWS architecture diagrams all use a bus and stubs, not
+ * a fan of curves. Nothing is measured, so nothing can drift.
+ *
+ * ## Why this is a server component
+ *
+ * The previous revision was `'use client'` and imported `framer-motion`,
+ * `useInView`, `Breathing` and `prefersReducedMotion` to run an entrance reveal,
+ * a breathing hub and one trunk signal. None of that needs state: they are three
+ * animations that play on their own schedule. Moved to CSS, the section holds no
+ * state, so it ships **zero JavaScript** — this change *removes* bundle weight
+ * rather than adding it. Same conclusion the Automation Universe reached.
+ *
+ * ## Accessibility
+ *
+ * Every connector is a pseudo-element, so the tree is decoration that assistive
+ * technology never sees, and the content is a plain nested list: six categories,
+ * each with its tools. The travelling signal is behind
+ * `prefers-reduced-motion: no-preference` in the stylesheet.
+ */
 
 interface Branch {
   id: string;
   label: string;
   Icon: typeof MessageCircle;
+  /** Icon tint. A token class, never a raw hex. */
   tint: string;
   tools: string[];
 }
 
-// Grouped into a hierarchy (root → category → tools) so the layout is pure
-// flow/grid — alignment is automatic and cannot drift, unlike a radial where
-// every node's position was hand-computed. This is the mindmap the client
-// asked for: one hub, clear branches, tools hanging off each branch.
+/**
+ * The six categories, carried over from the previous revision **verbatim**.
+ *
+ * RC4 is a visual phase and writes no marketing copy: every string below is
+ * already published and already reviewed, so no diagram can drift out of
+ * agreement with the page it sits on. Same rule RC2 used for `WorkflowGlyph`
+ * and RC3 used for the Automation Universe.
+ */
 const BRANCHES: Branch[] = [
   {
     id: 'messaging',
@@ -32,7 +85,7 @@ const BRANCHES: Branch[] = [
     id: 'crm',
     label: 'CRM & Pipeline',
     Icon: Users,
-    tint: 'text-violet-bright',
+    tint: 'text-gold-bright',
     tools: ['HubSpot', 'Pipedrive', 'GoHighLevel', 'Airtable'],
   },
   {
@@ -53,7 +106,7 @@ const BRANCHES: Branch[] = [
     id: 'payments',
     label: 'Payments',
     Icon: CreditCard,
-    tint: 'text-violet',
+    tint: 'text-gold',
     tools: ['Stripe', 'QuickBooks'],
   },
   {
@@ -66,12 +119,8 @@ const BRANCHES: Branch[] = [
 ];
 
 export function AIInfrastructure() {
-  const ref = useRef<HTMLElement>(null);
-  const inView = useInView(ref, { once: true, margin: '-10%' });
-  const flow = inView && !prefersReducedMotion();
-
   return (
-    <section ref={ref} id="integrations" className="section relative">
+    <section id="integrations" className="section relative">
       <div className="absolute inset-0 -z-10 grid-backdrop opacity-30" aria-hidden="true" />
 
       <div className="container-edge">
@@ -88,91 +137,62 @@ export function AIInfrastructure() {
           className="mx-auto items-center text-center"
         />
 
-        {/* ROOT NODE */}
-        <div className="mt-14 flex flex-col items-center md:mt-16">
-          <div className="relative">
-            <div
-              className="absolute inset-0 -m-8 rounded-full"
-              style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.4), transparent 70%)', filter: 'blur(22px)' }}
-              aria-hidden="true"
-            />
-            <Breathing period={6} amount={0.03}>
-              <div
-                className="relative flex h-24 w-24 items-center justify-center rounded-full border border-accent-bright/50 bg-surface-1/85 backdrop-blur-xl"
-                style={{ boxShadow: '0 0 44px rgba(59,130,246,0.5), inset 0 1px 0 rgba(255,255,255,0.12)' }}
-              >
-                <div className="text-center">
-                  <p className="font-display text-[12px] font-semibold tracking-tight text-white">SheetFlow</p>
-                  <p className="font-mono text-[8px] uppercase tracking-widest text-accent-bright">Automation</p>
-                </div>
-              </div>
-            </Breathing>
+        <div className="infra">
+          {/* The hub is drawn as a *plate*, not a disc, deliberately. The
+              Automation Universe already owns the radial core on this page, and
+              two glowing circles would be the same repetition RC3 exists to
+              remove. A stacked unit reads as infrastructure; a disc reads as a
+              second sun. The three rules are the logo mark
+              (SHEETFLOW_VISUAL_DNA.md § 6.1), which is what keeps them one
+              family rather than two unrelated drawings. */}
+          <div className="infra-hub">
+            <div className="infra-hub-plate">
+              <span className="infra-hub-rules" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+              </span>
+              <p className="infra-hub-name">SheetFlow</p>
+              <p className="infra-hub-role">Automation</p>
+            </div>
           </div>
 
-          {/* Trunk — vertical line down from the root, with a signal that
-              travels it on a loop (the "running" motif). */}
-          <div className="relative mt-3 h-10 w-px overflow-hidden bg-gradient-to-b from-accent-bright/60 to-accent-bright/10">
-            {flow && (
-              <motion.span
-                className="absolute left-1/2 h-3 w-px -translate-x-1/2 bg-accent-light"
-                style={{ boxShadow: '0 0 8px 1px rgba(147,197,253,0.8)' }}
-                initial={{ top: '-20%', opacity: 0 }}
-                animate={{ top: ['-20%', '120%'], opacity: [0, 1, 1, 0] }}
-                transition={{ duration: 2.2, repeat: Infinity, repeatDelay: 1.4, ease: 'easeInOut' }}
-              />
-            )}
-          </div>
-        </div>
-
-        {/* BRANCHES — a responsive grid so every card aligns perfectly (root →
-            trunk → balanced 2×3 grid of branch cards). */}
-        <div className="relative">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="infra-branches">
             {BRANCHES.map((b, i) => {
               const Icon = b.Icon;
               return (
-                <motion.div
+                <li
                   key={b.id}
-                  className="group relative flex flex-col rounded-2xl border border-white/[0.08] bg-surface-1/50 p-4 backdrop-blur-md transition-colors hover:border-accent/40"
-                  initial={{ opacity: 0, y: 22 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-10%' }}
-                  transition={{ duration: 0.6, delay: 0.1 * i, ease: EASE }}
+                  className="infra-branch"
+                  /* Stagger index for the travelling signal. One packet per
+                     stub, spaced so the bus reads as distributing top-to-bottom
+                     rather than pulsing all six at once — the same
+                     one-in-flight discipline as the Universe's beams. */
+                  style={{ '--i': i } as React.CSSProperties}
                 >
-                  {/* branch header */}
-                  <div className="flex items-center gap-2.5">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5">
-                      <Icon className={`h-4 w-4 ${b.tint}`} strokeWidth={2.2} aria-hidden="true" />
-                    </div>
-                    <p className="text-[13px] font-semibold leading-tight tracking-tight text-white">{b.label}</p>
-                  </div>
+                  <span className="infra-branch-badge">
+                    <Icon className={`h-4 w-4 ${b.tint}`} strokeWidth={2.2} aria-hidden="true" />
+                  </span>
 
-                  {/* tools */}
-                  <div className="mt-4 flex flex-wrap gap-1.5">
-                    {b.tools.map((t) => (
-                      <span
-                        key={t}
-                        className="rounded-full border border-accent/25 bg-surface-2/70 px-2.5 py-1 text-[11px] font-medium text-white/85 transition-colors group-hover:border-accent/45"
-                      >
-                        {t}
-                      </span>
-                    ))}
+                  <div className="infra-branch-body">
+                    <p className="infra-branch-label">{b.label}</p>
+                    <ul className="infra-tools">
+                      {b.tools.map((t) => (
+                        <li key={t} className="infra-tool">
+                          {t}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                </motion.div>
+                </li>
               );
             })}
-          </div>
+          </ul>
         </div>
 
-        <motion.p
-          className="mx-auto mt-10 max-w-md text-center text-[13px] text-ink-400 md:mt-12"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-        >
+        <p className="mx-auto mt-10 max-w-md text-center text-[13px] text-ink-400 md:mt-12">
           50+ integrations supported · Custom connections built on request · Your stack stays yours
-        </motion.p>
+        </p>
       </div>
     </section>
   );

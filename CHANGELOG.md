@@ -1,5 +1,117 @@
 # SheetFlow v2 Changelog
 
+## Release Candidate 4 — two more sections stop being the same rectangle, and the bundle gets smaller (2026-08-10)
+
+Full write-up: [`docs/RC4_SUMMARY.md`](docs/RC4_SUMMARY.md). The design rules
+that governed it, written first: [`docs/DESIGN_OS.md`](docs/DESIGN_OS.md).
+
+### Before anything else
+
+The working tree held **35 modified and 16 untracked files** — the whole RC2 and
+RC3 visual programme, verified against a production build and never committed.
+The full gate was re-run rather than trusting the phase documents; every number
+reproduced, and that is commit `a81ded0`. RC3 has no entry in this file because
+it never had a commit either.
+
+### The debt RC3 wrote down, now paid
+
+RC3 diagnosed that **five of nine homepage sections were literally the same
+object** and had budget to replace one. It also recorded, by name, the item it
+planned and failed to deliver: the `AIInfrastructure` trunk diagram, whose six
+branches wrapped to two rows so a distribution bus could only reach the first.
+
+RC4 built it as the bilateral tree RC3 prescribed — hub left, six branch rows
+right, every one connected — and took the next section down the list with it.
+
+**Three of five done.** The rounded-square-with-an-icon now appears **eleven**
+times on the homepage instead of twenty-five. `WorkflowPipeline` and
+`FeatureStorytelling` are the remaining two, and they are the RC5 list.
+
+### The connectors are CSS, and the alternative is recorded
+
+A curve per branch in an SVG gutter was written and abandoned: branch rows are
+content-sized, so the endpoints are unknown until layout runs. Runtime
+measurement is a `ResizeObserver` per branch — the Magic UI `AnimatedBeam` cost
+RC3 already rejected. Fixed row heights overflow at `md`. Proportional geometry
+under `preserveAspectRatio="none"` is correct but renders the travelling signal
+as a 1.35:1 ellipse, because `vector-effect` fixes strokes and not shapes.
+
+A spine with stubs needs no coordinate system, so nothing is measured and
+nothing can drift.
+
+### `DigitalCraft` shows the work instead of describing it
+
+Four glass cards become one browser frame that switches between websites,
+landing pages, dashboards and custom builds.
+
+The screens are **wireframes, and that is governance rather than taste**. Real
+captures live in `public/work/` and reusing them makes the homepage argue the
+same evidence twice; and there is no real capture for two of the four
+categories, so two panels would have to be invented — the thing D24 and the
+`ProjectEvidence` type exist to prevent. The frame says so on its face:
+*"Indicative layouts — every build is designed from scratch."*
+
+### Both sections now ship zero JavaScript
+
+Neither holds state, so neither needs a client boundary. `AIInfrastructure`
+dropped `framer-motion`, `useInView`, `Breathing` and `prefersReducedMotion`;
+`DigitalCraft` dropped `framer-motion`, `ScrollReveal` and `GlassCard` in favour
+of four visually-hidden radios and `:checked ~` selectors — which is also better
+assistive-technology behaviour, since a real radio group announces "1 of 4" and
+moves under arrow keys, where a `role="tablist"` without JavaScript advertises a
+keyboard contract it does not honour.
+
+```
+  js    gzip   351.6 kB  →  349.1 kB   −2.5 kB   (budget 360)
+  css   gzip    12.8 kB  →   14.0 kB   +1.2 kB   (budget  40)
+  largest chunk 69.2 kB  →   69.2 kB   unchanged (budget 170)
+```
+
+Two new interactive centerpieces, and the JavaScript bundle got smaller.
+
+### Two defects that only a screenshot could show
+
+**The wireframes rendered as solid black bars.** `` `craft-sh--${tone}` ``
+builds a class name that is a literal in no source file, and Tailwind
+tree-shakes custom `@layer components` rules its content scanner cannot find.
+All five tone rules were dropped and every `<rect>` fell back to SVG's default
+`fill: black`. Confirmed by grepping the built stylesheet — nothing before, all
+five after. Fixed with an explicit `Record<Tone, string>`.
+
+**The tree was too faint to read as a system**, shipped at `0.34` alpha and
+raised to `0.5` — the same value, for the same reason, RC3 reached for its beams
+after making the same mistake.
+
+### Verified
+
+Types clean · lint 0 errors, 8 pre-existing warnings · build green, 30 static
+pages · **axe 0 violations, 34/34** · **the full 418-test Playwright suite: 408
+passed, 10 skipped, 0 failed, in 8.5 minutes** · all three bundle budgets met ·
+**zero new dependencies**.
+
+That last number closes something RC3 left open. RC3's suite took **3.0 hours**
+and ended with two `axe.analyze()` timeouts on an untouched route, which it
+argued were load artifacts from stale `node` processes rather than regressions.
+The argument was sound but it was an argument. The same suite now runs in 8.5
+minutes with zero failures, which settles it.
+
+Not measured, and labelled as such: Lighthouse. The homepage's 52 mobile score
+is real and untouched. RC4 removed JavaScript and added no requests, so there is
+no mechanism for a regression — but that is an argument, not a measurement.
+
+### A design conflict, resolved in the open
+
+The RC4 brief asked for nine visual styles. `SHEETFLOW_VISUAL_DNA.md` § 9
+rejects three of them by name — skeuomorphism, brutalism, and the faux-3D family
+neomorphism and claymorphism sit in — and § 7 rules out maximalism. Each was
+split into the *structural principle* it encodes and the *surface treatment* it
+usually arrives with: the principles are used, the surfaces are not. Hence a
+browser frame (object-mimicry, deliberate) drawn flat in brand tokens, with grey
+dots rather than macOS traffic lights. `DESIGN_OS.md` § 1 sets out the split and
+leaves the founder a one-sentence override.
+
+---
+
 ## Release Candidate 2 — half the portfolio looked broken, and the fix was already in the data (2026-08-09)
 
 A visual polish pass on finished engineering. No architecture changes, no

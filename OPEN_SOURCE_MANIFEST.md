@@ -315,3 +315,74 @@ Radix and Motion Primitives confirmed MIT. Nothing was vendored this release.
 unchanged — three.js r128 via cdnjs in the AK Dental build, Chart.js 4.4.1 via
 jsDelivr in the Saraswati dashboard. Both belong to deployments our case studies
 *describe*; neither enters this repository's dependency graph.
+
+---
+
+## Release Candidate 4 — 2026-08-10
+
+Two homepage sections were rebuilt: `AIInfrastructure` (distribution bus) and
+`DigitalCraft` (device stage). Both are cases where the policy says to look
+first, and the record of looking is the point.
+
+### Retrieved and read in full
+
+| Source | Component | Licence | Outcome |
+|---|---|---|---|
+| Magic UI | `Safari` | MIT | **Structure adapted, surface refused** |
+| Magic UI | `AnimatedBeam` | MIT | Re-confirmed the RC3 rejection; see below |
+
+`Safari`'s registry source was fetched from `magicui.design/r/safari.json` and
+read end to end. Three ideas in it are good and were kept, in spirit rather
+than by copy:
+
+- The screen box is derived from named constants (`SCREEN_X`, `SCREEN_WIDTH`…)
+  rather than hand-tuned offsets, so the frame and its contents cannot drift.
+- An `aspect-ratio` wrapper scales the whole thing with no measurement.
+- The chrome is one flat layer, not a stack of shadowed divs.
+
+Two were dropped, for stated reasons:
+
+- **The `safariPunch` mask.** It exists so injected media (`imageSrc`,
+  `videoSrc`) can sit *behind* SVG chrome with the window's rounded bottom
+  clipping it. Nothing is injected here — the screens are drawn — so the mask
+  solves a problem this component does not have, and carrying it would be ~40
+  lines of `mask`/`clipPath` defs earning nothing.
+- **The photoreal macOS toolbar** — traffic lights in red/amber/green, the
+  reload and sidebar glyphs, the lock icon. `SHEETFLOW_VISUAL_DNA.md` § 9
+  rejects this by name as *"Skeuomorphism 2.0 … reads as nostalgic"*. The dots
+  are kept as three flat grey circles: the *object* is recognisable, the
+  *surface* is not imitated.
+
+**Nothing was vendored.** No file from Magic UI is in this repository. What was
+taken is an approach, which is what the MIT licence makes free and what
+attribution here records anyway.
+
+### Why `AnimatedBeam` was rejected a second time
+
+RC4's first draft of the infrastructure bus was an SVG gutter with one curve per
+branch, which is `AnimatedBeam`'s exact shape. It failed on the same axis RC3
+found: branch rows are content-sized, so endpoints are unknown until layout
+runs, and the library's answer — `getBoundingClientRect` in an effect under a
+`ResizeObserver`, one per beam — is six observers and a frame of pop-in for a
+diagram that never moves.
+
+The shipped connector is a CSS spine with per-row stubs. It needs no coordinate
+system at all, so there is nothing to measure and nothing to re-measure.
+
+### Surveyed, nothing taken
+
+**Aceternity UI, React Bits, Motion Primitives, Origin UI, shadcn/ui registry.**
+Every candidate for these two sections is WebGL (~150 kB gzip against 8.4 kB of
+headroom), Lottie/Rive (35–80 kB of runtime for motion that cannot respond to
+hover or focus), or a scroll effect built on a motion library this phase was
+removing rather than adding. `21st.dev / Magic MCP` remains not installed and
+needs an API key; nothing was wanted from it.
+
+**Licensing findings unchanged** from the Phase H audit and re-confirmed here:
+Origin UI AGPL-3.0, React Bits NOASSERTION, `21st-dev/magic-mcp` no LICENSE;
+shadcn/ui, Magic UI, Radix and Motion Primitives confirmed MIT.
+
+### Dependencies added
+
+**Zero** — in RC3 and RC4 both. The two new sections between them *removed*
+`framer-motion` from two client boundaries and cut 2.5 kB of gzipped JavaScript.

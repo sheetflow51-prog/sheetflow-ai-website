@@ -1274,6 +1274,590 @@
     }
   }
 
+  /* ======================================================================
+     RC4 — INFRASTRUCTURE DISTRIBUTION BUS
+     See `components/sections/AIInfrastructure.tsx` for why there is no SVG
+     here: branch rows are content-sized, so curve endpoints are unknown until
+     layout runs, and every way of learning them costs either a ResizeObserver
+     per branch or a distorted signal under `preserveAspectRatio="none"`.
+     A spine with stubs needs no coordinate system, so nothing can drift.
+     ====================================================================== */
+
+  /* Capped and centred for the same reason `.universe` is: at the full
+     container width the six branch rows stretch to ~925px while their chips
+     fill about 40% of that, so each row ends in a long empty gutter and the
+     tree reads as sparse rather than as tidy. Measured on a 1440 capture. */
+  .infra {
+    margin-top: 56px;
+    margin-inline: auto;
+    max-width: 1040px;
+  }
+
+  /* ---------- Hub plate ---------- */
+  .infra-hub {
+    position: relative;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* The ambient glow, and the only thing that breathes. The `Breathing`
+     component this replaces scaled the hub itself — which would now also scale
+     the trunk leaving it, so the connector would visibly change length on a
+     6s loop. Opacity and transform on a detached glow are composited and move
+     nothing structural. */
+  .infra-hub::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 210px;
+    height: 210px;
+    transform: translate(-50%, -50%);
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.32), transparent 70%);
+    filter: blur(26px);
+    pointer-events: none;
+    animation: infra-breathe 6s ease-in-out infinite;
+  }
+
+  @keyframes infra-breathe {
+    0%,
+    100% {
+      opacity: 0.72;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.06);
+    }
+  }
+
+  .infra-hub-plate {
+    position: relative;
+    z-index: 1;
+    width: 168px;
+    padding: 18px 16px 16px;
+    border-radius: 18px;
+    text-align: center;
+    background: linear-gradient(170deg, rgba(26, 31, 46, 0.96), rgba(10, 11, 15, 0.96));
+    border: 1px solid rgba(147, 197, 253, 0.28);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.08) inset,
+      0 18px 50px rgba(0, 0, 0, 0.5),
+      0 0 40px rgba(59, 130, 246, 0.16);
+  }
+
+  /* The trunk. Vertical below md, horizontal at md+ — see the media query. */
+  .infra-hub-plate::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    width: 1px;
+    height: 36px;
+    background: linear-gradient(180deg, rgba(147, 197, 253, 0.7), rgba(147, 197, 253, 0.2));
+  }
+
+  /* The logo's three stacked rules — spreadsheet rows
+     (SHEETFLOW_VISUAL_DNA.md § 6.1). This is what keeps the hub and the
+     Automation Universe's core one family rather than two unrelated drawings,
+     while the plate silhouette keeps them from reading as the same object. */
+  .infra-hub-rules {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 11px;
+  }
+
+  .infra-hub-rules i {
+    display: block;
+    height: 2px;
+    border-radius: 2px;
+    background: rgba(147, 197, 253, 0.75);
+  }
+
+  .infra-hub-rules i:nth-child(1),
+  .infra-hub-rules i:nth-child(3) {
+    width: 26px;
+  }
+
+  .infra-hub-rules i:nth-child(2) {
+    width: 34px;
+  }
+
+  .infra-hub-name {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #ffffff;
+  }
+
+  .infra-hub-role {
+    margin-top: 2px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: rgb(var(--color-accent-light));
+  }
+
+  /* ---------- Branches ---------- */
+  .infra-branches {
+    position: relative;
+    list-style: none;
+    margin: 36px 0 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+  }
+
+  .infra-branch {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(15, 17, 23, 0.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .infra-branch:hover {
+    border-color: rgba(59, 130, 246, 0.4);
+  }
+
+  /* Opaque, because the stub passes behind it. */
+  .infra-branch-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    background: linear-gradient(160deg, rgba(26, 31, 46, 0.97), rgba(10, 11, 15, 0.97));
+    border: 1px solid rgba(147, 197, 253, 0.18);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.06) inset,
+      0 6px 18px rgba(0, 0, 0, 0.45);
+  }
+
+  .infra-branch-label {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: #ffffff;
+  }
+
+  .infra-tools {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .infra-tool {
+    border-radius: 999px;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    background: rgba(15, 17, 23, 0.7);
+    padding: 3px 9px;
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.85);
+    transition: border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .infra-branch:hover .infra-tool {
+    border-color: rgba(59, 130, 246, 0.45);
+  }
+
+  /* ---------- md+ : the bilateral tree ----------
+     Below this width the tree is dropped entirely and the hub simply sits above
+     six stacked cards. A 168px hub plus a 64px gutter leaves ~128px of branch
+     row at 360px, which is narrower than the word "GoHighLevel". Same call the
+     Automation Universe makes when it drops its SVG: the DOM and the copy are
+     identical, only the decorative geometry differs. */
+  @media (min-width: 768px) {
+    .infra {
+      margin-top: 64px;
+      display: grid;
+      /* The gap IS the trunk length — they are declared together so a change to
+         one cannot silently detach the hub from the spine. */
+      grid-template-columns: 168px 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .infra-hub {
+      justify-content: flex-start;
+    }
+
+    .infra-hub-plate::after {
+      top: 50%;
+      left: 100%;
+      width: 40px;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(147, 197, 253, 0.7), rgba(147, 197, 253, 0.45));
+    }
+
+    .infra-branches {
+      margin-top: 0;
+      padding-left: 64px;
+    }
+
+    /* The spine. Both ends fade to transparent, so it does not matter that the
+       first and last rows are content-sized and their centres are unknown —
+       there is no hard endpoint to land wrong. Same trick as
+       `.universe-nodes::before`. */
+    .infra-branches::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: linear-gradient(
+        180deg,
+        transparent,
+        rgba(147, 197, 253, 0.5) 10%,
+        rgba(147, 197, 253, 0.5) 90%,
+        transparent
+      );
+    }
+
+    /* The stub, from the spine to this row. `-64px` is the branches column's
+       own padding, so the two are the same measurement by construction. */
+    .infra-branch::before {
+      content: '';
+      position: absolute;
+      left: -64px;
+      top: 50%;
+      width: 64px;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(147, 197, 253, 0.5), rgba(147, 197, 253, 0.26));
+    }
+
+    /* The travelling packet. Painted as a background on the stub-width box and
+       moved with `translateX` — transform-only and composited, the same cost
+       model as the RC3 glyph signal. Six branches at 0.6s across a 3.6s cycle
+       puts exactly one packet in flight, honouring VISUAL_DNA.md § 2's cap of
+       three simultaneous motions. */
+    .infra-branch::after {
+      content: '';
+      position: absolute;
+      left: -64px;
+      top: 50%;
+      width: 64px;
+      height: 1px;
+      pointer-events: none;
+      background: radial-gradient(circle 3px at 3px 50%, rgba(191, 219, 254, 1), transparent 72%);
+      background-repeat: no-repeat;
+      animation: infra-travel 3.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+      animation-delay: calc(var(--i) * 0.6s);
+    }
+  }
+
+  @keyframes infra-travel {
+    0% {
+      transform: translateX(0);
+      opacity: 0;
+    }
+    12% {
+      opacity: 1;
+    }
+    72% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(calc(100% - 6px));
+      opacity: 0;
+    }
+  }
+
+  /* ======================================================================
+     RC4 — DIGITAL CRAFT DEVICE STAGE
+     Four visually-hidden radios drive everything below through `:checked ~`.
+     See `components/sections/DigitalCraft.tsx` for why a radio group rather
+     than a `role="tablist"`, and why the screens are wireframes.
+     ====================================================================== */
+
+  .craft {
+    position: relative;
+    margin-top: 48px;
+  }
+
+  /* Hidden from sight, never from the focus order. `display: none` here would
+     remove the radios from tab order and the entire control would stop working
+     for the keyboard — the one mistake this pattern actually punishes. */
+  .craft-radio {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .craft-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .craft-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 15px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(15, 17, 23, 0.6);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1;
+    color: rgb(var(--color-text-secondary));
+    cursor: pointer;
+    transition:
+      color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+      background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .craft-tab:hover {
+    color: #ffffff;
+    border-color: rgba(59, 130, 246, 0.35);
+  }
+
+  /* Index-based rather than `[for='craft-websites']`. The radios and the labels
+     are rendered from one array in one order, so position carries exactly the
+     same fact the `htmlFor` string does — and a selector that cannot mention a
+     slug cannot fall out of step with one that gets renamed. */
+  .craft-radio:nth-of-type(1):checked ~ .craft-tabs .craft-tab:nth-child(1),
+  .craft-radio:nth-of-type(2):checked ~ .craft-tabs .craft-tab:nth-child(2),
+  .craft-radio:nth-of-type(3):checked ~ .craft-tabs .craft-tab:nth-child(3),
+  .craft-radio:nth-of-type(4):checked ~ .craft-tabs .craft-tab:nth-child(4) {
+    color: #ffffff;
+    border-color: rgba(59, 130, 246, 0.5);
+    background: rgba(59, 130, 246, 0.12);
+  }
+
+  /* The radio is invisible, so its focus ring has to be borrowed by the label
+     it controls, or a keyboard user is moving through this control blind. */
+  .craft-radio:nth-of-type(1):focus-visible ~ .craft-tabs .craft-tab:nth-child(1),
+  .craft-radio:nth-of-type(2):focus-visible ~ .craft-tabs .craft-tab:nth-child(2),
+  .craft-radio:nth-of-type(3):focus-visible ~ .craft-tabs .craft-tab:nth-child(3),
+  .craft-radio:nth-of-type(4):focus-visible ~ .craft-tabs .craft-tab:nth-child(4) {
+    outline: 2px solid rgb(var(--color-accent-light));
+    outline-offset: 3px;
+  }
+
+  /* ---------- The frame ---------- */
+  .craft-stage {
+    margin-top: 22px;
+  }
+
+  .craft-frame {
+    margin-inline: auto;
+    max-width: 880px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(10, 11, 15, 0.9);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.07) inset,
+      0 30px 80px rgba(0, 0, 0, 0.55);
+  }
+
+  .craft-chrome {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 40px;
+    padding: 0 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    background: linear-gradient(180deg, rgba(26, 31, 46, 0.85), rgba(15, 17, 23, 0.85));
+  }
+
+  /* Three dots, flat and unlit. Rendered in traffic-light colours this becomes
+     the macOS pastiche `SHEETFLOW_VISUAL_DNA.md` § 9 rejects as
+     "Skeuomorphism 2.0" — the window is a recognisable object, not an imitated
+     surface. */
+  .craft-dots {
+    display: inline-flex;
+    flex: none;
+    gap: 6px;
+  }
+
+  .craft-dots i {
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .craft-omnibox {
+    position: relative;
+    flex: 1;
+    height: 22px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .craft-url {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    padding-left: 12px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-style: normal;
+    letter-spacing: 0.02em;
+    color: rgb(var(--color-text-tertiary));
+    opacity: 0;
+    transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .craft-screen {
+    position: relative;
+    aspect-ratio: 640 / 380;
+    overflow: hidden;
+    background: linear-gradient(180deg, rgba(15, 17, 23, 0.6), rgba(10, 11, 15, 0.6));
+  }
+
+  .craft-panel {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .craft-screen-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* The wireframe palette. Five tones is the whole vocabulary — enough to show
+     hierarchy, too few to start looking like a screenshot. */
+  .craft-sh--dim {
+    fill: rgba(255, 255, 255, 0.06);
+  }
+
+  .craft-sh--line {
+    fill: rgba(255, 255, 255, 0.11);
+  }
+
+  .craft-sh--mid {
+    fill: rgba(255, 255, 255, 0.19);
+  }
+
+  .craft-sh--accent {
+    fill: rgba(96, 165, 250, 0.42);
+  }
+
+  .craft-sh--gold {
+    fill: rgba(244, 192, 99, 0.45);
+  }
+
+  /* One sweep across the glass, so the frame reads as a screen that is on
+     rather than a picture of one. A single element on the compositor. */
+  .craft-sheen {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      105deg,
+      transparent 38%,
+      rgba(255, 255, 255, 0.06) 50%,
+      transparent 62%
+    );
+    transform: translateX(-100%);
+    animation: craft-sheen 7s ease-in-out infinite;
+  }
+
+  @keyframes craft-sheen {
+    0%,
+    62% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .craft-note {
+    margin-top: 12px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  /* ---------- Caption, swapped in place ---------- */
+  .craft-captions {
+    position: relative;
+    margin-top: 18px;
+    min-height: 46px;
+  }
+
+  .craft-caption {
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    margin-inline: auto;
+    max-width: 520px;
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgb(var(--color-text-secondary));
+    opacity: 0;
+    transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Everything the selected radio reveals, in one rule: its screen, its address
+     bar and its caption all cross-fade together. */
+  .craft-radio:nth-of-type(1):checked ~ .craft-stage .craft-panel:nth-child(1),
+  .craft-radio:nth-of-type(1):checked ~ .craft-stage .craft-url:nth-child(1),
+  .craft-radio:nth-of-type(1):checked ~ .craft-captions .craft-caption:nth-child(1),
+  .craft-radio:nth-of-type(2):checked ~ .craft-stage .craft-panel:nth-child(2),
+  .craft-radio:nth-of-type(2):checked ~ .craft-stage .craft-url:nth-child(2),
+  .craft-radio:nth-of-type(2):checked ~ .craft-captions .craft-caption:nth-child(2),
+  .craft-radio:nth-of-type(3):checked ~ .craft-stage .craft-panel:nth-child(3),
+  .craft-radio:nth-of-type(3):checked ~ .craft-stage .craft-url:nth-child(3),
+  .craft-radio:nth-of-type(3):checked ~ .craft-captions .craft-caption:nth-child(3),
+  .craft-radio:nth-of-type(4):checked ~ .craft-stage .craft-panel:nth-child(4),
+  .craft-radio:nth-of-type(4):checked ~ .craft-stage .craft-url:nth-child(4),
+  .craft-radio:nth-of-type(4):checked ~ .craft-captions .craft-caption:nth-child(4) {
+    opacity: 1;
+  }
+
+  @media (min-width: 768px) {
+    .craft {
+      margin-top: 56px;
+    }
+
+    .craft-tab {
+      font-size: 13.5px;
+      padding: 10px 18px;
+    }
+  }
+
   /* ---------- RC3 reduced motion ---------- */
   /* `VISUAL_DNA.md` § 5: reduced motion is a kill switch, never a slow-mo.
      The global rule collapses `animation-duration` to 0.01ms, which would make
@@ -1286,15 +1870,27 @@
   @media (prefers-reduced-motion: reduce) {
     .universe-signal,
     .glyph-panel .glyph-link::after,
-    .glyph-rail .glyph-link::after {
+    .glyph-rail .glyph-link::after,
+    .infra-branch::after,
+    .craft-sheen {
       display: none;
     }
 
-    .border-beam::before {
+    .border-beam::before,
+    .infra-hub::before {
       animation: none;
     }
 
+    /* The hub glow is mid-cycle when its animation is cancelled, so it is
+       pinned to the resting end of the loop rather than left at whatever
+       opacity the frame happened to hold. */
+    .infra-hub::before {
+      opacity: 0.72;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
     .universe-signal,
+    .infra-branch::after,
     .reveal-view {
       animation-delay: 0s !important;
     }
