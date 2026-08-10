@@ -50,6 +50,25 @@ const result = await page.evaluate(() => {
     // The radios must still be focusable.
     radioDisplays: radios.map((r) => getComputedStyle(r).display),
     branchCount: document.querySelectorAll('.infra-branch').length,
+
+    // --- The Run (Visual OS) ---
+    // The traced spine is scroll-driven, and the failure mode is a rail
+    // stranded at zero height with five stages hanging off nothing. Its
+    // resting state must be *fully traced*, not un-traced.
+    spineScaleY: (() => {
+      const el = document.querySelector('.vos-spine-beam');
+      if (!el) return 'MISSING';
+      const t = getComputedStyle(el).transform;
+      if (!t || t === 'none') return 1;
+      const m = t.match(/matrix\(([^)]+)\)/);
+      return m ? Math.round(Number(m[1].split(',')[3]) * 1000) / 1000 : 'UNPARSED';
+    })(),
+    // `.reveal-view` must not hold a stage invisible when motion is off.
+    stageOpacities: [...document.querySelectorAll('.run-stage')].map((el) =>
+      getComputedStyle(el).opacity,
+    ),
+    stageCount: document.querySelectorAll('.run-stage').length,
+    nodeCount: document.querySelectorAll('.run-node').length,
   };
 });
 
@@ -66,6 +85,10 @@ const checks = [
   ['exactly one caption visible', visible(result.captionOpacities) === 1],
   ['visible panel is the checked one', Number(result.panelOpacities[result.checkedIndex]) > 0.5],
   ['radios still in layout (focusable)', result.radioDisplays.every((d) => d !== 'none')],
+  ['spine rests fully traced, not at zero', result.spineScaleY === 1],
+  ['five stages present', result.stageCount === 5],
+  ['five spine nodes present', result.nodeCount === 5],
+  ['no stage held invisible', result.stageOpacities.every((o) => Number(o) > 0.99)],
 ];
 
 let failed = 0;

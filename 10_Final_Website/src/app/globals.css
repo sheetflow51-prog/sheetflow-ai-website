@@ -1858,6 +1858,571 @@
     }
   }
 
+  /* ======================================================================
+     THE VISUAL OPERATING SYSTEM
+     Primitives, not components. See `VISUAL_OPERATING_SYSTEM.md` for the
+     engine roster and `VISUAL_DNA_V2.md` for the rules each one enforces.
+     Every engine below is server-rendered: the system's client-JS cost is 0.
+     ====================================================================== */
+
+  /* ---------------------------------------------------------------
+     AMBIENT BACKGROUND ENGINE            VISUAL_DNA_V2.md § 8.3
+     v1 mandated four atmospheric layers on every page and never priced
+     them; paint is 73–91% of this site's main thread. Atmosphere is now
+     budgeted, and the emotional arc is carried by the tier sequence.
+     --------------------------------------------------------------- */
+  .vos-ambient {
+    position: absolute;
+    inset: 0;
+    z-index: -10;
+    pointer-events: none;
+  }
+
+  .vos-ambient--grid::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.3;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px);
+    background-size: 64px 64px;
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, #000, transparent 78%);
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, #000, transparent 78%);
+  }
+
+  /* quiet — void plus grain only. For dense sections where the content is
+     already the light and a wash would just lift the black floor. */
+  .vos-ambient--quiet {
+    background: none;
+  }
+
+  .vos-ambient--standard.vos-ambient--accent {
+    background: radial-gradient(
+      ellipse 68% 52% at 50% 38%,
+      rgba(59, 130, 246, 0.1),
+      transparent 72%
+    );
+  }
+
+  .vos-ambient--standard.vos-ambient--gold {
+    background: radial-gradient(
+      ellipse 68% 52% at 50% 38%,
+      rgba(233, 162, 59, 0.07),
+      transparent 72%
+    );
+  }
+
+  /* dual — the two brand colours from opposite corners. This is the key/fill
+     pair from v1 § 6.4, corrected to the palette the product actually uses. */
+  .vos-ambient--standard.vos-ambient--dual,
+  .vos-ambient--full.vos-ambient--dual {
+    background:
+      radial-gradient(ellipse 52% 44% at 22% 26%, rgba(59, 130, 246, 0.13), transparent 70%),
+      radial-gradient(ellipse 46% 40% at 82% 78%, rgba(233, 162, 59, 0.07), transparent 70%);
+  }
+
+  .vos-ambient--full.vos-ambient--accent {
+    background:
+      radial-gradient(ellipse 56% 46% at 24% 22%, rgba(59, 130, 246, 0.16), transparent 70%),
+      radial-gradient(ellipse 48% 42% at 78% 76%, rgba(37, 99, 235, 0.1), transparent 70%),
+      linear-gradient(180deg, transparent 55%, rgba(6, 182, 212, 0.05) 100%);
+  }
+
+  /* ---------------------------------------------------------------
+     PREMIUM CARD ENGINE — the Liquid Glass ladder   VISUAL_DNA_V2.md § 4
+     Five tiers where alpha, blur AND shadow move together. One property
+     alone does not read as depth — which is why the three legacy glass
+     classes, within ~1.5% alpha of each other, never formed a hierarchy.
+     --------------------------------------------------------------- */
+  .vos-surface {
+    position: relative;
+    border: 1px solid transparent;
+    border-radius: 16px;
+    /* Two-layer background: fill on the padding box, edge on the border box.
+       That is what makes the border *graded* — lighter at the top than the
+       bottom — which reads as an edge catching light rather than as a stroke
+       drawn round a rectangle (§ 4.2). */
+    background:
+      linear-gradient(
+          180deg,
+          rgba(255, 255, 255, var(--vos-fill-a)),
+          rgba(255, 255, 255, var(--vos-fill-b))
+        )
+        padding-box,
+      linear-gradient(
+          180deg,
+          rgba(255, 255, 255, var(--vos-edge-a)),
+          rgba(255, 255, 255, var(--vos-edge-b))
+        )
+        border-box;
+    /* `saturate` is the whole difference between glass and fog (§ 4.2). */
+    backdrop-filter: blur(var(--vos-blur)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--vos-blur)) saturate(180%);
+    box-shadow: var(--vos-shadow);
+  }
+
+  .vos-surface--e0 {
+    --vos-fill-a: 0.02;
+    --vos-fill-b: 0.01;
+    --vos-edge-a: 0.05;
+    --vos-edge-b: 0.09;
+    --vos-blur: 4px;
+    --vos-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.45);
+  }
+
+  .vos-surface--e1 {
+    --vos-fill-a: 0.035;
+    --vos-fill-b: 0.018;
+    --vos-edge-a: 0.09;
+    --vos-edge-b: 0.05;
+    --vos-blur: 12px;
+    --vos-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  .vos-surface--e2 {
+    --vos-fill-a: 0.055;
+    --vos-fill-b: 0.026;
+    --vos-edge-a: 0.12;
+    --vos-edge-b: 0.06;
+    --vos-blur: 20px;
+    --vos-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.07),
+      0 12px 32px rgba(0, 0, 0, 0.4);
+  }
+
+  .vos-surface--e3 {
+    --vos-fill-a: 0.08;
+    --vos-fill-b: 0.034;
+    --vos-edge-a: 0.16;
+    --vos-edge-b: 0.07;
+    --vos-blur: 28px;
+    --vos-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 24px 70px rgba(0, 0, 0, 0.5);
+  }
+
+  /* At most one of these per viewport. If two things are presented, nothing
+     is (§ 4.1). The accent bloom is what makes it the subject. */
+  .vos-surface--e4 {
+    --vos-fill-a: 0.11;
+    --vos-fill-b: 0.045;
+    --vos-edge-a: 0.2;
+    --vos-edge-b: 0.08;
+    --vos-blur: 36px;
+    --vos-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.13),
+      0 32px 90px rgba(0, 0, 0, 0.55),
+      0 0 60px rgba(59, 130, 246, 0.14);
+  }
+
+  /* The 4px scan line, demoted from v1's "mandatory on every surface" to a
+     mark meaning exactly one thing: the system is writing to this surface
+     (§ 3.3). */
+  .vos-surface--live::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.04) 0px,
+      rgba(255, 255, 255, 0.04) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+  }
+
+  /* ---------------------------------------------------------------
+     ANIMATED PIPELINE ENGINE — the traced spine   VISUAL_DNA_V2.md § 7.2
+     Aceternity's Tracing Beam idea, without its implementation: no
+     useScroll, no springs, no measured svgHeight, no re-render per frame.
+     One scaleY on the compositor.
+     --------------------------------------------------------------- */
+  /* No `overflow: hidden` here, and that is load-bearing rather than tidy.
+     `overflow: hidden` makes an element a **scroll container**, so `view()` on
+     the beam inside it resolves against *this* box instead of the document.
+     The beam exactly fills it and it never scrolls, so the timeline is
+     degenerate and the animation freezes at a constant progress — measured at
+     `scaleY(0.7)` at every scroll position on the first build. The clip was
+     never needed anyway: the beam only ever scales *down* from `inset: 0`, so
+     there is nothing to overflow. */
+  .vos-spine {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    /* 2px, not 1. At 1px the traced portion and the untraced track were within
+       a hair of each other on a capture — the beam was doing its job and the
+       eye could not tell. Measured on a frame, not judged in the editor. */
+    width: 2px;
+    border-radius: 2px;
+    background: linear-gradient(
+      180deg,
+      transparent,
+      rgba(147, 197, 253, 0.14) 5%,
+      rgba(147, 197, 253, 0.14) 95%,
+      transparent
+    );
+  }
+
+  /* Rests fully traced. The animation starts at 0 and lives inside
+     `@supports`, so where scroll timelines are unsupported this renders
+     complete and static — never a rail stranded at zero height. */
+  .vos-spine-beam {
+    position: absolute;
+    inset: 0;
+    transform-origin: top center;
+    transform: scaleY(1);
+    border-radius: 2px;
+    background: linear-gradient(
+      180deg,
+      rgba(96, 165, 250, 1),
+      rgba(96, 165, 250, 0.85) 60%,
+      rgba(147, 197, 253, 0.6)
+    );
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.55);
+  }
+
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .vos-spine--traced .vos-spine-beam {
+        animation: vos-trace linear both;
+        animation-timeline: view();
+        /* `cover`, not `entry`: this element is taller than the viewport, so
+           the entry phase ends while most of the rail is still below the
+           fold and the beam would finish before the reader does. */
+        animation-range: cover 8% cover 68%;
+      }
+    }
+  }
+
+  @keyframes vos-trace {
+    from {
+      transform: scaleY(0);
+    }
+    to {
+      transform: scaleY(1);
+    }
+  }
+
+  .vos-spine-node {
+    position: absolute;
+    width: 11px;
+    height: 11px;
+    border-radius: 999px;
+    background: #0a0b0f;
+    border: 1px solid rgba(147, 197, 253, 0.55);
+    box-shadow:
+      0 0 0 4px rgba(6, 6, 8, 0.9),
+      0 0 14px rgba(59, 130, 246, 0.35);
+  }
+
+  /* ---------------------------------------------------------------
+     EVIDENCE OVERLAY ENGINE                VISUAL_DNA_V2.md § 6
+     Provenance is a required prop on the component; this is the mark it
+     emits. Coarse on purpose — convincing is the failure mode.
+     --------------------------------------------------------------- */
+  .vos-artifact {
+    margin: 0;
+  }
+
+  .vos-artifact-body {
+    overflow: hidden;
+  }
+
+  .vos-artifact-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .vos-artifact-note {
+    margin-top: 9px;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  .vos-fill--dim {
+    fill: rgba(255, 255, 255, 0.06);
+  }
+
+  .vos-fill--line {
+    fill: rgba(255, 255, 255, 0.11);
+  }
+
+  .vos-fill--mid {
+    fill: rgba(255, 255, 255, 0.19);
+  }
+
+  .vos-fill--accent {
+    fill: rgba(96, 165, 250, 0.45);
+  }
+
+  /* Gold marks an outcome, never a decoration (§ 2). One per composition. */
+  .vos-fill--gold {
+    fill: rgba(244, 192, 99, 0.62);
+  }
+
+  /* ---------------------------------------------------------------
+     DEVICE MOCKUP ENGINE                   VISUAL_DNA_V2.md § 3.2, § 10
+     The silhouette a visitor recognises, without the imitated surface
+     that would make it the pastiche § 9 rejects.
+     --------------------------------------------------------------- */
+  .vos-device {
+    position: relative;
+    width: 100%;
+    max-width: 208px;
+    padding: 14px 9px 9px;
+    border-radius: 26px;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    background: linear-gradient(180deg, rgba(26, 31, 46, 0.92), rgba(10, 11, 15, 0.96));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 20px 50px rgba(0, 0, 0, 0.5);
+  }
+
+  .vos-device-notch {
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 48px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+  }
+
+  .vos-device-screen {
+    border-radius: 18px;
+    overflow: hidden;
+    background: rgba(6, 6, 8, 0.92);
+  }
+
+  /* ---------------------------------------------------------------
+     THE RUN — the section built on the system
+     Editorial two-column narrative (§ 8.2): a held left chapter, a
+     scrolling right sequence.
+     --------------------------------------------------------------- */
+  .run {
+    position: relative;
+    margin-top: 8px;
+  }
+
+  .run-stages {
+    position: relative;
+    list-style: none;
+    margin: 48px 0 0;
+    padding: 0 0 0 34px;
+  }
+
+  /* The gap IS the passage of time (§ 8.1 repeals the constant 12px). Steps
+     in a sequence are 32–56px apart; peers in a set are 12–16. */
+  .run-stage {
+    position: relative;
+    padding-bottom: 44px;
+  }
+
+  .run-stage:last-child {
+    padding-bottom: 0;
+  }
+
+  .run-node {
+    left: -34px;
+    top: 5px;
+    transform: translateX(-50%);
+  }
+
+  .run-index {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: rgb(var(--color-accent-light));
+  }
+
+  .run-title {
+    margin-top: 9px;
+    font-family: var(--font-display);
+    font-size: 23px;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: #ffffff;
+    text-wrap: balance;
+  }
+
+  .run-body {
+    margin-top: 10px;
+    max-width: 46ch;
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: rgb(var(--color-text-secondary));
+  }
+
+  .run-figure {
+    margin-top: 18px;
+    max-width: 420px;
+  }
+
+  .run-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  .run-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+  }
+
+  .run-coda {
+    margin-top: 40px;
+    padding-left: 34px;
+    font-size: 13px;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  /* ---------- The phone's contents (stage 02) ----------
+     Shapes, not words. `VISUAL_DNA_V2.md` § 6 forbids a drawn artifact from
+     containing a message body that is not already published, and there is no
+     published transcript — so the bubbles hold line shapes. The exchange is
+     legible from its rhythm: they ask, it answers at length, they reply short. */
+  .run-phone {
+    margin-inline: auto;
+  }
+
+  .run-chat {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 10px;
+    min-height: 190px;
+  }
+
+  .run-chat-bar {
+    height: 6px;
+    width: 56px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    margin-bottom: 6px;
+  }
+
+  .run-chat-bubble {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-width: 78%;
+    padding: 9px 10px;
+    border-radius: 12px;
+  }
+
+  .run-chat-bubble i {
+    display: block;
+    height: 5px;
+    border-radius: 999px;
+  }
+
+  .run-chat-bubble--in {
+    align-self: flex-start;
+    background: rgba(255, 255, 255, 0.07);
+    border-bottom-left-radius: 4px;
+  }
+
+  .run-chat-bubble--in i {
+    background: rgba(255, 255, 255, 0.26);
+  }
+
+  .run-chat-bubble--in i:nth-child(1) {
+    width: 74px;
+  }
+
+  .run-chat-bubble--in i:nth-child(2) {
+    width: 52px;
+  }
+
+  /* The assistant's turn, in brand blue — the only coloured thing on this
+     screen, because it is the only thing the product did. */
+  .run-chat-bubble--out {
+    align-self: flex-end;
+    background: rgba(59, 130, 246, 0.22);
+    border-bottom-right-radius: 4px;
+  }
+
+  .run-chat-bubble--out i {
+    background: rgba(147, 197, 253, 0.75);
+  }
+
+  .run-chat-bubble--out i:nth-child(1) {
+    width: 88px;
+  }
+
+  .run-chat-bubble--out i:nth-child(2) {
+    width: 96px;
+  }
+
+  .run-chat-bubble--out i:nth-child(3) {
+    width: 62px;
+  }
+
+  @media (min-width: 1024px) {
+    .run {
+      display: grid;
+      grid-template-columns: minmax(300px, 0.82fr) 1.18fr;
+      gap: 76px;
+      align-items: start;
+    }
+
+    /* Sticky composition, permitted by § 7.3 — the page still scrolls at its
+       native speed and nothing is intercepted. Collapses below lg, where a
+       sticky column is only lost height. Never applied to an LCP candidate:
+       this section sits far below the fold on every viewport. */
+    .run-chapter {
+      position: sticky;
+      top: 132px;
+    }
+
+    .run-stages {
+      margin-top: 0;
+      padding-left: 40px;
+    }
+
+    .run-stage {
+      padding-bottom: 56px;
+    }
+
+    .run-node {
+      left: -40px;
+      top: 6px;
+    }
+
+    .run-title {
+      font-size: 27px;
+    }
+
+    .run-body {
+      font-size: 15px;
+    }
+
+    /* Second column, or the grid drops it under the sticky chapter where it
+       reads as a caption on the headline rather than as the sequence's close. */
+    .run-coda {
+      grid-column: 2;
+      padding-left: 40px;
+      margin-top: 8px;
+    }
+  }
+
   /* ---------- RC3 reduced motion ---------- */
   /* `VISUAL_DNA.md` § 5: reduced motion is a kill switch, never a slow-mo.
      The global rule collapses `animation-duration` to 0.01ms, which would make
