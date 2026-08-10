@@ -30,14 +30,39 @@
  * engagement dates, delivery timelines, contract values, traffic, enquiry
  * volumes, conversion rates, or any before/after comparison.
  *
+ * ## Two kinds of evidence, and why the type separates them
+ *
+ * Phase Y's forensic audit surfaced substantial systems that are **real, but
+ * not reachable** — a double-entry accounting engine, a CNC production
+ * pipeline, an outbound engine. The original type could not express them:
+ * `liveUrl` was required and documented "must return HTTP 200", and a test
+ * asserted exactly that against every project.
+ *
+ * Weakening `liveUrl` to optional would have quietly dropped the guarantee the
+ * field exists to provide — that nothing on `/work` links to something a
+ * visitor cannot open. `ProjectEvidence` keeps it instead, by making the two
+ * cases structurally different:
+ *
+ *   - `live` carries a `liveUrl` and a `shot`, and is fetched by test.
+ *   - `internal` **has no field a URL can be typed into**, and carries an
+ *     `artifacts` ledger of what was inspected instead. It renders no outbound
+ *     link and no screenshot, so it cannot accidentally imply a visitable site.
+ *
+ * Same technique as `ProjectOutcome` below, applied to reachability rather than
+ * to metrics: the honest state is the one the compiler enforces.
+ *
  * ## Elevate WPC
  *
- * Named by the founder as a fourth project. It has **no verifiable artifact** —
- * absent from the Vercel account (5 projects; it is not among them), no
- * resolving domain under any tested spelling, and nothing in the workspace.
- * A case study describing its architecture would be invention of exactly the
- * kind the permission above forbids, so it is not listed. Adding it is a
- * data-only change once a URL or repository exists: append an entry here.
+ * Still not listed, and the reason has changed. Earlier revisions of this file
+ * said it had "no verifiable artifact … nothing in the workspace". **Both
+ * halves were wrong** (see `docs/EVIDENCE_MATRIX.md` §2.5). A live Google Sites
+ * presence exists, and the Manus prototype — recorded as dead in Phase M on a
+ * single failed request — was re-tested in Phase Y and returns **HTTP 200**.
+ *
+ * What remains unverified is the thing that matters: **SheetFlow's authorship**.
+ * Neither artifact is built on anything in this account. The WPC *automation
+ * pipeline* below is the same product domain, is unambiguously ours, and is
+ * listed in its place.
  */
 
 import type { Verification } from '@/content/proof';
@@ -71,6 +96,137 @@ export type ProjectOutcome =
 export const NOT_DISCLOSED_LABEL = 'Not publicly disclosed.';
 
 /* ------------------------------------------------------------------ */
+/* Evidence                                                            */
+/* ------------------------------------------------------------------ */
+
+/** A captured frame of a running deployment, stored under `public/work/`. */
+export interface ProjectShot {
+  src: string;
+  width: number;
+  height: number;
+  alt: string;
+}
+
+/**
+ * One inspectable artifact behind an internal build.
+ *
+ * This is what replaces "click the link and check" for work a visitor cannot
+ * open. It is deliberately specific — a filename and a line count, a named
+ * output, a test count — because a vague claim about unreachable work is
+ * exactly the kind of thing that cannot be challenged, and therefore should
+ * not be made.
+ */
+export interface InternalArtifact {
+  /** The artifact, named as it exists on disk. */
+  name: string;
+  /** What it contains, stated so it could be contradicted if wrong. */
+  detail: string;
+}
+
+/**
+ * Whether this project is something a visitor can open — and on what basis it
+ * is published.
+ *
+ * The `internal` variant carries **no URL field of any kind**. That is the
+ * entire point: `/work` guarantees every outbound project link resolves, and
+ * the guarantee is held by the type rather than by whoever edits this file
+ * next.
+ *
+ * ## Why `demo` exists, and why it is not just `live` with a flag
+ *
+ * Phase Z's Netlify enumeration — the account audit Phase M recorded as a
+ * coverage gap after a single 502 — surfaced live builds for **real, named
+ * clinics that never commissioned them**: `ak-dental-demo`, `keen-griffin-feb211`.
+ * They are unambiguously ours (they sit on SheetFlow's own Netlify account,
+ * `sheetflow51@gmail.com`), they are reachable, and they are substantial.
+ *
+ * The `live` variant could not hold them without lying. It emits an
+ * `about: Organization` node naming the client, which asserts a commercial
+ * relationship — precisely the claim `EVIDENCE_MATRIX.md` §2.4 forbids for work
+ * nobody paid for, and the same disqualifier that keeps Elevate WPC off this
+ * page.
+ *
+ * A boolean on `live` would have been the smaller diff and the worse type: the
+ * `about` node would still have been reachable by forgetting to check it. A
+ * separate variant means the JSON-LD builder branches on the discriminant, and
+ * a demonstration build **cannot** emit a client organisation — asserted by
+ * test, not by review.
+ *
+ * The three cases are therefore: `live` (commissioned, visitable), `demo`
+ * (ours, visitable, uncommissioned), `internal` (ours, not visitable).
+ */
+/**
+ * A second surface belonging to the same engagement.
+ *
+ * Some builds ship more than one page worth showing — the Saraswati engagement
+ * includes an internal CRM dashboard that the public site does not link to.
+ * `note` is **required**, because every companion surface published so far has
+ * needed a qualification that the screenshot alone would not convey: the
+ * dashboard runs on seeded demonstration data, and showing a lead pipeline
+ * without saying so would imply real patient records.
+ */
+export interface CompanionSurface {
+  /** The surface. Fetched by the same reachability test as `liveUrl`. */
+  url: string;
+  /** Short label, e.g. "CRM dashboard". */
+  label: string;
+  /** The qualification a reader needs in order to read the screenshot correctly. */
+  note: string;
+  shot: ProjectShot;
+}
+
+export type ProjectEvidence =
+  | {
+      kind: 'live';
+      /** The deployment this case study describes. Must return HTTP 200. */
+      liveUrl: string;
+      shot: ProjectShot;
+      /** A second page of the same engagement, if one is worth showing. */
+      companion?: CompanionSurface;
+    }
+  | {
+      kind: 'demo';
+      /** The deployment this case study describes. Must return HTTP 200. */
+      liveUrl: string;
+      shot: ProjectShot;
+      /**
+       * How we know this build is ours, and what it is *not*.
+       *
+       * Required rather than optional: a demonstration build names a real third
+       * party without a commission behind it, so the page must state the basis
+       * on which it is published. There is no way to add one of these without
+       * writing that sentence.
+       */
+      basis: string;
+    }
+  | {
+      kind: 'internal';
+      /** Why there is nothing to open, in the page's own voice. */
+      reason: string;
+      /**
+       * What was inspected to write this case study — **at least one**.
+       *
+       * A non-empty tuple rather than an array, for the same reason `basis` is
+       * a mandatory string on a demonstration: a case study about work nobody
+       * can open earns its place only by being specific, and an internal build
+       * with an empty ledger would be a page asserting engineering with nothing
+       * behind it. The type refuses it rather than a reviewer having to notice.
+       *
+       * It also removes a live crash. Since RC2 the `/work` tile renders
+       * `artifacts[0].name` directly, and `noUncheckedIndexedAccess` is off in
+       * this project — so an empty array would type-check and then throw at
+       * render. Now it cannot be written.
+       */
+      artifacts: [InternalArtifact, ...InternalArtifact[]];
+    };
+
+/** The single string every internal build renders in place of a live link. */
+export const INTERNAL_ONLY_LABEL = 'Internal build — no public deployment.';
+
+/** The single string every demonstration build renders. Asserted by test. */
+export const DEMO_BUILD_LABEL = 'Demonstration build — not a commissioned engagement.';
+
+/* ------------------------------------------------------------------ */
 /* Project shape                                                       */
 /* ------------------------------------------------------------------ */
 
@@ -84,6 +240,18 @@ export interface BuildFact {
 export interface ArchitectureStage {
   /** Stage name in the data flow, e.g. "Capture". */
   stage: string;
+  /**
+   * A shorter label for the compact `WorkflowGlyph` nodes, where the full
+   * `stage` name does not fit under a 44px icon.
+   *
+   * Set this **only** when `stage` is more than one short word. It is a
+   * truncation of an already-published label, never a different claim: the full
+   * `stage` string remains the source of truth and still renders in the
+   * architecture detail cards directly below the glyph. `WorkflowGlyph` falls
+   * back to `stage` when this is absent, so an omission degrades to a long
+   * label rather than to a wrong one.
+   */
+  short?: string;
   /** What happens here, in one sentence. */
   detail: string;
   /** The concrete surfaces involved, as observed. */
@@ -108,11 +276,16 @@ export interface WorkFaq {
 export interface WorkProject {
   /** URL segment and breadcrumb identity. */
   slug: string;
-  /** Client name, published under the permission recorded above. */
+  /**
+   * The client name for `live` client engagements, published under the
+   * permission recorded above — or the system's own name where the build is
+   * SheetFlow's (`evidence.kind === 'internal'`). Nothing here names a third
+   * party who did not commission the work.
+   */
   client: string;
   /** Sector label. */
   sector: string;
-  /** City/region, as stated on the client's own site. */
+  /** City/region for client work, or the build's context for internal work. */
   location: string;
   /** Short crumb/card label where `client` is too long. */
   shortLabel: string;
@@ -125,13 +298,10 @@ export interface WorkProject {
   headline: string;
   lede: string;
 
-  /** The deployment this case study describes. Must return HTTP 200. */
-  liveUrl: string;
+  /** Whether a visitor can open this, and the proof either way. */
+  evidence: ProjectEvidence;
 
-  /** Screenshot of the live build, under `public/work/`. */
-  shot: { src: string; width: number; height: number; alt: string };
-
-  /** What the build had to solve, observable from the finished site. */
+  /** What the build had to solve, observable from the finished artifact. */
   brief: string[];
 
   /** Data flow, as implemented. */
@@ -159,6 +329,26 @@ export interface WorkProject {
 /* Projects                                                            */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Array order is the render order of `/work`, and it is grouped by evidence
+ * kind: **client (3) → demonstration (2) → internal (5).**
+ *
+ * This is not alphabetical or chronological, and it is not arbitrary.
+ *
+ * Two things go wrong when it drifts. The first is editorial: the `/work` lede
+ * introduces the three kinds in exactly this order, so a grid in a different
+ * order contradicts the sentence directly above it. The second is visual, and
+ * it is how the problem was actually found — during the RC1 screenshot pass the
+ * demonstrations sat last, which put **five image-bearing cards, then five
+ * text-only tiles, then two more image cards** on one page. The rhythm broke in
+ * the middle and the newest, strongest imagery landed where fewest people would
+ * scroll to it.
+ *
+ * Grouping visitable work first fixes both: five screenshots, then five artifact
+ * ledgers, in the order the page has already promised.
+ *
+ * If you add a project, insert it in its kind's group rather than appending.
+ */
 export const projects: WorkProject[] = [
   {
     slug: 'saraswati-dental-clinic',
@@ -172,12 +362,26 @@ export const projects: WorkProject[] = [
     kicker: 'Dental practice · Agra',
     headline: 'A clinic site that takes the booking, not just the call.',
     lede: 'Saraswati Dental needed the enquiry captured before the visitor left the page — and routed somewhere a busy practice actually reads. The build pairs a validated intake form with a WhatsApp hand-off that arrives already knowing what the patient asked for.',
-    liveUrl: 'https://saraswati-dental-clinic.vercel.app',
-    shot: {
-      src: '/work/saraswati-dental-clinic.jpg',
-      width: 1280,
-      height: 800,
-      alt: 'Saraswati Dental Clinic homepage — an editorial hero reading “Your Smile, Our Masterpiece.” above a Hindi subhead, with the clinician’s name and registration number.',
+    evidence: {
+      kind: 'live',
+      liveUrl: 'https://saraswati-dental-clinic.vercel.app',
+      shot: {
+        src: '/work/saraswati-dental-clinic.jpg',
+        width: 1280,
+        height: 800,
+        alt: 'Saraswati Dental Clinic homepage — an editorial hero reading “Your Smile, Our Masterpiece.” above a Hindi subhead, with the clinician’s name and registration number.',
+      },
+      companion: {
+        url: 'https://saraswati-dental-clinic.vercel.app/dashboard.html',
+        label: 'CRM dashboard',
+        note: 'Every lead, name and number on this dashboard is seeded demonstration data — “Priya Sharma”, sequential placeholder phone numbers, IDs running SDC-001 onward. That is deliberate and it is the right call: the page is publicly reachable with no authentication, so real patient records here would be a data-protection exposure rather than a better demo. Read it as a working surface, not as a real pipeline.',
+        shot: {
+          src: '/work/saraswati-dental-clinic-dashboard.jpg',
+          width: 1280,
+          height: 800,
+          alt: 'Saraswati Dental Clinic CRM dashboard — four summary tiles for total leads, this month, converted and pending follow-up, above a bar chart of pipeline by status, a pie chart of leads by source, and a kanban pipeline.',
+        },
+      },
     },
     brief: [
       'Enquiries arrived by phone during treatment hours, when nobody could answer.',
@@ -204,6 +408,12 @@ export const projects: WorkProject[] = [
         nodes: ['WhatsApp hand-off', 'Direct dial', 'Maps directions'],
       },
       {
+        stage: 'Track',
+        detail:
+          'A separate dashboard turns captured enquiries into a worked pipeline — four summary tiles, two charts, and a kanban running the six statuses from new enquiry to closed.',
+        nodes: ['Summary tiles', 'Pipeline by status', 'Leads by source', 'Kanban board'],
+      },
+      {
         stage: 'Be found',
         detail:
           'A Dentist entity graph publishes the practice, its hours, its coordinates and its treatment questions in a form search engines and assistants read directly.',
@@ -217,6 +427,7 @@ export const projects: WorkProject[] = [
       { label: 'Typefaces', value: 'Playfair Display, Cormorant Garamond, Inter, Noto Sans Devanagari' },
       { label: 'Structured data', value: 'Dentist, FAQPage, AggregateRating, OpeningHoursSpecification, GeoCoordinates, PostalAddress' },
       { label: 'Contact channels', value: 'In-page form, WhatsApp click-to-chat, direct dial, Maps directions' },
+      { label: 'CRM dashboard', value: 'Chart.js 4.4.1, six-column kanban, appointment list — seeded data' },
     ],
     decisions: [
       {
@@ -240,6 +451,19 @@ export const projects: WorkProject[] = [
         evidence: 'The consent checkbox is required; the form will not submit without it.',
       },
       {
+        title: 'The CRM dashboard ships with invented patients, on purpose',
+        rationale:
+          'The dashboard is reachable at a public URL with no login. Seeding it with real enquiry records would have made a demonstration surface into a data-protection exposure — names, phone numbers and treatments for identifiable people, served to anyone who guessed the path. Fictional records make the surface reviewable without putting a single real patient on the open web. The constraint the page is actually under is privacy, not fidelity.',
+        evidence:
+          'Open the dashboard and read the records: “Priya Sharma”, sequential placeholder numbers, IDs running SDC-001 onward.',
+      },
+      {
+        title: 'The dashboard is not linked from the public site',
+        rationale:
+          'It is an internal surface for the practice, not a page for patients, so it earns no navigation entry and no sitemap presence. Reachable by URL for whoever is given it; absent from the path a visitor takes.',
+        evidence: 'The public site contains no reference to dashboard.html — search the source and there are zero matches.',
+      },
+      {
         title: 'Devanagari is loaded as a first-class face',
         rationale:
           'Serving Hindi through a fallback renders it visibly worse than the English beside it. Noto Sans Devanagari ships alongside the Latin faces so both scripts are set deliberately.',
@@ -261,6 +485,12 @@ export const projects: WorkProject[] = [
           'A visitor selects a treatment, gives a name and mobile number, optionally picks a preferred date, and ticks a consent box. The number is validated against Indian mobile format before submission, and a hidden honeypot field drops automated submissions. Visitors who prefer to message instead get a WhatsApp link that opens with the reason for contact already written.',
       },
       {
+        id: 'saraswati-dashboard',
+        question: 'What does the Saraswati Dental CRM dashboard do?',
+        answer:
+          'It turns captured enquiries into a worked pipeline: four summary tiles covering total leads, this month, converted and pending follow-up; a bar chart of the pipeline by status and a pie chart of leads by source; a kanban running the six statuses from new enquiry through to closed; and an upcoming-appointments list. Every record on it is seeded demonstration data, not a real patient — the page is publicly reachable with no login, so fictional records are what keeps a demonstration surface from becoming a privacy exposure.',
+      },
+      {
         id: 'saraswati-results',
         question: 'What business results did the Saraswati Dental project produce?',
         answer:
@@ -270,7 +500,6 @@ export const projects: WorkProject[] = [
     related: ['sparc-physiotherapy', 'r3s-realty'],
     services: ['appointment-booking', 'whatsapp-automation', 'lead-capture'],
   },
-
   {
     slug: 'sparc-physiotherapy',
     client: 'SPARC Physiotherapy Centre',
@@ -283,12 +512,15 @@ export const projects: WorkProject[] = [
     kicker: 'Physiotherapy · Bengaluru',
     headline: 'Rehab is chosen on credentials. So the site publishes them.',
     lede: 'Someone choosing a neuro-rehab clinician checks qualifications before price. SPARC needed those credentials stated where both a patient and a search engine could verify them — and an intake that reaches the clinic on the channel it already answers.',
-    liveUrl: 'https://sparc-physiotherapy.vercel.app',
-    shot: {
-      src: '/work/sparc-physiotherapy.jpg',
-      width: 1280,
-      height: 800,
-      alt: 'SPARC Physiotherapy Centre homepage — hero reading “Repair. Regain. Restore.”',
+    evidence: {
+      kind: 'live',
+      liveUrl: 'https://sparc-physiotherapy.vercel.app',
+      shot: {
+        src: '/work/sparc-physiotherapy.jpg',
+        width: 1280,
+        height: 800,
+        alt: 'SPARC Physiotherapy Centre homepage — hero reading “Repair. Regain. Restore.”',
+      },
     },
     brief: [
       'Nine distinct rehab programmes, from paediatric to cardio-pulmonary, each with a different patient.',
@@ -382,7 +614,6 @@ export const projects: WorkProject[] = [
     related: ['saraswati-dental-clinic', 'r3s-realty'],
     services: ['appointment-booking', 'whatsapp-automation'],
   },
-
   {
     slug: 'r3s-realty',
     client: 'R³S Realty & Developers',
@@ -395,12 +626,15 @@ export const projects: WorkProject[] = [
     kicker: 'Real estate · Agra',
     headline: 'Land is searched for by place. The site was built to be found by it.',
     lede: 'Plot buyers search corridors and landmarks, not developer names. R³S needed a site that answered locality queries directly, published its inventory in a form search engines can read, and moved an interested buyer to WhatsApp in one tap.',
-    liveUrl: 'https://r3s-realty-agra.vercel.app',
-    shot: {
-      src: '/work/r3s-realty.jpg',
-      width: 1280,
-      height: 800,
-      alt: 'R³S Realty homepage — a hero reading “Where roots meet rising horizons.” over a plotted development road, with residential plots on NH-19 starting at ₹8.99L.',
+    evidence: {
+      kind: 'live',
+      liveUrl: 'https://r3s-realty-agra.vercel.app',
+      shot: {
+        src: '/work/r3s-realty.jpg',
+        width: 1280,
+        height: 800,
+        alt: 'R³S Realty homepage — a hero reading “Where roots meet rising horizons.” over a plotted development road, with residential plots on NH-19 starting at ₹8.99L.',
+      },
     },
     brief: [
       'Buyers search by locality and highway, so the page had to target places rather than the brand.',
@@ -422,6 +656,7 @@ export const projects: WorkProject[] = [
       },
       {
         stage: 'Publish inventory',
+        short: 'Publish',
         detail:
           'The project is modelled as a product with a priced offer and availability, so listings are machine-readable rather than image text.',
         nodes: ['Product', 'Offer', 'RealEstateAgent', 'LocalBusiness'],
@@ -495,6 +730,916 @@ export const projects: WorkProject[] = [
     related: ['saraswati-dental-clinic', 'sparc-physiotherapy'],
     services: ['lead-capture', 'whatsapp-automation'],
   },
+
+  /* ---------------------------------------------------------------- */
+  /* Internal builds — real systems, nothing a visitor can open        */
+  /* ---------------------------------------------------------------- */
+  {
+    slug: 'ak-dental-diagnostic-centre',
+    client: 'Dr. A.K Gupta Dental & Diagnostic Centre',
+    sector: 'Dental practice · Demonstration build',
+    location: 'Tundla, Uttar Pradesh',
+    shortLabel: 'AK Dental',
+    metaTitle: 'AK Dental & Diagnostic Centre — a single-file clinic build',
+    metaDescription:
+      'A demonstration clinic site for a Tundla dental and diagnostic centre: ten sections, WhatsApp and dial routing on every screen, and the entire build — photography included — delivered as one self-contained HTML document.',
+    kicker: 'Dental practice · Tundla',
+    headline: 'One file. No build step. Ten sections and the photography inside it.',
+    lede: 'A demonstration build for a dental and diagnostic centre in Tundla, put together to show the practice what its site could be. The interesting constraint was delivery: the whole thing is a single HTML document with the clinic photography embedded in it, so it runs from any host — or from a USB stick — with nothing to install.',
+    evidence: {
+      kind: 'demo',
+      liveUrl: 'https://ak-dental-demo.netlify.app',
+      basis:
+        'Deployed from SheetFlow’s own Netlify account (project ak-dental-demo, enumerated 2026-08-08) — which is how authorship is established. It is a demonstration made to show the practice what is possible, not a commissioned engagement, and no fee, brief or agreement sits behind it.',
+      shot: {
+        src: '/work/ak-dental-diagnostic-centre.jpg',
+        width: 1280,
+        height: 800,
+        alt: 'Dr. A.K Gupta Dental & Diagnostic Centre demonstration site — a dark hero reading “Complete Dental Care, Expert Results.” beside a photograph of the treatment room, with call and WhatsApp buttons and the Tundla location beneath.',
+      },
+    },
+    brief: [
+      'The practice pairs a dental clinic with an in-house OPG imaging centre — a real differentiator that no template accounts for.',
+      'A demonstration has to survive being forwarded, opened on a phone, and viewed with no explanation attached.',
+      'Patients in the catchment reach a clinic by phone or WhatsApp, so every screen had to offer both without scrolling back.',
+    ],
+    architecture: [
+      {
+        stage: 'Deliver',
+        detail:
+          'The build is one HTML document with styles, scripts and photography embedded, so there is no asset pipeline and nothing to break when it is moved between hosts.',
+        nodes: ['Single document', 'Inlined CSS', 'Base64 photography'],
+      },
+      {
+        stage: 'Persuade',
+        detail:
+          'Ten sections take a visitor from the treatment they searched for to the clinician who provides it, with the in-house diagnostics centre given a section of its own.',
+        nodes: ['Hero', 'Services', 'In-house diagnostics', 'Gallery', 'Location'],
+      },
+      {
+        stage: 'Route',
+        detail:
+          'Click-to-chat and direct-dial links repeat through the page, so the contact action is always within reach of the section that prompted it.',
+        nodes: ['WhatsApp click-to-chat ×6', 'Direct dial ×6', 'Booking form'],
+      },
+      {
+        stage: 'Capture',
+        detail:
+          'An in-page appointment form takes the name, a telephone number and a preferred date, so an enquiry can be left outside calling hours.',
+        nodes: ['Name', 'Telephone input', 'Date picker'],
+      },
+    ],
+    build: [
+      { label: 'Delivery', value: 'Static HTML, single document — 429,734 bytes' },
+      { label: 'Hosting', value: 'Netlify' },
+      { label: 'Photography', value: '5 clinic images base64-inlined (379 kB, 88% of the document)' },
+      { label: 'Typefaces', value: 'Inter, Playfair Display (Google Fonts)' },
+      { label: 'Motion', value: 'GSAP; three.js r128 via cdnjs' },
+      { label: 'Contact channels', value: 'WhatsApp click-to-chat, direct dial, in-page appointment form' },
+      { label: 'Structured data', value: 'None — see the decisions below' },
+    ],
+    decisions: [
+      {
+        title: 'The photography is inside the document, and that is a trade, not a free win',
+        rationale:
+          'Embedding the clinic images as base64 makes the build a single portable file: it opens from any host, any folder, or an email attachment, with no broken image paths. The cost is real and worth stating — 379,084 bytes of the 429,734-byte payload, about 88%, is images that a browser cannot cache separately, cannot serve responsively, and must download before the page is complete. For a demonstration that gets forwarded, portability won. For a production build it would not.',
+        evidence:
+          'View source: five img elements carry src="data:image/jpeg;base64,…". The remaining four are Unsplash URLs standing in as placeholders.',
+      },
+      {
+        title: 'The diagnostics centre gets its own section rather than a service row',
+        rationale:
+          'In-house OPG imaging is the reason a patient would choose this practice over the one nearer to them — it means the scan and the treatment happen in one visit. Listing it as a sixth bullet among treatments would have buried the single thing that is not interchangeable.',
+        evidence: 'The services section carries a dedicated “Vedika OPG Centre” entry under an “In-House Diagnostics” heading.',
+      },
+      {
+        title: 'Contact repeats six times instead of sitting in a header',
+        rationale:
+          'On a phone, a sticky header costs vertical space on every screen of a long page. Repeating the WhatsApp and dial links at the end of each persuasive section instead puts the action next to the reason for taking it, and costs nothing when the visitor is not ready.',
+        evidence: 'Six wa.me links and six tel: links appear through the document, one pair per major section.',
+      },
+      {
+        title: 'No structured data, and it is a gap rather than a decision',
+        rationale:
+          'The Saraswati build publishes a full Dentist entity graph; this one publishes none, and has no meta description either. Naming it here rather than quietly omitting the row is the point: this is a demonstration of the visual and conversion layer, and the discoverability work that a production clinic site needs was not part of it.',
+        evidence: 'View source: the document contains no application/ld+json block and no meta name="description".',
+      },
+    ],
+    outcome: { disclosure: 'not-disclosed' },
+    faqs: [
+      {
+        id: 'ak-dental-what-is-it',
+        question: 'Is the AK Dental site a client project?',
+        answer:
+          'No. It is a demonstration build — SheetFlow made it to show the practice what its site could be, and it is published here on that basis. It is unambiguously our work, deployed from our own Netlify account, but no fee, brief or agreement sits behind it and no commercial relationship is implied.',
+      },
+      {
+        id: 'ak-dental-single-file',
+        question: 'Why is the AK Dental build a single 429 kB HTML file?',
+        answer:
+          'So it survives being forwarded. Everything — styles, scripts and five clinic photographs — is embedded in one document, which means it opens correctly from any host, any folder, or an email attachment with no broken paths and nothing to install. The trade is that about 88% of that payload is images the browser cannot cache separately or serve responsively, which is acceptable for a demonstration and would not be for a production build.',
+      },
+      {
+        id: 'ak-dental-results',
+        question: 'What business results has the AK Dental build produced?',
+        answer:
+          'Not publicly disclosed, and in this case there are none to disclose. It is a demonstration that was not commissioned, so there is no engagement behind it and no outcome has been measured or claimed.',
+      },
+    ],
+    related: ['align-dental-system', 'saraswati-dental-clinic'],
+    services: ['appointment-booking', 'whatsapp-automation', 'lead-capture'],
+  },
+  {
+    slug: 'align-dental-system',
+    client: 'Align Dental Care & Multi Speciality Clinic',
+    sector: 'Dental practice · Demonstration build',
+    location: 'Tundla, Uttar Pradesh',
+    shortLabel: 'Align Dental',
+    metaTitle: 'Align Dental — a componentised clinic build on React 19 and Vite',
+    metaDescription:
+      'A demonstration clinic site for Align Dental, Tundla, built as a typed React 19 application: every piece of clinic content lives in one typed module, so the same system re-points at another practice by editing data rather than markup.',
+    kicker: 'Dental practice · Tundla',
+    headline: 'The second clinic build is where you find out what was a template.',
+    lede: 'Built after the single-file demonstrations, and deliberately not like them. Every clinic-specific fact — name, address, treatments, hours, contact links — sits in one typed module, separate from the fourteen components that render it. Re-pointing the system at a different practice is a data edit, not a rebuild.',
+    evidence: {
+      kind: 'demo',
+      liveUrl: 'https://sheetflow51-prog.github.io/dental-demo/',
+      basis:
+        'Deployed to SheetFlow’s own GitHub Pages account, and the source is on this workspace — 1,326 lines of TypeScript and CSS across 20 files, inspected 2026-08-08. The build says so itself: its hero carries a badge reading “Premium website demo for clinic sales”. It was not commissioned, and no commercial relationship is implied.',
+      shot: {
+        src: '/work/align-dental-system.jpg',
+        width: 1280,
+        height: 800,
+        alt: 'Align Dental Care demonstration site — a light editorial hero reading “Brighten Every Visit With a Premium Dental Experience”, above a badge that labels the page a premium website demo for clinic sales.',
+      },
+    },
+    brief: [
+      'A third clinic build in the same sector is where copy-paste stops being cheaper than structure.',
+      'Clinic facts — hours, address, treatment list, contact numbers — are exactly the content that goes stale, and they were scattered through the markup of the earlier builds.',
+      'The practice presents itself as a premium, multi-speciality clinic, so the interface had to carry that without stock-template styling.',
+    ],
+    architecture: [
+      {
+        stage: 'Model',
+        detail:
+          'One typed module holds every clinic-specific fact — identity, address, hours, treatments, gallery, testimonials and the contact links built from the number.',
+        nodes: ['clinic.ts', 'Service type', 'Testimonial type', 'GalleryImage type'],
+      },
+      {
+        stage: 'Compose',
+        detail:
+          'Fourteen section components read that module and know nothing else about the practice, so none of them has to change when the practice does.',
+        nodes: ['HeroSection', 'ServicesSection', 'TrustSection', 'BookingSection', 'ContactSection'],
+      },
+      {
+        stage: 'Route',
+        detail:
+          'Contact actions are derived from the single stored number rather than written per link, so one edit changes every call, chat and directions target on the site.',
+        nodes: ['ctaLinks.whatsapp', 'ctaLinks.call', 'ctaLinks.directions'],
+      },
+      {
+        stage: 'Reach',
+        detail:
+          'A floating WhatsApp control and a sticky booking action persist as the visitor scrolls, so the two actions that matter are never more than a tap away.',
+        nodes: ['FloatingWhatsAppButton', 'StickyBookButton'],
+      },
+    ],
+    build: [
+      { label: 'Framework', value: 'React 19.2 (SPA) on Vite 8' },
+      { label: 'Language', value: 'TypeScript 6.0, strict project references' },
+      { label: 'Styling', value: 'Tailwind CSS 4.2 via @tailwindcss/vite' },
+      { label: 'Motion', value: 'framer-motion 12.38' },
+      { label: 'Icons', value: 'lucide-react 1.8' },
+      { label: 'Source size', value: '1,326 lines across 20 files — 14 section components, one data module' },
+      { label: 'Hosting', value: 'GitHub Pages' },
+    ],
+    decisions: [
+      {
+        title: 'Clinic content is a typed module, not markup',
+        rationale:
+          'The recurring failure in clinic sites is stale detail — an old number, last year’s hours, a treatment no longer offered — because those facts are scattered across the markup and only some get updated. Putting them in one typed object makes the update a single edit, and makes a missing field a compile error rather than a blank space on a live page.',
+        evidence: 'src/data/clinic.ts is 159 lines and exports the Service, Testimonial and GalleryImage types alongside the clinic object the components consume.',
+      },
+      {
+        title: 'Contact links are derived from the number, not written beside it',
+        rationale:
+          'A clinic that changes its phone number changes it once. Storing the number and building the wa.me, tel: and Maps targets from it removes the class of bug where the header dials the new number and the footer dials the old one.',
+        evidence: 'clinic.ctaLinks holds whatsapp, call and directions, all built from the stored whatsappNumber and mapQuery.',
+      },
+      {
+        title: 'Fourteen small components rather than one page file',
+        rationale:
+          'The earlier clinic demonstrations were single documents, which is the right call for something that gets forwarded and the wrong one for something that gets extended. Sections that are separately named and separately typed can be reordered, dropped or reused for the next practice without reading the whole file.',
+        evidence: 'src/components/ holds 14 .tsx files; App.tsx is 38 lines and does nothing but order them.',
+      },
+      {
+        title: 'The Google rating on the page is the clinic’s, and is not ours to claim',
+        rationale:
+          'The build renders a 5.0 rating and a review count taken from the practice’s own public Google listing. That is the clinic’s data, displayed on the clinic’s own site as it would be anywhere else. It is not a SheetFlow outcome metric, and it is not offered here as evidence of anything we did — which is why no figure from it appears on this page outside this sentence.',
+        evidence: 'The values originate in the practice’s public Google Business listing, stored in clinic.ts as rating and reviewCount.',
+      },
+    ],
+    outcome: { disclosure: 'not-disclosed' },
+    faqs: [
+      {
+        id: 'align-dental-what-is-it',
+        question: 'Is the Align Dental site a client project?',
+        answer:
+          'No. It is a demonstration build, made to show the practice what its site could be and published here on that basis. The source is ours and it is deployed from our own GitHub Pages account, but it was not commissioned and no commercial relationship is implied.',
+      },
+      {
+        id: 'align-dental-vs-single-file',
+        question: 'Why is this build structured differently from the other clinic demonstrations?',
+        answer:
+          'Because it is the third one. The single-file builds are portable and ideal for something that gets forwarded, but every clinic-specific fact is embedded in the markup, so re-pointing one at another practice means editing prose in a 400 kB document. Here the practice details live in one typed module that fourteen components read, which makes the same job a data edit — and makes a missing field a compile error instead of a gap on a live page.',
+      },
+      {
+        id: 'align-dental-results',
+        question: 'What business results has the Align Dental build produced?',
+        answer:
+          'Not publicly disclosed, and none exist to disclose. It is an uncommissioned demonstration, so there is no engagement behind it and no outcome has been measured or claimed. The rating shown on the build itself is the practice’s own public Google listing data, not a result of ours.',
+      },
+    ],
+    related: ['ak-dental-diagnostic-centre', 'saraswati-dental-clinic'],
+    services: ['appointment-booking', 'whatsapp-automation', 'lead-capture'],
+  },
+  {
+    slug: 'whatsapp-accounting-os',
+    client: 'WhatsApp Accounting OS',
+    sector: 'Financial systems',
+    location: 'SheetFlow internal build',
+    shortLabel: 'Accounting OS',
+    metaTitle: 'WhatsApp Accounting OS — a double-entry ledger fed by Hinglish messages',
+    metaDescription:
+      'A SheetFlow internal build: a PostgreSQL double-entry accounting engine that accepts bookkeeping over WhatsApp in English, Hindi and Hinglish, stages every entry for human verification, and never lets a parser write to the ledger.',
+    kicker: 'Financial systems · Internal build',
+    headline: 'Bookkeeping by WhatsApp, without letting the parser touch the ledger.',
+    lede: 'Indian cash businesses already record their day in messages — “आज ₹25,000 cement kharida”. The hard part is not reading that sentence. It is making sure a machine that half-understood it can never write a wrong number into the books.',
+    evidence: {
+      kind: 'internal',
+      reason:
+        'This is a back-office system with no public surface. It runs against a PostgreSQL database and a WhatsApp webhook, so there is no page to open — the evidence is the code and its test suite.',
+      artifacts: [
+        {
+          name: 'src/ledger/engine.ts — 438 lines',
+          detail:
+            'The single sanctioned write path into the ledger. Posts a journal entry, both balancing legs, both cached balances and the staging status flip inside one transaction, all-or-nothing.',
+        },
+        {
+          name: 'src/parser/index.ts — 258 lines',
+          detail:
+            'Extracts amount, direction, payment mode, counterparty and category from mixed-script messages. Normalises Devanagari digits and applies Indian-scale multipliers (k, hazaar, lakh, crore) as exact BigInt paise.',
+        },
+        {
+          name: 'src/staging/service.ts — 290 lines',
+          detail:
+            'The verification queue every inbound message lands in. Nothing reaches the ledger without a human confirming it.',
+        },
+        {
+          name: 'src/parser/parser.test.ts — 21 tests, all passing',
+          detail:
+            'Run on 2026-08-08 with `npm run test:staging`: 21 pass, 0 fail. Four of them assert the parser refuses to guess rather than filling a field it did not see evidence for.',
+        },
+      ],
+    },
+    brief: [
+      'The people keeping these books type in three languages at once, and will not switch to an accounting app to do it.',
+      'A language model reading a money message will sometimes be confident and wrong, which is the one failure mode a ledger cannot absorb.',
+      'Rupee amounts in floating point silently lose precision, and a ledger that does not balance is worse than no ledger.',
+    ],
+    architecture: [
+      {
+        stage: 'Receive',
+        detail:
+          'A WhatsApp webhook accepts the message exactly as sent — mixed script, shorthand amounts, no required format.',
+        nodes: ['Express webhook', 'WhatsApp gateway', 'Raw message store'],
+      },
+      {
+        stage: 'Parse',
+        detail:
+          'Tokens are extracted into a structured entry, and anything not clearly evidenced is reported as UNKNOWN rather than guessed.',
+        nodes: ['Devanagari normalisation', 'BigInt paise arithmetic', 'Direction & mode detection'],
+      },
+      {
+        stage: 'Stage',
+        detail:
+          'Every parsed entry lands in a verification queue as Pending Verification. This is a hard architectural boundary, not a workflow preference.',
+        nodes: ['Staging tables', 'Pending Verification', 'Operator correction'],
+      },
+      {
+        stage: 'Post',
+        detail:
+          'Only a human-confirmed entry is promoted into the double-entry ledger, as one atomic transaction that either lands completely or not at all.',
+        nodes: ['journal_entries', 'ledger_lines', 'Cached balances', 'Chart of accounts'],
+      },
+    ],
+    build: [
+      { label: 'Language', value: 'TypeScript, ES modules — 1,739 lines across 11 source files' },
+      { label: 'Database', value: 'PostgreSQL, with money held as NUMERIC(15, 2)' },
+      { label: 'Money arithmetic', value: 'BigInt paise in the parser; NUMERIC in the database. No amount becomes a JavaScript number.' },
+      { label: 'Language model', value: 'Google Generative AI, for insight generation only — never on the write path' },
+      { label: 'Concurrency', value: 'SELECT … FOR UPDATE row locking on the staging entry' },
+      { label: 'Tests', value: '21 parser tests via the Node test runner, all passing' },
+    ],
+    decisions: [
+      {
+        title: 'The parser is structurally forbidden from writing to the ledger',
+        rationale:
+          'A model that misreads one message in fifty is useful for drafting and unacceptable for posting. Rather than trying to raise its accuracy to the point where direct writes would be safe, the write path was closed: parser output can only reach a staging table, and only a human-confirmed row can be promoted. The system is then allowed to be wrong, because being wrong is recoverable.',
+        evidence:
+          'The ledger engine accepts a staging id and user-confirmed values, and re-derives nothing from the parsed row. There is no other function that inserts into journal_entries.',
+      },
+      {
+        title: 'Money never becomes a floating-point number',
+        rationale:
+          'IEEE-754 doubles cannot represent every two-decimal value, so a rupee amount that round-trips through a float has already lost. Amounts are parsed into BigInt paise, carried as exact decimal strings, and bound straight to PostgreSQL NUMERIC, which does the arithmetic.',
+        evidence:
+          'Amounts are typed as `string` throughout, and the posting path validates them against a NUMERIC(15, 2) pattern before binding — leading signs and exponent notation are rejected outright.',
+      },
+      {
+        title: 'A blank field beats a confident guess',
+        rationale:
+          'Every parsed field is headed for a human verification queue. A field left UNKNOWN costs the operator a glance; a field confidently filled with the wrong direction gets approved by a tired person and lands in the books. The parser therefore refuses to infer a direction or a payment mode it did not see evidence for.',
+        evidence:
+          'Four of the 21 tests assert exactly this — the parser reports UNKNOWN when both directions appear, when neither appears, and when a payment mode is unstated, and it declines to file a category it cannot support.',
+      },
+      {
+        title: 'Two people tapping “verify” at once cannot double-post',
+        rationale:
+          'The verification step is a message a human taps, and a message can be tapped twice. Locking the staging row for update means the second transaction blocks until the first commits, then reads the committed status and refuses — rather than interleaving past the check and posting the same entry twice.',
+        evidence:
+          'The posting routine opens by locking the staging entry FOR UPDATE, and the status check runs inside that lock.',
+      },
+    ],
+    outcome: { disclosure: 'not-disclosed' },
+    faqs: [
+      {
+        id: 'accounting-os-what-it-is',
+        question: 'What is the WhatsApp Accounting OS?',
+        answer:
+          'A SheetFlow internal build: a double-entry accounting engine on PostgreSQL that accepts bookkeeping entries sent over WhatsApp in English, Hindi or Hinglish. Messages are parsed into a staging queue, a human confirms or corrects each one, and only confirmed entries are posted to the ledger. It is not a deployed product and has no public URL.',
+      },
+      {
+        id: 'accounting-os-accuracy',
+        question: 'How does it stop an AI mistake from corrupting the books?',
+        answer:
+          'The parser cannot write to the ledger at all. Its output goes only to a staging table marked Pending Verification, and the single function that writes to the ledger takes human-confirmed values rather than parsed ones. An AI misreading is therefore a queue item somebody corrects, never a wrong entry in the accounts.',
+      },
+      {
+        id: 'accounting-os-results',
+        question: 'What business results has the WhatsApp Accounting OS produced?',
+        answer:
+          'Not publicly disclosed. It is an internal build with no client engagement behind it, so there is no measured business outcome to report and none is claimed.',
+      },
+    ],
+    related: ['bank-statement-parser', 'outbound-lead-engine'],
+    services: ['whatsapp-automation', 'business-reports'],
+  },
+  {
+    slug: 'wpc-design-automation',
+    client: 'WPC Design Automation',
+    sector: 'Manufacturing · CNC design automation',
+    location: 'SheetFlow internal build',
+    shortLabel: 'WPC Automation',
+    metaTitle: 'WPC Design Automation — one image compiled into a 15-size CNC production matrix',
+    metaDescription:
+      'A SheetFlow internal build: a Python pipeline that compiles a single door design into 15 manufacturing sizes, emitting CNC toolpaths, print files, spot-UV varnish masks and catalogue PDFs as atomically verified production bundles.',
+    kicker: 'Manufacturing AI · Internal build',
+    headline: 'One design in. Sixty production files out, or none at all.',
+    lede: 'A WPC door design has to exist in every size a customer might order, in four different file formats, each named exactly the way the CNC operator expects. Done by hand it is an afternoon of exacting, error-prone work per design — and a single mistyped size reaches the router as scrapped material.',
+    evidence: {
+      kind: 'internal',
+      reason:
+        'A manufacturing pipeline that runs on an operator’s machine and writes production bundles to disk. There is no hosted surface — the evidence is the source, the generated bundles and the run manifest.',
+      artifacts: [
+        {
+          name: 'orchestrator.py — 1,261 lines',
+          detail:
+            'Drives the run: size matrix expansion, staged delivery, bundle verification, idempotency checks and legacy artifact migration.',
+        },
+        {
+          name: 'vector_compiler.py — 869 lines',
+          detail:
+            'Converts the source image into closed-contour toolpath geometry and generates the spot-UV varnish mask via HSV band segmentation.',
+        },
+        {
+          name: 'catalog_pdf.py — 316 lines',
+          detail: 'Renders the per-size catalogue PDF that ships inside each bundle.',
+        },
+        {
+          name: 'outputs/ — 7 production bundles',
+          detail:
+            'Seven completed `*_Production_Bundle.zip` archives plus `latest_run_manifest.json`, which records the naming contract and the full 15-entry size matrix in millimetres.',
+        },
+        {
+          name: 'SheetFlow_ComplexJali_914x2134mm_Toolpath.svg',
+          detail:
+            'A compiled sample: 250 closed contours at 914.4 × 2133.6 mm, ready for the router.',
+        },
+        {
+          name: 'dashboard.html — 1.4 MB',
+          detail:
+            'A generated single-file production gallery titled “Sheetflow WPC Production Gallery”, embedding the compiled previews inline so it opens with no server and no asset directory.',
+        },
+      ],
+    },
+    brief: [
+      'Every design must ship in 15 sizes — three widths by five heights — and each size needs four different production roles.',
+      'CNC operators consume files by filename, so an inconsistent name is a production error rather than a cosmetic one.',
+      'Runs get interrupted, and a half-written bundle that looks complete is worse than an obviously missing one.',
+    ],
+    architecture: [
+      {
+        stage: 'Ingest',
+        detail:
+          'A single source design image enters the pipeline with a per-design configuration describing how its varnish bands should be segmented.',
+        nodes: ['Source image', 'Per-design config', 'Change detection'],
+      },
+      {
+        stage: 'Compile',
+        detail:
+          'The image is vectorised into closed-contour geometry and scaled across the size matrix at one uniform factor on both axes, so proportions never drift between sizes.',
+        nodes: ['Contour extraction', '15-size matrix', 'Uniform scaling'],
+      },
+      {
+        stage: 'Emit roles',
+        short: 'Emit',
+        detail:
+          'Each size produces four artifacts under a documented naming contract: the CNC toolpath, the print file, the spot-UV varnish mask and the catalogue page.',
+        nodes: ['Toolpath.svg', 'Print.jpg', 'Varnish.png', 'Catalog.pdf'],
+      },
+      {
+        stage: 'Deliver atomically',
+        short: 'Deliver',
+        detail:
+          'The bundle is staged to a partial file, verified, and only then renamed into place — so an interrupted run can never replace a good production pack with a truncated one.',
+        nodes: ['.partial staging', 'verify_bundle()', 'Atomic rename', 'Run manifest'],
+      },
+    ],
+    build: [
+      { label: 'Language', value: 'Python — 2,446 lines across three modules' },
+      { label: 'Size matrix', value: '15 sizes: 30/32/36 in widths × 72–84 in heights, recorded in millimetres' },
+      { label: 'CNC target', value: 'VCarve / ArtCAM, 6 mm tool at 3 mm cut depth' },
+      { label: 'Varnish masking', value: 'Spot-UV masks via a multiband HSV segmentation engine, configured per design' },
+      { label: 'Naming contract', value: '{CleanDesignName}_{CleanSize}_{Role}{ext} — ASCII letters and digits only, no spaces in any path segment' },
+      { label: 'Safety', value: 'Idempotent re-runs, `preview_only` dry-run on every destructive path, atomic staged delivery' },
+    ],
+    decisions: [
+      {
+        title: 'A bundle is renamed into place only after it verifies',
+        rationale:
+          'Production packs are overwritten on every re-run, and a run can die halfway — a lost connection, a full disk, an operator closing the terminal. Writing directly to the destination means a truncated archive silently replaces a good one, and nobody finds out until the router does. Staging to a partial file and renaming only after verification makes an interrupted run leave the previous good bundle untouched.',
+        evidence:
+          'Bundles are written to a `.partial` path and renamed only after `verify_bundle()` passes; the seven archives in `outputs/` are all complete.',
+      },
+      {
+        title: 'The filename is treated as a machine interface',
+        rationale:
+          'The CNC operator finds files by name, and tooling downstream parses them. That makes the filename an interface, not a label — so it is specified as a contract with a fixed field order, a fixed separator and an ASCII-only charset, and written into the run manifest rather than living in someone’s head.',
+        evidence:
+          '`latest_run_manifest.json` carries the naming contract explicitly: pattern, field separator, the four role suffixes, archive layout and charset.',
+      },
+      {
+        title: 'Every destructive path has a dry run',
+        rationale:
+          'The pipeline deletes and overwrites production output. A dry-run flag threaded through every such path means an operator can see exactly what a run would do before it does it, which is the difference between a tool people trust with a full rebuild and one they only ever run on a copy.',
+        evidence: 'Destructive operations take a `preview_only` parameter throughout the orchestrator.',
+      },
+      {
+        title: 'Unchanged designs are skipped, not recompiled',
+        rationale:
+          'Compiling 15 sizes × 4 roles is expensive, and most runs re-process a catalogue where one design changed. Change detection means a re-run costs roughly what the change costs, which is what makes running it routinely practical.',
+        evidence: 'The orchestrator gates work behind `is_new_or_changed()` and `bundle_covers()` checks.',
+      },
+    ],
+    outcome: { disclosure: 'not-disclosed' },
+    faqs: [
+      {
+        id: 'wpc-what-it-is',
+        question: 'What is WPC Design Automation?',
+        answer:
+          'A SheetFlow internal build: a Python pipeline that takes one WPC door design image and compiles it into a 15-size production matrix, emitting a CNC toolpath, a print file, a spot-UV varnish mask and a catalogue PDF for every size, packaged as verified production bundles. It is a manufacturing tool with no public deployment.',
+      },
+      {
+        id: 'wpc-client-work',
+        question: 'Was WPC Design Automation built for a client?',
+        answer:
+          'No. It is SheetFlow’s own capability, built to demonstrate what design automation can do for WPC manufacturing. No client commissioned it and no engagement is claimed. It is published here as an example of the engineering, not as delivered client work.',
+      },
+      {
+        id: 'wpc-results',
+        question: 'What business results has WPC Design Automation produced?',
+        answer:
+          'Not publicly disclosed. There is no client engagement behind it and no measured production outcome has been confirmed, so no figure is claimed.',
+      },
+    ],
+    related: ['whatsapp-accounting-os', 'bank-statement-parser'],
+    services: ['business-reports'],
+  },
+  {
+    slug: 'outbound-lead-engine',
+    client: 'Outbound Lead Engine',
+    sector: 'Sales automation',
+    location: 'SheetFlow internal build',
+    shortLabel: 'Lead Engine',
+    metaTitle: 'Outbound Lead Engine — a spreadsheet-driven outreach pipeline with reply detection',
+    metaDescription:
+      'A SheetFlow internal build: a Python outbound engine that cleans a lead spreadsheet, scores each lead with Claude, personalises and sends across rotating mailboxes, then reads the inbox back over IMAP to stop following up anyone who replied.',
+    kicker: 'Sales automation · Internal build',
+    headline: 'The follow-up stops the moment somebody replies.',
+    lede: 'Most outreach tooling is good at sending and bad at listening, which is how a prospect who answered on Tuesday gets chased again on Thursday. This engine treats the inbox as part of the pipeline: replies come back in, and the sequence for that lead stops.',
+    evidence: {
+      kind: 'internal',
+      reason:
+        'An operator-run pipeline that drives real mailboxes and a live spreadsheet. It has no hosted interface, and its outputs are somebody’s inbox — so the evidence is the source and the configuration.',
+      artifacts: [
+        {
+          name: 'scripts/system_orchestrator.py — 204 lines',
+          detail:
+            'The single command surface: pipeline, apify-import, campaign, replies, status, cycle, daily and a full dry run.',
+        },
+        {
+          name: 'scripts/lead_pipeline_manager.py — 446 lines',
+          detail:
+            'Standardises raw lead rows, validates addresses, removes duplicates and writes the clean outreach dataset.',
+        },
+        {
+          name: 'scripts/reply_detector.py — 380 lines',
+          detail:
+            'Reads mailboxes over IMAP, matches replies to campaign rows, and marks those leads so no further follow-up is scheduled.',
+        },
+        {
+          name: 'agents/claude_scorer.py — 274 lines',
+          detail:
+            'Scores each lead through the Claude API with a rule-based scorer as fallback, and degrades to that fallback rather than failing the run when the API is unreachable.',
+        },
+        {
+          name: 'config/system_config.json',
+          detail:
+            'The operational limits, in the repository rather than in someone’s memory: 40 emails per account per day, a 30-minute reply-check interval, and automatic reply sending switched off.',
+        },
+      ],
+    },
+    brief: [
+      'Lead lists arrive from several sources in several shapes, and none of them are clean enough to send from.',
+      'Sending everything from one mailbox gets that mailbox filtered, which ends the channel rather than the campaign.',
+      'A follow-up sent to somebody who already replied is the single most damaging thing an outreach system can do.',
+    ],
+    architecture: [
+      {
+        stage: 'Ingest',
+        detail:
+          'Rows arrive from scraped exports and lead sources into a raw sheet, with no cleaning assumed and nothing sent from them.',
+        nodes: ['Raw lead sheet', 'Source importers', 'Spreadsheet data plane'],
+      },
+      {
+        stage: 'Clean & score',
+        short: 'Score',
+        detail:
+          'Rows are standardised, addresses validated and duplicates dropped; each surviving lead is scored and bucketed by priority.',
+        nodes: ['Validation', 'Deduplication', 'Claude scoring', 'Hot / warm / cold'],
+      },
+      {
+        stage: 'Send',
+        detail:
+          'Each campaign personalises its first touch, rotates across sender accounts under a per-account daily cap, and schedules its own follow-ups.',
+        nodes: ['Personalisation', 'Account rotation', 'Daily cap', 'Follow-up scheduler'],
+      },
+      {
+        stage: 'Listen',
+        detail:
+          'Mailboxes are read back over IMAP; a detected reply is classified by intent, written to the campaign log, and stops that lead’s remaining sequence.',
+        nodes: ['IMAP reply detection', 'Intent classification', 'Sequence halt', 'Draft suggestion'],
+      },
+    ],
+    build: [
+      { label: 'Language', value: 'Python — 6,928 lines across 34 modules' },
+      { label: 'Data plane', value: 'A spreadsheet: raw leads, processed leads and an outreach log as the shared state' },
+      { label: 'Scoring', value: 'Claude API with a deterministic rule-based scorer as fallback' },
+      { label: 'Sending', value: 'SMTP across rotating accounts, capped at 40 per account per day' },
+      { label: 'Listening', value: 'IMAP reply detection on a 30-minute interval' },
+      { label: 'Safety', value: 'Dry-run mode across every campaign; automatic reply sending disabled by default' },
+    ],
+    decisions: [
+      {
+        title: 'The inbox is an input, not a destination',
+        rationale:
+          'A sequence that only sends will keep chasing someone who already answered — the most expensive mistake in outbound, because it converts an interested reply into an annoyed one. Reading the mailbox back over IMAP and halting the sequence on a detected reply makes the system aware of the conversation it started.',
+        evidence:
+          'The reply detector scans configured mailboxes, matches replies against campaign logs, and marks those leads so the follow-up scheduler skips them.',
+      },
+      {
+        title: 'A spreadsheet is the data plane, deliberately',
+        rationale:
+          'The operator needs to see the pipeline, sort it, and correct a row by hand at nine in the evening. A database would be tidier and would put every one of those actions behind a tool nobody wants to build. Keeping raw leads, processed leads and the outreach log as sheets means the state is inspectable and editable by the person accountable for it.',
+        evidence:
+          'A dedicated 692-line sheets module is the persistence layer; the status command reads its live counts.',
+      },
+      {
+        title: 'Scoring degrades instead of failing',
+        rationale:
+          'A model API is a network dependency in the middle of a batch job. Treating an outage as fatal means one bad afternoon stops the pipeline; falling back to a deterministic rule-based score means the run completes with slightly worse prioritisation, which is a far better failure.',
+        evidence:
+          'The Claude scorer imports a rule-based `score_lead` as fallback and walks a list of candidate models before giving up.',
+      },
+      {
+        title: 'Automatic replies are built and switched off',
+        rationale:
+          'The system can draft a reply from a classified intent, and sending those unattended is exactly where outbound automation earns its reputation. The capability ships; the switch is off in the committed configuration, so turning it on is a deliberate decision by a person.',
+        evidence:
+          '`auto_send_replies` is `false` in `config/system_config.json`, and the responder generates drafts rather than sending.',
+      },
+    ],
+    outcome: { disclosure: 'not-disclosed' },
+    faqs: [
+      {
+        id: 'lead-engine-what-it-is',
+        question: 'What is the Outbound Lead Engine?',
+        answer:
+          'A SheetFlow internal build: a Python pipeline that cleans and deduplicates lead spreadsheets, scores each lead with Claude, sends personalised campaigns across rotating mailboxes under a daily cap, and reads replies back over IMAP so anyone who answers drops out of the follow-up sequence. It is an internal operator tool with no public deployment.',
+      },
+      {
+        id: 'lead-engine-spam',
+        question: 'How does it avoid being spam?',
+        answer:
+          'Sending is capped at 40 messages per account per day and rotated across accounts, every campaign can be dry-run before it sends, replies stop the sequence for that lead immediately, and automatic reply sending is disabled in the committed configuration so nothing goes out unattended.',
+      },
+      {
+        id: 'lead-engine-results',
+        question: 'What business results has the Outbound Lead Engine produced?',
+        answer:
+          'Not publicly disclosed. No campaign outcome has been measured against a stated method, so no figure is claimed — including any figure about replies, meetings or clients acquired.',
+      },
+    ],
+    related: ['ai-voice-receptionist', 'whatsapp-accounting-os'],
+    services: ['lead-capture', 'crm-automation'],
+  },
+  {
+    slug: 'ai-voice-receptionist',
+    client: 'AI Voice Receptionist',
+    sector: 'Voice AI · Telephony',
+    location: 'SheetFlow internal build',
+    shortLabel: 'Voice Receptionist',
+    metaTitle: 'AI Voice Receptionist — an outbound calling agent that books appointments',
+    metaDescription:
+      'A SheetFlow internal build: a Node.js telephony agent that places outbound calls over Twilio, holds a conversation through a language model with streamed neural speech, books an appointment, and logs the outcome of every call.',
+    kicker: 'Voice AI · Internal build',
+    headline: 'A phone call is a latency budget with a conversation inside it.',
+    lede: 'Text agents get to think. A voice agent has roughly a second before the silence sounds wrong and the person on the other end says “hello?”. Everything in this build — the model choice, the speech cache, the turn handling — is spending that budget.',
+    evidence: {
+      kind: 'internal',
+      reason:
+        'A telephony service that answers Twilio webhooks and places real calls. Exposing it publicly would mean anyone could make it dial a number, so it is not hosted for demonstration.',
+      artifacts: [
+        {
+          name: 'src/server.js — 458 lines',
+          detail:
+            'Eight endpoints covering the full call lifecycle: initiation, greeting, each spoken turn, no-response handling, call status and audio delivery.',
+        },
+        {
+          name: 'src/ai.js — 177 lines',
+          detail:
+            'Builds the conversation prompt from business configuration and drives a four-phase call structure — opener, discovery, bridge, book — with explicit end and booked signals.',
+        },
+        {
+          name: 'src/tts.js — 100 lines',
+          detail:
+            'Speech synthesis with an in-memory audio cache served from a dedicated endpoint, expiring on a five-minute TTL swept every minute.',
+        },
+        {
+          name: 'src/sheets.js — 98 lines',
+          detail:
+            'Writes the outcome of every call — timestamp, name, phone, reason, what the person said — to a spreadsheet log.',
+        },
+        {
+          name: 'railway.json · Procfile · DEPLOY-NOW.md',
+          detail:
+            'Deployment configuration and a written runbook; the project was prepared for hosting rather than left as a script.',
+        },
+      ],
+    },
+    brief: [
+      'A synthesised voice that pauses too long stops sounding like a person, and the call is lost in the first few seconds.',
+      'Telephony is stateful and HTTP is not — each spoken turn arrives as a separate webhook with no memory of the last.',
+      'A call that goes well and is not written down anywhere has produced nothing.',
+    ],
+    architecture: [
+      {
+        stage: 'Dial',
+        detail:
+          'Contacts are read from a CSV and placed as outbound calls, each carrying its own reason for calling into the conversation.',
+        nodes: ['Contact list', 'Twilio outbound', 'Per-call context'],
+      },
+      {
+        stage: 'Converse',
+        detail:
+          'Each turn arrives as a webhook: speech is transcribed by the telephony layer, answered by the language model, and spoken back.',
+        nodes: ['Speech capture', 'Language model turn', 'Session store'],
+      },
+      {
+        stage: 'Speak',
+        detail:
+          'Replies are synthesised to audio, cached in memory and served from a URL the telephony platform plays, rather than re-generated per playback.',
+        nodes: ['Neural TTS', 'In-memory cache', 'Audio endpoint'],
+      },
+      {
+        stage: 'Record',
+        detail:
+          'The call ends on an explicit end or booked signal, and the outcome is appended to a spreadsheet log with what the person actually said.',
+        nodes: ['End / booked signals', 'Call status webhook', 'Outcome log'],
+      },
+    ],
+    build: [
+      { label: 'Runtime', value: 'Node.js with Express 5 — 1,487 lines across 11 modules' },
+      { label: 'Telephony', value: 'Twilio programmable voice, outbound' },
+      { label: 'Language model', value: 'OpenRouter, defaulting to GPT-4o-mini and switchable by environment variable' },
+      { label: 'Speech', value: 'ElevenLabs Flash v2.5, with a text fallback when no key is configured' },
+      { label: 'Logging', value: 'Spreadsheet call log — timestamp, name, number, reason, transcript summary' },
+      { label: 'Deployment', value: 'Railway configuration, Procfile, and an optional tunnel for local testing' },
+    ],
+    decisions: [
+      {
+        title: 'The model was chosen for time-to-first-token, not for reasoning',
+        rationale:
+          'On a phone call the strongest model is the wrong model if it thinks for two seconds. The default is a small fast one, and the choice is written down in the source next to the alternatives it was picked over — so the next person changing it knows the constraint they are trading against.',
+        evidence:
+          'The model constant carries a comment comparing three candidates on speed against naturalness, and reads from an environment variable so it can be changed without a code edit.',
+      },
+      {
+        title: 'Synthesised audio is cached and served, not regenerated',
+        rationale:
+          'The telephony platform fetches the audio it plays, and can fetch it more than once. Generating speech per fetch pays the synthesis latency again inside the call and bills for it twice. Caching in memory behind an audio endpoint means each utterance is synthesised once, with a short TTL because a call is over in minutes.',
+        evidence:
+          'Generated audio is stored against an id and served from `/audio/:id`, with a five-minute expiry swept on a one-minute interval.',
+      },
+      {
+        title: 'Missing speech credentials degrade to text, not to a dropped call',
+        rationale:
+          'If synthesis is unavailable the call can still happen through the telephony platform’s own voice. Falling back keeps the appointment bookable at lower quality rather than failing the call outright, which is the right trade for a missed configuration.',
+        evidence:
+          'The speech module returns a fallback text payload rather than throwing when no API key is present.',
+      },
+      {
+        title: 'The conversation has explicit exit signals',
+        rationale:
+          'A voice agent without a defined ending keeps talking, and an open-ended call is both a cost and a bad experience. The prompt structures the call into four phases and requires the model to emit an explicit end or booked marker, so the server decides when to hang up on a signal rather than on a guess.',
+        evidence:
+          'The prompt defines opener, discovery, bridge and booking phases, and the server terminates the loop on the end and booked markers.',
+      },
+    ],
+    outcome: { disclosure: 'not-disclosed' },
+    faqs: [
+      {
+        id: 'voice-what-it-is',
+        question: 'What is the AI Voice Receptionist?',
+        answer:
+          'A SheetFlow internal build: a Node.js service that places outbound phone calls over Twilio, holds a natural conversation using a language model with neural speech synthesis, works towards booking a consultation, and logs the outcome of every call to a spreadsheet. It is not publicly hosted.',
+      },
+      {
+        id: 'voice-why-not-live',
+        question: 'Why is there no live demo of the voice agent?',
+        answer:
+          'Because a public endpoint for a system whose function is to place phone calls is a system anyone can make dial any number, at our cost and under our caller ID. The deployment configuration exists and the service runs; it is not exposed for demonstration.',
+      },
+      {
+        id: 'voice-results',
+        question: 'What business results has the AI Voice Receptionist produced?',
+        answer:
+          'Not publicly disclosed. No call-outcome measurement has been confirmed against a stated method, so no figure is claimed — including connection rates, conversation length or appointments booked.',
+      },
+    ],
+    related: ['outbound-lead-engine', 'whatsapp-accounting-os'],
+    services: ['appointment-booking', 'lead-capture'],
+  },
+  {
+    slug: 'bank-statement-parser',
+    client: 'Bank Statement Parser',
+    sector: 'Document AI · Excel automation',
+    location: 'SheetFlow internal build',
+    shortLabel: 'Statement Parser',
+    metaTitle: 'Bank Statement Parser — scanned PDF statements compiled into an Excel workbook',
+    metaDescription:
+      'A SheetFlow internal build: a Python pipeline that reads scanned bank statement PDFs with OCR, extracts and categorises every transaction, and writes a four-sheet Excel workbook with a clean ledger and a financial summary.',
+    kicker: 'Document AI · Internal build',
+    headline: 'A scanned statement is not data until something reads it.',
+    lede: 'The statement arrives as a photograph of a page. Somewhere in it are three hundred transactions that a business needs in a spreadsheet — and typing them out is how a Saturday disappears. This pipeline reads the scan and hands back the workbook.',
+    evidence: {
+      kind: 'internal',
+      reason:
+        'The pipeline runs locally against real bank statements, and its output contains genuine account activity. It is described here and deliberately not screenshotted — the sample workbook holds real financial data belonging to a real person.',
+      artifacts: [
+        {
+          name: 'parser.py — 1,222 lines',
+          detail:
+            'The full pipeline: dependency bootstrap, PDF rendering, OCR, transaction extraction, categorisation and workbook generation.',
+        },
+        {
+          name: 'output/bank_statement_analysis.xlsx',
+          detail:
+            'A real generated workbook, verified on 2026-08-08: four sheets — Transactions (264 rows × 9 columns), Clean Ledger, Expense Categories and Financial Summary.',
+        },
+        {
+          name: 'input/ — two scanned statement PDFs',
+          detail:
+            'The actual inputs the sample output was produced from: 1.5 MB and 551 KB scans, each a photographed multi-page statement rather than a digital export.',
+        },
+      ],
+    },
+    brief: [
+      'The source is a photograph, not a text PDF, so nothing can be extracted without optical character recognition.',
+      'A transaction line that OCR mangles becomes a wrong number in a financial record, which is worse than a missing one.',
+      'The output has to land somewhere the business already works, which is a spreadsheet — not a dashboard nobody opens.',
+    ],
+    architecture: [
+      {
+        stage: 'Ingest',
+        detail:
+          'Scanned statement PDFs are dropped into an input folder; the pipeline picks up whatever is there with no per-file configuration.',
+        nodes: ['input/ folder', 'Multi-file batch', 'Page rendering'],
+      },
+      {
+        stage: 'Read',
+        detail:
+          'Each page is read twice — by direct text extraction where the PDF has a text layer, and by OCR where it does not — so digital and photographed statements both work.',
+        nodes: ['OCR engine', 'Text-layer extraction', 'Page images'],
+      },
+      {
+        stage: 'Structure',
+        detail:
+          'Recognised lines are parsed into dated transactions with debit, credit and running balance, each tagged with the file it came from.',
+        nodes: ['Transaction parsing', 'Debit / credit split', 'Balance tracking', 'Source attribution'],
+      },
+      {
+        stage: 'Publish to Excel',
+        short: 'Excel',
+        detail:
+          'The result is written as a four-sheet workbook: every transaction, a cleaned ledger, spend grouped by category, and a summary.',
+        nodes: ['Transactions', 'Clean Ledger', 'Expense Categories', 'Financial Summary'],
+      },
+    ],
+    build: [
+      { label: 'Language', value: 'Python — 1,222 lines, single-file pipeline' },
+      { label: 'OCR', value: 'PaddleOCR over rendered pages, with pdfplumber for statements carrying a text layer' },
+      { label: 'Categorisation', value: 'Anthropic API for transaction categorisation' },
+      { label: 'Output', value: 'Excel workbook via openpyxl — four sheets, one file' },
+      { label: 'Verified output', value: '264 transactions across two scanned statements, written on 2026-03-11' },
+      { label: 'Setup', value: 'Missing dependencies are detected and installed on first run' },
+    ],
+    decisions: [
+      {
+        title: 'Excel is the destination, not a dashboard',
+        rationale:
+          'The people who need this already live in spreadsheets — that is where their accountant wants the file and where they will filter, annotate and total it. A web dashboard would be a better demo and a worse tool: it would mean exporting to a spreadsheet anyway, with one more step in between.',
+        evidence:
+          'The pipeline writes a single `.xlsx` with four sheets and no other output surface; the sample workbook opens with 264 rows in the Transactions sheet.',
+      },
+      {
+        title: 'Two extraction paths, because statements arrive both ways',
+        rationale:
+          'Some statements are digital exports with a real text layer; most that arrive from a small business are photographs taken on a phone. Running text extraction where it works and OCR where it does not means one pipeline handles both, instead of failing on whichever kind it was not built for.',
+        evidence:
+          'Both pdfplumber and an OCR engine are required dependencies, and each transaction row records the source file it was read from.',
+      },
+      {
+        title: 'The sample output is described here and not shown',
+        rationale:
+          'The verified workbook is genuine, which is exactly why it cannot be a screenshot. It contains real counterparty names, real UPI identifiers and real balances. Publishing a picture of it to prove the pipeline works would leak somebody’s finances to prove a point about engineering.',
+        evidence:
+          'This case study cites row and column counts and the sheet names rather than any transaction content, and no image of the workbook appears anywhere on this site.',
+      },
+      {
+        title: 'The run installs what it needs',
+        rationale:
+          'This is operated by the business owner, not by a developer with a working Python toolchain. Detecting missing packages and installing them on first run removes the single most common reason a tool like this gets abandoned before it is ever used.',
+        evidence:
+          'The pipeline checks each required import at startup and installs any that are missing before continuing.',
+      },
+    ],
+    outcome: { disclosure: 'not-disclosed' },
+    faqs: [
+      {
+        id: 'parser-what-it-is',
+        question: 'What is the Bank Statement Parser?',
+        answer:
+          'A SheetFlow internal build: a Python pipeline that reads scanned bank statement PDFs using OCR, extracts every transaction with its date, debit, credit and running balance, categorises spending, and writes a four-sheet Excel workbook. A verified sample run produced 264 transactions from two scanned statements.',
+      },
+      {
+        id: 'parser-excel',
+        question: 'Why does it output Excel rather than a dashboard?',
+        answer:
+          'Because that is where the work continues. The workbook goes to an accountant, gets filtered and annotated, and totals get checked by hand. A dashboard would have required exporting to a spreadsheet as an extra step, so the spreadsheet is the product.',
+      },
+      {
+        id: 'parser-results',
+        question: 'What business results has the Bank Statement Parser produced?',
+        answer:
+          'Not publicly disclosed. It is an internal build with no client engagement behind it, and no time-saving or accuracy figure has been measured against a stated method, so none is claimed.',
+      },
+    ],
+    related: ['whatsapp-accounting-os', 'wpc-design-automation'],
+    services: ['business-reports', 'invoice-reminders'],
+  },
+
 ];
 
 /* ------------------------------------------------------------------ */
@@ -503,6 +1648,84 @@ export const projects: WorkProject[] = [
 
 export function getProject(slug: string): WorkProject | undefined {
   return projects.find((p) => p.slug === slug);
+}
+
+/** A commissioned client engagement, carrying a fetchable URL and a screenshot. */
+export type LiveProject = WorkProject & {
+  evidence: Extract<ProjectEvidence, { kind: 'live' }>;
+};
+
+/**
+ * Any project a visitor can open — commissioned or demonstration.
+ *
+ * Both variants carry `liveUrl` and `shot`, so this is the correct input for
+ * anything whose concern is *reachability*: the screenshot capture script and
+ * the test that fetches every published URL.
+ */
+export type VisitableProject = WorkProject & {
+  evidence: Extract<ProjectEvidence, { kind: 'live' | 'demo' }>;
+};
+
+/**
+ * Commissioned client engagements only.
+ *
+ * The narrowed return type is the point: callers that make a *client* claim
+ * cannot be handed a demonstration build or an internal one by a later edit to
+ * the array above.
+ *
+ * Use `visitableProjects()` instead where the concern is whether a URL resolves
+ * — that question has the same answer for both visitable variants, and using
+ * this one there would silently stop fetching the demo URLs.
+ */
+export function liveProjects(): LiveProject[] {
+  return projects.filter((p): p is LiveProject => p.evidence.kind === 'live');
+}
+
+/** Projects a visitor can open, of either visitable kind. */
+export function visitableProjects(): VisitableProject[] {
+  return projects.filter(
+    (p): p is VisitableProject =>
+      p.evidence.kind === 'live' || p.evidence.kind === 'demo',
+  );
+}
+
+/**
+ * The six fields the homepage grid renders, and nothing else.
+ *
+ * ## Why this exists here rather than in the component
+ *
+ * `components/sections/CaseStudy.tsx` is a client component, and it used to
+ * import this module directly. That put the **entire case-study corpus** into
+ * the browser bundle — every architecture stage, engineering decision and FAQ
+ * answer for all eight projects — to render a card showing a name, a sector and
+ * a picture.
+ *
+ * It went unnoticed while `/work` held three projects. Phase Y took it to
+ * eight, gzipped JS went 355.7 → 369.3 kB, and the 360 kB budget gate failed.
+ * The narrowing therefore happens on the server, and the prose never enters the
+ * client graph.
+ *
+ * `toCard` lives in this module and not next to the component because anything
+ * exported from a `'use client'` file becomes a client reference — a server
+ * component calling it gets a proxy, and the page fails to serialize at export.
+ */
+export interface CaseStudyCard {
+  slug: string;
+  client: string;
+  sector: string;
+  location: string;
+  shot: { src: string; alt: string };
+}
+
+/** Narrows a visitable project to what the homepage grid needs. Server-side only. */
+export function toCard(project: VisitableProject): CaseStudyCard {
+  return {
+    slug: project.slug,
+    client: project.client,
+    sector: project.sector,
+    location: project.location,
+    shot: { src: project.evidence.shot.src, alt: project.evidence.shot.alt },
+  };
 }
 
 export function relatedProjects(project: WorkProject): WorkProject[] {

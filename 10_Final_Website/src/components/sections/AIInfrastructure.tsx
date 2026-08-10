@@ -6,6 +6,7 @@ import { MessageCircle, Users, CalendarClock, Workflow, CreditCard, Boxes } from
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { Breathing } from '@/components/motion/Breathing';
 import { prefersReducedMotion } from '@/lib/utils';
+import { EASE } from '@/lib/motion';
 
 interface Branch {
   id: string;
@@ -136,7 +137,7 @@ export function AIInfrastructure() {
                   initial={{ opacity: 0, y: 22 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: '-10%' }}
-                  transition={{ duration: 0.6, delay: 0.1 * i, ease: [0.16, 1, 0.3, 1] }}
+                  transition={{ duration: 0.6, delay: 0.1 * i, ease: EASE }}
                 >
                   {/* branch header */}
                   <div className="flex items-center gap-2.5">

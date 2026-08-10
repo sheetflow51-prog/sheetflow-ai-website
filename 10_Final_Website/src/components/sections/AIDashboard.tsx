@@ -9,6 +9,7 @@ import { SectionHeader } from '@/components/ui/SectionHeader';
 import { TiltCard } from '@/components/motion/TiltCard';
 import { Breathing } from '@/components/motion/Breathing';
 import { prefersReducedMotion } from '@/lib/utils';
+import { EASE } from '@/lib/motion';
 
 /**
  * useReduced — SSR-safe reduced-motion gate.
@@ -72,7 +73,7 @@ function StatCounter({
     if (prefersReducedMotion()) { setCount(value); return; }
     const controls = animate(0, value, {
       duration: 1.4,
-      ease: [0.16, 1, 0.3, 1],
+      ease: EASE,
       onUpdate: (latest) => setCount(Math.floor(latest)),
     });
     return () => controls.stop();
@@ -138,7 +139,7 @@ function MiniChart() {
           initial={{ pathLength: 0 }}
           whileInView={{ pathLength: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 1.4, ease: EASE }}
         />
       </svg>
       {/* Live endpoint — the one pixel that stays alive after the one-time
@@ -184,7 +185,7 @@ export function AIDashboard() {
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-10%' }}
-            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.9, ease: EASE }}
             style={{
               perspective: '2000px',
             }}
@@ -244,7 +245,7 @@ export function AIDashboard() {
                 initial={{ opacity: 0, x: 30, y: -10 }}
                 whileInView={{ opacity: 1, x: 0, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: 0.6, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ delay: 0.6, duration: 0.7, ease: EASE }}
                 style={{ transform: 'translateZ(40px)' }}
               >
                 <GlassCard variant="strong" className="border-signal-success/30 p-4">
@@ -272,7 +273,7 @@ export function AIDashboard() {
                 initial={{ opacity: 0, x: -30, y: 20 }}
                 whileInView={{ opacity: 1, x: 0, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: 0.85, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ delay: 0.85, duration: 0.7, ease: EASE }}
                 style={{ transform: 'translateZ(60px)' }}
               >
                 <GlassCard variant="strong" className="p-4">

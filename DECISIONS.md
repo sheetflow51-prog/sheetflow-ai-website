@@ -502,3 +502,233 @@ not lab numbers — shows INP suffering.
 > comparison has no arms to distrust: it is two whole pages, built the same way.
 >
 > Still the founder's call, and still not taken autonomously.
+
+---
+
+## Phase Y — 2026-08-08
+
+### D28 — `ProjectEvidence`: internal builds are a different shape, not a relaxed one
+
+**Decision.** `WorkProject` no longer carries `liveUrl` and `shot` directly. It
+carries an `evidence` discriminated union: `live` with a fetchable `liveUrl` and
+a `shot`, or `internal` with a `reason` and an `artifacts` ledger and **no field
+a URL or an image can be typed into**.
+
+**The alternative and why it lost.** Making `liveUrl` optional was one line. It
+would also have destroyed the property the field exists for — that every outbound
+project link on `/work` resolves — replacing a compile-time guarantee with a
+convention. The five new systems would have fitted, and the sixth person to add a
+project would have left it blank.
+
+**Consequences, all intended:**
+
+- `liveProjects()` returns a narrowed `LiveProject`, so the HTTP-200 test cannot
+  receive an internal build, and an internal build cannot silently skip it.
+- Internal case studies emit no project `url`, no `about` organisation and no
+  `image` in JSON-LD, asserted by test. Naming a client for uncommissioned work
+  is now a failing test rather than a review catch.
+- Internal builds have **no screenshot at all**. See D30.
+
+**Precedent followed:** `ProjectOutcome` (D24) does exactly this for metrics. The
+honest state is the one the compiler enforces.
+
+### D29 — Adobe, Canva and Figma MCP: not used, and using them would weaken the portfolio
+
+**Decision.** No image tooling was applied to any portfolio asset.
+
+**Reasoning, which is now structural rather than incidental:**
+
+1. **The three client screenshots are evidence.** Their value is that a visitor
+   can open the live site and see the same thing. Retouching, colour work or
+   generative expansion makes the image diverge from the artifact it evidences.
+   Improving them would degrade them.
+2. **Optimisation is already handled** — `next/image` serves AVIF and WebP with a
+   30-day cache, and the shots come from a committed deterministic script. An
+   external round-trip makes a reproducible asset unreproducible to save nothing
+   measurable.
+3. **DEC-302 stands** for brand assets: `logo.png` is canonical and
+   `public/brand/` is generated from it.
+
+**Revisit if** a case study ever needs a diagram rather than a screenshot. A
+generated architecture diagram is a different artifact from a retouched
+photograph of evidence, and the objection above would not apply to it.
+
+### D30 — Internal builds carry an artifact ledger instead of a picture
+
+**Decision.** No imagery is generated for the five internal systems.
+
+**Why.** A screenshot of a live deployment is *checkable* — the reader can open
+the URL and compare. A screenshot of a file on a developer's laptop is an
+assertion with a picture attached, and it borrows the visual authority of the
+verifiable kind without the verifiability. The `internal` variant therefore
+carries named files with line counts, named outputs and a test count with the
+date it ran — claims a reader could contradict.
+
+**One artifact was declined specifically on privacy grounds.** The Bank Statement
+Parser's output workbook is genuine, which is exactly why it cannot be shown: it
+holds real counterparty names, real UPI identifiers and real balances. It is
+cited by sheet name and row count only.
+
+**Consequence:** 10 screenshot tests skip, and are replaced by the internal-build
+assertions in D28.
+
+### D31 — AI Content Engine excluded pending output, not on quality
+
+**Decision.** 6,272 lines across 20 agents is not published.
+
+**Why.** Two disqualifiers, both about evidence rather than ambition. It
+**cannot run as found** — `config.json` carries `YOUR_YOUTUBE_API_KEY` and the
+rest as literal placeholders. And it has **produced nothing**: `outputs/` holds
+two temporary text files, no video, no thumbnail, no post. A content engine's
+evidence is content.
+
+**Reopen when** a run produces artifacts. The architecture is genuinely
+substantial and this is a gate, not a judgement.
+
+### D27 — corrected again, in the other direction
+
+Phase M corrected D27 from "no verifiable artifact" to "live Google Sites
+presence, dead Manus prototype". **The second half was also wrong.**
+
+`elevatewpc-gd3vgq9r.manus.space` returns **HTTP 200, 369,848 bytes** when
+fetched following redirects. Phase M's HTTP `000` was a transient connection
+failure recorded as a finding from one attempt.
+
+**What has never changed, across three revisions of this decision: SheetFlow's
+authorship is unverified.** Both artifacts are live; neither is built on anything
+in this account. That was always the disqualifier, and the two dead-versus-alive
+corrections were never the deciding fact.
+
+**Standing rule added:** a network check gets a **retry before it gets a
+conclusion**. Phase M's exclusion and Phase Y's own `ECONNRESET` were the same
+error twice, in the same repository that already had this rule for Lighthouse.
+
+---
+
+## Phase Z — 2026-08-08
+
+### D32 — Demonstration builds are published, as a third evidence kind
+
+**Decision.** Two live builds SheetFlow made **uncommissioned** for real, named
+clinics now ship at `/work`: Dr. A.K Gupta Dental & Diagnostic Centre and Align
+Dental Care. They ship under a new `ProjectEvidence` variant, `demo`.
+
+**Why this was previously blocked, and what unblocked it.** Phase M and Phase Y
+both withheld these builds. The stated reason was that a `-demo` URL and an
+auto-generated Netlify subdomain signal a speculative build rather than a
+delivered engagement — which is true, and was the right call given what those
+phases could establish.
+
+What they could not establish was **authorship**, because the Netlify account
+was never enumerated (a gap both phases recorded honestly and carried forward).
+Phase Z enumerated it: both builds are deployed from SheetFlow's own account,
+`sheetflow51@gmail.com`. **Controlling the deploying account is direct evidence
+of authorship** — and it is exactly the evidence Elevate WPC has never had,
+which is why that one is still excluded.
+
+**The two questions earlier phases collapsed.** "Did we build it?" and "did
+anyone commission it?" are separate, and withholding the work answered the first
+question wrongly in order to avoid answering the second wrongly. The type now
+answers them separately.
+
+**Why a variant and not a boolean.** A `isDemo` flag on `live` would have been
+the smaller change and the weaker guarantee: the JSON-LD builder would still
+have had a reachable path that emits `about: Organization`, which asserts the
+named practice engaged us. As a distinct variant, the builder branches on the
+discriminant and a demonstration **cannot** emit a client organisation. A test
+asserts the absence, and asserts that `url` and `image` survive — because the
+build is still ours and still reachable.
+
+**Three places carry the disclosure**, because one is not enough:
+1. The case study renders a mandatory `basis` string **above the screenshot**,
+   not below it — a reader who looks at the picture and leaves has still passed
+   it.
+2. The `/work` card carries a "Demonstration" marker, so the distinction
+   survives someone who only scans the grid.
+3. `llms.txt` names all three kinds and instructs answer engines not to count
+   demonstrations as customers — the surface where "SheetFlow built a site for
+   AK Dental" would most quietly become "…as a client".
+
+**Consequence.** `/work` goes from 8 case studies to 10. The client count does
+not change: **three**. Anything that makes a client claim still calls
+`liveProjects()`, which cannot return a demonstration.
+
+### D33 — Krishna Dental stays excluded, on new and better grounds
+
+**Decision.** Not published, despite D32 removing its previous disqualifier.
+
+**Why.** D32 made "it looks speculative" a non-reason — that is what `demo`
+exists for — so the build was re-read rather than reclassified on the old note.
+It is **unfinished**: its WhatsApp link is `wa.me/91XXXXXXXXXX`, an unreplaced
+placeholder, and it contains **no form at all** where the AK Dental build has a
+working one.
+
+Publishing it would put a real clinic's name on a case study advertising a
+contact path that goes nowhere. Authorship is established (same Netlify
+account); completeness is not.
+
+**Reopen when** the placeholder number is replaced with a real one.
+
+**The general lesson is the one worth keeping:** when a rule changes, re-check
+the artifacts it was excluding, rather than assuming the new rule admits them.
+The old reason for exclusion was wrong *and* the conclusion was right.
+
+### D34 — The Saraswati CRM dashboard ships, with its seeded data stated
+
+**Decision.** The dashboard at `/dashboard.html` is published inside the existing
+Saraswati case study as a `CompanionSurface`, with a mandatory note.
+
+**Why now.** It has been queued since Phase M with the condition "described as a
+demonstration on seeded data". The `CompanionSurface` type makes `note`
+**required**, so that condition is enforced structurally rather than remembered.
+
+**What the note says, and why it is not an apology.** Every record is invented —
+"Priya Sharma", sequential placeholder numbers, IDs from SDC-001. That is the
+correct engineering decision, not a shortcut: the page is publicly reachable
+with **no authentication**, so real patient records there would be a
+data-protection exposure. The constraint the page is under is privacy, not
+fidelity, and the case study says so.
+
+### D35 — Internal builds get a diagram, and D30 still holds
+
+**Decision.** RC2 renders a `WorkflowGlyph` on the five internal `/work` tiles
+and case-study headers. **D30 is not overturned.** It is drawn narrower, and the
+line it draws is the one that was actually doing the work.
+
+**The tension, stated plainly.** D30 says "no imagery is generated for the five
+internal systems", and RC2 generates imagery for the five internal systems. That
+looks like a reversal and it needs an answer rather than silence.
+
+**Why it is not one.** Read D30's *reason* rather than its sentence. The thing
+D30 refuses is **a picture that borrows the visual authority of a verifiable
+artifact without the verifiability** — a screenshot of a file on a developer's
+laptop, which looks exactly like a screenshot of a running deployment and is not
+one. That objection is about **simulating evidence**.
+
+A `WorkflowGlyph` simulates nothing. It renders `architecture[].stage` — strings
+already published, already reviewed under D24, and already set in prose in the
+detail cards **directly below the diagram on the same page**. A reader who
+doubts a node reads the paragraph under it. Nothing about it resembles a
+screenshot, and it makes no claim the page does not already make in words.
+
+**The test D30 implies, made explicit.** An internal build may render a visual
+if and only if:
+
+1. every element of it is drawn from data already published on that page;
+2. it does not resemble a capture of a running interface; and
+3. a reader can check every claim it makes without leaving the page.
+
+A staged mockup of the accounting OS's "dashboard" fails (1) and (2) and stays
+refused. A rendered PDF page from the bank parser's real output fails on D30's
+privacy grounds as well and stays refused.
+
+**What forced the decision.** The `/work` grid's internal tiles were **~90%
+empty**, measured on the running build, so half the portfolio read as broken
+cards beside five finished ones. D30's correct refusal of fake screenshots had
+been carried, by default, into having nothing at all — and the five projects it
+silenced are the largest engineering on the site.
+
+**Enforced, not remembered.** `tests/e2e/work.spec.ts` fails if any published
+stage has no icon keyed to its exact string, and fails if a compact `short`
+label is not a literal word of the stage it shortens — so the diagram cannot
+acquire a claim the case study does not make.

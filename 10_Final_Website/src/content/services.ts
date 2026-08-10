@@ -393,6 +393,12 @@ export const services: ServicePage[] = [
         answer:
           'Yes. Daily suits most service businesses because it matches the rhythm of enquiries and bookings, but the same assembly runs weekly or on a schedule you choose. Exception alerts can also fire immediately rather than waiting for the next report.',
       },
+      {
+        id: 'faq-reports-excel-output',
+        question: 'Can the report arrive as an Excel workbook rather than an email?',
+        answer:
+          'Yes, and for anything an accountant will touch it is usually the better answer. The email is for reading; a workbook is for filtering, annotating and totalling, which is what actually happens to a set of figures once someone needs to work with them. Reports can be written as a multi-sheet Excel file — a detail sheet, a cleaned ledger and a summary — delivered to OneDrive, SharePoint or as an attachment, with no Google Workspace account involved. Both can run from the same assembly, so the email stays as the daily glance and the workbook accumulates the record.',
+      },
     ],
     related: ['crm-automation', 'lead-capture'],
   },

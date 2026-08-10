@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Registered so the angle can be *interpolated* — an unregistered custom
+   property is a string to the animation engine and jumps from 0deg to 360deg in
+   one step. Declared at top level because `@property` is not a nested rule.
+
+   Where `@property` is unsupported the angle simply stays at its initial value:
+   `.border-beam` degrades to a static gradient edge, which is a resting state
+   the design already uses, rather than to a broken one. */
+@property --beam-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
 /* ==========================================================================
    SHEETFLOW AI — DESIGN TOKENS
    The intelligence layer's visual foundation.
@@ -182,6 +195,22 @@
     @apply h-px w-6 bg-accent-bright/40;
   }
 
+  /* The same eyebrow typography without the 24px lead-in rule, for eyebrows
+     inside cards.
+
+     Before RC2 this was a hand-copied class string — `text-[11px] font-medium
+     uppercase tracking-widest text-accent-bright/80` — repeated on the `/work`
+     grid cards and the case-study "More work" cards. It was `.kicker` minus its
+     one identifying rule, so the eyebrow above a section had a lead-in and the
+     eyebrow on every card below it did not, for no stated reason.
+
+     The rule is dropped rather than added because ten cards on `/work` each
+     carrying a lead-in reads as decoration; at page level it reads as
+     structure. Same type, different scale, one definition each. */
+  .kicker-bare {
+    @apply text-[11px] font-medium uppercase tracking-widest text-accent-bright/80;
+  }
+
   /* ---------- Headline systems ---------- */
   /* Mobile minimums tightened: avoid the 9vw clamp jumping straight from
      mobile-floor to desktop-ceiling, which produced cramped 64px monoliths
@@ -306,9 +335,12 @@
       0 0 40px rgba(59, 130, 246, 0.1);
   }
 
-  /* Feature card with mouse-tracked highlight */
+  /* Feature card with mouse-tracked highlight.
+     20px radius, not 28px: `.card` is `rounded-2xl` and the `.tsx` layer runs
+     18 × `rounded-2xl` to 1 × `rounded-xl`, so 20px is the system value and
+     this was the outlier — visible wherever the two sit on one page. */
   .feature-card {
-    @apply relative overflow-hidden rounded-3xl p-8;
+    @apply relative overflow-hidden rounded-2xl p-8;
     background: rgba(255, 255, 255, 0.025);
     border: 1px solid rgba(255, 255, 255, 0.06);
     transition: border-color 0.3s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -334,6 +366,28 @@
 
   .feature-card:hover {
     border-color: rgba(59, 130, 246, 0.2);
+  }
+
+  /* ---------- Closing CTA panel (RC2) ---------- */
+  /* The homepage's `FinalCTA` sits on an ambient treatment. The equivalent
+     block on the eleven `/work` routes was a headline, a paragraph and two
+     controls on flat void — indistinguishable from any other section, and the
+     last thing a visitor sees before leaving (`RC2_VISUAL_AUDIT.md` § V7).
+
+     This introduces no new visual vocabulary. It composes three things the
+     design system already defines — the aurora wash, the signature top edge and
+     the 20px glass radius — so the CTA is promoted using the language the rest
+     of the site is written in. */
+  .cta-panel {
+    @apply signature-edge relative overflow-hidden rounded-2xl px-6 py-12 sm:px-10 md:px-14 md:py-16;
+    background:
+      radial-gradient(ellipse 70% 120% at 15% 0%, rgba(59, 130, 246, 0.13), transparent 62%),
+      radial-gradient(ellipse 60% 110% at 88% 20%, rgba(233, 162, 59, 0.09), transparent 62%),
+      rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.05) inset,
+      0 20px 60px rgba(0, 0, 0, 0.35);
   }
 
   /* ---------- Badge / pill ---------- */
@@ -533,6 +587,242 @@
     border-radius: inherit;
   }
 
+  /* ---------- Workflow glyph (RC2) ---------- */
+  /* The pipeline diagram on `/work` tiles, case-study headers and the
+     architecture rail. See `components/work/WorkflowGlyph.tsx` for why it is
+     markup rather than an SVG.
+
+     All geometry hangs off `--glyph-node`. The connector meets the node at
+     `calc(var(--glyph-node) / 2)`, so tuning a size in one place cannot leave
+     the connector floating above or below the icons. */
+  .glyph {
+    --glyph-node: 44px;
+    --glyph-gap: 10px;
+    --glyph-label: 11px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .glyph-tile {
+    --glyph-node: 38px;
+    --glyph-gap: 8px;
+    --glyph-label: 10px;
+  }
+
+  .glyph-panel {
+    --glyph-node: 52px;
+    --glyph-gap: 12px;
+    --glyph-label: 12px;
+  }
+
+  .glyph-rail {
+    --glyph-node: 40px;
+    --glyph-gap: 9px;
+    --glyph-label: 11px;
+  }
+
+  @media (min-width: 768px) {
+    .glyph-tile {
+      --glyph-node: 48px;
+      --glyph-label: 11px;
+    }
+    .glyph-panel {
+      --glyph-node: 64px;
+      --glyph-label: 13px;
+    }
+  }
+
+  .glyph-node {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--glyph-node);
+    height: var(--glyph-node);
+    border-radius: 14px;
+    /* Opaque enough to occlude the connector passing behind it — a dashed line
+       crossing the icon reads as a rendering fault rather than as a pipeline. */
+    background: linear-gradient(160deg, rgba(26, 31, 46, 0.96), rgba(10, 11, 15, 0.96));
+    border: 1px solid rgba(147, 197, 253, 0.18);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.06) inset,
+      0 6px 18px rgba(0, 0, 0, 0.45);
+    transition:
+      border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .glyph-icon {
+    width: calc(var(--glyph-node) * 0.42);
+    height: calc(var(--glyph-node) * 0.42);
+    color: rgb(var(--color-accent-light));
+  }
+
+  /* The terminal node is where the work ends up — a ledger, a workbook, a
+     booked appointment. Gold is the logo's second colour and is used here for
+     exactly one node per glyph, so the eye lands on the outcome. */
+  .glyph-step:last-child .glyph-node {
+    border-color: rgba(244, 192, 99, 0.28);
+  }
+  .glyph-step:last-child .glyph-icon {
+    color: rgb(var(--color-gold-bright));
+  }
+
+  .glyph-label {
+    margin-top: var(--glyph-gap);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--glyph-label);
+    line-height: 1.25;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    text-align: center;
+    /* ink-200. ink-400 measures 4.81:1 on void but these labels sit at 10px in
+       the tile variant, where AA wants the larger ratio. */
+    color: rgb(var(--color-text-secondary));
+  }
+
+  .glyph-detail {
+    margin-top: 5px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    line-height: 1.3;
+    text-align: center;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  /* Connector. Spans from this node's centre back to the previous node's
+     centre — `right: 50%; width: 100%` is exactly one column, so it holds at
+     any number of stages and any container width. Sits behind the nodes. */
+  .glyph-link {
+    position: absolute;
+    top: calc(var(--glyph-node) / 2);
+    right: 50%;
+    width: 100%;
+    height: 1px;
+    z-index: 0;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+      90deg,
+      rgba(147, 197, 253, 0.5) 0px,
+      rgba(147, 197, 253, 0.5) 5px,
+      transparent 5px,
+      transparent 11px
+    );
+    /* Fades under both nodes so the dashes never appear to touch an icon. */
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+            mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+  }
+
+  .glyph-node,
+  .glyph-label,
+  .glyph-detail {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Hover — the only continuous motion this component has, and it runs only
+     while a pointer is on the card. At rest every glyph on `/work` costs
+     nothing, which is the whole reason five of them can sit on a route that
+     scores 64 on mobile. */
+  .group:hover .glyph-link,
+  .glyph:hover .glyph-link {
+    animation: glyph-flow 1.1s linear infinite;
+  }
+
+  .group:hover .glyph-node,
+  .glyph:hover .glyph-node {
+    border-color: rgba(147, 197, 253, 0.34);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.08) inset,
+      0 8px 22px rgba(0, 0, 0, 0.5),
+      0 0 18px rgba(59, 130, 246, 0.16);
+  }
+
+  .group:hover .glyph-step:last-child .glyph-node,
+  .glyph:hover .glyph-step:last-child .glyph-node {
+    border-color: rgba(244, 192, 99, 0.45);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.08) inset,
+      0 8px 22px rgba(0, 0, 0, 0.5),
+      0 0 18px rgba(233, 162, 59, 0.18);
+  }
+
+  @keyframes glyph-flow {
+    to {
+      background-position: 11px 0;
+    }
+  }
+
+  /* One-shot entrance, `panel` variant only — the case-study header, where the
+     glyph is the page's first visual and is above the fold on every viewport.
+     It plays once and stops; nothing here loops.
+
+     The 100% keyframe is the resting state deliberately. The global
+     reduced-motion rule collapses `animation-duration` to 0.01ms, which lands
+     the element on its final frame — so a visitor who asked for no motion gets
+     the correct static rendering rather than an element stuck at opacity 0. */
+  .glyph-panel .glyph-node,
+  .glyph-panel .glyph-label,
+  .glyph-panel .glyph-detail {
+    animation: glyph-node-in 0.62s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--glyph-i) * 110ms);
+  }
+
+  .glyph-panel .glyph-link {
+    animation: glyph-link-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--glyph-i) * 110ms - 40ms);
+    transform-origin: right center;
+  }
+
+  @keyframes glyph-node-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes glyph-link-in {
+    from {
+      opacity: 0;
+      transform: scaleX(0);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* The global reduced-motion rule collapses `animation-duration` but leaves
+     `animation-delay` alone, which would hold the last node invisible for
+     440ms before snapping it in — a flash of missing content, which is the
+     failure mode reduced-motion exists to prevent. Zero the delay here, and
+     stop the hover drift outright rather than running it at 0.01ms. */
+  @media (prefers-reduced-motion: reduce) {
+    .glyph-panel .glyph-node,
+    .glyph-panel .glyph-label,
+    .glyph-panel .glyph-detail,
+    .glyph-panel .glyph-link {
+      animation-delay: 0s !important;
+    }
+
+    .group:hover .glyph-link,
+    .glyph:hover .glyph-link {
+      animation: none !important;
+    }
+  }
+
   /* The proprietary signature grid — sparse 64px lattice that fades
      toward the edges. Used as the "intelligence canvas" backdrop. */
   .signature-grid {
@@ -542,6 +832,472 @@
     background-size: 64px 64px;
     mask-image: radial-gradient(ellipse 60% 50% at 50% 50%, #000 30%, transparent 80%);
     -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 50%, #000 30%, transparent 80%);
+  }
+
+  /* ======================================================================
+     RC3 — DEPTH SYSTEM
+     Geometry and motion live here rather than in JavaScript. `audit-bundle.mjs`
+     sums every emitted chunk, so lazy-loading buys no budget: at plan time RC3
+     had 9.0 kB of JS headroom against 28.4 kB of CSS headroom. See
+     `docs/RC3_COMPONENT_PLAN.md`.
+     ====================================================================== */
+
+  /* ---------- Elevation tier 4 ---------- */
+  /* `.glass`, `.glass-strong` and `.glass-subtle` sit within ~1.5% alpha of one
+     another, so stacking them does not read as a hierarchy. This is the tier
+     that is meant to look *lifted* — used where one surface must clearly sit
+     above the composition rather than within it. */
+  .glass-elevated {
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.055),
+      rgba(255, 255, 255, 0.022)
+    );
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.1) inset,
+      0 24px 70px rgba(0, 0, 0, 0.5);
+  }
+
+  /* ---------- Animated border ---------- */
+  /* Magic UI's Border Beam look, rebuilt. Theirs animates `offsetDistance`
+     along `offset-path: rect()` with framer-motion, and ships Tailwind v4
+     syntax — neither compiles here (this repo is Tailwind 3.4), and `rect()`
+     support is thin. A rotating conic gradient behind a padding-box mask is the
+     same effect with zero JavaScript and universal support. */
+  .border-beam {
+    position: relative;
+  }
+
+  .border-beam::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    pointer-events: none;
+    background: conic-gradient(
+      from var(--beam-angle),
+      transparent 0deg,
+      transparent 232deg,
+      rgba(147, 197, 253, 0.65) 296deg,
+      rgba(244, 192, 99, 0.55) 330deg,
+      transparent 360deg
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+  }
+
+  /* The beam *travels* only while the surface is hovered or focused.
+     A conic gradient rotating on a loop repaints its element every frame for
+     the entire life of the page, including while scrolled far out of view —
+     the permanent-compositor-load pattern `MOTION_INVENTORY.md` § 2 already
+     flags as worth auditing. At rest this is a lit gradient edge, which is a
+     finished look rather than a degraded one; motion is spent on interaction,
+     which is the same rule the RC2 glyph hover established. */
+  .border-beam:hover::before,
+  .border-beam:focus-within::before {
+    animation: border-beam-spin 4.5s linear infinite;
+  }
+
+  @keyframes border-beam-spin {
+    to {
+      --beam-angle: 360deg;
+    }
+  }
+
+  /* ---------- Scroll choreography ---------- */
+  /* The `/work` entrance reveal RC2 abandoned (`MOTION_INVENTORY.md` § 6).
+     Its objection was correct and is designed around here, not ignored:
+
+       1. NEVER put this on an LCP candidate. An `opacity: 0` headline delays
+          LCP by the reveal delay, and `/work` measures LCP at 4.7s on mobile.
+          Below-the-fold content only — content a scroll is required to reach.
+       2. Pure CSS behind `@supports`. No IntersectionObserver, no JS, no
+          hydration cost. Where scroll-driven animations are unsupported the
+          rule never applies and today's static page renders unchanged, so
+          there is no path on which an element is stranded invisible. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .reveal-view {
+        animation: reveal-view-in linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 58%;
+      }
+    }
+  }
+
+  @keyframes reveal-view-in {
+    from {
+      opacity: 0;
+      transform: translateY(26px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* ======================================================================
+     RC3 — AUTOMATION UNIVERSE
+     See `components/sections/AutomationUniverse.tsx` for why the geometry is a
+     module-scope constant and why no motion library is imported.
+     ====================================================================== */
+
+  .universe {
+    position: relative;
+    margin-inline: auto;
+    max-width: 980px;
+  }
+
+  /* Below md the radial diagram is illegible — six nodes on an ellipse inside
+     360px gives ~20px labels — so the SVG is dropped and the same buttons
+     become a vertical spine. The DOM and the copy are identical; only the
+     decorative geometry differs. */
+  .universe-canvas {
+    display: none;
+  }
+
+  .universe-nodes {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  /* The mobile trunk — one continuous line behind the badge column, so the six
+     automations read as one system rather than six list items. */
+  .universe-nodes::before {
+    content: '';
+    position: absolute;
+    left: 21px;
+    top: 22px;
+    bottom: 22px;
+    width: 1px;
+    background: linear-gradient(
+      180deg,
+      transparent,
+      rgba(147, 197, 253, 0.3) 12%,
+      rgba(147, 197, 253, 0.3) 88%,
+      transparent
+    );
+  }
+
+  .universe-node {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 7px 10px 7px 0;
+    text-align: left;
+    border-radius: 12px;
+    transition: background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .universe-node-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    /* Opaque: the trunk and the beams pass behind these. */
+    background: linear-gradient(160deg, rgba(26, 31, 46, 0.97), rgba(10, 11, 15, 0.97));
+    border: 1px solid rgba(147, 197, 253, 0.18);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.06) inset,
+      0 6px 18px rgba(0, 0, 0, 0.45);
+    transition:
+      border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .universe-node-label {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    color: rgb(var(--color-text-secondary));
+    transition: color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .universe-node[data-active='true'] .universe-node-badge {
+    border-color: rgba(147, 197, 253, 0.5);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.1) inset,
+      0 8px 24px rgba(0, 0, 0, 0.5),
+      0 0 22px rgba(59, 130, 246, 0.28);
+    transform: scale(1.06);
+  }
+
+  .universe-node[data-active='true'] .universe-node-label {
+    color: #ffffff;
+  }
+
+  /* ---------- Detail panel ---------- */
+  .universe-detail {
+    position: relative;
+    margin: 28px auto 0;
+    max-width: 560px;
+    border-radius: 20px;
+    padding: 22px 24px;
+    text-align: center;
+  }
+
+  .universe-detail-title {
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #ffffff;
+  }
+
+  .universe-detail-body {
+    margin-top: 8px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgb(var(--color-text-secondary));
+  }
+
+  .universe-detail-impact {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  .universe-detail-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+  }
+
+  /* ---------- md+ : the radial diagram ---------- */
+  @media (min-width: 768px) {
+    .universe {
+      /* Published by the component from its own `VIEW` constant, so the canvas
+         ratio and the node coordinates can never drift apart. */
+      aspect-ratio: var(--universe-ratio, 1000 / 620);
+    }
+
+    .universe-canvas {
+      display: block;
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .universe-nodes {
+      position: absolute;
+      inset: 0;
+      display: block;
+    }
+
+    .universe-nodes::before {
+      display: none;
+    }
+
+    .universe-slot {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      transform: translate(-50%, -50%);
+    }
+
+    .universe-node {
+      flex-direction: column;
+      gap: 10px;
+      width: 136px;
+      padding: 0;
+      text-align: center;
+    }
+
+    .universe-node-badge {
+      width: 56px;
+      height: 56px;
+    }
+
+    .universe-node-label {
+      font-size: 12.5px;
+      text-wrap: balance;
+    }
+
+    .universe-detail {
+      margin-top: 4px;
+    }
+  }
+
+  /* ---------- SVG layer ---------- */
+  /* 0.42, not the 0.22 this shipped at first. Measured on a capture rather than
+     judged in the editor: at 0.22 over the section's ambient wash the beams
+     were effectively invisible and the diagram read as six loose icons around a
+     disc — the network was there in the DOM and absent on screen. */
+  .universe-beam {
+    fill: none;
+    stroke: rgba(147, 197, 253, 0.5);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+  }
+
+  /* The lit state is a second path stacked on the resting one, so activating a
+     node changes opacity only — no geometry is recomputed and nothing reflows. */
+  .universe-beam-lit {
+    fill: none;
+    stroke: rgba(147, 197, 253, 0.85);
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    opacity: 0;
+    filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.55));
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  [data-lit='true'] .universe-beam-lit {
+    opacity: 1;
+  }
+
+  .universe-ring {
+    fill: none;
+    stroke: rgba(147, 197, 253, 0.16);
+    stroke-width: 1;
+  }
+
+  /* Near-opaque. At 0.92 the page's `ParticleField` drifted visibly *through*
+     the brand mark, which reads as a speck on the screen rather than as depth. */
+  .universe-core {
+    fill: rgba(10, 11, 15, 0.985);
+    stroke: rgba(147, 197, 253, 0.34);
+    stroke-width: 1.25;
+  }
+
+  /* The logo's three stacked rules — spreadsheet rows
+     (SHEETFLOW_VISUAL_DNA.md § 6.1). The core is the brand mark, not a blob. */
+  .universe-rule {
+    stroke: rgba(147, 197, 253, 0.75);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+  }
+
+  /* The traveling signal. `offset-path` reuses the beam's own `d` string, so a
+     dot cannot drift off its beam, and moving a 6px dot repaints the dot —
+     not the path's bounding box, which is the cost that ruled out
+     `stroke-dashoffset` path-draw in RC2 (`MOTION_INVENTORY.md` § 6).
+
+     Hidden unless `offset-path` is supported: a dot parked at the origin would
+     be a bright artifact in the corner of the diagram. */
+  .universe-signal {
+    fill: rgb(var(--color-accent-light));
+    opacity: 0;
+  }
+
+  @supports (offset-path: path('M 0 0')) {
+    .universe-signal {
+      animation: universe-travel 3.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+      /* 6 nodes × 0.53s ≈ the 3.2s cycle, so exactly one signal is in flight at
+         any moment — VISUAL_DNA.md § 2 caps simultaneous active motion at 3. */
+      animation-delay: calc(var(--i) * 0.53s);
+      filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.9));
+    }
+  }
+
+  @keyframes universe-travel {
+    0% {
+      offset-distance: 0%;
+      opacity: 0;
+    }
+    14% {
+      opacity: 1;
+    }
+    76% {
+      opacity: 1;
+    }
+    100% {
+      offset-distance: 100%;
+      opacity: 0;
+    }
+  }
+
+  /* ---------- Glyph signal (RC3) ---------- */
+  /* Brief requirement 2: every case study shows its workflow *animated*. RC2
+     shipped `WorkflowGlyph` static.
+
+     The dot is painted as a background on a full-width pseudo-element and moved
+     with `translateX`, so this is transform-only and composited — no layout, and
+     no per-frame repaint of anything wider than the 1px connector. Staggered by
+     stage index so the packet reads as travelling down the pipeline rather than
+     as every connector blinking at once. */
+  .glyph-panel .glyph-link::after,
+  .glyph-rail .glyph-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle 3px at 3px 50%, rgba(191, 219, 254, 1), transparent 72%);
+    background-repeat: no-repeat;
+    animation: glyph-travel 2.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+    animation-delay: calc(var(--glyph-i) * 0.42s);
+  }
+
+  @keyframes glyph-travel {
+    0% {
+      transform: translateX(0);
+      opacity: 0;
+    }
+    12% {
+      opacity: 1;
+    }
+    72% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(calc(100% - 6px));
+      opacity: 0;
+    }
+  }
+
+  /* ---------- RC3 reduced motion ---------- */
+  /* `VISUAL_DNA.md` § 5: reduced motion is a kill switch, never a slow-mo.
+     The global rule collapses `animation-duration` to 0.01ms, which would make
+     every signal *teleport* along its path — a flash of noise, strictly worse
+     than no signal. These are removed instead.
+
+     The delay resets exist because the global rule collapses duration but
+     leaves `animation-delay` untouched — the gap RC2 found and documented in
+     `MOTION_INVENTORY.md` § 7. Any staggered animation added here inherits it. */
+  @media (prefers-reduced-motion: reduce) {
+    .universe-signal,
+    .glyph-panel .glyph-link::after,
+    .glyph-rail .glyph-link::after {
+      display: none;
+    }
+
+    .border-beam::before {
+      animation: none;
+    }
+
+    .universe-signal,
+    .reveal-view {
+      animation-delay: 0s !important;
+    }
   }
 }
 

@@ -12,6 +12,7 @@ import { Brackets } from '@/components/signature/Brackets';
 import { Trace } from '@/components/signature/Trace';
 import { useAnalytics } from '@/lib/hooks/useAnalytics';
 import { prefersReducedMotion } from '@/lib/utils';
+import { EASE } from '@/lib/motion';
 import { publishedTrustLogos } from '@/content/proof';
 
 const reveal = {
@@ -20,7 +21,7 @@ const reveal = {
     opacity: 1,
     y: 0,
     filter: 'blur(0px)',
-    transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.2 + i * 0.12 },
+    transition: { duration: 0.9, ease: EASE, delay: 0.2 + i * 0.12 },
   }),
 };
 
@@ -252,7 +253,7 @@ export function Hero() {
             className="mt-14 flex w-full max-w-3xl flex-col items-center gap-4 md:mt-20"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 1.2 }}
+            transition={{ duration: 0.7, ease: EASE, delay: 1.2 }}
           >
             <p className="text-[10px] uppercase tracking-[0.18em] text-ink-400">
               Trusted by growing businesses

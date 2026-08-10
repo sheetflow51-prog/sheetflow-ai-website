@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef } from 'react';
 import { useStore } from '@/lib/store';
 import { prefersReducedMotion } from '@/lib/utils';
+import { EASE } from '@/lib/motion';
 
 /**
  * Awakening — Signature Moment #1: HERO AI AWAKENING.
@@ -60,7 +61,7 @@ export default function Awakening() {
           transition={{
             duration: 1.6,
             times: [0, 0.18, 0.7, 1],
-            ease: [0.16, 1, 0.3, 1],
+            ease: EASE,
           }}
           onAnimationComplete={() => {
             // Once the awakening finishes, we let the component unmount
@@ -75,7 +76,7 @@ export default function Awakening() {
             transition={{
               duration: 1.6,
               times: [0, 0.3, 0.6, 1],
-              ease: [0.16, 1, 0.3, 1],
+              ease: EASE,
             }}
           >
             <div
@@ -101,7 +102,7 @@ export default function Awakening() {
               duration: 1.2,
               delay: 0.3,
               times: [0, 0.3, 1],
-              ease: [0.16, 1, 0.3, 1],
+              ease: EASE,
             }}
             style={{
               boxShadow: '0 0 40px rgba(96, 165, 250,0.4)',
@@ -117,7 +118,7 @@ export default function Awakening() {
               duration: 1.2,
               delay: 0.2,
               times: [0, 0.4, 1],
-              ease: [0.16, 1, 0.3, 1],
+              ease: EASE,
             }}
             style={{
               background:
@@ -141,7 +142,7 @@ export default function Awakening() {
               duration: 1.4,
               delay: 0.4,
               times: [0, 0.5, 1],
-              ease: [0.16, 1, 0.3, 1],
+              ease: EASE,
             }}
             style={{
               background:

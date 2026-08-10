@@ -7,6 +7,7 @@ import { Logo } from '@/components/ui/Logo';
 import { Button } from '@/components/ui/Button';
 import { useStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
+import { EASE } from '@/lib/motion';
 
 /**
  * Root-relative, not bare fragments.
@@ -64,6 +65,30 @@ export function Navigation() {
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
+  /*
+   * Close the menu when the viewport reaches the desktop breakpoint.
+   *
+   * Without this the overlay is hidden by `lg:hidden` while `open` stays true,
+   * so the scroll lock above keeps `body { overflow: hidden }` applied — the
+   * page becomes unscrollable with no menu visible and nothing to click to
+   * restore it. Escape still works, but only for someone who guesses.
+   *
+   * The bug predates the breakpoint move, at `md`. Moving the switch from 768
+   * to 1024px is what makes it reachable in ordinary use: rotating a tablet
+   * from portrait to landscape now crosses the boundary with the menu open.
+   *
+   * 1024px must stay in step with the `lg:` classes in the markup below.
+   */
+  useEffect(() => {
+    const desktop = window.matchMedia('(min-width: 1024px)');
+    const sync = () => {
+      if (desktop.matches) setOpen(false);
+    };
+    sync();
+    desktop.addEventListener('change', sync);
+    return () => desktop.removeEventListener('change', sync);
+  }, []);
+
   return (
     <>
       <header
@@ -77,7 +102,15 @@ export function Navigation() {
         <div className="container-edge flex w-full items-center justify-between gap-4 md:gap-8">
           <div className="flex items-center gap-10">
             <Logo />
-            <nav className="hidden items-center gap-1 md:flex">
+            {/* Switches at `lg`, not `md`.
+                At 768–1023px the full bar renders logo + six links + a CTA, and
+                it does not fit: RC1's tablet capture (810px) showed "How we
+                work" wrapping onto three lines and "Book free audit" onto two,
+                which pushed the header to roughly double height. Tablets get
+                the sheet menu instead. The trigger and the overlay below use
+                the same breakpoint — all three must move together, or a width
+                exists with either no menu at all or two. */}
+            <nav className="hidden items-center gap-1 lg:flex">
               {NAV_LINKS.map((link) => (
                 <a
                   key={link.href}
@@ -105,7 +138,7 @@ export function Navigation() {
               aria-label={open ? 'Close menu' : 'Open menu'}
               aria-expanded={open}
               aria-controls="mobile-menu"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.03] text-white/80 backdrop-blur transition-colors hover:bg-white/[0.06] md:hidden"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.03] text-white/80 backdrop-blur transition-colors hover:bg-white/[0.06] lg:hidden"
               onClick={() => setOpen((v) => !v)}
             >
               {open ? <X className="h-4 w-4" strokeWidth={2} /> : <Menu className="h-4 w-4" strokeWidth={2} />}
@@ -122,11 +155,11 @@ export function Navigation() {
             role="dialog"
             aria-modal="true"
             aria-label="Site navigation"
-            className="fixed inset-0 z-40 flex flex-col bg-void/95 pt-20 backdrop-blur-2xl md:hidden"
+            className="fixed inset-0 z-40 flex flex-col bg-void/95 pt-20 backdrop-blur-2xl lg:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.25, ease: EASE }}
           >
             {/* Aurora wash to keep the brand atmosphere on mobile too */}
             <div
@@ -144,7 +177,7 @@ export function Navigation() {
                     key={link.href}
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.05 + i * 0.06, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 0.5, delay: 0.05 + i * 0.06, ease: EASE }}
                   >
                     <a
                       href={link.href}
@@ -160,7 +193,7 @@ export function Navigation() {
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.5, delay: 0.4, ease: EASE }}
                 className="mt-auto flex flex-col gap-3 pb-10"
               >
                 <Button

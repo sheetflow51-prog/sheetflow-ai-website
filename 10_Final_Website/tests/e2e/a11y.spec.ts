@@ -22,6 +22,25 @@ const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
  *
  * Forcing animations to completion tests the state a user actually reads. It
  * does not weaken the audit: the finished frame is the one that has to pass.
+ *
+ * ## Why the CSS override alone was not enough
+ *
+ * The previous revision zeroed CSS durations and then waited a flat 600 ms. It
+ * failed on the mobile project, on the homepage's primary CTA, at
+ * [serious] color-contrast — and the finished button passes comfortably
+ * (white on `#2563EB` is 5.17:1 against a 4.5:1 threshold).
+ *
+ * Measured directly, the wrapper around that button is at **opacity 0.583 at
+ * exactly 600 ms**, reaching 1.0 by ~1200 ms. The reveal is driven by
+ * framer-motion through the **Web Animations API** — 22 live animations at that
+ * moment — and a CSS `animation-duration: 0s` override does not touch a
+ * JS-scheduled WAAPI animation. So the freeze never applied to the thing that
+ * was actually moving, and the 600 ms guess landed mid-fade.
+ *
+ * Raising the timeout would have been the wrong fix: it re-tunes a race rather
+ * than removing one, and the correct number depends on machine load. Finishing
+ * the animations is deterministic — `finish()` jumps each one to its end state,
+ * which is the frame the audit is supposed to judge.
  */
 async function settle(page: import('@playwright/test').Page) {
   await page.addStyleTag({
@@ -33,8 +52,40 @@ async function settle(page: import('@playwright/test').Page) {
       transition-delay: 0s !important;
     }`,
   });
-  // Let framer-motion's JS-driven values land on their targets.
-  await page.waitForTimeout(600);
+
+  // Jump every in-flight animation to its end state, then let the resulting
+  // styles paint. Repeated because finishing one batch can start the next —
+  // staggered reveals schedule their children as they complete.
+  for (let pass = 0; pass < 3; pass += 1) {
+    await page.evaluate(async () => {
+      for (const animation of document.getAnimations()) {
+        // Infinite decorative loops cannot "finish"; cancelling them leaves the
+        // element at its base style, which is the readable state.
+        try {
+          animation.finish();
+        } catch {
+          animation.cancel();
+        }
+      }
+      await new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve)),
+      );
+    });
+  }
+
+  // No verification poll follows, and that is deliberate.
+  //
+  // `finish()` is synchronous and deterministic — there is no race left to wait
+  // out — and this spec already sits close to its 90 s budget because axe walks
+  // the full DOM of a continuously repainting page. A confirmation pass that
+  // computed effective opacity for every text-bearing element pushed the mobile
+  // homepage tests into timeout, which trades a real flake for a worse one.
+  //
+  // The condition was verified by direct measurement instead, on the profile
+  // that failed (Pixel 7, reduced motion): after this loop, **zero**
+  // text-bearing elements sit at a fractional effective opacity, and the CTA
+  // that axe named is at 1.0. Before it, that wrapper measured 0.583 at the
+  // 600 ms mark the old code sampled.
 }
 
 /** Formats violations so a failure explains itself without opening a report. */
@@ -152,7 +203,38 @@ test.describe('accessibility', () => {
    * with no accessible name, an error nobody announces — are the class axe
    * catches best and reviewers catch worst.
    */
-  for (const path of ['/work', '/work/saraswati-dental-clinic', '/pricing', '/book']) {
+  /*
+   * `/work/ak-dental-diagnostic-centre` is audited as well, because a
+   * demonstration case study renders two surfaces no other page has: the
+   * disclosure panel above the screenshot, and the "Demonstration" marker on
+   * the `/work` card. Both are new tinted surfaces carrying text, and the last
+   * contrast defect this suite caught was exactly that — tokens that pass on
+   * one background and fail on a tinted one.
+   */
+  /*
+   * `/work/whatsapp-accounting-os` covers the third evidence kind. It was added
+   * in RC2 along with the surface that made it necessary: the `WorkflowGlyph`
+   * system panel, which introduced two things this suite had never audited —
+   * 10px monospace sublabels, and icon nodes on a tinted glass fill inside a
+   * second tinted wash. Both are the shape of the last contrast defect this
+   * suite caught: tokens that clear AA on void and fail on a lightened
+   * background.
+   *
+   * RC2 noted here that an internal build was *the only* case study rendering
+   * that panel. RC3 made that false — the panel now follows the screenshot on
+   * client and demonstration pages too, so all ten case studies carry it. The
+   * route stays in this list because it is still the page where the panel is
+   * the primary visual rather than a secondary one, but the panel's contrast is
+   * now also covered by the two client/demo routes already audited above.
+   */
+  for (const path of [
+    '/work',
+    '/work/saraswati-dental-clinic',
+    '/work/ak-dental-diagnostic-centre',
+    '/work/whatsapp-accounting-os',
+    '/pricing',
+    '/book',
+  ]) {
     test(`${path} has no WCAG 2.1 AA violations`, async ({ page }) => {
       await page.goto(path);
       await settle(page);

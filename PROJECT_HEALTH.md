@@ -1,13 +1,89 @@
 # Project Health — SheetFlow v2
 
 > Single-snapshot dashboard. Regenerated after every phase.
-> **Last updated: 2026-08-08** · Phase M (evidence re-audit, Excel-first) · branch `feat/m01-foundation`
+> **Last updated: 2026-08-09** · Release Candidate 2 · branch `feat/m01-foundation`
 >
-> Phase M verification: `type-check` clean · build green at **30 routes** ·
-> **290 Playwright tests passed, 0 failed** · all bundle budgets met (355.7 kB
-> gzip JS / 360 kB, CSS 10.6 kB / 40 kB). **Lighthouse not rerun** — no render
-> path changed, and a fresh batch quoted against Phase L's would invite the
-> between-batch comparison Phase J was retracted for.
+> RC2 verification: `type-check` clean · `lint` 0 errors / 8 warnings · build
+> green at **37 routes** · bundle **351.0 kB gzip JS / 360 kB**, CSS 11.6 / 40 kB ·
+> **416 Playwright tests — 406 passed, 10 skipped, 0 failed** (9.8 min) · axe
+> **0 violations across 12** route/motion combinations · screenshot matrix
+> **70 images, 10 routes × 5 breakpoints** in
+> `10_Final_Website/release-preview/`, with the RC1 matrix kept beside it as
+> `release-preview-rc1/` for comparison.
+>
+> ### RC2 was a visual pass, and it had 9.1 kB to spend
+>
+> The phase opened with **9.1 kB of client-JS headroom**, a homepage at **52**
+> on mobile and `/work` in a **62–70** band. That converts "make it look
+> premium" into one hard rule: **ship no client JavaScript.** Everything RC2
+> delivered is a server component, static markup or CSS, and the only motion
+> added is one-shot on load or on hover.
+>
+> **The finding it existed to catch was invisible in source.** Five of ten
+> `/work` cards are internal builds with nothing to screenshot; their 16:10
+> media area was **~90 % empty**, so half the portfolio grid read as broken
+> cards beside five finished ones — the inverse of the truth, since those five
+> are the largest engineering on the site.
+>
+> **The fix was already in the repository.** `WorkflowGlyph` draws each build's
+> pipeline from `architecture[].stage` — data already published and already
+> rendered in prose below the diagram — so no new claim was introduced and
+> nothing can drift out of agreement with the page. Two tests hold it there.
+>
+> **It also found a reduced-motion bug.** The global rule collapses
+> `animation-duration` but not `animation-delay`, so a staggered CSS animation
+> holds its last element invisible for the full delay. Fixed for the glyph;
+> deliberately not fixed globally, which would re-time the homepage.
+>
+> Full record: `docs/RC2_VISUAL_AUDIT.md`, `docs/RC2_SUMMARY.md`,
+> `docs/MOTION_INVENTORY.md`, `LAUNCH_CHECKLIST.md`.
+>
+> ---
+>
+> ### RC1 — retained for context
+>
+> ### RC1 was a release pass and it found three real defects
+>
+> No features were added. Every finding needed the site **rendered**, at a width
+> nobody had looked at — which is the argument for a release pass existing at all.
+>
+> **1. Every card on `/work` was clipped on every phone, and had been for four
+> phases.** One internal-build tile lists a 446-line script path using
+> `truncate` — `white-space: nowrap`, min-content **317 px**. A grid item's
+> default `min-width: auto` propagated that to the column and pinned **all ten
+> cards** at **431 px**: 49 px of overflow on a 430 px phone, **119 px at
+> 360 px**.
+>
+> **The reason it survived is the interesting part.** An ancestor carries
+> `overflow-x: clip`, so cards were cut off *silently* — `scrollWidth ===
+> clientWidth` stayed true. A document-level overflow audit run this session
+> reported **no overflow at any breakpoint** and was perfectly correct. The
+> check that found it compares each card against **its own grid box**, and that
+> is what is now asserted, at 360/390/430 px.
+>
+> **2. The navigation broke between 768 px and 1024 px.** The desktop bar
+> switched in at `md`, where six links + logo + CTA do not fit: at 810 px "How
+> we work" wrapped onto three lines and the CTA onto two, roughly doubling
+> header height. Moved to `lg`. **Header height is now a constant 64 px from
+> 360 px to 1440 px.**
+>
+> **3. That surfaced a latent bug worth more than the fix.** With the menu open,
+> the overlay hides at the breakpoint but `open` stays true, so the scroll lock
+> keeps `body { overflow: hidden }` — **the page becomes unscrollable with no
+> menu and nothing to click.** It predates the change; widening the range to
+> 1024 px makes it reachable by *rotating a tablet*. Closed via `matchMedia`.
+>
+> ### The build being previewed was stale, and it nearly shipped
+>
+> A byte count corrected in source (429,197 → 429,734) still rendered its old
+> value: `next start` was serving a `.next` from before the edit — the
+> Windows/OneDrive hazard documented twice already. **The first full screenshot
+> matrix was captured from that stale build**, and was caught only by reading a
+> number off a screenshot.
+>
+> The standing note has now earned a third instance and a sharper form: **before
+> trusting a rendered artifact, confirm the server is serving the build you
+> think it is.** Stop by PID from `netstat`; `pkill` does not work here.
 
 Scores below are **measured or verifiable**, never estimated. Where a number
 cannot be measured honestly it says so — a confident percentage nobody computed
@@ -19,10 +95,12 @@ is how this project got a retracted performance finding.
 
 | | Status |
 |---|---|
-| **Production ready?** | ⚠️ **Engineering complete — two founder blockers remain (B2 domain, D2 branch)** |
-| **Build** | ✅ green, **30 routes** (was 19) |
-| **Verification** | ✅ **290 tests passing** (was 152) |
+| **Production ready?** | ⚠️ **Engineering complete — founder blockers remain (B2 domain, D2 branch, 🔐 3 credentials to rotate) — all consolidated in `BLOCKERS.md`** |
+| **Build** | ✅ green, **37 routes** |
+| **Verification** | ✅ **416 tests** — 406 passed, 10 skipped, **0 failed**, in 9.8 min |
+| **Bundle** | ✅ **351.0 kB gzip JS** / 360 kB · CSS 11.6 / 40 kB — RC2 added **+0.1 kB JS** (a constants module) and +0.8 kB CSS. The visual work itself shipped **zero** client JavaScript |
 | **Deployed to production** | ❌ awaiting founder approval |
+| **Responsive** | ✅ **verified 360–1440 px** — 10 routes × 5 breakpoints captured; 0 horizontal overflow; card-vs-grid overflow now asserted by test |
 
 **Completion is deliberately not given as a single %.** Everything that is
 engineering-gated is done. What remains is **permission-gated and
@@ -32,58 +110,71 @@ remainder is work I can do, and it is not.
 
 | Area | State | Evidence |
 |---|---|---|
-| Homepage build | ✅ complete | 10 sections, 3 breakpoints verified via `npm run shots` |
+| Homepage build | ✅ complete | 10 sections, verified at **5 breakpoints** in the RC1 matrix |
 | **Service pages** | ✅ **complete** | **6 of 6 catalogued services have a page.** Parity now asserted in both directions — the reverse check is what was missing while two offers had no page |
 | Design system | ✅ complete | `brand-os/`, tokens mirrored in `tailwind.config.ts` |
-| **Portfolio / case studies** | ✅ **complete** | **B1 closed (D24).** 3 case studies at `/work`, each linking to a live deployment. Elevate WPC omitted — no verifiable artifact (D27) |
+| **Portfolio / case studies** | ✅ **complete** | **B1 closed (D24).** **10** case studies at `/work` — **3 client builds** linking to live deployments, **2 demonstration builds** (ours, reachable, uncommissioned — D32), and **5 internal systems** (13,822 lines). All three kinds are enforced by `ProjectEvidence`, not by review: internal builds have no field a URL can be typed into, demonstrations cannot emit a client organisation. Elevate WPC still omitted — **authorship** unverified. Krishna Dental excluded — **unfinished**, placeholder WhatsApp number (D33) |
+| **Version control (workspace)** | ⛔ **gap outside this repo** | **None of the five internal systems is in git** — 13,822 lines, no history, no remote, several inside OneDrive. Evidence Matrix §2.14 |
+| **Credential hygiene (workspace)** | ⛔ **3 findings, still unrotated** | Airtable WhatsApp token (Phase M), plaintext **Twilio auth token** and **Groq API key** (Phase Y). None public; all need rotation. Evidence Matrix §2.10 |
 | **Pricing** | ✅ **complete** | `/pricing` — ₹19,999 / ₹4,999-mo published under D25, machine-readable, comparison table, enterprise band, 7 FAQs, and a break-even line built from our published price and the visitor's own figure |
 | **Booking** | ✅ **complete** | `/book` — 4-question qualification → Calendly prefill, **zero third-party JS**, works without JavaScript (D26) |
-| Accessibility | ✅ AA | Lighthouse 100 on every route, axe 0 violations across 6 route/motion combinations |
+| Accessibility | ✅ AA | axe 0 violations across **12** route/motion combinations — RC2 added `/work/whatsapp-accounting-os`, the one evidence kind never audited. `settle()` finishes WAAPI animations deterministically (Phase Z) |
+| **Case-study visuals** | ✅ **RC2** | `WorkflowGlyph` on all 10 case studies and the 5 internal `/work` tiles, drawn from published `architecture[].stage` only. Zero client JS. Stage→icon parity and `short`-label truthfulness both asserted by test |
+| **Motion system** | ✅ **RC2** | One easing definition in `lib/motion.ts`, replacing 27 hand-copied literals across 11 files. Inventory in `docs/MOTION_INVENTORY.md`. Reduced-motion `animation-delay` gap closed for the glyph; open globally |
+| **Navigation** | ✅ **fixed in RC1** | Header height constant **64 px, 360→1440 px**. The desktop bar now switches at `lg`; below it, the sheet menu, which also closes itself at the breakpoint so the scroll lock cannot strand a visitor |
 | SEO | ✅ 100 | Lighthouse SEO 100 on every route |
 | GEO / answer-engine | ✅ strong | see below |
-| Performance | ⚠️ **homepage 52 mobile / ~59–65 desktop** · **new routes 65–76 mobile** | Homepage unchanged despite gaining 3 images. New routes are the fast ones. See below |
+| Performance | ⚠️ **homepage 52 mobile** (not re-measured — its render path is untouched) · **`/work` 62 this batch** | `/work` sits in a documented cross-batch band of **62–70**; a single figure inside it is not a finding. CLS **0** and a11y **100** held while the page gained 2 cards and 2 images. See below |
 | Customer **outcome** metrics | ⛔ **still blocked** | No engagement has a measured, client-confirmed result. Correctly absent |
 | Production deploy | ⛔ **blocked** | needs founder approval |
 
 ---
 
-## Lighthouse — 2026-08-08, mobile preset, median of 5
+## Lighthouse — RC1 batch, mobile preset, median of 5
 
-Production build, `npm run audit:lh` with `LH_PRESET=mobile` (4× CPU **and**
-simulated Slow 4G), warm-up discarded, run back to back on one machine.
+Production build, `LH_PRESET=mobile` (4× CPU **and** simulated Slow 4G),
+warm-up discarded, runs back to back on one machine.
 
-Mobile is reported first this phase because it is the stricter test and it is
-where the audience for a WhatsApp-automation business actually is.
+Only the routes this phase **changed** were re-measured. Quoting fresh numbers
+beside stale ones from a different batch is the invalid comparison Phase J was
+retracted for, and the temptation is strongest exactly when a number moves.
 
 | Route | Perf | A11y | BP | SEO | FCP | LCP | TBT | CLS | SI |
 |---|---|---|---|---|---|---|---|---|---|
-| `/` | **52** | 100 | 96 | 100 | 0.9 s | 3.9 s | 4,300 ms | 0 | 7.1 s |
-| `/work` | **65** | 100 | 96 | 100 | 0.9 s | 4.2 s | 910 ms | 0 | 2.8 s |
-| `/pricing` | **66** | 100 | 96 | 100 | 2.1 s | 5.0 s | 480 ms | 0 | 3.4 s |
-| `/book` | **76** | 100 | 96 | 100 | 1.3 s | 3.7 s | 510 ms | 0 | 2.8 s |
+| `/work` | **64** | 100 | 96 | 100 | 1.4 s | 4.7 s | 740 ms | 0 | 3.2 s |
+| `/work/ak-dental-diagnostic-centre` | **63** | 100 | 96 | 100 | 0.9 s | 4.2 s | 1,120 ms | 0 | 3.0 s | *(Phase Z batch)*
 
-**The homepage did not regress, and that was the risk worth measuring.** It
-gained three case-study images this phase and scored **52** — the exact
-median-of-9 baseline recorded in Phase J, and the centre of its documented
-48–54 band. Read this as *no detectable change*, **not** as confirmation that
-images are free: a one-point move on this machine is noise, and the honest claim
-is that any cost is below what this instrument can resolve.
+**The new demonstration case study measured 63** — and this comparison *is*
+valid, because both routes were run in the same batch, back to back, on one
+machine. That is the only kind of comparison this repository accepts.
 
-**`/pricing` per-run: 55/58/66/67/74.** A 19-point spread on an unchanged build
-in one batch. The median is trustworthy; any single run is not. This is the same
-machine-load effect documented in Phase J and it has not gone away.
+A case study with a full-width screenshot, a disclosure panel, an architecture
+flow and a FAQ costs the same as the index that links to it. **Accessibility is
+100 and CLS is 0 on the newest surface on the site**, which is what the run was
+for.
 
-**The new routes are the fast ones**, as the service routes were. Everything
-they share with the homepage — tokens, fonts, glass, `framer-motion`, `gsap`,
-Lenis, cursor, `DeferredAtmosphere` — is exonerated again. The homepage cost
-remains its own decorative composition (A2).
+**`/work` measured 64 on the final build. Earlier batches recorded 65, 70 and
+62. Do not read any of those differences as signal** — three different batches on
+three different builds, which is precisely the comparison this repository has
+already retracted a finding for. What can be said honestly:
 
-Desktop was not re-measured this phase. The documented band is 59–65 and nothing
-shipped here touches the desktop render path; quoting a fresh number from a
-different batch would invite exactly the invalid between-batch comparison Phase J
-was retracted for.
+- **Within this batch**, `/work` scores 62 with accessibility, best-practices
+  and SEO unchanged at 100/96/100.
+- **The documented cross-batch band for `/work` is now 62–70**, and RC1 sits inside it at 64. Any single
+  figure inside it is indistinguishable from machine mood at this sample size.
+- There *is* a plausible mechanism for a real cost — the page went from 8 cards
+  to 10, and from 3 above-the-fold screenshots to 5. **A mechanism is not a
+  measurement.** Establishing it would need both arms measured in one batch,
+  which is a phase of work nobody has asked for and which A2 already outranks.
 
----
+**CLS is 0 and accessibility is 100**, which are the two numbers that would
+have been at risk from adding image-bearing cards and a new tinted disclosure
+surface. Both held.
+
+**The homepage was not re-measured, deliberately.** Nothing this phase touched
+its render path — no component, token or dependency on `/` changed — and its
+documented mobile median is **52**, centre of a 48–54 band. A fresh number would
+have invited exactly the between-batch reading warned against above.
 
 ## Performance — root cause known, and it is not a bug
 
@@ -136,8 +227,8 @@ without a new mechanism.
 | `knowsAbout` expertise signal | ✅ 9 entities, each mapped to a service actually sold |
 | `contactPoint` | ✅ reachable sales contact + booking URL |
 | **Published prices in structured data** | ✅ **new, and the highest-value GEO surface on the site.** "How much does WhatsApp automation cost" is a question assistants are asked constantly and can almost never answer, because agencies publish "contact us" |
-| **Named client work** | ✅ **new** — 3 case studies with resolvable live URLs, giving assistants something citable about delivered work |
-| Topic clusters | ✅ **6 service pages** (full catalogue parity) + 3 case studies, each with its own questions and two-way internal links |
+| **Named client work** | ✅ 3 client case studies with resolvable live URLs, giving assistants something citable about delivered work — plus **2 demonstrations that `llms.txt` explicitly instructs models not to count as customers** |
+| Topic clusters | ✅ **6 service pages** (full catalogue parity) + **10 case studies**, each with its own questions and two-way internal links |
 
 ### The `llms.txt` defect this phase caught
 
@@ -161,10 +252,20 @@ A test asserts the stale sentence is gone and the new guidance is present.
 ## Accessibility
 
 axe-core, WCAG 2.1 AA tags, against the production build, animations frozen at
-final state. Run across **6 route/motion combinations**: `/`, `/services`,
-`/services/whatsapp-automation`, `/work`, `/work/saraswati-dental-clinic`,
-`/pricing`, `/book`, plus reduced-motion arms on `/`, a service page and
-`/pricing`.
+final state. Run across **12 route/motion combinations** — and, because the
+suite runs a desktop and a mobile project, **24 axe scans per full run**:
+`/`, `/services`, `/services/whatsapp-automation`, `/work`,
+`/work/saraswati-dental-clinic`, `/work/ak-dental-diagnostic-centre`,
+**`/work/whatsapp-accounting-os`**, `/pricing`, `/book`, plus reduced-motion
+arms on `/`, a service page and `/pricing`.
+
+The demonstration case study was added because it renders two tinted text
+surfaces no other page has — the disclosure panel and the "Demonstration" card
+marker. **RC2 added the internal case study**, the one evidence kind never
+audited, for the same reason: its `WorkflowGlyph` system panel introduced 10 px
+monospace sublabels and icon nodes on a tinted glass fill *inside a second
+tinted wash*. The last contrast defect this suite caught was exactly that shape
+— tokens that clear AA on void and fail on a lightened background.
 
 **Zero violations.** Lighthouse accessibility is **100** on every route.
 
@@ -192,6 +293,49 @@ what caught it. A single-viewport accessibility audit would have shipped it.
 
 ---
 
+## Test-suite health — a load ceiling worth naming
+
+RC1 ran the full suite while the machine was also building, capturing 60
+screenshots and running audits. **The suite went from 11 minutes to 1.3 hours**
+and produced three failures. All three were re-run in isolation:
+
+| Failure | Verdict |
+|---|---|
+| `bank-statement-parser` social image | **Passed on re-run.** Transient |
+| `bank-statement-parser` FAQ visibility | **Passed on re-run.** Transient (90 s timeout under load) |
+| OG+Twitter image served | **`ECONNRESET` on a *different route every run*** — `/`, then `/services`. Six consecutive direct fetches returned 200 `image/png` at an identical 67,831 bytes |
+| `sitemap.xml` reachable | **`ECONNRESET` on a static route.** This is the decisive one |
+
+**The `sitemap.xml` failure is what settles the diagnosis.** It is a static file
+that cannot be "slow to render", and it still reset. The problem is the origin
+dropping connections under concurrent load — not any route, and not any
+assertion. The machine was simultaneously building, capturing 60 screenshots and
+running audits; the suite's wall time went **11 minutes → 1.3 hours**, and 46
+node/chrome processes were live.
+
+The edge-rendered OG routes make it worse but are not the cause: they take
+**~2.3 s each** and the suite requests roughly twenty across two parallel
+projects.
+
+**Fixed by applying a rule this repository already had, consistently.** The
+reachability check has retried since Phase Z; the image checks did not. They do
+now — one retry before failing, on the same reasoning: *a route that is genuinely
+missing fails both attempts; a contended one does not, and should not cost a
+release its confidence.*
+
+**Confirmed by running it clean.** With nothing else on the machine the same
+suite returned **412 tests — 402 passed, 10 skipped, 0 failed, in 14.7
+minutes**. Same build, same assertions, no failures. That is the control the
+diagnosis needed.
+
+**The honest caveat:** a suite that needs a quiet machine to be green is a suite
+with a load ceiling. The retry now absorbs the image flakes; the 90 s per-test
+timeout is a separate margin that has **not** been re-tuned and would still bite
+under heavy concurrency. If failures recur on an idle machine, they are
+findings. Under concurrent builds they are not.
+
+---
+
 ## Workspace hygiene
 
 Scanned 2026-08-08.
@@ -204,7 +348,12 @@ Scanned 2026-08-08.
 | Git working tree | ✅ clean at commit time |
 | Orphaned VSCode editor backups | ✅ none for this workspace |
 
-**A Windows/OneDrive `.next` contention recurred and is worth naming.** Two
+**Phase Z note: no `.next` contention this phase.** The documented mitigation —
+stop the listener by port, remove `.next`, rebuild — was applied pre-emptively
+before the first build and the failure did not recur. Recorded because a
+mitigation that works is worth as much as the failure it prevents.
+
+**A Windows/OneDrive `.next` contention recurred in Phase Y and is worth naming.** Two
 consecutive builds failed with `EPERM … unlink '.next/server/app/book'` while
 `next start` held the directory. `pkill -f` does **not** stop the Next server on
 Windows — the process survived and kept serving a stale build, which briefly
@@ -258,7 +407,63 @@ PID from `netstat`**, removing `.next` and rebuilding cleared it.
 homepage-wide assertion fails but the source is correct, check what the server
 is actually serving *before* debugging the code.
 
-## Capabilities actually used this phase
+## Capabilities actually used — Release Candidate 1
+
+Full accounting in `docs/MCP_EXECUTION_REPORT.md` §13. The standing rule from
+Phase Z — **a capability recorded as unavailable is a hypothesis, not a fact** —
+was applied before any code was written.
+
+| Capability | Used? | Note |
+|---|---|---|
+| **Playwright** | ✅ **used, and it found all three defects** | A new 10-route × 5-breakpoint capture harness, per-width layout probes, and the booking form exercised end to end. None of the three findings is visible in source |
+| **Direct HTTP** | ✅ used | The entire verification surface read off the running build: sitemap, robots, per-route metadata, all OG routes, and a JSON-LD audit of all 10 case studies |
+| **Lighthouse + bundle audit** | ✅ used | Final build |
+| **Vercel MCP** | ⛔ **re-tested, still unusable — now with a stronger test** | `list_teams` → empty, *and* `list_projects` with the founder's real `teamId` from `.vercel/project.json` → `Failed to list projects`. That distinguishes "wrong account" from "no teams", which the old evidence could not. **D3 confirmed, not merely restated** |
+| **Vercel CLI** | ✅ used | `domains ls` re-confirmed B2 at **0 domains** |
+| **GitHub MCP** | ⛔ re-tested, still auth-gated | OAuth capability mismatch; a non-interactive session cannot complete it. **Needs the founder to authorise the connector.** Nothing this release required it |
+| Netlify MCP | ❌ not re-read | Enumerated decisively in Phase Z; no deployment changed |
+| context7 | ✅ available, ❌ nothing to resolve | The work was a reorder, two CSS utilities, one effect, one script, two tests |
+| **Magic MCP / 21st.dev** | ❌ not exposed (D15) | **No UI component was authored**, so there was nothing to source even had they been available |
+| chrome-devtools MCP | ❌ not exposed | The repo's own calibrated CDP tooling and Lighthouse cover it; a second path yields numbers not comparable with the baselines |
+| **Adobe / Canva / Figma** | ❌ not used, deliberately | No new imagery. The one image improvement this release was **removing a capture artifact** — the custom cursor — which is fixed in the harness, not by editing a picture |
+| Airtable, Calendly, Slack, Notion, Gmail, Drive, ElevenLabs | ❌ no need | The booking hand-off was verified against the **rendered form**, which is stronger than re-reading the Calendly API |
+
+---
+
+## Capabilities actually used — Phase Z
+
+Honesty matters more here than a long list. The full accounting is in
+`docs/MCP_EXECUTION_REPORT.md` §11.
+
+| Capability | Used? | Note |
+|---|---|---|
+| **Netlify MCP** | ✅ **used, and it was the phase** | `get-user` + `get-projects`. **Recorded as ⛔ 502 by two prior phases; it worked on the first call.** Enumerated 4 projects, found 1 in no inventory, and established authorship-by-account-ownership — the evidence that unblocked two case studies |
+| **Playwright (repo harness)** | ✅ used | 6 case-study frames captured; full suite; the a11y diagnosis that found `settle()` sampling a mid-fade frame |
+| **Direct HTTP (`curl`)** | ✅ used, and it stopped a publication | 9 deployments fetched with retry and md5-hashed. Caught Krishna Dental's `wa.me/91XXXXXXXXXX` placeholder **after** the new variant had cleared its old disqualifier, and measured AK Dental's 88% base64 payload |
+| **Lighthouse** | ✅ used | mobile preset, median of 5, on the route that changed |
+| **Vercel MCP** | ⛔ wrong account (D3) | Unchanged. No deploy attempted — founder-gated |
+| **GitHub MCP** | ⛔ auth — dynamic client registration unsupported | Non-interactive session cannot complete OAuth. Not needed: the only GitHub surface touched was a public Pages deployment |
+| context7 | ✅ available, ❌ not needed | No unfamiliar library API — a third variant on an existing discriminated union, typed content, Markdown |
+| **Adobe / Canva / Figma** | ❌ not used, and the reason got stronger | **Two more portfolio images shipped, and both are evidence.** Their value is that a reader can open the live build and see the same frame. Retouching or generative expansion would make each image diverge from the artifact it exists to corroborate |
+| 21st.dev / Magic MCP | ❌ not installed | See D15. Nothing was wanted from it — see `OPEN_SOURCE_MANIFEST.md` |
+| Airtable, Calendly, ElevenLabs, Notion, Slack, Gmail, Drive | ❌ not used | No build or verification need this phase |
+
+### Components reused from GitHub / 21st.dev
+
+**Zero again**, and the evaluation was re-run rather than assumed. Three pieces
+of UI were written: a disclosure panel, a card marker, and a captioned second
+figure — roughly 60 lines reusing `glass`, `card-interactive` and the existing
+type scale.
+
+Every one has a mature MIT equivalent. The reason none was imported is that
+**the value in these components is not the markup**: it is that the disclosure
+text is *mandatory in the type*, positioned above the screenshot, and asserted
+by test. An imported alert box supplies a rounded rectangle and none of that,
+while adding a dependency to pages whose measured constraint is bytes.
+
+---
+
+## Capabilities actually used — Phase M and Y (retained for the record)
 
 Honesty matters more here than a long list.
 
@@ -300,7 +505,56 @@ ordered list *is* the semantics.
 
 ---
 
-## Shipped this phase — Phase K
+## Shipped — Release Candidate 1
+
+No features. Three defect fixes, two regression tests, one capture harness.
+
+| What | Detail |
+|---|---|
+| **`min-w-0` on the `/work` grid item and truncating list** | Releases the 431 px min-content floor a `truncate` file path imposed on **every card**. Overflow at 360/390/430 px is now **0 px**, measured |
+| **Nav breakpoint `md` → `lg`** | Tablets get the sheet menu. Header height constant **64 px** across 360–1440 px |
+| **`matchMedia` closes the menu at the desktop breakpoint** | Prevents a persistent scroll lock with no visible menu — reachable by rotating a tablet |
+| **`/work` grid regrouped** | client → demonstration → internal, matching the lede. Asserted by test |
+| **`scripts/capture-release-preview.mjs`** | 10 routes × 5 breakpoints; hides the custom cursor, which a synthetic mouse parks over page content |
+| **2 new tests** | Card-vs-grid overflow at three phone widths; evidence-kind grouping |
+
+### Fixed — Release Candidate 1
+
+| Fix | Severity | How it was found |
+|---|---|---|
+| **Every `/work` card clipped on every phone** | **High (visual, all mobile)** | Comparing card width to *grid* width. A document-level overflow audit reported clean and was correct — `overflow-x: clip` swallowed it |
+| **Nav wrapping to double height at 768–1023 px** | **Medium (visual, tablet)** | The 810 px capture in the RC1 matrix |
+| **Scroll lock persists when the menu's breakpoint is crossed** | **Medium (functional)** | Reasoning about the breakpoint change, then confirming — not from a report |
+| **Screenshot matrix captured from a stale build** | **Medium (process)** | Reading a byte count off a screenshot and not recognising it |
+| **Custom cursor captured over a spec-table label** | Low (deliverable) | Reviewing the first matrix |
+
+---
+
+## Shipped this phase — Phase Z
+
+| What | Detail |
+|---|---|
+| `ProjectEvidence.demo` | Third variant: ours, reachable, **uncommissioned**. Emits `url` and `image`, **never `about`** — asserted by test (D32) |
+| `/work/ak-dental-diagnostic-centre` | Demonstration build. 429,734-byte single document, **88% base64 photography**, published with the trade-off stated rather than hidden |
+| `/work/align-dental-system` | Demonstration build. React 19 / Vite 8 / Tailwind 4, 1,326 lines, clinic facts in one typed module. **Self-labelled** "Premium website demo for clinic sales" |
+| `CompanionSurface` + Saraswati CRM dashboard | Queued since Phase M. `note` is a **required** field, so the seeded-data disclosure is structural rather than remembered (D34) |
+| Netlify account enumeration | Closes the coverage gap Phase M opened and Phase Y carried. 4 projects, 1 previously unknown |
+| `settle()` rewrite | Finishes in-flight WAAPI animations instead of waiting a fixed 600 ms. Fixes a false `[serious]` contrast failure; spec ~3× faster |
+| `llms.txt` three-kind rewrite | Names client / demonstration / internal separately, generated from the discriminant, with explicit instruction not to count demonstrations as customers |
+| `BLOCKERS.md` | Every blocker consolidated with its exact cause and **ranked resolution options** |
+| 2 new governance tests | Demonstrations emit no client organisation; reachability retries once and covers companion surfaces |
+
+### Fixed this phase
+
+| Fix | Severity | How it was found |
+|---|---|---|
+| **`settle()` sampled a mid-fade frame**, failing the homepage CTA at `[serious]` contrast when the button passes at 5.17:1 | **High (false failure)** | Measuring the element rather than trusting the report. The wrapper is at **opacity 0.583 at exactly 600 ms** — a CSS freeze cannot stop a framer-motion WAAPI animation |
+| **`llms.txt` called every project a client** *"published with permission"* | **High (GEO)** | Growth exposed it. It was **already false** for the five internal builds; the wording predated them |
+| **Krishna Dental was about to ship on a cleared disqualifier** | Medium (governance) | Re-reading the artifact after the rule changed. Placeholder `wa.me/91XXXXXXXXXX`, no form |
+
+---
+
+## Shipped — Phase K (retained for the record)
 
 | What | Detail |
 |---|---|
@@ -330,7 +584,7 @@ Four tests exist because all four failures are invisible in a diff review:
 
 ---
 
-## Fixed this phase
+## Fixed — Phase K and Y (retained for the record)
 
 | Fix | Severity | How it was found |
 |---|---|---|
@@ -348,14 +602,19 @@ Four tests exist because all four failures are invisible in a diff review:
 
 ## Open blockers
 
+**Consolidated in `BLOCKERS.md`** this phase — exact blocker, why it blocks, and
+**ranked resolution options** for each. Summary only here.
+
 | # | Blocker | Owner | Unblocks |
 |---|---|---|---|
-| **B2** | **`sheetflow.ai` is not attached.** `vercel domains ls` returns **0 domains**; `NEXT_PUBLIC_SITE_URL` resolves to a `vercel.app` subdomain. Every canonical, `og:url`, sitemap `<loc>`, `llms.txt` reference and JSON-LD `@id` points at the wrong host — **now including the case-study `@id`s that carry client names**. Moving later re-hosts the entity graph and discards accrued authority. **Attach the domain and set the env var before any indexing is invited.** | **Founder** (domain purchase/DNS) | Correct canonicals, a stable entity graph, production launch |
-| **D2** | `origin/main` diverged, 13 ahead / 1 behind, no fast-forward path | **Founder** | Production deploy |
-| — | **Production deployment** — `vercel --prod` was attempted and **blocked by the session permission policy** on both Phase K and Phase L. The Vercel MCP alternative was rejected: `deploy_to_vercel` creates a *new* project from a file tree, so it would fork a duplicate rather than deploy the linked one. Must be run by the founder | **Founder** | Going live |
-| — | **Calendly redirect to `/book/confirmed`** — set in the Calendly dashboard after deploy, not from this codebase (D26) | **Founder** | Post-booking analytics and the confirmation experience |
+| **B2** | **`sheetflow.ai` is not attached** — 0 domains. **RC1 narrowed this**: `NEXT_PUBLIC_SITE_URL` is unset locally, so the code already falls back to `https://sheetflow.ai` and every canonical, `og:url`, sitemap `<loc>` and `@id` is correct in the build. What blocks is the domain not existing, plus a Vercel env var that *overrides* the correct fallback. **No code change** — a purchase, a DNS attachment, and possibly just deleting a variable | **Founder** (purchase/DNS) | Correct canonicals, stable entity graph, launch |
+| — | **Production deployment** — outward-facing, no approval exists. `vercel --prod` blocked by session policy on Phase K and L; the Vercel MCP alternative forks a duplicate project rather than deploying the linked one | **Founder** | Going live |
+| **D2** | `origin/main` diverged, 13 ahead / 1 behind, no fast-forward | **Founder** | Production deploy |
+| 🔐 | **3 credentials unrotated** — Twilio auth token + Groq key (in OneDrive, therefore synced and versioned), Airtable WhatsApp token. None public; all should still be rotated | **Founder** | Credential hygiene |
+| **D12** | Preview deployments are SSO-protected | **Founder** (security setting) | Anonymous audit of a preview URL |
+| — | **Calendly redirect to `/book/confirmed`** — set in the dashboard after deploy (D26) | **Founder** | Post-booking experience |
 | — | **GA4 / Search Console / Clarity IDs** | **Founder** (credentials) | Analytics beyond Vercel's built-in |
-| **D12** | Preview deployments are SSO-protected | **Founder** (security setting) | Automated verification against a preview URL |
+| — | **13,822 lines of internal systems have no git** — no history, no remote, several in OneDrive | **Founder** | The largest un-mitigated workspace risk |
 | **A1** | Is the Spline/3D direction still live? 6 unused deps force `--legacy-peer-deps` | **Founder** (architecture) | Dependency cleanup, resolves D6 |
 | **A2** | Does the homepage's decorative composition survive its measured cost? | **Founder** (design) | The only remaining homepage performance lever |
 
@@ -367,36 +626,58 @@ Four tests exist because all four failures are invisible in a diff review:
    visually inert (both names resolve to identical hex).
 2. **D4 remove `raw-loader`; D5 remove inert `.eslintrc.json`** — both need
    founder approval for package changes.
-3. **Desktop Lighthouse for the four new routes** — mobile is measured; desktop
-   is not. Low value: the service routes' desktop/mobile relationship is already
-   documented, and desktop is the easier profile.
-4. **9 lint warnings** — 7 `react-hooks/set-state-in-effect` deliberately
-   downgraded with rationale, 2 unused disable directives in `layout.tsx`.
+3. **Desktop Lighthouse for the newer routes** — mobile is measured; desktop is
+   not. Low value: desktop is the easier profile and the relationship is already
+   documented.
+4. **8 lint warnings** — all `react-hooks/set-state-in-effect`, deliberately
+   downgraded with rationale, and **all in `src/components/three/`** — the
+   directory A1 may delete outright, which would take the lint debt to zero as a
+   side effect.
 
-**What is not on this list, deliberately:** more pages. The site now has 9
-content routes covering services, work, pricing and booking. Adding a blog or a
-second tier of service pages is a *marketing* decision that needs evidence
-someone is searching for it — not an engineering gap.
+**What is not on this list, deliberately:** more pages. The site has 11 content
+routes covering services, work, pricing and booking. Adding a blog or a second
+tier of service pages is a *marketing* decision that needs evidence someone is
+searching for it — not an engineering gap.
+
+**Also not on this list: more portfolio.** After Phase Z the workspace has been
+enumerated at the account level on Vercel, GitHub and Netlify, and searched on
+disk across the whole workstation. Every artifact found is either published,
+excluded with a written reason, or recorded as assessed. There is no known
+unexamined work left to add.
 
 ---
 
 ## Next recommended phase
 
-**There isn't an engineering one worth running.** That is the honest read.
+**Ship it.** That is the honest read, and RC1 is the reason it is now a
+different answer than it was.
 
-The remaining levers are: a design decision the founder owns (A2), an
-architecture decision the founder owns (A1), a domain purchase (B2), a branch
-reconciliation (D2), and a deployment approval. Every one is outside what
-engineering can resolve, and three of them — B2 especially — should be settled
-*before* more work is built on top of the current host.
+Phase Z closed with "there isn't an engineering phase worth running", and
+flagged that the same claim had been wrong before. **It was wrong again.** RC1
+added no features and found three real defects — one of which had been clipping
+every card on `/work`, on every phone, for four phases.
 
-If work must continue while those are pending, the highest-value item is
-**desktop Lighthouse on the four new routes**, purely to complete the record.
+So the caveat stands and has now earned a second instance: **"nothing left" has
+been wrong twice.** But the specific thing that keeps being wrong is *not*
+"there is more to build" — it is "the built thing has been looked at closely
+enough". Both of the last two phases found their defects by **rendering the site
+and measuring it**, never by reading source.
+
+The remaining levers are unchanged and all founder-owned: a domain purchase
+(B2), a branch reconciliation (D2), a deployment approval, three credential
+rotations, and two architecture/design decisions (A1, A2).
+
+**If work must continue before those are settled**, the highest-value item is a
+**responsive audit of the routes RC1 did not fix** — `/pricing`, `/services/*`
+and `/book` were captured at all five breakpoints and reviewed, but only `/work`
+had its geometry asserted. The `min-width: auto` trap that clipped those cards
+is a *general* CSS hazard, and the test that now catches it covers one page.
 
 ### Recommended next prompt
 
-> Attach `sheetflow.ai`, set `NEXT_PUBLIC_SITE_URL` to it, redeploy, and verify
-> on the deployed artifact that every canonical, `og:url`, sitemap `<loc>`,
-> `llms.txt` reference and JSON-LD `@id` resolves to the new host — including
-> the three case-study `@id`s. Then reconcile `origin/main` (D2) and take the
-> production deployment decision.
+> Attach `sheetflow.ai`, delete or correct `NEXT_PUBLIC_SITE_URL` on Vercel (the
+> code's fallback is already right), redeploy, and verify on the deployed
+> artifact that every canonical, `og:url`, sitemap `<loc>`, `llms.txt` reference
+> and JSON-LD `@id` resolves to the new host — all ten case-study `@id`s
+> included. Then reconcile `origin/main` (D2), rotate the three credentials in
+> `BLOCKERS.md`, and take the production deployment decision.

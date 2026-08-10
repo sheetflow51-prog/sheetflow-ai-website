@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useStore } from '@/lib/store';
 import { prefersReducedMotion } from '@/lib/utils';
+import { EASE } from '@/lib/motion';
 
 /**
  * Intelligence Boot Sequence.
@@ -87,7 +88,7 @@ export default function LoadingScreen() {
               ? { clipPath: 'inset(0 0 100% 0)' }
               : { clipPath: 'inset(0 0 0 0)' }
           }
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.5, ease: EASE }}
           aria-hidden="true"
         >
           <div className="relative flex flex-col items-center gap-7">
@@ -96,7 +97,7 @@ export default function LoadingScreen() {
               className="relative"
               initial={{ opacity: 0, scale: 0.82, filter: 'blur(10px)' }}
               animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.9, ease: EASE }}
             >
               {/* Soft brand glow behind the mark */}
               <div
@@ -131,7 +132,7 @@ export default function LoadingScreen() {
                   className="h-full bg-gradient-to-r from-accent-bright to-violet-bright"
                   initial={{ width: '0%' }}
                   animate={stage >= 2 ? { width: '100%' } : { width: '0%' }}
-                  transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                  transition={{ duration: 0.7, ease: EASE }}
                 />
               </div>
               <AnimatePresence mode="wait">

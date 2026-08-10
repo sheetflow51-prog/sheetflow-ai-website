@@ -6,7 +6,7 @@ import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { ScrollReveal } from '@/components/motion/ScrollReveal';
 import { publishedCaseStudies } from '@/content/proof';
-import { projects } from '@/content/work';
+import type { CaseStudyCard } from '@/content/work';
 
 /**
  * The homepage work section.
@@ -31,7 +31,7 @@ import { projects } from '@/content/work';
  * property `content/proof.ts` exists to guarantee.
  */
 
-export function CaseStudy() {
+export function CaseStudy({ cards }: { cards: CaseStudyCard[] }) {
   // Verified, permissioned *outcome* entries — still empty, deliberately.
   const measured = publishedCaseStudies();
   const hasMeasured = measured.length > 0;
@@ -52,8 +52,12 @@ export function CaseStudy() {
           />
         </div>
 
+        {/* The homepage shows the three client builds only. `/work` carries the
+            internal systems too, but they have no screenshot by construction —
+            an internal project has no `shot` field — and a three-up image grid
+            is the wrong surface to introduce them on. */}
         <ScrollReveal className="grid gap-4 md:grid-cols-3" y={30} duration={0.7} stagger={0.1}>
-          {projects.map((p) => (
+          {cards.map((p) => (
             <div key={p.slug}>
               <Link
                 href={`/work/${p.slug}`}

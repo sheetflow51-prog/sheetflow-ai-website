@@ -42,3 +42,20 @@ next-env.d.ts
 test-results/
 playwright-report/
 .shots/
+
+# Release Candidate screenshot matrix — 10 routes x 5 breakpoints.
+#
+# Ignored for the same reason as `.shots/`: these are review artifacts, not
+# build output, and they are deterministic — `node
+# scripts/capture-release-preview.mjs` against a production server reproduces
+# them exactly. The matrix is ~80 MB of PNG, which is not something to carry in
+# git history for something a command regenerates in minutes.
+#
+# The committed screenshots are the ones in `public/work/` — those are
+# *published evidence*, pinned deliberately so what we show cannot drift when a
+# third-party site changes.
+#
+# The glob covers the per-phase copies as well: RC2 keeps the RC1 matrix as
+# `release-preview-rc1/` so the before/after comparison has a before, and both
+# are regenerable review artifacts rather than source.
+release-preview*/

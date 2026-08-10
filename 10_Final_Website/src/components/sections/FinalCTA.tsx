@@ -9,6 +9,7 @@ import { Brackets } from '@/components/signature/Brackets';
 import { Trace } from '@/components/signature/Trace';
 import { useAnalytics } from '@/lib/hooks/useAnalytics';
 import { prefersReducedMotion } from '@/lib/utils';
+import { EASE } from '@/lib/motion';
 
 export function FinalCTA() {
   const { track } = useAnalytics();
@@ -133,7 +134,7 @@ export function FinalCTA() {
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.6, ease: EASE }}
           >
             <Badge variant="ai">Let's Build Yours</Badge>
           </motion.div>
@@ -143,7 +144,7 @@ export function FinalCTA() {
             initial={{ opacity: 0, y: 32, filter: 'blur(8px)' }}
             whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
             viewport={{ once: true }}
-            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+            transition={{ duration: 0.9, ease: EASE, delay: 0.1 }}
             style={{ scale: headlineScale }}
           >
             Stop doing the busywork.{' '}

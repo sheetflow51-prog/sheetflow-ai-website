@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { EASE } from '@/lib/motion';
 
 interface TraceProps {
   /** Path orientation. */
@@ -44,7 +45,7 @@ export function Trace({
 
   const drawTransition = {
     duration: 1.4,
-    ease: [0.16, 1, 0.3, 1],
+    ease: EASE,
     delay: 0.2,
   };
 

@@ -1,5 +1,5 @@
 import { Hero } from '@/components/sections/Hero';
-import { WorkflowUniverse } from '@/components/sections/WorkflowUniverse';
+import { AutomationUniverse } from '@/components/sections/AutomationUniverse';
 import { AIDashboard } from '@/components/sections/AIDashboard';
 import { WorkflowPipeline } from '@/components/sections/WorkflowPipeline';
 import { FeatureStorytelling } from '@/components/sections/FeatureStorytelling';
@@ -11,6 +11,7 @@ import { FinalCTA } from '@/components/sections/FinalCTA';
 import { SectionHandoff } from '@/components/signature/SectionHandoff';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { homeGraph } from '@/lib/structured-data';
+import { liveProjects, toCard } from '@/content/work';
 
 export default function HomePage() {
   return (
@@ -23,7 +24,7 @@ export default function HomePage() {
       <JsonLd graph={homeGraph()} />
       <Hero />
       <SectionHandoff />
-      <WorkflowUniverse />
+      <AutomationUniverse />
       <SectionHandoff />
       <AIDashboard />
       <SectionHandoff />
@@ -31,7 +32,10 @@ export default function HomePage() {
       <SectionHandoff />
       <FeatureStorytelling />
       <SectionHandoff />
-      <CaseStudy />
+      {/* Narrowed here, on the server. `CaseStudy` is a client component, and
+          importing the case-study corpus inside it shipped every project's full
+          prose to the browser to render three cards. */}
+      <CaseStudy cards={liveProjects().map(toCard)} />
       <SectionHandoff />
       <DigitalCraft />
       <SectionHandoff />

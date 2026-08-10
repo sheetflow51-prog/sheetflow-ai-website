@@ -2,22 +2,27 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { ArrowRight, ArrowUpRight, Check, Info } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Check, FileCode2, Info } from 'lucide-react';
 
 import { JsonLd } from '@/components/seo/JsonLd';
 import { ServiceBreadcrumb } from '@/components/sections/ServiceBreadcrumb';
 import { Button } from '@/components/ui/Button';
 import { SectionHandoff } from '@/components/signature/SectionHandoff';
 import { ArchitectureFlow } from '@/components/work/ArchitectureFlow';
+import { WorkflowGlyph } from '@/components/work/WorkflowGlyph';
 import {
   getProject,
   projects,
   relatedProjects,
   NOT_DISCLOSED_LABEL,
+  INTERNAL_ONLY_LABEL,
+  DEMO_BUILD_LABEL,
   type WorkProject,
+  type CompanionSurface,
 } from '@/content/work';
 import { getService } from '@/content/services';
 import { workProjectGraph } from '@/lib/structured-data';
+import { cn } from '@/lib/utils';
 
 /**
  * `/work/[slug]` — one case study per delivered build.
@@ -73,6 +78,200 @@ export async function generateMetadata({
       description: project.metaDescription,
     },
   };
+}
+
+/**
+ * The evidence block for an internal build — what stands in for "click the link
+ * and check".
+ *
+ * A case study about work nobody can open has to earn its place differently. It
+ * does that by being specific: named files with line counts, named outputs,
+ * a test count and the date it was run. Every row here is a claim somebody
+ * could contradict by looking, which is the property a vague description of
+ * unreachable work would lack.
+ *
+ * It renders no image and no outbound link, because the `internal` variant
+ * carries neither — see `ProjectEvidence` in `content/work.ts`.
+ */
+/**
+ * The animated pipeline panel.
+ *
+ * ## Why it now appears on all ten case studies
+ *
+ * RC2 introduced this for the five internal builds, which have no deployment to
+ * screenshot, and recorded the asymmetry as a deliberate-but-arguable call
+ * (`docs/RC2_SUMMARY.md` § 6, item 4): client pages lead with a real capture,
+ * which is stronger evidence than any diagram, so they never showed it.
+ *
+ * That reasoning holds for what sits **above** the fold and is preserved — a
+ * client page still opens with its screenshot. But it does not justify the
+ * system never being drawn at all, and RC3's brief asks for an animated
+ * workflow visualisation on *every* case study. So the panel now follows the
+ * screenshot rather than replacing it: the photograph proves the thing shipped,
+ * the diagram explains how it works.
+ *
+ * It stays `aria-hidden`. Every label in it is a stage name the architecture
+ * section announces in full further down the page, and a screen reader
+ * receiving the same pipeline twice gains nothing.
+ */
+function SystemPanel({
+  stages,
+  className,
+}: {
+  stages: WorkProject['architecture'];
+  className?: string;
+}) {
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(
+        'signature-edge relative overflow-hidden rounded-2xl glass px-6 py-10 md:px-12 md:py-14',
+        className,
+      )}
+    >
+      <div className="pointer-events-none absolute inset-0 signature-grid opacity-70" />
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(ellipse 65% 130% at 50% 0%, rgba(59,130,246,0.14), transparent 72%)',
+        }}
+      />
+      <p className="relative mb-9 text-center font-mono text-[10px] uppercase tracking-widest text-ink-300">
+        System pipeline
+      </p>
+      <WorkflowGlyph
+        stages={stages}
+        variant="panel"
+        withDetail
+        className="relative mx-auto max-w-4xl"
+      />
+    </div>
+  );
+}
+
+function Evidence({
+  evidence,
+  stages,
+}: {
+  evidence: Extract<WorkProject['evidence'], { kind: 'internal' }>;
+  stages: WorkProject['architecture'];
+}) {
+  return (
+    <section className="mt-14" aria-labelledby="evidence-heading">
+      {/* The visual anchor an internal build has instead of a screenshot.
+          Before RC2 these five pages ran breadcrumb → headline → lede →
+          evidence ledger, with nothing to look at, while the five client pages
+          were showing a full-bleed 1280×800 capture at the same scroll position
+          (`docs/RC2_VISUAL_AUDIT.md` § V2). */}
+      <SystemPanel stages={stages} className="mb-6" />
+
+      <div className="rounded-2xl glass p-8 md:p-10">
+        <div className="flex items-start gap-3">
+          <FileCode2
+            className="mt-0.5 h-5 w-5 shrink-0 text-accent-bright/80"
+            strokeWidth={1.8}
+            aria-hidden="true"
+          />
+          <div>
+            <h2 id="evidence-heading" className="font-display text-[20px] font-semibold text-white">
+              {INTERNAL_ONLY_LABEL}
+            </h2>
+            <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-ink-200 text-pretty">
+              {evidence.reason}
+            </p>
+          </div>
+        </div>
+
+        <dl className="mt-8 divide-y divide-white/[0.06] border-t border-white/[0.06]">
+          {evidence.artifacts.map((artifact) => (
+            <div
+              key={artifact.name}
+              className="grid gap-1.5 py-5 sm:grid-cols-[minmax(0,280px)_1fr] sm:gap-6"
+            >
+              <dt className="font-mono text-[12px] leading-relaxed text-accent-bright/80">
+                {artifact.name}
+              </dt>
+              <dd className="text-[15px] leading-relaxed text-ink-200 text-pretty">
+                {artifact.detail}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * A second surface of the same engagement.
+ *
+ * The `note` renders *below the image and above nothing else* — it is the only
+ * thing standing between a screenshot of a lead pipeline and a reader who
+ * assumes those are real patients. The type makes it mandatory for that reason.
+ */
+function Companion({ companion }: { companion: CompanionSurface }) {
+  return (
+    <figure className="mt-10">
+      <div className="rounded-2xl glass overflow-hidden p-0">
+        <Image
+          src={companion.shot.src}
+          alt={companion.shot.alt}
+          width={companion.shot.width}
+          height={companion.shot.height}
+          sizes="(min-width: 1280px) 1100px, 94vw"
+          className="h-auto w-full"
+        />
+      </div>
+      <figcaption className="mt-4 space-y-2">
+        <p className="text-[12px] text-ink-400">
+          {companion.label}, captured from{' '}
+          <a
+            href={companion.url}
+            className="text-ink-300 underline decoration-white/20 underline-offset-4 transition-colors hover:text-white"
+            data-cursor="hover"
+          >
+            {companion.url.replace('https://', '')}
+          </a>
+          .
+        </p>
+        <p className="max-w-2xl text-[13px] leading-relaxed text-ink-300 text-pretty">
+          {companion.note}
+        </p>
+      </figcaption>
+    </figure>
+  );
+}
+
+/**
+ * The disclosure a demonstration build carries.
+ *
+ * This page names a real practice that did not commission the work. The whole
+ * governance position for `demo` rests on that being stated plainly, in the
+ * page's own voice, above the fold — so this is not a badge or a footnote. It
+ * renders the `basis` string, which the type makes mandatory precisely so no
+ * demonstration can reach the page without one.
+ */
+function DemoNotice({ basis }: { basis: string }) {
+  return (
+    <aside className="mt-10 rounded-2xl border border-white/[0.10] bg-white/[0.03] p-6 md:p-7">
+      <div className="flex items-start gap-3">
+        <Info
+          className="mt-0.5 h-5 w-5 shrink-0 text-accent-bright/80"
+          strokeWidth={1.8}
+          aria-hidden="true"
+        />
+        <div>
+          <p className="font-display text-[17px] font-semibold text-white">
+            {DEMO_BUILD_LABEL}
+          </p>
+          <p className="mt-2.5 max-w-2xl text-[15px] leading-relaxed text-ink-200 text-pretty">
+            {basis}
+          </p>
+        </div>
+      </div>
+    </aside>
+  );
 }
 
 /**
@@ -162,44 +361,75 @@ export default async function WorkProjectPage({
           </div>
 
           <div className="mt-10 flex flex-wrap items-center gap-3">
-            <Button
-              variant="secondary"
-              href={project.liveUrl}
-              trailing={
-                <ArrowUpRight className="h-4 w-4" strokeWidth={2.2} aria-hidden="true" />
-              }
-            >
-              Visit the live site
-            </Button>
+            {(project.evidence.kind === 'live' || project.evidence.kind === 'demo') && (
+              <Button
+                variant="secondary"
+                href={project.evidence.liveUrl}
+                trailing={
+                  <ArrowUpRight className="h-4 w-4" strokeWidth={2.2} aria-hidden="true" />
+                }
+              >
+                {project.evidence.kind === 'live'
+                  ? 'Visit the live site'
+                  : 'Open the demonstration'}
+              </Button>
+            )}
             <span className="font-mono text-[11px] uppercase tracking-widest text-ink-400">
               {project.sector} · {project.location}
             </span>
           </div>
 
-          <figure className="mt-14">
-            <div className="rounded-2xl glass overflow-hidden p-0">
-              <Image
-                src={project.shot.src}
-                alt={project.shot.alt}
-                width={project.shot.width}
-                height={project.shot.height}
-                sizes="(min-width: 1280px) 1100px, 94vw"
-                className="h-auto w-full"
-                priority
-              />
-            </div>
-            <figcaption className="mt-4 text-[12px] text-ink-400">
-              {project.client}, captured from the live deployment at{' '}
-              <a
-                href={project.liveUrl}
-                className="text-ink-300 underline decoration-white/20 underline-offset-4 transition-colors hover:text-white"
-                data-cursor="hover"
-              >
-                {project.liveUrl.replace('https://', '')}
-              </a>
-              .
-            </figcaption>
-          </figure>
+          {/* The demonstration notice sits above the screenshot, not below it.
+              A visitor who reads the headline, looks at the picture and leaves
+              must still have passed the sentence saying nobody commissioned
+              this — placing it after the fold would make the disclosure
+              technically present and practically invisible. */}
+          {project.evidence.kind === 'demo' && <DemoNotice basis={project.evidence.basis} />}
+
+          {project.evidence.kind === 'live' || project.evidence.kind === 'demo' ? (
+            <figure className="mt-14">
+              <div className="rounded-2xl glass overflow-hidden p-0">
+                <Image
+                  src={project.evidence.shot.src}
+                  alt={project.evidence.shot.alt}
+                  width={project.evidence.shot.width}
+                  height={project.evidence.shot.height}
+                  sizes="(min-width: 1280px) 1100px, 94vw"
+                  className="h-auto w-full"
+                  priority
+                />
+              </div>
+              <figcaption className="mt-4 text-[12px] text-ink-400">
+                {project.client}, captured from the{' '}
+                {project.evidence.kind === 'live' ? 'live deployment' : 'demonstration build'} at{' '}
+                <a
+                  href={project.evidence.liveUrl}
+                  className="text-ink-300 underline decoration-white/20 underline-offset-4 transition-colors hover:text-white"
+                  data-cursor="hover"
+                >
+                  {project.evidence.liveUrl.replace('https://', '')}
+                </a>
+                .
+              </figcaption>
+            </figure>
+          ) : (
+            <Evidence evidence={project.evidence} stages={project.architecture} />
+          )}
+
+          {/* RC3: on client and demonstration work the diagram *follows* the
+              photograph rather than replacing it — the capture proves the thing
+              shipped, the pipeline explains what it does. It sits outside the
+              `<figure>` deliberately: `<figcaption>` must be the figure's first
+              or last child, so appending a sibling after the caption would have
+              produced invalid markup. Internal builds get theirs from
+              `Evidence`, which is the only visual those pages have. */}
+          {(project.evidence.kind === 'live' || project.evidence.kind === 'demo') && (
+            <SystemPanel stages={project.architecture} className="mt-6" />
+          )}
+
+          {project.evidence.kind === 'live' && project.evidence.companion && (
+            <Companion companion={project.evidence.companion} />
+          )}
         </div>
       </section>
 
@@ -238,7 +468,9 @@ export default async function WorkProjectPage({
             id="architecture-heading"
             className="headline-section text-fade text-balance mt-5 max-w-3xl"
           >
-            How an enquiry moves through it.
+            {project.evidence.kind === 'internal'
+              ? 'How the work moves through it.'
+              : 'How an enquiry moves through it.'}
           </h2>
           <ArchitectureFlow stages={project.architecture} className="mt-12" />
         </div>
@@ -256,8 +488,9 @@ export default async function WorkProjectPage({
                 What it is made of.
               </h2>
               <p className="mt-6 max-w-md text-[15px] leading-relaxed text-ink-300 text-pretty">
-                Every row was read off the running deployment, not from a project brief. Open
-                the site and view source to check any of it.
+                {project.evidence.kind === 'internal'
+                  ? 'Every row was read off the source, not from a project brief. Line counts, versions and limits are the ones in the files listed above.'
+                  : 'Every row was read off the running deployment, not from a project brief. Open the site and view source to check any of it.'}
               </p>
             </div>
 
@@ -370,46 +603,48 @@ export default async function WorkProjectPage({
       {/* ------------------------------------------------- Links & closing */}
       <section className="section" aria-labelledby="project-next-heading">
         <div className="container-edge">
-          <h2
-            id="project-next-heading"
-            className="headline-section text-fade text-balance max-w-3xl"
-          >
-            Want the same systems?
-          </h2>
-
-          {linkedServices.length > 0 && (
-            <>
-              <p className="mt-6 max-w-2xl text-[15px] leading-relaxed text-ink-300 text-pretty">
-                This build uses the following SheetFlow services:
-              </p>
-              <ul className="mt-5 flex flex-wrap gap-2.5">
-                {linkedServices.map((s) => (
-                  <li key={s.slug}>
-                    <Link
-                      href={`/services/${s.slug}`}
-                      className="inline-flex min-h-[36px] items-center gap-2 rounded-full border border-white/[0.1] px-4 text-[13px] text-ink-200 transition-colors hover:border-white/25 hover:text-white"
-                      data-cursor="hover"
-                    >
-                      {s.name}
-                      <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-
-          <div className="mt-12 flex flex-wrap items-center gap-3">
-            <Button variant="primary" size="lg" href="/book">
-              Book free audit
-            </Button>
-            <Link
-              href="/pricing"
-              className="inline-flex min-h-[24px] items-center text-[14px] text-ink-300 transition-colors hover:text-white"
-              data-cursor="hover"
+          <div className="cta-panel">
+            <h2
+              id="project-next-heading"
+              className="headline-section text-fade text-balance max-w-3xl"
             >
-              See pricing
-            </Link>
+              Want the same systems?
+            </h2>
+
+            {linkedServices.length > 0 && (
+              <>
+                <p className="mt-6 max-w-2xl text-[15px] leading-relaxed text-ink-300 text-pretty">
+                  This build uses the following SheetFlow services:
+                </p>
+                <ul className="mt-5 flex flex-wrap gap-2.5">
+                  {linkedServices.map((s) => (
+                    <li key={s.slug}>
+                      <Link
+                        href={`/services/${s.slug}`}
+                        className="inline-flex min-h-[36px] items-center gap-2 rounded-full border border-white/[0.1] px-4 text-[13px] text-ink-200 transition-colors hover:border-white/25 hover:text-white"
+                        data-cursor="hover"
+                      >
+                        {s.name}
+                        <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+
+            <div className="mt-12 flex flex-wrap items-center gap-3">
+              <Button variant="primary" size="lg" href="/book">
+                Book free audit
+              </Button>
+              <Link
+                href="/pricing"
+                className="inline-flex min-h-[24px] items-center text-[14px] text-ink-300 transition-colors hover:text-white"
+                data-cursor="hover"
+              >
+                See pricing
+              </Link>
+            </div>
           </div>
 
           {related.length > 0 && (
@@ -425,7 +660,7 @@ export default async function WorkProjectPage({
                       className="card-interactive group flex flex-col gap-2 p-6"
                       data-cursor="hover"
                     >
-                      <span className="text-[11px] font-medium uppercase tracking-widest text-accent-bright/80">
+                      <span className="kicker-bare">
                         {p.kicker}
                       </span>
                       <span className="font-display text-[19px] font-semibold text-white">

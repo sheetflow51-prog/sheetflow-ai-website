@@ -313,8 +313,23 @@ test.describe('service pages', () => {
       expect(tw, `${path} declares no twitter:image`).toBeTruthy();
 
       // A declared image that 404s is the same failure with extra steps.
+      //
+      // Retried, for the reason this repository has now recorded four times:
+      // **one failed request is not a finding.** These are edge-rendered and
+      // each takes ~2.3s to produce; the suite asks for roughly twenty of them
+      // across two parallel projects, and the origin resets connections under
+      // that load. RC1 saw exactly that — `ECONNRESET` on `/` in one run and on
+      // `/services` in the next, while six consecutive direct fetches of the
+      // same route returned 200 `image/png` at an identical 67,831 bytes.
+      //
+      // A route that is genuinely missing fails both attempts. A contended one
+      // does not, and should not spend a release on being re-investigated.
       for (const url of [og!, tw!]) {
-        const res = await request.get(new URL(url).pathname + new URL(url).search);
+        const target = new URL(url).pathname + new URL(url).search;
+        let res = await request.get(target).catch(() => null);
+        if (!res || res.status() !== 200) {
+          res = await request.get(target, { timeout: 45_000 });
+        }
         expect(res.status(), `image does not resolve: ${url}`).toBe(200);
         expect(res.headers()['content-type']).toContain('image/');
       }

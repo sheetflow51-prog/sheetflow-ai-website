@@ -33,11 +33,25 @@ import { chromium } from '@playwright/test';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, 'public', 'work');
 
-/** Must stay in sync with `shot.src` in `src/content/work.ts`. */
+/**
+ * Must stay in sync with `shot.src` in `src/content/work.ts` — every project
+ * whose evidence is `live` or `demo`, in the order they appear there.
+ *
+ * The demonstration builds are captured by the same script and the same rules
+ * as the client work. They are ours and they are reachable; the distinction
+ * between the two is a publishing question, not a capture one.
+ */
 const TARGETS = [
   ['saraswati-dental-clinic', 'https://saraswati-dental-clinic.vercel.app'],
   ['sparc-physiotherapy', 'https://sparc-physiotherapy.vercel.app'],
   ['r3s-realty', 'https://r3s-realty-agra.vercel.app'],
+  ['ak-dental-diagnostic-centre', 'https://ak-dental-demo.netlify.app'],
+  ['align-dental-system', 'https://sheetflow51-prog.github.io/dental-demo/'],
+  // Companion surfaces — a second page of an engagement already listed above.
+  [
+    'saraswati-dental-clinic-dashboard',
+    'https://saraswati-dental-clinic.vercel.app/dashboard.html',
+  ],
 ];
 
 const VIEWPORT = { width: 1280, height: 800 };

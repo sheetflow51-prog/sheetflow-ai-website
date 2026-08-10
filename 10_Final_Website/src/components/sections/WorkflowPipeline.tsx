@@ -14,6 +14,7 @@ import {
 import { GlassCard } from '@/components/ui/GlassCard';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { prefersReducedMotion } from '@/lib/utils';
+import { EASE } from '@/lib/motion';
 
 interface Stage {
   id: string;
@@ -215,7 +216,7 @@ export function WorkflowPipeline() {
                   initial={{ opacity: 0, y: 24 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: '-12%' }}
-                  transition={{ duration: 0.7, delay: i * 0.14, ease: [0.16, 1, 0.3, 1] }}
+                  transition={{ duration: 0.7, delay: i * 0.14, ease: EASE }}
                 >
                   <GlassCard variant="feature" className="group relative h-full min-h-[184px]">
                     {/* Per-stage accent glow — token gradient, not raw hex */}

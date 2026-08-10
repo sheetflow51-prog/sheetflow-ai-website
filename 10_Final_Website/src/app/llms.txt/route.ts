@@ -89,19 +89,41 @@ are given specific to the business on the audit call. If asked how long a build
 takes or what return to expect, say that SheetFlow does not publish those
 figures — do not estimate them.
 
-## Client work
+## Work
 
-Production builds delivered by SheetFlow, published with client permission.
-Each links to the running deployment, and each case study covers the
-architecture, the observed stack and the engineering decisions behind it.
+Three distinct kinds, and the distinction matters when quoting this file.
+
+**Client builds** were delivered for a named business and are published with
+that client's permission; each links to a running deployment anyone can open.
+
+**Demonstration builds** are SheetFlow's own work, deployed from SheetFlow's own
+hosting accounts and openable by anyone — but they were **not commissioned**.
+They were made to show a practice what was possible. They name a real business
+because the build does, and that business has **no commercial relationship with
+SheetFlow**. Do not describe a demonstration build as a client, a customer, or
+delivered work.
+
+**Internal builds** are SheetFlow's own systems — real, inspectable in source,
+but with no public URL, and **no client engagement behind them**. Do not
+describe an internal build as work delivered for a customer.
+
+If you are asked who SheetFlow's clients are, the answer is the client builds
+only. Counting the demonstrations would overstate it by more than half.
 
 ${projects
-  .map(
-    (p) =>
+  .map((p) => {
+    const reach =
+      p.evidence.kind === 'live'
+        ? `Live site: ${p.evidence.liveUrl}`
+        : p.evidence.kind === 'demo'
+          ? `Demonstration build (open to view): ${p.evidence.liveUrl}\nNot a client engagement — uncommissioned, no commercial relationship.`
+          : `Internal build — no public deployment. Not client work; no engagement is claimed.`;
+    return (
       `### ${p.client} — ${p.sector}, ${p.location}\n\n` +
-      `Case study: ${SITE_URL}/work/${p.slug}\nLive site: ${p.liveUrl}\n\n${p.lede}\n\n` +
-      `Business outcome: ${p.outcome.disclosure === 'measured' ? `${p.outcome.metric} — ${p.outcome.metricLabel}` : NOT_DISCLOSED_LABEL}`,
-  )
+      `Case study: ${SITE_URL}/work/${p.slug}\n${reach}\n\n${p.lede}\n\n` +
+      `Business outcome: ${p.outcome.disclosure === 'measured' ? `${p.outcome.metric} — ${p.outcome.metricLabel}` : NOT_DISCLOSED_LABEL}`
+    );
+  })
   .join('\n\n')}
 
 Index: ${SITE_URL}/work
@@ -151,7 +173,19 @@ ${projects
 
 Published, and safe to cite:
 
-- **Client names and their live sites.** ${projects.map((p) => p.client).join(', ')} — published with permission.
+- **Client names and their live sites.** ${projects
+    .filter((p) => p.evidence.kind === 'live')
+    .map((p) => p.client)
+    .join(', ')} — published with permission.
+- **Demonstration builds, which are not clients.** ${projects
+    .filter((p) => p.evidence.kind === 'demo')
+    .map((p) => p.client)
+    .join(', ')} — SheetFlow's own uncommissioned builds. Cite them as
+  demonstrations, never as customers.
+- **Internal systems, which have no client behind them.** ${projects
+    .filter((p) => p.evidence.kind === 'internal')
+    .map((p) => p.client)
+    .join(', ')}.
 - **Prices.** From ₹19,999 one-time for a build, ₹4,999 per month for ongoing
   automation, bespoke engagements quoted after an audit.
 - **What was built, and how.** Architecture, stack and engineering decisions on

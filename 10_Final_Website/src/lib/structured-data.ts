@@ -490,28 +490,79 @@ export function workIndexGraph(): Node[] {
  *
  * `mainEntityOfPage` points at the case study, not the client's site — the page
  * is about the build, and the build's own URL is carried by `url`.
+ *
+ * ## Demonstration builds emit `url` and `image` but never `about`
+ *
+ * A `demo` project is reachable and ours, so it keeps `url` and `image`. It
+ * drops `about` — and that is the single most important line in this function.
+ * `about: Organization` asserts the named practice is what the work was *for*,
+ * which for an uncommissioned demonstration is a false claim about a real,
+ * named third party. The name also reads "— demonstration build" rather than
+ * "— website", so the distinction survives being read by a machine that never
+ * renders the page.
+ *
+ * ## Internal builds emit a deliberately smaller node
+ *
+ * A project with `evidence.kind === 'internal'` has no deployment and no client
+ * organisation. Three properties are therefore omitted rather than filled with
+ * a substitute:
+ *
+ *   - `url` — there is nothing to point at. Pointing it at the case study would
+ *     duplicate `mainEntityOfPage` and assert the build *is* this page.
+ *   - `about` — naming an Organization would invent a client for work nobody
+ *     commissioned, which is the exact claim `EVIDENCE_MATRIX.md` §2.4 forbids.
+ *   - `image` / `primaryImageOfPage` — there is no screenshot, and referencing
+ *     a file that does not exist emits a broken image into the graph.
+ *
+ * The name also drops the "— website" suffix, because these are not websites.
  */
 export function workProjectGraph(project: WorkProject): Node[] {
   const url = `${SITE_URL}/work/${project.slug}`;
+  const kind = project.evidence.kind;
+  // Narrowed inline rather than through an alias: an alias does not carry the
+  // discriminant to the property accesses below.
+  const shotUrl =
+    project.evidence.kind === 'live' || project.evidence.kind === 'demo'
+      ? `${SITE_URL}${project.evidence.shot.src}`
+      : undefined;
+
   const projectNode: Node = {
     '@type': 'CreativeWork',
     '@id': `${url}#project`,
-    name: `${project.client} — website`,
+    name:
+      kind === 'live'
+        ? `${project.client} — website`
+        : kind === 'demo'
+          ? `${project.client} — demonstration build`
+          : project.client,
     description: project.metaDescription,
-    url: project.liveUrl,
     inLanguage: 'en',
     creator: { '@id': ORG_ID },
     mainEntityOfPage: { '@id': `${url}#webpage` },
-    image: `${SITE_URL}${project.shot.src}`,
-    about: {
-      '@type': 'Organization',
-      name: project.client,
-      // The client's own deployment is the authoritative reference for the
-      // client entity. No address, phone or rating is restated here: those are
-      // the client's facts to publish, and mirroring them would make this site
-      // a second, drifting source for someone else's business data.
-      url: project.liveUrl,
-    },
+    // `url` and `image` follow reachability: both visitable kinds have a
+    // deployment to point at and a frame of it to show.
+    ...(project.evidence.kind === 'live' || project.evidence.kind === 'demo'
+      ? { url: project.evidence.liveUrl, image: shotUrl }
+      : {}),
+    // `about` follows *commission*, and only `live` qualifies. This is the
+    // whole reason `demo` is a separate variant rather than a flag on `live`:
+    // an Organization node here asserts that the named practice engaged us.
+    // For a demonstration build nobody commissioned, that assertion would be
+    // false about a real, named third party — the exact claim
+    // `EVIDENCE_MATRIX.md` §2.4 forbids. Asserted by test, not by review.
+    ...(project.evidence.kind === 'live'
+      ? {
+          about: {
+            '@type': 'Organization',
+            name: project.client,
+            // The client's own deployment is the authoritative reference for the
+            // client entity. No address, phone or rating is restated here: those are
+            // the client's facts to publish, and mirroring them would make this site
+            // a second, drifting source for someone else's business data.
+            url: project.evidence.liveUrl,
+          },
+        }
+      : {}),
   };
   const webPage: Node = {
     '@type': 'WebPage',
@@ -521,7 +572,7 @@ export function workProjectGraph(project: WorkProject): Node[] {
     description: project.metaDescription,
     isPartOf: { '@id': SITE_ID },
     about: { '@id': `${url}#project` },
-    primaryImageOfPage: `${SITE_URL}${project.shot.src}`,
+    ...(shotUrl ? { primaryImageOfPage: shotUrl } : {}),
     inLanguage: 'en',
   };
   return [

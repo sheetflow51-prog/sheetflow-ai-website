@@ -172,3 +172,146 @@ with no package behind it.
 
 Radix remains the named exception with a named trigger: adopt it the moment a
 modal, combobox or command palette exists. The site still has none.
+
+---
+
+## Phase Y — 2026-08-08
+
+### The evaluation, and why the answer is still zero
+
+Phase Y added five case studies and two new UI branches: the internal-build card
+tile on `/work`, and the artifact ledger on `/work/[slug]`. Both were candidates
+for reuse. Neither took a dependency.
+
+**The artifact ledger is a description list.** `<dl>` with a monospace term and a
+prose detail, on the existing `glass` surface, using the `divide-y` border
+treatment already used by the Build section directly below it on the same page.
+A component library cannot supply that more cheaply than the twelve lines it
+takes — and importing one would introduce a second visual language into a page
+whose whole argument is consistency.
+
+**The card tile is the same story.** It reuses `card-interactive`, the existing
+`aspect-[16/10]` frame and `font-mono` at the established tracking. The point of
+the tile is that an internal build occupies the *same slot* as a screenshot, so
+the grid does not reflow and the two kinds of work read as one portfolio.
+
+### The registries were re-checked for the categories Phase Y asks about
+
+Phase Y §11 names booking flow, pricing page, testimonial section, FAQ, timeline,
+animated cards, accessibility helpers, SEO utilities, schema generation,
+breadcrumbs, sitemap and OpenGraph as reuse candidates. **Every one of them is
+already built here, and each was built for a reason a generic implementation
+would break:**
+
+| Candidate | Status in this repo | Why a library version would be worse |
+|---|---|---|
+| Booking flow | `/book` with a qualification step | Ships **zero third-party JavaScript**. Every embeddable booking widget is third-party JavaScript |
+| Pricing page | `/pricing` with a break-even calculator | Prices are typed content with a calculator over the visitor's own figure; a pricing *table* component solves the easy half |
+| Testimonial section | **Deliberately absent** | There are no testimonials. A component would be an empty slot inviting someone to fill it — the exact failure `content/proof.ts` exists to make impossible |
+| FAQ | `content/faq.ts` → rendered `<dl>` + `FAQPage` JSON-LD | Answers must be **in the DOM without interaction**, or an answer engine quoting the page reads empty question nodes. Most FAQ components are disclosure widgets |
+| Timeline | Not present | Nothing to sequence. Adding one would invite fabricated project timelines — explicitly forbidden by D24 |
+| Animated cards | `card-interactive` + `ScrollReveal` | Phase J measured TBT as **73–91% paint**, not JavaScript. Adding animation libraries targets the wrong cost |
+| Accessibility helpers | axe-core in the suite, **zero AA violations** across 6 route/motion combinations | The suite is the helper. A runtime library would not have caught the WCAG 2.1.1 defect Phase K found on the mobile profile |
+| SEO utilities, schema generation | `lib/structured-data.ts`, hand-built entity graph with `@id` pinning | Generic generators emit a second `WebSite` node. This graph was **specifically designed to avoid that** — see the regression test asserting exactly one |
+| Breadcrumbs | `ServiceBreadcrumb` + `BreadcrumbList`, every crumb fetched by test | Already asserted reachable, which no library ships |
+| Sitemap, OpenGraph | `sitemap.xml` route + **8 edge-runtime OG/Twitter image routes** | Framework-native. A plugin would replace working framework code with a dependency |
+
+**Licence findings are unchanged** — Origin UI is still AGPL-3.0, React Bits
+still `NOASSERTION`, `21st-dev/magic-mcp` still has no LICENSE file. Nothing was
+re-fetched this phase because nothing was imported, and re-running the audit
+would restate a conclusion no new evidence bears on.
+
+Radix remains the named exception with the same named trigger: **adopt it the
+moment a modal, combobox or command palette exists.** The site still has none.
+
+### GitHub MCP
+
+Still requires OAuth, still impossible in a non-interactive session. `gh` CLI
+substituted completely — it enumerated the repositories and established the
+finding in Evidence Matrix §2.14. Licence verification via the GitHub API was
+not needed, because no candidate reached the point of being imported.
+
+---
+
+## Phase Z — 2026-08-08
+
+**Components reused: zero. Evaluation run, not skipped.**
+
+Three pieces of UI were written this phase:
+
+| Component | Size | What a library would have supplied |
+|---|---|---|
+| `DemoNotice` — the disclosure panel on a demonstration case study | ~22 lines | An alert/callout box |
+| The "Demonstration" card marker on `/work` | ~4 lines | A badge |
+| `Companion` — a second figure with a caption and a qualifying note | ~34 lines | A figure with caption |
+
+Every one has a mature MIT implementation available — shadcn/ui `Alert`, Magic
+UI badges, any card library. All three were still written here, and the reason
+is the same in each case and worth stating once properly:
+
+**The value in these components is not the markup.** It is that the disclosure
+is mandatory in the type (`basis` and `note` are required fields, so the panel
+cannot render empty), that it is positioned *above* the screenshot rather than
+below it, and that its presence is asserted by test. An imported alert box
+supplies a rounded rectangle with an icon and none of that — while adding a
+dependency and a second visual language to pages whose measured constraint is
+bytes.
+
+The existing primitives — `glass`, `card-interactive`, the `font-mono` scale —
+already produce markup that matches every other surface on the site. Importing
+a component to replace them would have made the pages look *less* consistent,
+not more.
+
+**Licensing findings are unchanged** from the Phase H audit: Origin UI is
+AGPL-3.0, React Bits is NOASSERTION, `21st-dev/magic-mcp` ships no LICENSE;
+shadcn/ui, Magic UI, Radix and Motion Primitives are confirmed MIT. Nothing
+this phase altered that assessment, and nothing new was vendored.
+
+**Third-party code in the artifacts described, not consumed by this site:** the
+AK Dental build loads three.js r128 from cdnjs and the Saraswati dashboard loads
+Chart.js 4.4.1 from jsDelivr. Both are dependencies of *other people's
+deployments* that our case studies describe — they are recorded here for
+accuracy about what those builds contain, and neither enters this repository's
+dependency graph.
+
+---
+
+## Release Candidate 1 — 2026-08-08
+
+**Components reused: zero, and this time there was nothing to evaluate.**
+
+RC1 authored **no UI component**. The three code changes were:
+
+| Change | What it is |
+|---|---|
+| `min-w-0` on a grid item and a truncating list | Two Tailwind utilities, releasing a `min-width: auto` floor |
+| Nav breakpoint `md:` → `lg:` on three classes | A breakpoint token change |
+| A `matchMedia` effect closing the menu at the desktop breakpoint | 12 lines, no dependency |
+
+None of these has a library equivalent, because none of them is a component.
+They are corrections to how existing markup behaves at widths nobody had
+measured — the kind of fix an imported component would have hidden rather than
+solved, since a third-party card would carry its own `min-width` behaviour and
+the same class of bug would simply move.
+
+**Worth stating plainly**, because "reuse before building" is a standing policy
+and a reader is entitled to know it was considered: a headless UI library
+(shadcn/ui `NavigationMenu`, Radix `NavigationMenu`) *would* have supplied a
+responsive nav with a breakpoint-aware sheet, and would plausibly have shipped
+without the scroll-lock bug found here.
+
+It was still the wrong trade. The existing nav is ~60 lines, matches the site's
+visual language exactly, and ships in a bundle whose measured constraint is
+bytes. Replacing working markup with a dependency to fix a one-line breakpoint
+and a twelve-line effect would have cost more than it returned — and the bug it
+would have avoided is now **fixed, documented and impossible to reintroduce
+silently**, which is the durable version of the same benefit.
+
+**Licensing findings unchanged** from the Phase H audit: Origin UI AGPL-3.0,
+React Bits NOASSERTION, `21st-dev/magic-mcp` no LICENSE; shadcn/ui, Magic UI,
+Radix and Motion Primitives confirmed MIT. Nothing was vendored this release.
+
+**Third-party code in the artifacts described, not consumed by this site:**
+unchanged — three.js r128 via cdnjs in the AK Dental build, Chart.js 4.4.1 via
+jsDelivr in the Saraswati dashboard. Both belong to deployments our case studies
+*describe*; neither enters this repository's dependency graph.
