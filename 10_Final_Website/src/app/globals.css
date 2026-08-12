@@ -99,6 +99,34 @@
     text-rendering: optimizeLegibility;
   }
 
+  /**
+   * Anchor targets clear the fixed navigation.
+   *
+   * `Navigation` is `fixed top-0` at `h-16`, and every anchor target on the
+   * site had `scroll-margin-top: 0`. So each of the six in-page links —
+   * "How we work", "Integrations", "FAQ", and the three in the footer — parked
+   * the section's top edge at y=0, which is 64px *underneath* the nav bar. The
+   * kicker and the first line of every section heading landed behind it. The
+   * link worked, the destination was simply not the thing the reader was shown.
+   *
+   * Declared as a variable rather than a literal because the number is not a
+   * design choice, it is `h-16` restated: if the nav's height changes and this
+   * does not, the bug returns silently and only at the one scroll position
+   * nobody tests. The extra 1.5rem is the choice — a heading pinned flush to
+   * the nav reads as clipped even when it is fully visible.
+   *
+   * Set on `[id]` rather than on `html { scroll-padding-top }` because Lenis
+   * drives programmatic scrolling and reads the target's own scroll-margin.
+   */
+  :root {
+    --nav-h: 4rem;
+  }
+
+  section[id],
+  [id][data-anchor] {
+    scroll-margin-top: calc(var(--nav-h) + 1.5rem);
+  }
+
   body {
     background: rgb(var(--color-void));
     color: rgb(var(--color-text-primary));
@@ -1883,7 +1911,7 @@
   .infra-hub-role {
     margin-top: 2px;
     font-family: var(--font-mono);
-    font-size: 9px;
+    font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.14em;
     color: rgb(var(--color-accent-light));
@@ -3258,7 +3286,7 @@
     border-radius: 999px;
     border: 1px solid rgba(233, 162, 59, 0.34);
     background: rgba(233, 162, 59, 0.1);
-    font-size: 9px;
+    font-size: 10px;
     letter-spacing: 0.12em;
     color: rgb(var(--color-gold-bright));
   }
@@ -3304,7 +3332,7 @@
     display: block;
     margin-bottom: 5px;
     font-family: var(--font-mono);
-    font-size: 9px;
+    font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.14em;
     color: rgba(244, 192, 99, 0.72);
@@ -3476,7 +3504,7 @@
   .report-note-foot {
     margin-top: 10px;
     font-family: var(--font-mono);
-    font-size: 9px;
+    font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.14em;
     color: rgb(var(--color-text-tertiary));
