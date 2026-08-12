@@ -272,7 +272,142 @@ now points at `/work`, the canonical portfolio route the navbar and
 Verified on production at 1440 and 390: mouse click, keyboard Enter and the
 browser Back button all behave correctly, with no new console errors.
 
+## 8. Final release hardening — 2026-08-13
+
+The release-finalisation pass. No production code was changed: every line below
+is a verification, and the section exists so the next session can tell what was
+measured today from what was inherited from § 3 and § 7.
+
+### 8.1 What is deployed, and how that was established
+
+| Field | Value |
+|---|---|
+| Production URL | https://sheetflow-ai-website.vercel.app |
+| Live deployment | `dpl_4UXduQqrfCTvKx2hRJFsbThG4Nin` · `target: production` · `READY` |
+| Created | 2026-08-13 00:04:07 IST |
+| Second alias | `sheetflow-ai-website-sheetflow51-progs-projects.vercel.app` |
+| Code commit | `0276c6a` |
+| Repository HEAD | `74d853b` |
+
+`vercel inspect` reports **no git metadata** for this deployment — it was pushed
+with the CLI from the working tree, not built from a GitHub ref, so there is no
+commit SHA stored alongside it to read off. Identity is therefore established
+from the artefact and the clock, which is stronger than a label anyway:
+
+1. The production alias resolves to `dpl_4UXduQqrfCTvKx2hRJFsbThG4Nin`, created
+   at 00:04:07 — **21 seconds after** `0276c6a` was authored at 00:03:46.
+2. Production serves both changes that exist *only* at `0276c6a`: the hero's
+   secondary CTA carries `href="/work"`, and every booking path points at
+   `/free-automation-audit` with **zero** occurrences of `/30min` in the served
+   HTML of `/` and `/book` combined.
+3. `git diff --stat 0276c6a 74d853b` touches **one file, `PROJECT_RECOVERY.md`**.
+
+So the deployed application code is byte-identical to HEAD's application code;
+the two commits differ only in this document.
+
+### 8.2 Verification table
+
+| Check | Result | Evidence |
+|---|---|---|
+| Working tree | ✅ clean | `git status --porcelain` empty before and after the build and suite |
+| Secrets | ✅ clean | `git grep` over **all 386 tracked files** for OpenAI/GitHub/AWS/Slack/Google/Resend key shapes and PEM blocks: no matches. `.env.local` untracked and ignored twice (`.gitignore:51`, `10_Final_Website/.gitignore:32`). `.env.example` documents names only |
+| Sitemap | ✅ 21/21 | Every `<loc>` in the live `sitemap.xml` returns 200; `/this-page-does-not-exist-rc10` returns 404 |
+| Core routes | ✅ 6/6 | `/`, `/services`, `/work`, `/pricing`, `/book`, `/book/confirmed` all 200 |
+| Work routes | ✅ 10/10 | All published work slugs 200; `commerce.spec.ts` "sitemap lists every content route" green, so the sitemap is not merely self-consistent |
+| Static endpoints | ✅ 4/4 | `robots.txt` 436 B `text/plain`, `sitemap.xml` 4,041 B `application/xml`, `llms.txt` 37,800 B `text/plain`, `manifest.webmanifest` 606 B `application/manifest+json` |
+| Internal links | ✅ 32/32 | Every unique same-origin `href` harvested from the five core routes returns 200 — no broken internal link |
+| Images | ✅ pass | 20 `<img>` across the five core routes: **0** missing `alt`, **0** missing `src`, 0 broken. In-browser on `/`: 5 images, `naturalWidth > 0` on all |
+| Hero CTAs | ✅ pass | In the live DOM the hero contains exactly two links: "Book a free automation audit" → `/book`, "See our work" → `/work` |
+| Hydration | ✅ clean | No hydration error or warning in the console on `/`. Total console output is 3 messages, 2 of them the analytics 404 in § 7.2 |
+| Headings | ✅ pass | Exactly one `h1` on `/` |
+| Overflow | ✅ pass | `documentElement.scrollWidth` 1530 against a 1536 viewport |
+| TypeScript | ✅ pass | `tsc --noEmit` exit 0 |
+| ESLint | ✅ pass | `eslint src` exit 0 — 0 errors, 6 warnings (5 × `react-hooks/set-state-in-effect`, 1 unused disable directive in `Hero.tsx:151`) |
+| Build | ✅ pass | `next build` exit 0 at HEAD — 30 static pages, 10 work routes, 6 service routes, compiled in 44 s |
+| Focused suite | ✅ 68/68 | `playwright test smoke commerce --workers=1` against the local production build, 1.8 min |
+| Analytics | 🟡 open | Unchanged from § 7.2 — a dashboard toggle, see § 8.5 |
+
+### 8.3 Booking, checked end to end against the live event
+
+The § 7.1 fix was re-verified today rather than assumed, because the failure it
+recovered from was a *far end* that vanished without touching this repository.
+
+- **The event exists.** The Calendly API returns exactly one active event type:
+  "Free Automation Audit", `2a45325e-c622-40c8-879b-7d7765b0009d`, duration 30,
+  `locations: [google_conference]`, `secret: false`, with one custom question at
+  position 0 — the `a1` field the form composes into.
+- **Availability is real and in the right zone.** 2026-08-14 offers 16 slots,
+  `03:30Z`–`11:00Z`, which the booking page renders as **9:00am–4:30pm India
+  Standard Time**. The API and the rendered page agree slot for slot.
+- **Required fields hold.** On `/book`, `form.checkValidity()` is `false` when
+  empty and `:invalid` names exactly `name`, `email`, `sector`, `bottleneck`;
+  `a1` is optional, as designed.
+- **Prefill lands.** A real form submission was driven in a browser to Calendly's
+  invitee step. `full_name` = "Release Check", `email` =
+  "release.check@example.com", and `question_0` carries the composed notes
+  ("Business: … Biggest gap: … "). The slot header reads "9:00am - 9:30am,
+  Friday, August 14, 2026". **No booking was created** — the run stopped before
+  "Schedule Event".
+- **No stale destination.** `/30min` appears nowhere in the served HTML, and in
+  the repository it survives only as two sentences of prose in `contact.ts`
+  explaining why the slug could not be restored. There is no code path to it.
+
+### 8.4 The two production test failures, and why they are the harness
+
+Run against `PLAYWRIGHT_BASE_URL=https://sheetflow-ai-website.vercel.app`, the
+focused suite reports **66 passed, 2 failed** — both of them
+`commerce.spec.ts:173 › booking › loads no third-party script`, desktop and
+mobile.
+
+The hostnames the failure lists are all `sheetflow-ai-website.vercel.app`: the
+site's own origin. The assertion defines first-party as
+
+```ts
+if (r.resourceType() === 'script' && !url.hostname.includes('localhost'))
+```
+
+so pointing the suite at any remote host reclassifies every one of the app's own
+Next.js chunks as third-party. It is a baseURL assumption, not a finding.
+
+Checked independently, the claim the test means to make is true: `/book` serves
+**14 `<script src>` tags, all same-origin `/_next/...` paths, and zero absolute
+or external script URLs**. The same suite against the local production build is
+**68/68**.
+
+Left unchanged deliberately. Rewriting an assertion during release finalisation
+to make a red line go green is how a real regression gets hidden later; the
+localhost assumption is worth widening to "same origin as baseURL" as ordinary
+work, on a branch, with the suite green either side.
+
+### 8.5 The one remaining manual action
+
+Vercel Web Analytics is still off, so `/_vercel/insights/script.js` still 404s
+and still costs Lighthouse Best Practices 96 rather than 100. It remains the
+only console error on the site.
+
+**This cannot be done from here, and was not retried today.** Per § 7.2 the
+Vercel MCP connector is authenticated to a different scope and returns
+`403 forbidden` for this project on both `get_project` and `list_deployments`,
+re-confirmed this session. The CLI *is* correctly authenticated — it read the
+deployment metadata in § 8.1 — but exposes no analytics command. The fix is
+**Vercel → Project → Analytics → Enable**: one toggle, no code change, no
+redeploy.
+
+### 8.6 Rollback
+
+| | Value |
+|---|---|
+| Current production | `dpl_4UXduQqrfCTvKx2hRJFsbThG4Nin` (code `0276c6a`) |
+| Previous production | `dpl_BrfoiS1TkDCG841Z9YqECyemUp58`, `READY`, created 2026-08-12 22:27:16 IST (code `5151dd6`) |
+| Command | `vercel rollback dpl_BrfoiS1TkDCG841Z9YqECyemUp58` |
+
+Note what rolling back costs: `5151dd6` predates § 7.1 and § 7.3, so it restores
+the **dead `/30min` booking destination** and the hero's destination-less "See
+our work" button. It is a rollback for a catastrophic regression only. For
+anything narrower, fix forward.
+
 ---
 
-*Generated during the RC9 recovery session. Every figure above was executed, not
-inferred. Figures in § 3 marked "stale" are explicitly not claimed as current.*
+*Generated during the RC9 recovery session and extended by the RC10 release
+hardening pass. Every figure above was executed, not inferred. Figures in § 3
+marked "stale" are explicitly not claimed as current.*
