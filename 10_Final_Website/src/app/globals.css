@@ -239,9 +239,28 @@
     letter-spacing: -0.01em;
   }
 
-  /* Apple-style fade gradient on headlines */
+  /* Apple-style fade gradient on headlines.
+
+     RC6 raised the floor from 0.55 to 0.82, and moved the ramp late (72% →
+     100%) so only the final descender band is affected.
+
+     The old curve was tuned for a headline sitting on pure void. It has not
+     sat on pure void since the ambient engine landed: on a lit chapter the
+     bottom third of every headline resolved to roughly #8C8F96 against a
+     background the wash had already lifted, which measured under 4.5:1 and,
+     more to the point, read as a headline that had been *dimmed* rather than
+     one that was catching light. At monument scale that is the largest object
+     on the screen looking faded.
+
+     A gradient from 100% to 82% still reads as a light falloff — it is the
+     same gesture, priced for the surface it is actually on. */
   .text-fade {
-    background: linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.55) 100%);
+    background: linear-gradient(
+      180deg,
+      #ffffff 0%,
+      #ffffff 72%,
+      rgba(255, 255, 255, 0.82) 100%
+    );
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -947,53 +966,158 @@
   }
 
   /* ======================================================================
-     RC3 — AUTOMATION UNIVERSE
-     See `components/sections/AutomationUniverse.tsx` for why the geometry is a
-     module-scope constant and why no motion library is imported.
+     RC6 — AUTOMATION ORCHESTRATION
+     See `components/sections/UniverseStage.tsx` for why the orbit is a true
+     circle, why the hexagon is flat-top, and why the six are in lifecycle
+     order. Two rules govern this whole block:
+
+       1. The HTML layer and the SVG layer share one coordinate system. `--u`
+          is *one viewBox user unit, expressed as a length*, so a node written
+          as `112` here lands on the same pixel as `112` in the viewBox at
+          every width. Nothing is positioned in a number unrelated to the
+          geometry.
+       2. Continuous motion is capped at three (`VISUAL_DNA.md` § 2): the
+          travelling signals, the core pulse, the orbit trace. Everything else
+          is a transition on a state change.
      ====================================================================== */
 
   .universe {
     position: relative;
-    margin-inline: auto;
     max-width: 980px;
+    /* The stage is the query container for its own contents. `--u` is declared
+       on the child rather than here, because an element carrying
+       `container-type` is a container for its *descendants* and not for
+       itself — `cqw` in this rule would resolve against an outer container. */
+    container-type: inline-size;
   }
 
-  /* Below md the radial diagram is illegible — six nodes on an ellipse inside
+  /* Depth fog. The chapter's ambient wash and the page's particle field both
+     sit behind this section, and at RC5 they were brighter at the centre of
+     the composition than the connectors drawn on top of them — the hierarchy
+     was inverted, so the diagram competed with its own background. This is a
+     single non-blurred radial that sinks the middle of the stage, scoped to
+     the stage, so the shared ambient engine is untouched and only the area the
+     diagram occupies is quietened. */
+  .universe::before {
+    content: '';
+    position: absolute;
+    inset: -6% -4%;
+    z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      58% 58% at 50% 50%,
+      rgba(6, 7, 11, 0.72) 0%,
+      rgba(6, 7, 11, 0.42) 46%,
+      rgba(6, 7, 11, 0) 78%
+    );
+  }
+
+  /* Below md the radial diagram is illegible — six nodes on an orbit inside
      360px gives ~20px labels — so the SVG is dropped and the same buttons
-     become a vertical spine. The DOM and the copy are identical; only the
-     decorative geometry differs. */
+     become a vertical spine hanging off the engine. The DOM and the copy are
+     identical; only the decorative geometry differs. */
   .universe-canvas {
     display: none;
   }
 
   .universe-nodes {
+    /* Static fallback ≈ the value a 980px stage resolves to, so a browser
+       without container queries gets the desktop scale rather than the
+       guaranteed-invalid value. */
+    --u: 0.9px;
     list-style: none;
     margin: 0;
     padding: 0;
     position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     gap: 4px;
   }
 
+  @supports (container-type: inline-size) {
+    .universe-nodes {
+      --u: calc(100cqw / var(--universe-units, 1080));
+    }
+  }
+
   /* The mobile trunk — one continuous line behind the badge column, so the six
-     automations read as one system rather than six list items. */
+     automations read as one system rather than six list items. It starts at
+     the engine, not at the first automation. */
   .universe-nodes::before {
     content: '';
     position: absolute;
-    left: 21px;
-    top: 22px;
-    bottom: 22px;
+    left: 23px;
+    top: 24px;
+    bottom: 26px;
     width: 1px;
     background: linear-gradient(
       180deg,
-      transparent,
-      rgba(147, 197, 253, 0.3) 12%,
+      rgba(147, 197, 253, 0.42),
+      rgba(147, 197, 253, 0.3) 14%,
       rgba(147, 197, 253, 0.3) 88%,
       transparent
     );
   }
 
+  /* ---------- The engine, at the head of the mobile column ---------- */
+  .universe-origin {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 0 14px;
+  }
+
+  .universe-origin-mark {
+    position: relative;
+    flex: none;
+    width: 46px;
+    height: 46px;
+    border-radius: 15px;
+    background:
+      radial-gradient(70% 70% at 50% 34%, rgba(59, 130, 246, 0.34), rgba(10, 11, 15, 0.98) 72%),
+      linear-gradient(160deg, rgba(26, 31, 46, 0.98), rgba(10, 11, 15, 0.98));
+    border: 1px solid rgba(147, 197, 253, 0.4);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.08) inset,
+      0 0 24px rgba(59, 130, 246, 0.22);
+  }
+
+  /* The logo's three stacked rules, at badge scale. */
+  .universe-origin-mark::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(rgba(147, 197, 253, 0.8), rgba(147, 197, 253, 0.8)) center 17px / 14px 2px no-repeat,
+      linear-gradient(rgba(147, 197, 253, 0.8), rgba(147, 197, 253, 0.8)) center 22px / 20px 2px no-repeat,
+      linear-gradient(rgba(147, 197, 253, 0.8), rgba(147, 197, 253, 0.8)) center 27px / 14px 2px no-repeat;
+  }
+
+  .universe-origin-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .universe-origin-name {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #ffffff;
+  }
+
+  .universe-origin-role {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  /* ---------- The node ---------- */
   .universe-node {
     position: relative;
     display: flex;
@@ -1003,27 +1127,69 @@
     padding: 7px 10px 7px 0;
     text-align: left;
     border-radius: 12px;
-    transition: background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .universe-node-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+  /* The plate. A flat-top hexagon in the same orientation as the orbit —
+     vertices due left and due right. `clip-path` does not respect the box
+     model, so the 1px edge is a second, inset hexagon stacked under the
+     content rather than a border. */
+  .universe-plate {
+    position: relative;
+    display: grid;
+    place-items: center;
     flex: none;
-    width: 44px;
-    height: 44px;
-    border-radius: 14px;
-    /* Opaque: the trunk and the beams pass behind these. */
-    background: linear-gradient(160deg, rgba(26, 31, 46, 0.97), rgba(10, 11, 15, 0.97));
-    border: 1px solid rgba(147, 197, 253, 0.18);
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.06) inset,
-      0 6px 18px rgba(0, 0, 0, 0.45);
+    width: 48px;
+    height: 48px;
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+    background: linear-gradient(160deg, rgba(147, 197, 253, 0.34), rgba(147, 197, 253, 0.13));
     transition:
-      border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-      box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-      transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+      filter 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Opaque, deliberately: the connectors and the trunk pass *behind* the
+     nodes, and a translucent plate would show a beam running through the icon.
+     Depth comes from the gradient, the inset highlight and the cast shadow —
+     not from `backdrop-filter`, which would put six blur surfaces on the one
+     section the page's paint profiler already flags. */
+  .universe-plate-face {
+    position: absolute;
+    inset: 1.25px;
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+    background:
+      radial-gradient(84% 62% at 50% 6%, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0) 70%),
+      linear-gradient(162deg, rgba(30, 36, 52, 0.99), rgba(10, 11, 15, 0.99));
+    transition: background 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .universe-plate-icon {
+    position: relative;
+    width: 19px;
+    height: 19px;
+    transform: translateY(-2px);
+  }
+
+  /* The automation's state, at a glance. Sits inside the hexagon rather than
+     on its corner, because the clip would cut a corner-mounted dot in half. */
+  .universe-plate-dot {
+    position: absolute;
+    left: 50%;
+    bottom: 22%;
+    width: 4px;
+    height: 4px;
+    margin-left: -2px;
+    border-radius: 999px;
+    opacity: 0.75;
+    transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .universe-node-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
   }
 
   .universe-node-label {
@@ -1035,27 +1201,58 @@
     transition: color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .universe-node[data-active='true'] .universe-node-badge {
-    border-color: rgba(147, 197, 253, 0.5);
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.1) inset,
-      0 8px 24px rgba(0, 0, 0, 0.5),
-      0 0 22px rgba(59, 130, 246, 0.28);
-    transform: scale(1.06);
+  /* The transformation, in one line: event on the left, outcome on the right.
+     This is the whole reason a reader can parse a node in under two seconds
+     without opening it. */
+  .universe-node-flow {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    line-height: 1.3;
+    color: rgb(var(--color-text-tertiary));
+    transition: color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* ---------- Active + engaged ---------- */
+  .universe-node[data-active='true'] .universe-plate {
+    filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.5))
+      drop-shadow(0 0 16px rgba(59, 130, 246, 0.42));
+  }
+
+  .universe-node[data-active='true'] .universe-plate-face {
+    background:
+      radial-gradient(84% 62% at 50% 6%, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 70%),
+      linear-gradient(162deg, rgba(38, 47, 70, 0.99), rgba(13, 15, 22, 0.99));
+  }
+
+  .universe-node[data-active='true'] .universe-plate-dot {
+    opacity: 1;
   }
 
   .universe-node[data-active='true'] .universe-node-label {
     color: #ffffff;
   }
 
+  .universe-node[data-active='true'] .universe-node-flow {
+    color: rgb(var(--color-text-secondary));
+  }
+
+  /* The other five recede *only while the reader is engaging*. At rest the
+     diagram is a whole system with one node lit; permanently suppressing five
+     of its six subjects would be a worse drawing, not a calmer one. 0.5 rather
+     than lower: below that the labels stop meeting contrast, and dimming is
+     decoration — it may never cost a node its readability. */
+  .universe[data-engaged='true'] .universe-node:not([data-active='true']) {
+    opacity: 0.5;
+  }
+
   /* ---------- Detail panel ---------- */
   .universe-detail {
     position: relative;
-    margin: 28px auto 0;
-    max-width: 560px;
+    margin: 28px 0 0;
+    max-width: 620px;
     border-radius: 20px;
     padding: 22px 24px;
-    text-align: center;
   }
 
   .universe-detail-title {
@@ -1073,11 +1270,51 @@
     color: rgb(var(--color-text-secondary));
   }
 
+  /* The mechanism, in four beats. A wrapping flex row rather than a grid: the
+     four beats are different lengths in every automation, and four equal
+     columns would put "AI qualifies" in the middle of a large empty cell. */
+  .universe-steps {
+    list-style: none;
+    margin: 16px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px 0;
+  }
+
+  .universe-step {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    line-height: 1;
+    color: rgb(var(--color-text-tertiary));
+    white-space: nowrap;
+  }
+
+  /* The chevron is the connector between beats, so it belongs to the gap and
+     not to a beat — hence `::after` on all but the last, which is the only
+     placement that survives wrapping without leaving a dangling arrow. */
+  .universe-step:not(:last-child)::after {
+    content: '';
+    width: 18px;
+    height: 1px;
+    margin: 0 9px;
+    background: linear-gradient(90deg, rgba(147, 197, 253, 0.15), rgba(147, 197, 253, 0.5));
+  }
+
+  .universe-step:last-child {
+    color: rgb(var(--color-text-secondary));
+  }
+
   .universe-detail-impact {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    margin-top: 16px;
+    margin-top: 18px;
     font-family: var(--font-mono);
     font-size: 10px;
     text-transform: uppercase;
@@ -1091,18 +1328,19 @@
     border-radius: 999px;
   }
 
-  /* ---------- md+ : the radial diagram ---------- */
+  /* ---------- md+ : the orchestration ---------- */
   @media (min-width: 768px) {
     .universe {
       /* Published by the component from its own `VIEW` constant, so the canvas
          ratio and the node coordinates can never drift apart. */
-      aspect-ratio: var(--universe-ratio, 1000 / 620);
+      aspect-ratio: var(--universe-ratio, 1080 / 880);
     }
 
     .universe-canvas {
       display: block;
       position: absolute;
       inset: 0;
+      z-index: 1;
       width: 100%;
       height: 100%;
     }
@@ -1110,36 +1348,111 @@
     .universe-nodes {
       position: absolute;
       inset: 0;
+      z-index: 2;
       display: block;
     }
 
-    .universe-nodes::before {
+    .universe-nodes::before,
+    .universe-origin {
       display: none;
     }
 
+    /* A zero-size anchor sitting exactly on the orbit point. */
     .universe-slot {
       position: absolute;
       left: var(--x);
       top: var(--y);
-      transform: translate(-50%, -50%);
+      width: 0;
+      height: 0;
     }
 
+    /* Every dimension below is a viewBox user unit multiplied by `--u`, so the
+       HTML nodes scale in exact lockstep with the SVG beneath them — no
+       breakpoint steps, no measurement, no drift. The `max()` floors are the
+       one exception: type may not shrink below legibility just because the
+       geometry can. */
+
+    /* What sits on the orbit is the **plate**, not the node's bounding box.
+       Centring the box was the first attempt and it was wrong in a way only a
+       measurement catches: the box is plate + label, so its centre is half a
+       label-height away from the plate, and each node was pushed off-radius by
+       a different amount depending on which side its label was on. Measured on
+       the render, the six angular gaps came out 53.4° / 62.1° / 64.5° instead
+       of 60°, and the connectors missed the plates.
+
+       So the button *is* the plate, and the label is hung off it absolutely.
+       Text can now wrap to two lines, or change entirely, and no node can move
+       off its own radius. */
     .universe-node {
-      flex-direction: column;
-      gap: 10px;
-      width: 136px;
+      position: absolute;
+      left: 0;
+      top: 0;
+      display: block;
+      width: calc(112 * var(--u));
+      height: calc(112 * var(--u));
+      transform: translate(-50%, -50%);
       padding: 0;
+      gap: 0;
       text-align: center;
     }
 
-    .universe-node-badge {
-      width: 56px;
-      height: 56px;
+    .universe-plate {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Labels always sit on the side facing away from the core, so no label is
+       ever laid over the connector arriving at its own node. Absolutely
+       positioned, but still inside the `<button>` — so it remains part of the
+       hit area and clicking the title activates the node. */
+    .universe-node-text {
+      position: absolute;
+      left: 50%;
+      top: calc(100% + 14 * var(--u));
+      width: calc(210 * var(--u));
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: calc(5 * var(--u));
+      text-align: center;
+    }
+
+    .universe-slot[data-above='true'] .universe-node-text {
+      top: auto;
+      bottom: calc(100% + 14 * var(--u));
+    }
+
+    .universe-plate-face {
+      inset: calc(1.4 * var(--u));
+    }
+
+    .universe-plate-icon {
+      width: calc(38 * var(--u));
+      height: calc(38 * var(--u));
+      transform: translateY(calc(-5 * var(--u)));
+    }
+
+    .universe-plate-dot {
+      width: calc(8 * var(--u));
+      height: calc(8 * var(--u));
+      margin-left: calc(-4 * var(--u));
     }
 
     .universe-node-label {
-      font-size: 12.5px;
+      font-size: max(11.5px, calc(16 * var(--u)));
       text-wrap: balance;
+    }
+
+    .universe-node-flow {
+      font-size: max(9px, calc(12 * var(--u)));
+    }
+
+    /* Hover elevation. `translateY` on the plate only — moving the whole node
+       would move its label off the geometry it is anchored to. */
+    .universe-node:hover .universe-plate,
+    .universe-node:focus-visible .universe-plate {
+      transform: translateY(calc(-6 * var(--u)));
     }
 
     .universe-detail {
@@ -1147,23 +1460,82 @@
     }
   }
 
+  /* Below lg the labels have less room than the geometry implies, so the flow
+     line is dropped rather than wrapped to two lines under a shrinking title.
+     The node keeps its plate, its title and its status dot — it loses the one
+     element that was never load-bearing. */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .universe-node-flow {
+      display: none;
+    }
+  }
+
   /* ---------- SVG layer ---------- */
+  /* The orbit through all six node centres. It exists at all only because the
+     radius is a scalar — on the RC5 ellipse there was no single circle the six
+     nodes sat on, which is the geometric fact a reader was perceiving as
+     "manually positioned" without being able to name it. */
+  .universe-orbit {
+    fill: none;
+    stroke: rgba(147, 197, 253, 0.12);
+    stroke-width: 1;
+  }
+
+  /* One short dash on that same circle, rotating. This is the diagram's
+     slowest movement and the only one that reads as orbital rather than as
+     traffic; a solid ring rotating would be invisible, being symmetric. */
+  .universe-orbit-trace {
+    fill: none;
+    stroke: rgba(147, 197, 253, 0.5);
+    stroke-width: 1.25;
+    stroke-linecap: round;
+    stroke-dasharray: 74 2088;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: universe-orbit 44s linear infinite;
+  }
+
+  @keyframes universe-orbit {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
   /* 0.42, not the 0.22 this shipped at first. Measured on a capture rather than
      judged in the editor: at 0.22 over the section's ambient wash the beams
      were effectively invisible and the diagram read as six loose icons around a
      disc — the network was there in the DOM and absent on screen. */
+  /* 0.68, not the 0.5 this was designed at. Judged on a 1440 capture rather
+     than in the editor: at 0.5, over the section's ambient wash and behind the
+     stage fog, the resting connectors were present in the DOM and effectively
+     absent on screen — the diagram read as six hexagons floating near a disc,
+     and only the *hovered* connector was ever visible. A network whose links
+     you cannot see at rest is not a network. */
   .universe-beam {
     fill: none;
-    stroke: rgba(147, 197, 253, 0.5);
-    stroke-width: 1.5;
+    stroke: rgba(147, 197, 253, 0.68);
+    stroke-width: 1.6;
     stroke-linecap: round;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  /* The lit state is a second path stacked on the resting one, so activating a
+  /* A second rail bowed the *same* way as the first but less, so the pair runs
+     roughly parallel and reads as a channel. Mirroring it — the first attempt —
+     produced two symmetric arcs meeting at both ends, which at this scale is an
+     eye, not a conduit. */
+  .universe-beam-alt {
+    fill: none;
+    stroke: rgba(147, 197, 253, 0.2);
+    stroke-width: 1;
+    stroke-linecap: round;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* The lit state is a third path stacked on the resting pair, so activating a
      node changes opacity only — no geometry is recomputed and nothing reflows. */
   .universe-beam-lit {
     fill: none;
-    stroke: rgba(147, 197, 253, 0.85);
+    stroke: rgba(147, 197, 253, 0.9);
     stroke-width: 1.75;
     stroke-linecap: round;
     opacity: 0;
@@ -1173,6 +1545,17 @@
 
   [data-lit='true'] .universe-beam-lit {
     opacity: 1;
+  }
+
+  /* While the reader is engaging, the five unselected channels recede so the
+     lit one is unambiguously the subject. Matched to the node dimming above,
+     and driven by the same single attribute. */
+  .universe[data-engaged='true'] .universe-link:not([data-lit='true']) .universe-beam {
+    opacity: 0.32;
+  }
+
+  .universe[data-engaged='true'] .universe-link:not([data-lit='true']) .universe-beam-alt {
+    opacity: 0.4;
   }
 
   .universe-ring {
@@ -1185,8 +1568,43 @@
      the brand mark, which reads as a speck on the screen rather than as depth. */
   .universe-core {
     fill: rgba(10, 11, 15, 0.985);
-    stroke: rgba(147, 197, 253, 0.34);
+    stroke: rgba(147, 197, 253, 0.38);
     stroke-width: 1.25;
+  }
+
+  /* The core's own heartbeat: one ring leaving the disc. The centre has to be
+     the most important object in the composition (it is what the other six
+     point at), and at RC5 it was the only element that never moved. */
+  .universe-pulse {
+    fill: none;
+    stroke: rgba(96, 165, 250, 0.5);
+    stroke-width: 1.25;
+    transform-box: fill-box;
+    transform-origin: center;
+    opacity: 0;
+    animation: universe-pulse 5.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  }
+
+  /* The engine answers when a node is engaged — one step brighter and one step
+     faster. Subtle by design: the core acknowledging the reader is the point,
+     the core competing with the node they are reading is not. */
+  .universe[data-engaged='true'] .universe-pulse {
+    stroke: rgba(96, 165, 250, 0.72);
+    animation-duration: 3.4s;
+  }
+
+  @keyframes universe-pulse {
+    0% {
+      transform: scale(1);
+      opacity: 0;
+    }
+    18% {
+      opacity: 0.62;
+    }
+    100% {
+      transform: scale(1.62);
+      opacity: 0;
+    }
   }
 
   /* The logo's three stacked rules — spreadsheet rows
@@ -1197,7 +1615,55 @@
     stroke-linecap: round;
   }
 
-  /* The traveling signal. `offset-path` reuses the beam's own `d` string, so a
+  /* The core names itself. Sized in user units, so it scales with the viewBox
+     exactly like every other part of the drawing. */
+  /* Sizes are in viewBox user units, so they scale with the drawing — which is
+     the point, and also the trap: at the 768 stage the first pass rendered the
+     role line at under 6 device pixels, a smear rather than a word. Both were
+     raised to land the role on the site's own micro-label scale (~10px) at full
+     size, and below lg it is dropped entirely rather than shown illegibly. */
+  .universe-core-name {
+    fill: #ffffff;
+    font-family: var(--font-mono);
+    font-size: 17px;
+    font-weight: 500;
+    letter-spacing: 2.1px;
+    text-anchor: middle;
+  }
+
+  .universe-core-role {
+    fill: rgba(147, 197, 253, 0.72);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 1.7px;
+    text-anchor: middle;
+  }
+
+  .universe-core-dot {
+    fill: rgb(var(--color-accent-light));
+    opacity: 0.9;
+  }
+
+  /* Below lg the stage renders at roughly 0.6 of full size. The engine still
+     names itself — the name is enlarged and re-centred — but the role line and
+     the activity dot are removed rather than drawn at a size nobody can read.
+     Nothing is lost: below md the mobile column's own header carries
+     "SheetFlow / Automation engine" as real HTML text. `x`/`y` are not CSS
+     properties on `<text>`, so the re-centring is a transform. */
+  @media (max-width: 1023px) {
+    .universe-core-role,
+    .universe-core-dot {
+      display: none;
+    }
+
+    .universe-core-name {
+      font-size: 26px;
+      letter-spacing: 3.4px;
+      transform: translateY(4px);
+    }
+  }
+
+  /* The travelling signal. `offset-path` reuses the beam's own `d` string, so a
      dot cannot drift off its beam, and moving a 6px dot repaints the dot —
      not the path's bounding box, which is the cost that ruled out
      `stroke-dashoffset` path-draw in RC2 (`MOTION_INVENTORY.md` § 6).
@@ -1213,7 +1679,10 @@
     .universe-signal {
       animation: universe-travel 3.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
       /* 6 nodes × 0.53s ≈ the 3.2s cycle, so exactly one signal is in flight at
-         any moment — VISUAL_DNA.md § 2 caps simultaneous active motion at 3. */
+         any moment — VISUAL_DNA.md § 2 caps simultaneous active motion at 3.
+         The stagger follows array order, which is lifecycle order, so the ring
+         is traced clockwise: lead in, answered, booked, recorded, invoiced,
+         reported. */
       animation-delay: calc(var(--i) * 0.53s);
       filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.9));
     }
@@ -1233,6 +1702,22 @@
     100% {
       offset-distance: 100%;
       opacity: 0;
+    }
+  }
+
+  /* The four beats arrive in order, because the order *is* the content — four
+     words appearing at once is a list, four words appearing in sequence is a
+     pipeline. Replays on every change: the component keys the list on the
+     automation id, so React remounts it and the animation restarts. */
+  .universe-step {
+    animation: universe-step-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation-delay: calc(var(--i) * 0.07s);
+  }
+
+  @keyframes universe-step-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
     }
   }
 
@@ -1287,9 +1772,10 @@
      container width the six branch rows stretch to ~925px while their chips
      fill about 40% of that, so each row ends in a long empty gutter and the
      tree reads as sparse rather than as tidy. Measured on a 1440 capture. */
+  /* No `margin-top` and no auto centring: the chapter owns the gap to its
+     subject, and the subject starts at the chapter's left edge like every
+     other one on the page. */
   .infra {
-    margin-top: 56px;
-    margin-inline: auto;
     max-width: 1040px;
   }
 
@@ -1589,9 +2075,11 @@
      than a `role="tablist"`, and why the screens are wireframes.
      ====================================================================== */
 
+  /* No `margin-top` of its own any more — the chapter owns the gap between a
+     head and its subject (`.chapter-stage`), so nine sections cannot each pick
+     a slightly different one. */
   .craft {
     position: relative;
-    margin-top: 48px;
   }
 
   /* Hidden from sight, never from the focus order. `display: none` here would
@@ -1609,10 +2097,13 @@
     border: 0;
   }
 
+  /* Left, not centred. RC5 made every chapter open at the same x — the rail's
+     edge — and a centred control row under a left-aligned head is the exact
+     mixed-alignment that made the page read as separate templates. */
   .craft-tabs {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 8px;
   }
 
@@ -1668,74 +2159,16 @@
     margin-top: 22px;
   }
 
-  .craft-frame {
-    margin-inline: auto;
-    max-width: 880px;
-    border-radius: 16px;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(10, 11, 15, 0.9);
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.07) inset,
-      0 30px 80px rgba(0, 0, 0, 0.55);
-  }
+  /* The frame, the chrome, the omnibox, the screen and the sheen all moved to
+     the Browser Mockup engine in RC5 — `.vos-browser-*`, above. What is left
+     here is only the part that is genuinely this section's: the *swap*.
 
-  .craft-chrome {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    height: 40px;
-    padding: 0 14px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-    background: linear-gradient(180deg, rgba(26, 31, 46, 0.85), rgba(15, 17, 23, 0.85));
-  }
-
-  /* Three dots, flat and unlit. Rendered in traffic-light colours this becomes
-     the macOS pastiche `SHEETFLOW_VISUAL_DNA.md` § 9 rejects as
-     "Skeuomorphism 2.0" — the window is a recognisable object, not an imitated
-     surface. */
-  .craft-dots {
-    display: inline-flex;
-    flex: none;
-    gap: 6px;
-  }
-
-  .craft-dots i {
-    width: 9px;
-    height: 9px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.14);
-  }
-
-  .craft-omnibox {
-    position: relative;
-    flex: 1;
-    height: 22px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-  }
-
+     `.vos-browser-url` supplies the address bar's type and position; these two
+     rules add the cross-fade that the radio group drives, so four addresses can
+     occupy one omnibox. Same split for the panels. */
   .craft-url {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    padding-left: 12px;
-    font-family: var(--font-mono);
-    font-size: 10.5px;
-    font-style: normal;
-    letter-spacing: 0.02em;
-    color: rgb(var(--color-text-tertiary));
     opacity: 0;
     transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .craft-screen {
-    position: relative;
-    aspect-ratio: 640 / 380;
-    overflow: hidden;
-    background: linear-gradient(180deg, rgba(15, 17, 23, 0.6), rgba(10, 11, 15, 0.6));
   }
 
   .craft-panel {
@@ -1745,68 +2178,23 @@
     transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .craft-screen-svg {
-    display: block;
-    width: 100%;
+  .craft-panel .vos-artifact-svg {
     height: 100%;
   }
 
-  /* The wireframe palette. Five tones is the whole vocabulary — enough to show
-     hierarchy, too few to start looking like a screenshot. */
-  .craft-sh--dim {
-    fill: rgba(255, 255, 255, 0.06);
+  /* The window sits flush with the chapter's left edge rather than centred in
+     the column. The engine's default is `margin-inline: auto`, which is right
+     for a frame that is the only thing on its row and wrong for one that is a
+     chapter's subject. */
+  .craft-stage .vos-browser {
+    margin-inline: 0;
   }
 
-  .craft-sh--line {
-    fill: rgba(255, 255, 255, 0.11);
-  }
-
-  .craft-sh--mid {
-    fill: rgba(255, 255, 255, 0.19);
-  }
-
-  .craft-sh--accent {
-    fill: rgba(96, 165, 250, 0.42);
-  }
-
-  .craft-sh--gold {
-    fill: rgba(244, 192, 99, 0.45);
-  }
-
-  /* One sweep across the glass, so the frame reads as a screen that is on
-     rather than a picture of one. A single element on the compositor. */
-  .craft-sheen {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: linear-gradient(
-      105deg,
-      transparent 38%,
-      rgba(255, 255, 255, 0.06) 50%,
-      transparent 62%
-    );
-    transform: translateX(-100%);
-    animation: craft-sheen 7s ease-in-out infinite;
-  }
-
-  @keyframes craft-sheen {
-    0%,
-    62% {
-      transform: translateX(-100%);
-    }
-    100% {
-      transform: translateX(100%);
-    }
-  }
-
-  .craft-note {
+  /* The provenance caption is emitted by the `Artifact` engine now rather than
+     hand-written here — which is the point of the migration: § 6's rule is no
+     longer something this section remembers to obey. */
+  .craft-stage .vos-artifact-note {
     margin-top: 12px;
-    text-align: center;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: rgb(var(--color-text-tertiary));
   }
 
   /* ---------- Caption, swapped in place ---------- */
@@ -1820,9 +2208,7 @@
     position: absolute;
     inset-inline: 0;
     top: 0;
-    margin-inline: auto;
     max-width: 520px;
-    text-align: center;
     font-size: 14px;
     line-height: 1.6;
     color: rgb(var(--color-text-secondary));
@@ -1848,10 +2234,6 @@
   }
 
   @media (min-width: 768px) {
-    .craft {
-      margin-top: 56px;
-    }
-
     .craft-tab {
       font-size: 13.5px;
       padding: 10px 18px;
@@ -1876,6 +2258,23 @@
     inset: 0;
     z-index: -10;
     pointer-events: none;
+    /* Fade the wash out at its own top and bottom edges.
+       Added in RC5, and it is the difference between chapters that flow and
+       chapters that end. Each tone is a radial gradient whose value at the
+       section's top edge is non-zero, so without this the wash terminates in a
+       visible horizontal seam exactly at the boundary — measured at y≈250 on
+       the 1440px capture, right where chapter 01 meets the hero. A seam at
+       every join is the page telling the reader a scene has ended nine times.
+       `VISUAL_DNA_V2.md` § 8.3 makes atmosphere carry the arc; an arc cannot
+       be carried by ten separately-terminated washes. */
+    -webkit-mask-image: linear-gradient(
+      180deg,
+      transparent 0%,
+      #000 14%,
+      #000 86%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(180deg, transparent 0%, #000 14%, #000 86%, transparent 100%);
   }
 
   .vos-ambient--grid::before {
@@ -2147,20 +2546,37 @@
     color: rgb(var(--color-text-tertiary));
   }
 
+  /* ---------- The schematic palette ----------
+     RC6 retuned all four neutrals. The register is still coarse — § 3.5 is
+     right that *convincing is the failure mode*, and none of this makes a
+     wireframe photoreal — but coarse and *unstyled* are not the same register,
+     and these were reading as the second one.
+
+     Two things were wrong. They were neutral (pure white at low alpha), so
+     they belonged to no palette and picked up whatever the wash behind them
+     was doing; and the three tiers spanned 0.06–0.19, which at these shape
+     sizes is not enough separation to read as structure. Grey rounded
+     rectangles at low contrast with no hue is, precisely, the house style of a
+     loading skeleton — so the largest artifact on the page, the browser stage
+     in chapter 05, read as a page that had not finished loading.
+
+     Cool-tinted and spread wider, the same shapes read as a diagram drawn in
+     the brand's ink. Nothing about what they claim has changed, and the
+     provenance caption the engine emits is untouched. */
   .vos-fill--dim {
-    fill: rgba(255, 255, 255, 0.06);
+    fill: rgba(147, 197, 253, 0.09);
   }
 
   .vos-fill--line {
-    fill: rgba(255, 255, 255, 0.11);
+    fill: rgba(198, 216, 244, 0.17);
   }
 
   .vos-fill--mid {
-    fill: rgba(255, 255, 255, 0.19);
+    fill: rgba(214, 228, 250, 0.28);
   }
 
   .vos-fill--accent {
-    fill: rgba(96, 165, 250, 0.45);
+    fill: rgba(96, 165, 250, 0.55);
   }
 
   /* Gold marks an outcome, never a decoration (§ 2). One per composition. */
@@ -2203,21 +2619,908 @@
     background: rgba(6, 6, 8, 0.92);
   }
 
-  /* ---------------------------------------------------------------
-     THE RUN — the section built on the system
-     Editorial two-column narrative (§ 8.2): a held left chapter, a
-     scrolling right sequence.
-     --------------------------------------------------------------- */
-  .run {
-    position: relative;
-    margin-top: 8px;
+  /* The browser window. Lifted out of `sections/DigitalCraft.tsx` in RC5,
+     where it was inline and therefore un-reusable — item 1 of the VOS
+     migration list. Chrome is CSS so it stays crisp at any width; only the
+     screen contents are SVG. */
+  .vos-browser {
+    margin-inline: auto;
+    max-width: 880px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(10, 11, 15, 0.9);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.07) inset,
+      0 30px 80px rgba(0, 0, 0, 0.55);
   }
 
+  .vos-browser-chrome {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 40px;
+    padding: 0 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    background: linear-gradient(180deg, rgba(26, 31, 46, 0.85), rgba(15, 17, 23, 0.85));
+  }
+
+  /* Three dots, flat and unlit. Rendered in traffic-light colours this becomes
+     the macOS pastiche `SHEETFLOW_VISUAL_DNA.md` § 9 rejects as
+     "Skeuomorphism 2.0" — the window is a recognisable object, not an imitated
+     surface. */
+  .vos-browser-dots {
+    display: inline-flex;
+    flex: none;
+    gap: 6px;
+  }
+
+  .vos-browser-dots i {
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .vos-browser-omnibox {
+    position: relative;
+    flex: 1;
+    height: 22px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .vos-browser-url {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    padding-left: 12px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-style: normal;
+    letter-spacing: 0.02em;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  .vos-browser-screen {
+    position: relative;
+    aspect-ratio: var(--vos-browser-ratio, 640 / 380);
+    overflow: hidden;
+    background: linear-gradient(180deg, rgba(15, 17, 23, 0.6), rgba(10, 11, 15, 0.6));
+  }
+
+  /* One sweep across the glass, so the frame reads as a screen that is on
+     rather than a picture of one. A single element on the compositor. */
+  .vos-browser-sheen {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      105deg,
+      transparent 38%,
+      rgba(255, 255, 255, 0.06) 50%,
+      transparent 62%
+    );
+    transform: translateX(-100%);
+    animation: vos-browser-sheen 7s ease-in-out infinite;
+  }
+
+  @keyframes vos-browser-sheen {
+    0%,
+    62% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  /* ---------------------------------------------------------------
+     LIVE METRICS ENGINE                    VISUAL_DNA_V2.md § 6
+     `provenance` is required on the group. A figure in a dashboard IS a
+     claim about a customer, and it reads as one even when the copy
+     around it says otherwise. Nothing counts up — see `Metric.tsx`.
+     --------------------------------------------------------------- */
+  .vos-metrics {
+    margin: 0;
+  }
+
+  .vos-metrics-body {
+    padding: clamp(20px, 2.4vw, 30px);
+  }
+
+  .vos-metrics-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  .vos-metric-value {
+    font-family: var(--font-display);
+    font-size: clamp(30px, 3.4vw, 44px);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: #ffffff;
+  }
+
+  /* One per composition, and it must mark an outcome (§ 2). */
+  .vos-metric-value--gold {
+    color: rgb(var(--color-gold-bright));
+  }
+
+  /* `wrap`, because at 412px "Bookings confirmed" takes two lines and an
+     unwrapped delta then hangs off the first line's baseline beside the second
+     — legible, but reading as a misalignment rather than as a pair. */
+  .vos-metric-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 8px;
+    margin-top: 8px;
+    font-size: 12px;
+  }
+
+  .vos-metric-label {
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  .vos-metric-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .vos-metric-delta--up {
+    color: rgb(var(--color-success));
+  }
+
+  .vos-metric-delta--down {
+    color: rgb(var(--color-danger));
+  }
+
+  .vos-spark {
+    position: relative;
+    height: 96px;
+    width: 100%;
+  }
+
+  .vos-spark-svg {
+    display: block;
+    height: 100%;
+    width: 100%;
+  }
+
+  .vos-spark-line {
+    fill: none;
+    stroke: rgb(var(--color-accent-light));
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* The trace. `pathLength` normalises the dash units so one constant works
+     for any series length — without it the dash offset would have to be the
+     measured path length, which is a `getTotalLength()` call and therefore
+     JavaScript. Rests **drawn**, for the same reason the spine rests traced. */
+  .vos-spark-line,
+  .vos-spark-area {
+    opacity: 1;
+  }
+
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .vos-spark-line {
+        stroke-dasharray: 1;
+        stroke-dashoffset: 0;
+        animation: vos-spark-draw linear both;
+        animation-timeline: view();
+        animation-range: entry 10% entry 70%;
+      }
+
+      .vos-spark-area {
+        animation: vos-spark-fill linear both;
+        animation-timeline: view();
+        animation-range: entry 30% entry 85%;
+      }
+    }
+  }
+
+  @keyframes vos-spark-draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes vos-spark-fill {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* The one continuously-moving element on the surface. 2px, on an opacity
+     loop rather than a transform, so it reads as a signal holding rather than
+     as something travelling. */
+  .vos-spark-tip {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: rgb(var(--color-accent-light));
+    box-shadow: 0 0 8px 2px rgba(147, 197, 253, 0.7);
+    animation: vos-spark-tip 6s ease-in-out infinite;
+  }
+
+  @keyframes vos-spark-tip {
+    0%,
+    100% {
+      opacity: 0.45;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  /* ---------------------------------------------------------------
+     PARALLAX ENGINE                        VISUAL_DNA_V2.md § 7.2
+     Rests NEUTRAL, not finished — unlike the spine. The finished state
+     of a parallax is an element pushed off its layout position, and
+     shipping that statically would misalign rather than un-animate.
+     --------------------------------------------------------------- */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .vos-drift {
+        animation: vos-drift linear both;
+        animation-timeline: view();
+        animation-range: cover 0% cover 100%;
+      }
+    }
+  }
+
+  @keyframes vos-drift {
+    from {
+      transform: translate3d(0, var(--vos-drift-from, 40px), 0);
+    }
+    to {
+      transform: translate3d(0, var(--vos-drift-to, -40px), 0);
+    }
+  }
+
+  /* ---------------------------------------------------------------
+     NARRATIVE ENGINE — the chapter, and the line through all of them
+     See `components/vos/Chapter.tsx` for the page-level defect this
+     exists against: nine self-contained pages stacked on one route,
+     joined by ~275px of void and two different header alignments.
+     --------------------------------------------------------------- */
+  .chapter {
+    position: relative;
+    width: 100%;
+    /* `clip`, not `hidden`. `hidden` makes an element a scroll container, and
+       every scroll-driven animation inside — the chapter rail included —
+       would then resolve `view()` against *this* box instead of the document,
+       freezing at a constant progress. That is the exact defect the VOS notes
+       record from the first Spine build. */
+    overflow: clip;
+    /* Asymmetric, and this is the number the engine exists to change.
+       `.section` pays `clamp(64px, 9.5vw, 160px)` on both edges, so two
+       sections back to back put up to 320px of nothing between them —
+       measured at ~275px on the 1440px capture. Here the join is ~150px, and
+       the rail crosses it, so it is a transition rather than a gap.
+
+       RC6 tightens it again, to ~164px at 1440. RC5 set these numbers against
+       a page whose chapter heads were a stacked title-over-lede block; the
+       masthead grid above removed a lede-height from the top of every chapter,
+       and a join tuned for the taller head reads loose under the shorter one.
+       Padding is a relationship, so it moves when the things it separates
+       do. */
+    padding-block: clamp(44px, 4vw, 72px) clamp(52px, 5vw, 92px);
+  }
+
+  /* The rail is positioned against the *section*, not against the container,
+     so it spans the padding and meets its neighbours exactly. Its `left` is
+     computed from the same three numbers `.container-edge` uses for its own
+     padding and max-width — one source, so the rail cannot drift off the
+     content column's edge at any width. */
+  .chapter-rail {
+    left: max(1.5rem, calc((100% - 1280px) / 2 + 1.5rem));
+  }
+
+  @media (min-width: 640px) {
+    .chapter-rail {
+      left: max(2rem, calc((100% - 1280px) / 2 + 2rem));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .chapter-rail {
+      left: max(2.5rem, calc((100% - 1280px) / 2 + 2.5rem));
+    }
+  }
+
+  .chapter-content {
+    --chapter-indent: 30px;
+    position: relative;
+    padding-left: var(--chapter-indent);
+  }
+
+  @media (min-width: 768px) {
+    .chapter-content {
+      --chapter-indent: 56px;
+    }
+  }
+
+  .chapter-head {
+    max-width: 46rem;
+  }
+
+  /* ---------- The masthead, from lg up ----------
+     RC6. Below lg this is unchanged: kicker, title, lede, stacked.
+
+     The defect it answers is the most-repeated shape on the page. Every
+     chapter head was capped at 46rem inside a 1280px container, left-aligned,
+     with nothing else on its row — so on a 1440 capture roughly 400px of the
+     right-hand column was empty at the top of all eight chapters, and the
+     fixed ambient wash was the only thing in it. Eight times down one page,
+     that does not read as generous white space; it reads as a column somebody
+     forgot to fill. § 8.2 asks for an editorial layout and this is the part of
+     it the page never had.
+
+     The fix moves the lede rather than resizing anything. The title column is
+     still exactly 46rem, so no headline re-wraps and no line break the copy
+     was written around changes; the description simply relocates from *below*
+     the title into the space beside it. The page also gets shorter by roughly
+     one lede-height per chapter, which is the cheapest scroll-length
+     reduction available — nothing was cut.
+
+     `end` alignment sets the deck on the headline's last baseline, which is
+     what makes it read as one masthead rather than as two stacked blocks. */
+  @media (min-width: 1024px) {
+    .chapter-head {
+      max-width: none;
+      display: grid;
+      grid-template-columns: minmax(0, 46rem) minmax(0, 1fr);
+      column-gap: clamp(40px, 4vw, 80px);
+      align-items: end;
+    }
+
+    .chapter-kicker {
+      grid-column: 1 / -1;
+    }
+
+    /* Zeroed: in the stacked layout this gap separated the lede from the
+       title above it, and there is nothing above it any more. The 4px of
+       optical padding lands its final baseline level with the headline's. */
+    .chapter-lede {
+      margin-top: 0;
+      padding-bottom: 4px;
+    }
+  }
+
+  .chapter-kicker {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+  }
+
+  /* Back onto the rail. The 1px offset centres an 11px node on a 2px line:
+     the rail's own centre is 1px right of the indent origin. */
+  .chapter-node {
+    left: calc(1px - var(--chapter-indent));
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .chapter-mark {
+    color: rgb(var(--color-accent-light));
+  }
+
+  .chapter-kicker-text {
+    color: rgba(96, 165, 250, 0.8);
+  }
+
+  .chapter-title {
+    margin-top: 18px;
+    font-family: var(--font-display);
+    font-size: clamp(32px, 5.6vw, 60px);
+    font-weight: 600;
+    line-height: 1.02;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    /* Same correction as `.text-fade`, and it matters more here: a chapter
+       title is two or three lines, so at the old 0.55 floor an entire final
+       line — usually the half of the sentence carrying the claim — rendered
+       at roughly half white on a lit wash. */
+    background: linear-gradient(
+      180deg,
+      #ffffff 0%,
+      #ffffff 72%,
+      rgba(255, 255, 255, 0.82) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  .chapter-lede {
+    margin-top: 20px;
+    max-width: 40rem;
+    font-size: 16px;
+    line-height: 1.65;
+    text-wrap: pretty;
+    color: rgb(var(--color-text-secondary));
+  }
+
+  @media (min-width: 768px) {
+    .chapter-lede {
+      font-size: 17px;
+    }
+  }
+
+  /* The chapter's centrepiece. A single named gap, so "how far below the head
+     does the subject start" is one decision rather than nine — § 8.1 makes gap
+     a statement of relationship, and this relationship is the same every time:
+     a chapter and the thing it is about. */
+  .chapter-stage {
+    margin-top: clamp(40px, 4.5vw, 72px);
+  }
+
+  /* ---------------------------------------------------------------
+     THE CLOSE — the descent
+     RC4 ran this from `useScroll` + a spring + five `useTransform`s.
+     One element, one property, on the compositor. Rests at full
+     intensity: a browser without scroll timelines gets the finished
+     closing scene, not a dim one (§ 7.2's degradation rule).
+     --------------------------------------------------------------- */
+  .cta-descent {
+    position: absolute;
+    inset: 0;
+    z-index: -6;
+    pointer-events: none;
+    opacity: 1;
+    mix-blend-mode: screen;
+    /* Gold 0.26 → 0.12, blue 0.20 → 0.26.
+
+       The warmth here is deliberate and stays — § 2 gives gold to the moment
+       the system has worked, and the close is that moment. What changed is
+       that this used to be the *second* gold layer on the closing frame; the
+       fixed global aurora was the first, and the two summed. With that one
+       corrected to 0.07 this became the brightest warm light on the route by a
+       wide margin, and on `screen` over void it was resolving to the same
+       brown the rest of the page had just been cleared of — on the one frame
+       a visitor is deciding, and now behind a glass panel that reads whatever
+       is under it. Warm, not muddy: the blue takes the lead and the gold
+       becomes the highlight on it. */
+    background:
+      radial-gradient(ellipse 80% 70% at 70% 50%, rgba(233, 162, 59, 0.12), transparent 60%),
+      radial-gradient(circle 40vh at 50% 46%, rgba(59, 130, 246, 0.26), transparent 62%);
+  }
+
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .cta-descent {
+        animation: cta-descend linear both;
+        animation-timeline: view();
+        animation-range: cover 0% cover 72%;
+      }
+    }
+  }
+
+  @keyframes cta-descend {
+    from {
+      opacity: 0.22;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* The panel the close now sits on. 28px, the system's largest radius —
+     the only surface on the route that takes it, which is part of how it
+     reads as the resolution rather than as a ninth card. */
+  .close-panel {
+    border-radius: 28px;
+    padding: clamp(36px, 4.6vw, 68px) clamp(24px, 4vw, 60px);
+  }
+
+  /* ---------------------------------------------------------------
+     THE TERMS — chapter 07, the pricing beat
+     Three peers, so the gap is 12–16px (§ 8.1) — not the 32–56px a
+     sequence gets. They are alternatives, not steps.
+     --------------------------------------------------------------- */
+  /* See the note on `.run-stages`: no `margin: 0`. Preflight has already done
+     it, and repeating it here silently shadows `.chapter-stage`. */
+  .terms {
+    display: grid;
+    gap: 14px;
+    list-style: none;
+  }
+
+  @media (min-width: 900px) {
+    .terms {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: stretch;
+    }
+  }
+
+  .terms-card {
+    display: flex;
+    flex-direction: column;
+    padding: 26px 24px;
+  }
+
+  /* ---------- The recommendation, made visible ----------
+     RC6. The section already passed `elevation={4}` to this card, which is
+     correct and was not enough: e4 differs from its e2 neighbours by 5.5% fill
+     alpha and 16px of blur, and against a lit wash at card scale that reads as
+     "slightly lighter", not as "this is the one". Measured on the 1440
+     capture, the three tiers were one flat row and the only thing marking the
+     middle was a 9px gold pill.
+
+     This is the page's single highest-leverage conversion surface, so it gets
+     three separations rather than one — the § 4.1 rule that depth needs alpha,
+     blur *and* shadow moving together, applied one level up: elevation, a
+     coloured ring, and displacement.
+
+     The overrides go through the engine's own custom properties rather than
+     around them. `.vos-surface` builds its border from a border-box gradient
+     on a transparent 1px border, so a `border-color` here would set a colour
+     on a border that is painted by the background — a rule that computes
+     cleanly, changes nothing, and is invisible in an editor. */
+  .terms-card--featured {
+    --vos-edge-a: 0.28;
+    --vos-edge-b: 0.1;
+    --vos-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.16),
+      0 0 0 1px rgba(96, 165, 250, 0.34),
+      0 32px 90px rgba(0, 0, 0, 0.6),
+      0 0 72px rgba(59, 130, 246, 0.16);
+  }
+
+  /* The specular edge is gold on this card alone. § 2: gold marks the
+     resolution, and on a row of alternatives the resolution is the
+     recommendation — the same argument `content/pricing.ts` makes for the flag
+     it already carries, drawn at the scale of the whole card instead of a
+     9px pill. */
+  .terms-card--featured::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 16px;
+    right: 16px;
+    height: 1px;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(244, 192, 99, 0.6),
+      transparent
+    );
+  }
+
+  /* Displacement, only once the three are actually a row. Stacked on mobile
+     there is no row to break out of, and a card offset from a column of one
+     is just a misalignment.
+
+     Negative block margins against the row's `stretch`, **not** a transform.
+     A `transform: translateY(-10px)` here is the obvious way to write this and
+     it does nothing: this card also carries `.reveal-view`, whose keyframes
+     end on `transform: none`, and an animated value beats a normal
+     declaration whatever its specificity. So the card would rest at 0,
+     correctly, per the cascade — and the rule would look right in the file.
+     Only a capture taken after the reveal had run would show it.
+
+     Margins have the better result anyway. The card's margin box still fills
+     the row, so the border box grows 20px instead of sliding: the recommended
+     tier is *taller* than its neighbours as well as lifted, which is the
+     shape the pattern actually wants. */
+  @media (min-width: 900px) {
+    .terms-card--featured {
+      margin-block: -10px;
+      padding-block: 36px;
+    }
+  }
+
+  .terms-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: rgb(var(--color-accent-light));
+  }
+
+  /* The chapter's one gold element. § 2: gold marks a resolution, and on a
+     page of alternatives the resolution is the recommendation. */
+  .terms-flag {
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(233, 162, 59, 0.34);
+    background: rgba(233, 162, 59, 0.1);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: rgb(var(--color-gold-bright));
+  }
+
+  .terms-price {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 18px;
+    font-family: var(--font-display);
+    font-size: clamp(26px, 2.6vw, 34px);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: #ffffff;
+  }
+
+  .terms-price-note {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  .terms-summary {
+    margin-top: 16px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgb(var(--color-text-secondary));
+  }
+
+  .terms-limit {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    font-size: 13px;
+    line-height: 1.6;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  .terms-limit-mark {
+    display: block;
+    margin-bottom: 5px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: rgba(244, 192, 99, 0.72);
+  }
+
+  /* `margin-top: auto` pins every card's action to its bottom edge, so three
+     cards of different text lengths still present one horizontal line of
+     actions rather than a ragged one. */
+  .terms-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: auto;
+    padding-top: 22px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #ffffff;
+    transition: color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .terms-cta:hover {
+    color: rgb(var(--color-accent-light));
+  }
+
+  .terms-foot {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-top: 30px;
+  }
+
+  @media (min-width: 1024px) {
+    .terms-foot {
+      flex-direction: row;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 48px;
+    }
+  }
+
+  /* `min-height: 24px`, not decoration. A 14px link's content box is 21px tall,
+     and WCAG 2.5.8 sets 24×24 as the floor for a target — which
+     `tests/e2e/responsive.spec.ts` asserts, and which this link failed at
+     312×21 on its first run. The width was never the problem; single-line
+     inline links are the shape that fails this. */
+  .terms-more {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    min-height: 24px;
+    font-size: 14px;
+    color: #ffffff;
+  }
+
+  .terms-own {
+    max-width: 46rem;
+    font-size: 13px;
+    line-height: 1.65;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  .terms-own-lead {
+    font-weight: 600;
+    color: rgb(var(--color-text-secondary));
+  }
+
+  /* ---------------------------------------------------------------
+     THE ANSWERS — chapter 08
+     The `<details>` list, on a flush surface. Padding lives here rather
+     than on the rows so the first and last questions are inset from the
+     surface's own edge by the same amount as the dividers between them.
+     --------------------------------------------------------------- */
+  .faq-panel {
+    border-radius: 20px;
+    padding: 6px clamp(18px, 2.4vw, 30px);
+  }
+
+  .faq-item {
+    padding-block: 20px;
+  }
+
+  .faq-item + .faq-item {
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+  }
+
+  /* ---------------------------------------------------------------
+     THE REPORT — chapter 06, built on the Live Metrics engine
+     Subject and context on two planes (§ 4.3), rather than a tilting
+     card with two others overhanging it by 74px and 58px.
+     --------------------------------------------------------------- */
+  .report {
+    display: grid;
+    gap: 14px;
+  }
+
+  @media (min-width: 1024px) {
+    .report {
+      /* The subject gets the larger share, and `start` alignment keeps the two
+         context notes at the top rather than stretching them to match a taller
+         neighbour — equal heights would make three peers out of one subject
+         and two notes. */
+      grid-template-columns: 1.6fr 1fr;
+      align-items: start;
+      gap: 18px;
+    }
+  }
+
+  .report-figures {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+    margin-top: 22px;
+  }
+
+  .report-chart {
+    margin-top: 26px;
+  }
+
+  .report-chart-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  .report-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: rgb(var(--color-success));
+  }
+
+  .report-notes {
+    display: grid;
+    gap: 12px;
+  }
+
+  .report-note {
+    padding: 18px;
+  }
+
+  .report-note--success {
+    border-color: rgba(16, 185, 129, 0.3);
+  }
+
+  .report-note-head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #ffffff;
+  }
+
+  .report-note-body {
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: rgb(var(--color-text-secondary));
+  }
+
+  .report-note-foot {
+    margin-top: 10px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  .report-note-foot--success {
+    color: rgb(var(--color-success));
+  }
+
+  .report-bar {
+    display: block;
+    position: relative;
+    margin-top: 12px;
+    height: 4px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .report-bar-fill {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: rgb(var(--color-accent-bright));
+  }
+
+  /* ---------------------------------------------------------------
+     THE RUN — chapter 03
+     RC4 gave this section its own rail and its own held chapter column.
+     RC5 took both away, and that is the point rather than a loss: the
+     five stages now mount on the **page** rail, so the line that numbers
+     the chapters and the line the workflow hangs off are one line. A
+     private rail inside a page that already has one reads as two
+     systems; this reads as the page zooming in.
+     --------------------------------------------------------------- */
+  /* No `margin: 0` here, and that is load-bearing rather than tidy. Tailwind's
+     preflight already zeroes list margins, so writing it again did nothing
+     except shadow `.chapter-stage`'s `margin-top` — both are single-class
+     selectors in the same layer, and this one is later in the file, so it won
+     and the chapter head ran straight into stage 01 with a 20px gap where 65
+     was intended. Only visible in a capture. */
   .run-stages {
     position: relative;
     list-style: none;
-    margin: 48px 0 0;
-    padding: 0 0 0 34px;
   }
 
   /* The gap IS the passage of time (§ 8.1 repeals the constant 12px). Steps
@@ -2231,9 +3534,12 @@
     padding-bottom: 0;
   }
 
+  /* Onto the page rail, using the same expression as `.chapter-node` — one
+     indent value, inherited, so a stage station and a chapter mark cannot end
+     up on two different vertical lines. */
   .run-node {
-    left: -34px;
-    top: 5px;
+    left: calc(1px - var(--chapter-indent));
+    top: 6px;
     transform: translateX(-50%);
   }
 
@@ -2288,7 +3594,6 @@
 
   .run-coda {
     margin-top: 40px;
-    padding-left: 34px;
     font-size: 13px;
     color: rgb(var(--color-text-tertiary));
   }
@@ -2298,8 +3603,11 @@
      containing a message body that is not already published, and there is no
      published transcript — so the bubbles hold line shapes. The exchange is
      legible from its rhythm: they ask, it answers at length, they reply short. */
+  /* Flush left, with the rest of the chapter. Centred, it drifted out of line
+     with the four schematics beside it in the sequence — five stages whose
+     artifacts start at five different x positions is not a sequence. */
   .run-phone {
-    margin-inline: auto;
+    margin-inline: 0;
   }
 
   .run-chat {
@@ -2376,34 +3684,20 @@
   }
 
   @media (min-width: 1024px) {
-    .run {
-      display: grid;
-      grid-template-columns: minmax(300px, 0.82fr) 1.18fr;
-      gap: 76px;
-      align-items: start;
-    }
-
-    /* Sticky composition, permitted by § 7.3 — the page still scrolls at its
-       native speed and nothing is intercepted. Collapses below lg, where a
-       sticky column is only lost height. Never applied to an LCP candidate:
-       this section sits far below the fold on every viewport. */
-    .run-chapter {
-      position: sticky;
-      top: 132px;
-    }
-
-    .run-stages {
-      margin-top: 0;
-      padding-left: 40px;
-    }
-
+    /* Each stage becomes editorial in its own right: the sentence on the left,
+       the artifact it describes on the right. The full column width is
+       available now that the section is not spending 300px of it on a sticky
+       copy of the headline the chapter head already carries. */
     .run-stage {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
+      align-items: start;
+      gap: 56px;
       padding-bottom: 56px;
     }
 
-    .run-node {
-      left: -40px;
-      top: 6px;
+    .run-figure {
+      margin-top: 4px;
     }
 
     .run-title {
@@ -2412,14 +3706,6 @@
 
     .run-body {
       font-size: 15px;
-    }
-
-    /* Second column, or the grid drops it under the sticky chapter where it
-       reads as a caption on the headline rather than as the sequence's close. */
-    .run-coda {
-      grid-column: 2;
-      padding-left: 40px;
-      margin-top: 8px;
     }
   }
 
@@ -2434,16 +3720,36 @@
      `MOTION_INVENTORY.md` § 7. Any staggered animation added here inherits it. */
   @media (prefers-reduced-motion: reduce) {
     .universe-signal,
+    .universe-orbit-trace,
+    .universe-pulse,
     .glyph-panel .glyph-link::after,
     .glyph-rail .glyph-link::after,
     .infra-branch::after,
-    .craft-sheen {
+    .vos-browser-sheen,
+    .vos-spark-tip {
       display: none;
     }
 
     .border-beam::before,
     .infra-hub::before {
       animation: none;
+    }
+
+    /* The four pipeline beats are *content*, not decoration: their entrance is
+       `backwards`-filled, so cancelling the animation without also clearing the
+       delay would leave them at `opacity: 0` — the reader would lose the
+       mechanism entirely. Removed, not shortened, and the list is shown. */
+    .universe-step {
+      animation: none;
+    }
+
+    /* Hover elevation is a transition rather than an animation, so the global
+       rule does not reach it. The lit connector and the dimming are opacity
+       changes and are kept — they carry which node is selected, which is
+       information, and § 13 forbids conveying that through motion alone. */
+    .universe-node:hover .universe-plate,
+    .universe-node:focus-visible .universe-plate {
+      transform: none;
     }
 
     /* The hub glow is mid-cycle when its animation is cancelled, so it is
@@ -2455,6 +3761,7 @@
     }
 
     .universe-signal,
+    .universe-step,
     .infra-branch::after,
     .reveal-view {
       animation-delay: 0s !important;

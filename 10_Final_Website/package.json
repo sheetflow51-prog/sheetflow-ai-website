@@ -20,8 +20,20 @@
     "trace": "node scripts/trace-paint.mjs",
     "shots": "node scripts/capture-screens.mjs",
     "trace:all": "cross-env TRACE_EXPERIMENTS=none,no-blend,no-sheen,no-ambient-anim,no-ambient,no-backdrop-blur,no-particles node scripts/trace-paint.mjs",
-    "preflight": "npm run type-check && npm run lint && npm run build",
-    "verify": "npm run preflight && npm run test:e2e && npm run audit:bundle"
+    "env:check": "node scripts/session-supervisor.mjs --check --verbose",
+    "env:heal": "node scripts/session-supervisor.mjs",
+    "env:release-next": "node scripts/session-supervisor.mjs --release-next",
+    "preflight": "npm run eng:preflight && npm run env:release-next && npm run type-check && npm run lint && npm run build",
+    "verify": "npm run preflight && npm run test:e2e && npm run audit:bundle",
+    "eng": "node engineering/EngineeringSupervisor.ts",
+    "eng:preflight": "node engineering/EngineeringSupervisor.ts preflight",
+    "eng:plan": "node engineering/EngineeringSupervisor.ts plan",
+    "eng:verify": "node engineering/EngineeringSupervisor.ts verify",
+    "eng:visual": "node engineering/EngineeringSupervisor.ts visual",
+    "eng:probe": "node engineering/PageProbe.ts",
+    "eng:report": "node engineering/EngineeringSupervisor.ts report",
+    "eng:full": "node engineering/EngineeringSupervisor.ts full",
+    "eng:types": "tsc -p engineering/tsconfig.json"
   },
   "dependencies": {
     "@react-three/drei": "^9.114.0",

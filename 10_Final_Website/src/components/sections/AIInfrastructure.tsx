@@ -1,5 +1,6 @@
 import { MessageCircle, Users, CalendarClock, Workflow, CreditCard, Boxes } from 'lucide-react';
-import { SectionHeader } from '@/components/ui/SectionHeader';
+import { Chapter } from '@/components/vos';
+import { beat } from '@/content/narrative';
 
 /**
  * AI Infrastructure — the distribution bus.
@@ -119,25 +120,25 @@ const BRANCHES: Branch[] = [
 ];
 
 export function AIInfrastructure() {
+  const { mark, tier, tone, grid } = beat('integrations');
+
   return (
-    <section id="integrations" className="section relative">
-      <div className="absolute inset-0 -z-10 grid-backdrop opacity-30" aria-hidden="true" />
-
-      <div className="container-edge">
-        <SectionHeader
-          kicker="Plays Nicely With Your Stack"
-          title={
-            <>
-              One hub, wired into{' '}
-              <span className="text-ink-300">every tool you already use.</span>
-            </>
-          }
-          description="No rip-and-replace. SheetFlow sits at the centre and branches out into your messaging, CRM, calendar, automation and billing — orchestrating what's already in place."
-          align="center"
-          className="mx-auto items-center text-center"
-        />
-
-        <div className="infra">
+    <Chapter
+      id="integrations"
+      mark={mark}
+      tier={tier}
+      tone={tone}
+      grid={grid}
+      kicker="Plays nicely with your stack"
+      title={
+        <>
+          One hub, wired into{' '}
+          <span className="text-ink-300">every tool you already use.</span>
+        </>
+      }
+      description="No rip-and-replace. SheetFlow sits at the centre and branches out into your messaging, CRM, calendar, automation and billing — orchestrating what's already in place."
+    >
+      <div className="infra chapter-stage">
           {/* The hub is drawn as a *plate*, not a disc, deliberately. The
               Automation Universe already owns the radial core on this page, and
               two glowing circles would be the same repetition RC3 exists to
@@ -190,10 +191,9 @@ export function AIInfrastructure() {
           </ul>
         </div>
 
-        <p className="mx-auto mt-10 max-w-md text-center text-[13px] text-ink-400 md:mt-12">
+        <p className="mt-10 max-w-md text-[13px] text-ink-400 md:mt-12">
           50+ integrations supported · Custom connections built on request · Your stack stays yours
         </p>
-      </div>
-    </section>
+    </Chapter>
   );
 }

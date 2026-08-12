@@ -82,26 +82,41 @@ export default function AmbientBackground() {
           />
         </div>
 
-        {/* Gold aurora — counter-orbits slower, positioned opposite. */}
+        {/* Gold aurora — counter-orbits slower, positioned opposite.
+            RC6: 0.22 → 0.07. This layer is *fixed to the viewport*, so it was
+            painting over all ten chapters at an alpha nearly double the
+            strongest wash any chapter is allowed to spend — the atmosphere
+            budget in `content/narrative.ts` was being set on a canvas that had
+            already ignored it.
+            The visible symptom was worse than the accounting one: gold at 0.22
+            over `--color-void` (#060608), next to the azure layer, resolves to
+            a desaturated olive. Read off the 1440 capture, that haze covered
+            the right third of frames 02–14. Gold is now what § 2 of the DNA
+            says it is — the mark on an outcome — rather than the colour of the
+            page's air. */}
         <div className="ambient-spin-b absolute -inset-1/4 will-change-transform">
           <div
             className="absolute bottom-[10%] right-[14%] h-[60%] w-[60%]"
             style={{
               background:
-                'radial-gradient(circle at center, rgba(233, 162, 59, 0.22), rgba(244, 192, 99, 0.10) 40%, transparent 66%)',
+                'radial-gradient(circle at center, rgba(233, 162, 59, 0.07), rgba(244, 192, 99, 0.035) 40%, transparent 66%)',
             }}
           />
         </div>
 
         {/* Central aurora — always present so mid-page sections are never a
             flat void; it breathes with the group and gently rotates so the
-            middle of every screen stays alive as you scroll. */}
+            middle of every screen stays alive as you scroll.
+            RC6: its gold mid-stop is gone. It sat at the centre of every
+            viewport, which is exactly where the reader is, so it was the layer
+            doing the most to make white text sit on a warm grey rather than on
+            void. Cool the middle and the type gets its contrast back for free. */}
         <div className="ambient-spin-b absolute -inset-1/4 will-change-transform">
           <div
             className="absolute left-1/2 top-1/2 h-[70%] w-[70%] -translate-x-1/2 -translate-y-1/2"
             style={{
               background:
-                'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.14), rgba(233, 162, 59, 0.06) 45%, transparent 68%)',
+                'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.13), rgba(96, 165, 250, 0.05) 45%, transparent 68%)',
             }}
           />
         </div>
@@ -117,12 +132,15 @@ export default function AmbientBackground() {
         }}
       />
 
-      {/* Cyan horizon — static "signal-info" moment anchored at the bottom edge. */}
+      {/* Cyan horizon — static "signal-info" moment anchored at the bottom edge.
+          0.08 → 0.05: cyan is a third hue on a page whose palette is two, and
+          at the old value it tinted the footer green wherever the gold layer
+          reached it. It is a horizon, not a light source. */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            'radial-gradient(ellipse 100% 60% at 50% 100%, rgba(6, 182, 212, 0.08), transparent 70%)',
+            'radial-gradient(ellipse 100% 60% at 50% 100%, rgba(6, 182, 212, 0.05), transparent 70%)',
         }}
       />
 
@@ -134,8 +152,12 @@ export default function AmbientBackground() {
         ref={glow}
         className="absolute left-0 top-0 -ml-[260px] -mt-[260px] h-[520px] w-[520px] rounded-full opacity-0 will-change-transform"
         style={{
+          /* Single-hue since RC6. `plus-lighter` *adds*, so a gold mid-stop
+             under the pointer was painting warm light onto whatever the reader
+             was looking at — the one place on the page a colour cast is least
+             affordable. */
           background:
-            'radial-gradient(circle, rgba(96, 165, 250, 0.20) 0%, rgba(244, 192, 99, 0.10) 42%, transparent 70%)',
+            'radial-gradient(circle, rgba(96, 165, 250, 0.20) 0%, rgba(147, 197, 253, 0.07) 42%, transparent 70%)',
           mixBlendMode: 'plus-lighter',
           transition: 'opacity 700ms ease-out',
         }}

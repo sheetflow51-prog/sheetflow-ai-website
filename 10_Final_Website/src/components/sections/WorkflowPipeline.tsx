@@ -1,14 +1,13 @@
-import { SectionHeader } from '@/components/ui/SectionHeader';
 import {
-  Ambient,
   Artifact,
+  Chapter,
   DeviceFrame,
-  Spine,
   SpineNode,
   type Elevation,
   type Provenance,
   type Shape,
 } from '@/components/vos';
+import { beat } from '@/content/narrative';
 
 /**
  * The Run — the first section built entirely on the Visual Operating System.
@@ -27,14 +26,23 @@ import {
  * features". Nothing in the composition said "then", and nothing said which
  * stage mattered.
  *
- * ## The composition
+ * ## The composition, and what RC5 changed about it
  *
- * `VISUAL_DNA_V2.md` § 8.2: narrative sections use an asymmetric editorial
- * grid — a held left chapter, a scrolling right sequence. § 7.3 permits the
- * sticky column that makes it work, having separated *scroll-jacking* (which
- * hijacks velocity and direction, and stays forbidden) from *sticky
- * composition* (which intercepts nothing and is the grammar of every reference
- * this brand aims at).
+ * RC4 built this as a self-contained editorial grid: a **sticky left chapter**
+ * carrying the headline, and a right column of stages on their own private
+ * rail. That was right for one section redesigned in isolation, and wrong once
+ * the whole page had a rail of its own — two vertical lines on one page read as
+ * two systems, and the sticky column repeated a headline the page's chapter
+ * head was already carrying 300px to its left.
+ *
+ * So the private rail is gone and the five stages mount on the **page** rail
+ * (`Chapter`). The line that numbers the chapters is now the line the workflow
+ * hangs off, which is not a compromise — it is the clearest statement the page
+ * makes that these are parts of one system rather than nine drawings of one.
+ *
+ * The width that frees up goes to the stages: each is now its own editorial
+ * row, the sentence on the left and the artifact it describes on the right,
+ * instead of a 420px figure under a 46ch paragraph.
  *
  * § 8.1 repealed the constant 12px gap, and this section is why: the gap
  * between stages is **44–56px**, because here the gap *is* the passage of time.
@@ -218,84 +226,81 @@ const STAGES: Stage[] = [
 ];
 
 export function WorkflowPipeline() {
+  const { mark, tier, tone, grid } = beat('how-it-works');
+
   return (
-    <section id="how-it-works" className="section relative">
-      <Ambient tier="standard" tone="dual" grid />
+    <Chapter
+      id="how-it-works"
+      mark={mark}
+      tier={tier}
+      tone={tone}
+      grid={grid}
+      kicker="How it works"
+      title={
+        <>
+          From first contact to booked{' '}
+          <span className="text-ink-300">— automatically.</span>
+        </>
+      }
+      description="One lead, start to finish. Follow a single enquiry through the system — replied to, qualified, booked, logged and reported — without anyone lifting a finger."
+    >
+      {/* No `<Spine>` here any more. The rail these stations sit on belongs to
+          the chapter, and it is traced by the reader's own scroll progress
+          across the whole page rather than restarting at this section. */}
+      <ol className="run-stages chapter-stage">
+        {STAGES.map((s) => (
+          <li key={s.id} className="run-stage reveal-view">
+            <SpineNode className="run-node" />
 
-      <div className="container-edge">
-        <div className="run">
-          {/* The chapter. Holds while the sequence scrolls past it — the
-              reader keeps the question in view while reading the answer. */}
-          <div className="run-chapter">
-            <SectionHeader
-              kicker="How It Works"
-              title={
-                <>
-                  From first contact to booked{' '}
-                  <span className="text-ink-300">— automatically.</span>
-                </>
-              }
-              description="One lead, start to finish. Follow a single enquiry through the system — replied to, qualified, booked, logged and reported — without anyone lifting a finger."
-            />
-          </div>
+            <div className="run-copy">
+              <p className="run-index">{s.num}</p>
+              <h3 className="run-title">{s.title}</h3>
+              <p className="run-body">{s.detail}</p>
 
-          <ol className="run-stages">
-            {/* The rail, traced by the reader's own scroll progress. */}
-            <Spine variant="traced" />
+              <p className="run-status">
+                <span className={`run-status-dot ${s.dot}`} aria-hidden="true" />
+                {s.status}
+              </p>
+            </div>
 
-            {STAGES.map((s) => (
-              <li key={s.id} className="run-stage reveal-view">
-                <SpineNode className="run-node" />
+            <div className="run-figure">
+              {s.shapes ? (
+                <Artifact
+                  shapes={s.shapes}
+                  view={s.view ?? ART}
+                  elevation={s.elevation}
+                  live={s.live}
+                  provenance={s.provenance}
+                />
+              ) : (
+                <Artifact provenance={s.provenance} elevation={s.elevation}>
+                  <DeviceFrame className="run-phone">
+                    <div className="run-chat" aria-hidden="true">
+                      <span className="run-chat-bar" />
+                      <span className="run-chat-bubble run-chat-bubble--in">
+                        <i />
+                        <i />
+                      </span>
+                      <span className="run-chat-bubble run-chat-bubble--out">
+                        <i />
+                        <i />
+                        <i />
+                      </span>
+                      <span className="run-chat-bubble run-chat-bubble--in">
+                        <i />
+                      </span>
+                    </div>
+                  </DeviceFrame>
+                </Artifact>
+              )}
+            </div>
+          </li>
+        ))}
+      </ol>
 
-                <p className="run-index">{s.num}</p>
-                <h3 className="run-title">{s.title}</h3>
-                <p className="run-body">{s.detail}</p>
-
-                <div className="run-figure">
-                  {s.shapes ? (
-                    <Artifact
-                      shapes={s.shapes}
-                      view={s.view ?? ART}
-                      elevation={s.elevation}
-                      live={s.live}
-                      provenance={s.provenance}
-                    />
-                  ) : (
-                    <Artifact provenance={s.provenance} elevation={s.elevation}>
-                      <DeviceFrame className="run-phone">
-                        <div className="run-chat" aria-hidden="true">
-                          <span className="run-chat-bar" />
-                          <span className="run-chat-bubble run-chat-bubble--in">
-                            <i />
-                            <i />
-                          </span>
-                          <span className="run-chat-bubble run-chat-bubble--out">
-                            <i />
-                            <i />
-                            <i />
-                          </span>
-                          <span className="run-chat-bubble run-chat-bubble--in">
-                            <i />
-                          </span>
-                        </div>
-                      </DeviceFrame>
-                    </Artifact>
-                  )}
-                </div>
-
-                <p className="run-status">
-                  <span className={`run-status-dot ${s.dot}`} aria-hidden="true" />
-                  {s.status}
-                </p>
-              </li>
-            ))}
-          </ol>
-
-          <p className="run-coda">
-            One journey shown here. The same system runs every lead, every day.
-          </p>
-        </div>
-      </div>
-    </section>
+      <p className="run-coda">
+        One journey shown here. The same system runs every lead, every day.
+      </p>
+    </Chapter>
   );
 }

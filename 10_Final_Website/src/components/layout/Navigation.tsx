@@ -28,11 +28,20 @@ import { EASE } from '@/lib/motion';
  * `/#customers`, the placeholder explaining that no results are published —
  * a nav item promising results and delivering their absence).
  */
+/**
+ * `How we work` points at `/#how-it-works` since RC5, not `/#product`.
+ *
+ * `#product` was `FeatureStorytelling`, the six-pillar grid the homepage
+ * narrative removed — five of its six pillars restated chapters 01 and 03. The
+ * label was always describing chapter 03 anyway: *"From first contact to
+ * booked"* is how we work, and *"Six pillars of automation"* was a second
+ * summary of what we automate.
+ */
 const NAV_LINKS = [
   { label: 'Services', href: '/services' },
   { label: 'Work', href: '/work' },
   { label: 'Pricing', href: '/pricing' },
-  { label: 'How we work', href: '/#product' },
+  { label: 'How we work', href: '/#how-it-works' },
   { label: 'Integrations', href: '/#integrations' },
   { label: 'FAQ', href: '/#faq' },
 ];

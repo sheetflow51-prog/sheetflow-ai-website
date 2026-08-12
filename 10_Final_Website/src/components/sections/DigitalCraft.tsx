@@ -1,19 +1,27 @@
 import { LayoutTemplate, Rocket, LayoutDashboard, Blocks } from 'lucide-react';
-import { SectionHeader } from '@/components/ui/SectionHeader';
+import { Artifact, BrowserFrame, Chapter, Schematic, type Shape } from '@/components/vos';
+import { beat } from '@/content/narrative';
 
 /**
- * Digital Craft — the device stage.
+ * Digital Craft — the device stage. Chapter 05.
  *
- * ## What this replaces
+ * ## What this replaced, and what RC5 changed
  *
- * Four `GlassCard`s in a `lg:grid-cols-4`, each holding a lucide icon in a
- * rounded square, a title and a paragraph. It was one of the five sections
- * `docs/RC3_MOODBOARD.md` § 1 identified as literally the same object, and RC3
- * only had budget to fix one of them. This is the second.
+ * RC4 replaced four `GlassCard`s in a `lg:grid-cols-4` — one of the five
+ * sections `docs/RC3_MOODBOARD.md` § 1 identified as literally the same object
+ * — with a browser window whose screen swaps between four builds. That
+ * composition is unchanged and correct.
  *
- * A section about *what we build* that shows nothing built is the same failure
- * the Automation Universe fixed: the most inherently visual thing on offer,
- * sold entirely in body copy.
+ * What RC5 changed is that **none of it was reusable**. The frame, its chrome,
+ * its omnibox, its screen, its sheen and a second private copy of the wireframe
+ * renderer all lived inline in this file, so the site had two browser-window
+ * implementations waiting to happen and two five-entry tone maps with different
+ * alphas. It is item 1 of the migration list in `VISUAL_OPERATING_SYSTEM.md`.
+ *
+ * Now: `BrowserFrame` draws the window, `Schematic` draws the screens, and
+ * `Artifact` emits the provenance caption that this file used to hand-write.
+ * What is left here is what is genuinely this section's — the four builds, and
+ * the radio group that swaps them.
  *
  * ## Why the screens are wireframes and not screenshots
  *
@@ -28,61 +36,17 @@ import { SectionHeader } from '@/components/ui/SectionHeader';
  * photograph of a thing that shipped, which is the honest register for a
  * capability statement — and it costs no image bytes at all.
  *
- * ## What was taken from Magic UI's `Safari`, and what was not
- *
- * Its full registry source was retrieved and read. The structural ideas worth
- * keeping: a fixed screen box derived from constants rather than hand-tuned
- * offsets, and an `aspect-ratio` wrapper so the frame scales without measuring.
- *
- * Dropped: the mask punch (`safariPunch`), which exists so injected media can
- * sit *behind* SVG chrome. Nothing is injected here — the screens are drawn —
- * so the mask solves a problem this component does not have. Also dropped:
- * macOS traffic lights and a photoreal Safari toolbar, which
- * `SHEETFLOW_VISUAL_DNA.md` § 9 rejects by name as "Skeuomorphism 2.0". The
- * frame is drawn flat in brand tokens: an object the visitor recognises,
- * without the faux-3D surface that makes object-mimicry read as nostalgic.
- *
  * ## Why this ships zero JavaScript
  *
  * Selecting one of four panels is a one-of-N choice, which is what a radio
  * group *is*. Four visually-hidden radios and `:checked ~` sibling selectors
- * give tab behaviour with no state, no hydration and no client boundary — so
- * this section becomes a server component and **removes** the `framer-motion`,
- * `ScrollReveal` and `GlassCard` imports the card grid needed.
+ * give tab behaviour with no state, no hydration and no client boundary.
  *
  * It is also better assistive-technology behaviour than the alternative was
  * going to be: a real radio group is announced as "1 of 4" and moves under
  * arrow keys natively, where a `role="tablist"` without JavaScript would be a
  * keyboard contract the component does not actually honour.
  */
-
-type Tone = 'dim' | 'mid' | 'line' | 'accent' | 'gold';
-
-/**
- * Tone → class name, written out rather than interpolated.
- *
- * This is not stylistic. `` `craft-sh--${tone}` `` builds a class name that
- * never exists as a literal in any source file, and Tailwind tree-shakes custom
- * rules in `@layer components` whose selectors its content scanner cannot find.
- * The first build did exactly that: all five `.craft-sh--*` rules were dropped,
- * every `<rect>` fell back to SVG's default `fill: black`, and the wireframes
- * rendered as solid black bars inside the frame.
- *
- * It compiled, it type-checked, and it was only visible in a screenshot — the
- * same lesson RC3 recorded when its beams shipped at an alpha that made them
- * invisible. Naming the five classes here is what keeps the scanner able to see
- * them.
- */
-const TONE_CLASS: Record<Tone, string> = {
-  dim: 'craft-sh--dim',
-  line: 'craft-sh--line',
-  mid: 'craft-sh--mid',
-  accent: 'craft-sh--accent',
-  gold: 'craft-sh--gold',
-};
-
-/** `[x, y, width, height, tone, radius]` — see `Screen` for why this is data. */
-type Shape = [number, number, number, number, Tone?, number?];
 
 interface Craft {
   id: string;
@@ -98,7 +62,7 @@ const SCREEN = { w: 640, h: 380 };
 
 /**
  * The four service lines, with copy carried over from the card grid
- * **verbatim**. RC4 is a visual phase and writes no marketing copy: every
+ * **verbatim**. RC4 was a visual phase and wrote no marketing copy: every
  * string below is already published and already reviewed. Same rule RC2 used
  * for `WorkflowGlyph` and RC3 used for the Automation Universe.
  *
@@ -209,139 +173,104 @@ const CRAFT: Craft[] = [
   },
 ];
 
-/**
- * One panel's wireframe.
- *
- * The shapes are data rather than hand-written JSX because four inline SVGs of
- * twenty elements each is eighty near-identical tags, which is exactly the kind
- * of block nobody re-reads and where a wrong coordinate hides indefinitely.
- */
-function Screen({ shapes }: { shapes: Shape[] }) {
-  return (
-    <svg
-      className="craft-screen-svg"
-      viewBox={`0 0 ${SCREEN.w} ${SCREEN.h}`}
-      preserveAspectRatio="xMidYMid slice"
-      aria-hidden="true"
-      focusable="false"
-    >
-      {shapes.map(([x, y, w, h, tone = 'dim', r = 4], i) => (
-        <rect
-          key={`${x}-${y}-${i}`}
-          x={x}
-          y={y}
-          width={w}
-          height={h}
-          rx={r}
-          className={TONE_CLASS[tone]}
-        />
-      ))}
-    </svg>
-  );
-}
-
 export function DigitalCraft() {
+  const { mark, tier, tone, grid } = beat('build');
+
   return (
-    <section id="build" className="section relative">
-      <div className="container-edge">
-        <SectionHeader
-          kicker="Beyond Automation"
-          title={
-            <>
-              Websites, dashboards, and every digital asset —{' '}
-              <span className="text-ink-300">built around your business.</span>
-            </>
-          }
-          description="Automation is where most of our work starts, not where it ends. We design and build the websites, landing pages, and dashboards your business runs on — each one made to order, each one yours to keep."
-        />
+    <Chapter
+      id="build"
+      mark={mark}
+      tier={tier}
+      tone={tone}
+      grid={grid}
+      kicker="Beyond automation"
+      title={
+        <>
+          Websites, dashboards, and every digital asset —{' '}
+          <span className="text-ink-300">built around your business.</span>
+        </>
+      }
+      description="Automation is where most of our work starts, not where it ends. We design and build the websites, landing pages, and dashboards your business runs on — each one made to order, each one yours to keep."
+    >
+      {/* The radios lead the container so `:checked ~` can reach the labels,
+          the stage and the captions alike. They are visually hidden but never
+          `display: none` — that would take them out of the focus order and the
+          whole control would stop working for the keyboard. */}
+      <div className="craft chapter-stage">
+        {CRAFT.map((c, i) => (
+          <input
+            key={c.id}
+            type="radio"
+            name="craft"
+            id={`craft-${c.id}`}
+            className="craft-radio"
+            defaultChecked={i === 0}
+          />
+        ))}
 
-        {/* The radios lead the container so `:checked ~` can reach both the
-            labels and the stage. They are visually hidden but never
-            `display: none` — that would take them out of the focus order and
-            the whole control would stop working for the keyboard. */}
-        <div className="craft">
-          {CRAFT.map((c, i) => (
-            <input
-              key={c.id}
-              type="radio"
-              name="craft"
-              id={`craft-${c.id}`}
-              className="craft-radio"
-              defaultChecked={i === 0}
-            />
-          ))}
-
-          {/* No `role="group"` here: the radios are siblings *before* this
-              element, not children of it, so a group role would name a
-              container that holds none of the controls it claims to group. The
-              shared `name="craft"` is what actually groups them, and it is what
-              makes assistive technology announce "1 of 4". */}
-          <div className="craft-tabs">
-            {CRAFT.map((c) => {
-              const Icon = c.Icon;
-              return (
-                <label key={c.id} htmlFor={`craft-${c.id}`} className="craft-tab">
-                  <Icon className="h-4 w-4" strokeWidth={2.2} aria-hidden="true" />
-                  <span>{c.title}</span>
-                </label>
-              );
-            })}
-          </div>
-
-          {/* The frame. Chrome is CSS so it stays crisp at any width; only the
-              screen is SVG. */}
-          <div className="craft-stage">
-            <div className="craft-frame">
-              <div className="craft-chrome">
-                <span className="craft-dots" aria-hidden="true">
-                  <i />
-                  <i />
-                  <i />
-                </span>
-                <span className="craft-omnibox" aria-hidden="true">
-                  {CRAFT.map((c) => (
-                    <em key={c.id} className="craft-url" data-craft={c.id}>
-                      {c.slug}
-                    </em>
-                  ))}
-                </span>
-              </div>
-
-              <div className="craft-screen">
-                {CRAFT.map((c) => (
-                  <div key={c.id} className="craft-panel" data-craft={c.id}>
-                    <Screen shapes={c.shapes} />
-                  </div>
-                ))}
-                {/* A single sweep across the glass. It reads as a screen that is
-                    on rather than a picture of one, and it is one element
-                    moving on the compositor. */}
-                <span className="craft-sheen" aria-hidden="true" />
-              </div>
-            </div>
-
-            {/* Stated, not implied. These are layout skeletons, and a visitor
-                should not have to work out that they are not screenshots. */}
-            <p className="craft-note">Indicative layouts — every build is designed from scratch.</p>
-          </div>
-
-          {/* One caption, swapped in place. Four stacked captions would be four
-              more rectangles, which is the problem this section exists to
-              solve. `aria-live` is deliberately absent: the radio group already
-              announces the change, and a live region would say it twice. */}
-          <div className="craft-captions">
-            {CRAFT.map((c) => (
-              <p key={c.id} className="craft-caption" data-craft={c.id}>
-                {c.body}
-              </p>
-            ))}
-          </div>
+        {/* No `role="group"` here: the radios are siblings *before* this
+            element, not children of it, so a group role would name a
+            container that holds none of the controls it claims to group. The
+            shared `name="craft"` is what actually groups them, and it is what
+            makes assistive technology announce "1 of 4". */}
+        <div className="craft-tabs">
+          {CRAFT.map((c) => {
+            const Icon = c.Icon;
+            return (
+              <label key={c.id} htmlFor={`craft-${c.id}`} className="craft-tab">
+                <Icon className="h-4 w-4" strokeWidth={2.2} aria-hidden="true" />
+                <span>{c.title}</span>
+              </label>
+            );
+          })}
         </div>
 
-        <p className="mx-auto mt-10 max-w-md text-center text-[13px] text-ink-400 md:mt-14">
-          One team, from automation to the site it runs on. Tell us what you need built.
-        </p>
+        <div className="craft-stage">
+          {/* `Artifact` with `children` renders no `Surface` of its own — a
+              child that is already a frame *is* the surface, and wrapping it in
+              another gives a frame inside a frame. What it does contribute is
+              the caption, which this file used to write by hand and which
+              § 6 requires. */}
+          <Artifact
+            provenance="indicative"
+            note="Indicative layouts — every build is designed from scratch."
+          >
+            <BrowserFrame
+              sheen
+              ratio={`${SCREEN.w} / ${SCREEN.h}`}
+              url={CRAFT.map((c) => (
+                <em key={c.id} className="vos-browser-url craft-url" data-craft={c.id}>
+                  {c.slug}
+                </em>
+              ))}
+            >
+              {CRAFT.map((c) => (
+                <div key={c.id} className="craft-panel" data-craft={c.id}>
+                  {/* `slice`, not `meet`: the frame fixes the aspect here, so a
+                      letterboxed drawing would leave two bands of dead screen. */}
+                  <Schematic shapes={c.shapes} view={SCREEN} fit="slice" />
+                </div>
+              ))}
+            </BrowserFrame>
+          </Artifact>
+        </div>
+
+        {/* One caption, swapped in place. Four stacked captions would be four
+            more rectangles, which is the problem this section exists to
+            solve. `aria-live` is deliberately absent: the radio group already
+            announces the change, and a live region would say it twice. */}
+        <div className="craft-captions">
+          {CRAFT.map((c) => (
+            <p key={c.id} className="craft-caption" data-craft={c.id}>
+              {c.body}
+            </p>
+          ))}
+        </div>
       </div>
-    </section>
+
+      <p className="mt-10 max-w-md text-[13px] text-ink-400 md:mt-14">
+        One team, from automation to the site it runs on. Tell us what you need built.
+      </p>
+    </Chapter>
   );
 }

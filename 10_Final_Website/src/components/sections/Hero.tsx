@@ -7,9 +7,8 @@ import { Sparkles, Play } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Magnetic } from '@/components/motion/Magnetic';
-import { Parallax } from '@/components/motion/Parallax';
+import { Drift } from '@/components/vos';
 import { Brackets } from '@/components/signature/Brackets';
-import { Trace } from '@/components/signature/Trace';
 import { useAnalytics } from '@/lib/hooks/useAnalytics';
 import { prefersReducedMotion } from '@/lib/utils';
 import { EASE } from '@/lib/motion';
@@ -87,17 +86,33 @@ export function Hero() {
   }, []);
 
   return (
-    <section className="relative isolate min-h-[100svh] overflow-hidden pt-24 pb-20 md:pt-36 md:pb-32">
+    /* `pb` 32 → 18 at md. The hero is `min-h-[100svh]`, so its bottom padding
+       is spent *after* the fold on most desktops: 128px of it, plus the
+       removed trace, put roughly 400px of nothing between the CTA microcopy
+       and chapter 01's kicker on the 1440 capture — the second frame of the
+       page was two-thirds empty. The fold itself is untouched. */
+    <section className="relative isolate min-h-[100svh] overflow-hidden pt-24 pb-16 md:pt-36 md:pb-18">
       {/* Layered backgrounds */}
       <div className="absolute inset-0 -z-10 signature-grid opacity-50" aria-hidden="true" />
 
       {/* Signature L-bracket frame — recurring brand motif (see VISUAL_DNA § 10.2) */}
       <Brackets inset={32} size={22} animate />
 
-      {/* AI core — placed behind the headline, full-bleed, with subtle scroll parallax */}
-      <Parallax
+      {/* AI core — placed behind the headline, full-bleed, with subtle scroll
+          parallax.
+
+          `Drift` rather than `motion/Parallax` since RC5. The old one ran
+          `useScroll` + `useSpring` + three `useTransform`s and re-rendered on
+          every scroll frame — to reposition the single largest painted element
+          on the site, on a main thread that is already 73–91% paint. This is
+          the same travel from `animation-timeline: view()`, on the compositor,
+          for no JavaScript.
+
+          The `scale` leg of the old effect is not carried over: scaling a
+          masked, blurred 820px square is a repaint of the most expensive
+          element on the page for a 4% size change nobody reported seeing. */}
+      <Drift
         range={120}
-        scale={1.04}
         className="pointer-events-none absolute inset-0 -z-10 mx-auto flex items-center justify-center opacity-90"
       >
         {/* The core is masked to a soft radial falloff rather than clipped to a
@@ -145,7 +160,7 @@ export function Hero() {
             />
           )}
         </div>
-      </Parallax>
+      </Drift>
 
       {/* Cinematic vignette */}
       <div
@@ -274,22 +289,26 @@ export function Hero() {
           </motion.div>
         )}
 
-        {/* Signature Trace — recurring memory motif under the trust strip */}
-        <motion.div
-          className={logos.length > 0 ? 'mt-8 md:mt-10' : 'mt-14 md:mt-20'}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.6, duration: 0.6 }}
-        >
-          <Trace orientation="horizontal" length={180} nodes={5} active={3} />
-        </motion.div>
+        {/* Scroll indicator.
 
-        {/* Scroll indicator */}
+            The `Trace` that used to sit between this and the block above was
+            removed in RC6. The hero was ending on three consecutive "there is
+            more below" gestures — a five-node trace, a label, and an animated
+            rail — stacked in a column, and the trust strip they were spaced
+            around does not render (no logo has usage permission yet), so the
+            trace was a dotted line under nothing. Read on the capture it was
+            debris rather than a motif.
+
+            It is kept at the close, where it sits above the guarantee row and
+            has something to punctuate. The hero/close mirror the brief asks
+            for is carried by the bracket frame and the edge beam handing the
+            signal between them, which are two motifs, in both places, doing it
+            without a third. */}
         <motion.div
-          className="mt-10 flex flex-col items-center gap-2 text-[11px] uppercase tracking-widest text-ink-400 md:mt-12"
+          className="mt-12 flex flex-col items-center gap-2 text-[11px] uppercase tracking-widest text-ink-400 md:mt-16"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 2, duration: 0.8 }}
+          transition={{ delay: 1.6, duration: 0.8 }}
           aria-hidden="true"
         >
           <span>See what we automate</span>

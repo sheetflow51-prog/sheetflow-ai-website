@@ -1,35 +1,44 @@
 'use client';
 
-import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
-import { useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Magnetic } from '@/components/motion/Magnetic';
+import { Ambient, Surface } from '@/components/vos';
 import { Brackets } from '@/components/signature/Brackets';
 import { Trace } from '@/components/signature/Trace';
 import { useAnalytics } from '@/lib/hooks/useAnalytics';
 import { prefersReducedMotion } from '@/lib/utils';
 import { EASE } from '@/lib/motion';
+import { beat } from '@/content/narrative';
+
+/**
+ * The close — the resolution, and unnumbered for that reason.
+ *
+ * ## The descent, moved to CSS
+ *
+ * RC4's version ran `useScroll` scoped to this section, fed a `useSpring`
+ * (stiffness 100, damping 30, mass 0.7), and derived **five** `useTransform`s
+ * from it: a wash opacity, a vignette opacity, a headline scale, and a scale
+ * and opacity on the corner glow. Five motion values re-evaluated per scroll
+ * frame, three of them driving properties on full-viewport elements.
+ *
+ * The effect is worth keeping — atmosphere intensifying as the reader arrives
+ * at the closing scene is the arc's last beat. `VISUAL_DNA_V2.md` § 7.2 is
+ * explicit that this is now a CSS job, so the descent is one
+ * `animation-timeline: view()` opacity ramp on one wash, and the headline
+ * scale is dropped entirely — type does not move under reading (§ 7.1), and
+ * scaling an `h2` from 0.96 to 1 as it is read was always in tension with that.
+ *
+ * The base atmosphere is `Ambient tier="full"`, which is what § 8.3 assigns to
+ * the two ends of the arc, so this section stops hand-rolling four gradients
+ * that the engine already owns.
+ */
 
 export function FinalCTA() {
   const { track } = useAnalytics();
-  const sectionRef = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ['start end', 'end end'],
-  });
-  // The "descent" — atmosphere intensifies as the user reaches the closing scene.
-  const descent = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    mass: 0.7,
-  });
-  // Ambient violet wash deepens, vignette darkens, headline scale breathes up.
-  const violetIntensity = useTransform(descent, [0, 0.6, 1], [0.05, 0.18, 0.28]);
-  const vignetteIntensity = useTransform(descent, [0, 0.6, 1], [0.4, 0.7, 0.95]);
-  const headlineScale = useTransform(descent, [0, 0.7], [0.96, 1]);
-  const coreScale = useTransform(descent, [0, 1], [0.9, 1.15]);
-  const coreOpacity = useTransform(descent, [0, 0.4, 1], [0.2, 0.5, 0.8]);
+  const { tier, tone } = beat('contact');
 
   // Continuous ambient motion (traveling beam + CTA sheen) mounts only after
   // hydration and only when reduced-motion is not requested.
@@ -39,11 +48,11 @@ export function FinalCTA() {
   }, []);
 
   return (
-    <section
-      id="contact"
-      ref={sectionRef}
-      className="relative isolate overflow-hidden py-24 md:py-44"
-    >
+    /* 44 → 30 at md. The panel now carries up to 68px of its own padding, and
+       176px of section padding on top of that put the closing headline most of
+       a viewport away from the beat above it. */
+    <section id="contact" className="relative isolate overflow-hidden py-20 md:py-30">
+      <Ambient tier={tier} tone={tone} />
       {/* Continuous signal beam traveling the closing section's top edge —
           mirrors the hero's bottom-edge beam (gold-led here) so the two
           bookends "hand off" the running signal. */}
@@ -76,60 +85,50 @@ export function FinalCTA() {
       {/* Signature L-bracket frame — closes the brand memory loop with the hero (VISUAL_DNA § 10.2) */}
       <Brackets inset={32} size={22} animate />
 
-      {/* Cinematic violet wash — intensifies on descent */}
-      <motion.div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-[6]"
-        style={{
-          background:
-            'radial-gradient(ellipse 80% 70% at 70% 50%, rgba(233, 162, 59,1), transparent 60%)',
-          opacity: violetIntensity,
-          mixBlendMode: 'screen',
-        }}
-      />
+      {/* The descent. One element, one property, on the compositor — where
+          RC4 had four elements and five spring-driven motion values. It rests
+          at full intensity, so a browser without scroll timelines gets the
+          finished closing scene rather than a dim one. */}
+      <div className="cta-descent" aria-hidden="true" />
 
-      {/* Subtle 3D core glow on the right edge — scales/brightens with descent */}
-      <motion.div
-        className="pointer-events-none absolute -right-40 top-1/2 -z-10 hidden h-[700px] w-[700px] -translate-y-1/2 lg:block"
-        style={{ scale: coreScale, opacity: coreOpacity }}
-      >
-        {/* Lightweight static brand glow (no second video) — keeps the closing
-            scene atmospheric without a second decoding <video> (perf). */}
-        <div
-          className="h-full w-full rounded-full"
-          style={{
-            background:
-              'radial-gradient(circle, rgba(59,130,246,0.35), rgba(233,162,59,0.12) 45%, transparent 70%)',
-            filter: 'blur(30px)',
-          }}
-        />
-      </motion.div>
-
-      {/* Edge vignette — darkens as the closing scene approaches */}
-      <motion.div
+      {/* Edge vignette. Static now: it was ramping 0.4 → 0.95 across the same
+          scroll range as the wash above, which is two elements animating the
+          same idea. */}
+      <div
         className="pointer-events-none absolute inset-0 -z-[5]"
         aria-hidden="true"
         style={{
           background:
             'radial-gradient(ellipse 100% 80% at 50% 50%, transparent 30%, rgba(6,6,8,0.85) 90%)',
-          opacity: vignetteIntensity,
-        }}
-      />
-
-      {/* Soft accent halo behind the headline */}
-      <motion.div
-        aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-1/2 -z-[5] h-[60vh] w-[60vh] -translate-x-1/2 -translate-y-1/2"
-        style={{
-          background:
-            'radial-gradient(circle, rgba(59, 130, 246,0.22), transparent 60%)',
-          opacity: useTransform(descent, [0, 0.5, 1], [0.2, 0.6, 0.8]),
-          filter: 'blur(10px)',
+          opacity: 0.8,
         }}
       />
 
       <div className="container-edge relative z-10">
-        <div className="mx-auto flex max-w-3xl flex-col items-start lg:max-w-4xl">
+        {/* A surface, and centred — as of RC6.
+
+            This is the last thing a visitor sees before deciding, and it was
+            the only beat on the page with no object in it: a headline, a
+            paragraph and two controls, left-aligned in a 1280 container, on a
+            wash. On the 1440 capture the right half of the closing screen held
+            nothing at all, so the page ended on its emptiest frame.
+
+            Centred rather than left, deliberately, and it is not a break with
+            the alignment system — the close sits outside the chapter rail by
+            construction (it carries no mark, per `content/narrative.ts`), and
+            it already mirrors the hero in three other ways: the bracket frame,
+            the edge beam handing the signal back, and the `Trace`. The hero is
+            centred. Closing the loop means closing it here too.
+
+            `elevation={3}`, not 4: the `presented` tier is spent on the
+            recommended pricing card two chapters up, and § 4.1's rule is per
+            viewport rather than per page — but a lifted glass panel over the
+            full-tier wash and the descent is already the strongest surface on
+            the route, and taking 4 as well would leave nothing above it. */}
+        <Surface
+          elevation={3}
+          className="close-panel mx-auto flex max-w-4xl flex-col items-center text-center"
+        >
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -140,19 +139,18 @@ export function FinalCTA() {
           </motion.div>
 
           <motion.h2
-            className="headline-cinematic text-fade text-balance mt-6 max-w-[20ch] origin-left"
+            className="headline-cinematic text-fade text-balance mt-6 max-w-[20ch]"
             initial={{ opacity: 0, y: 32, filter: 'blur(8px)' }}
             whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
             viewport={{ once: true }}
             transition={{ duration: 0.9, ease: EASE, delay: 0.1 }}
-            style={{ scale: headlineScale }}
           >
             Stop doing the busywork.{' '}
             <span className="text-accent-gradient text-glow">Let SheetFlow run it.</span>
           </motion.h2>
 
           <motion.p
-            className="mt-6 max-w-xl text-[16px] leading-relaxed text-ink-300 text-balance md:mt-7 md:text-[18px]"
+            className="mx-auto mt-6 max-w-xl text-[16px] leading-relaxed text-ink-200 text-balance md:mt-7 md:text-[18px]"
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -164,7 +162,7 @@ export function FinalCTA() {
           </motion.p>
 
           <motion.div
-            className="mt-10 flex flex-col items-start gap-3 sm:flex-row sm:items-center"
+            className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:items-center"
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -228,8 +226,9 @@ export function FinalCTA() {
             <Trace orientation="horizontal" length={200} nodes={5} active={4} />
           </motion.div>
 
+
           <motion.div
-            className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-2 text-[12px] text-ink-400"
+            className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-[12px] text-ink-400"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
@@ -246,7 +245,7 @@ export function FinalCTA() {
             <span>·</span>
             <span>Cancel any time</span>
           </motion.div>
-        </div>
+        </Surface>
       </div>
     </section>
   );

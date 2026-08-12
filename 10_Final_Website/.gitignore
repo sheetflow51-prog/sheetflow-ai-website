@@ -59,3 +59,18 @@ playwright-report/
 # `release-preview-rc1/` so the before/after comparison has a before, and both
 # are regenerable review artifacts rather than source.
 release-preview*/
+
+# Session Supervisor: quarantined artifacts + last-run snapshot.
+# Moved here rather than deleted so a crash always has a before-picture —
+# the RC6.1 recovery deleted test-results/ and had to reconstruct the
+# chrome-headless-shell OOM from Windows Event Log alone.
+.env-quarantine/
+
+# Engineering Supervisor: machine-local state.
+#
+# Baselines, locks, caches and saved page audits. Gitignored deliberately: a
+# perf baseline is a claim about *this* host — 4 cores, Intel HD 620, 7.88 GB —
+# and committing it would let a faster machine's numbers silently become this
+# machine's budget, turning every subsequent comparison into an artefact of
+# where the number came from.
+.engineering/

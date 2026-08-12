@@ -14,6 +14,18 @@
  *
  * This asserts the opposite of what the visual capture asserts: that with
  * motion off, everything meaningful is still on screen.
+ *
+ * ## RC5
+ *
+ * Extended to the page-level engines. The narrative rail is the highest-stakes
+ * item on this list: it is one line running the whole homepage, it is
+ * scroll-driven, and if it rests at `scaleY(0)` the page loses its only
+ * structural through-line on every browser without scroll timelines — while
+ * still compiling, type-checking and looking correct in an editor.
+ *
+ * The `.craft-sheen` check became `.vos-browser-sheen` when the browser frame
+ * was extracted into the VOS. The probe found that rename by failing, which is
+ * the behaviour a probe is for.
  */
 import { chromium } from '@playwright/test';
 
@@ -37,7 +49,7 @@ const result = await page.evaluate(() => {
   return {
     // Signals must be gone, not teleporting.
     infraSignalDisplay: disp(branch, '::after'),
-    sheenDisplay: disp(document.querySelector('.craft-sheen'), null),
+    sheenDisplay: disp(document.querySelector('.vos-browser-sheen'), null),
     // The structural connectors must remain — they are not motion.
     infraStubDisplay: disp(branch, '::before'),
     hubGlowOpacity: op(hub) === 'MISSING' ? 'MISSING' : getComputedStyle(hub, '::before').opacity,
@@ -69,6 +81,51 @@ const result = await page.evaluate(() => {
     ),
     stageCount: document.querySelectorAll('.run-stage').length,
     nodeCount: document.querySelectorAll('.run-node').length,
+
+    // --- The narrative (RC5) ---
+    // One rail per chapter, each resting fully traced for the same reason the
+    // Run's did. A rail at scaleY(0) is the page's structure, invisible.
+    railCount: document.querySelectorAll('.chapter-rail').length,
+    railScales: [...document.querySelectorAll('.chapter-rail .vos-spine-beam')].map((el) => {
+      const t = getComputedStyle(el).transform;
+      if (!t || t === 'none') return 1;
+      const m = t.match(/matrix\(([^)]+)\)/);
+      return m ? Math.round(Number(m[1].split(',')[3]) * 1000) / 1000 : 'UNPARSED';
+    }),
+    // Every chapter head must be readable, not held at the reveal's start.
+    headOpacities: [...document.querySelectorAll('.chapter-head')].map((el) =>
+      getComputedStyle(el).opacity,
+    ),
+    markCount: document.querySelectorAll('.chapter-mark').length,
+
+    // Parallax rests NEUTRAL, unlike the rails — its finished state is an
+    // element pushed off its layout position, so `none` is the correct rest.
+    driftTransform: (() => {
+      const el = document.querySelector('.vos-drift');
+      if (!el) return 'MISSING';
+      return getComputedStyle(el).transform;
+    })(),
+
+    // The closing descent rests at full intensity, not dimmed.
+    descentOpacity: op(document.querySelector('.cta-descent')),
+
+    // Continuously-moving decoration must be gone, not teleporting.
+    sparkTipDisplay: disp(document.querySelector('.vos-spark-tip'), null),
+    // …but the sparkline itself is information and must still be drawn.
+    sparkLineOpacity: op(document.querySelector('.vos-spark-line')),
+    sparkDashOffset: (() => {
+      const el = document.querySelector('.vos-spark-line');
+      return el ? getComputedStyle(el).strokeDashoffset : 'MISSING';
+    })(),
+
+    // Every drawn artifact declares its provenance (§ 6). Counted, not
+    // eyeballed: the engine emits the caption, so a zero here means a section
+    // has drifted off the engine and back to hand-written markup.
+    provenanceNotes: document.querySelectorAll('.vos-artifact-note').length,
+    termsCards: document.querySelectorAll('.terms-card').length,
+    termsOpacities: [...document.querySelectorAll('.terms-card')].map((el) =>
+      getComputedStyle(el).opacity,
+    ),
   };
 });
 
@@ -89,6 +146,20 @@ const checks = [
   ['five stages present', result.stageCount === 5],
   ['five spine nodes present', result.nodeCount === 5],
   ['no stage held invisible', result.stageOpacities.every((o) => Number(o) > 0.99)],
+
+  // --- The narrative (RC5) ---
+  ['eight chapter rails present', result.railCount === 8],
+  ['every rail rests fully traced', result.railScales.every((s) => s === 1)],
+  ['eight chapter marks present', result.markCount === 8],
+  ['no chapter head held invisible', result.headOpacities.every((o) => Number(o) > 0.99)],
+  ['parallax rests neutral, not offset', result.driftTransform === 'none'],
+  ['closing descent rests at full intensity', Number(result.descentOpacity) > 0.99],
+  ['spark tip removed', result.sparkTipDisplay === 'none'],
+  ['sparkline still drawn', Number(result.sparkLineOpacity) > 0.99],
+  ['sparkline not left un-traced', result.sparkDashOffset === '0px' || result.sparkDashOffset === '0'],
+  ['every drawn artifact carries provenance', result.provenanceNotes >= 6],
+  ['three pricing tiers present', result.termsCards === 3],
+  ['no pricing tier held invisible', result.termsOpacities.every((o) => Number(o) > 0.99)],
 ];
 
 let failed = 0;

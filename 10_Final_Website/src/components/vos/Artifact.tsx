@@ -67,6 +67,55 @@ const PROVENANCE_NOTE: Record<Provenance, string | null> = {
   capture: null,
 };
 
+export interface SchematicProps {
+  shapes: Shape[];
+  /** viewBox dimensions the shape coordinates are expressed in. */
+  view?: { w: number; h: number };
+  /**
+   * `meet` letterboxes the drawing inside its box; `slice` fills the box and
+   * crops. A schematic sitting on its own `Surface` wants `meet`, because the
+   * Surface is sized by the drawing. One filling a frame's screen wants
+   * `slice`, because there the *frame* fixes the aspect and a letterboxed
+   * drawing would leave two bands of empty screen.
+   */
+  fit?: 'meet' | 'slice';
+  className?: string;
+}
+
+/**
+ * The wireframe renderer, exported so a caller that already has a surface —
+ * a browser window, a device screen — can draw into it without the extra
+ * `Surface` that `Artifact` wraps around a bare schematic.
+ *
+ * This is the part that was duplicated. `DigitalCraft` carried its own copy of
+ * this function *and* its own five-entry tone map with slightly different
+ * alphas, so the same wireframe vocabulary rendered two ways depending on which
+ * section drew it.
+ */
+export function Schematic({ shapes, view = { w: 640, h: 380 }, fit = 'meet', className }: SchematicProps) {
+  return (
+    <svg
+      className={cn('vos-artifact-svg', className)}
+      viewBox={`0 0 ${view.w} ${view.h}`}
+      preserveAspectRatio={`xMidYMid ${fit}`}
+      aria-hidden="true"
+      focusable="false"
+    >
+      {shapes.map(([x, y, w, h, tone = 'dim', r = 4], i) => (
+        <rect
+          key={`${x}-${y}-${i}`}
+          x={x}
+          y={y}
+          width={w}
+          height={h}
+          rx={r}
+          className={TONE_CLASS[tone]}
+        />
+      ))}
+    </svg>
+  );
+}
+
 export interface ArtifactProps {
   /** Required by design. `VISUAL_DNA_V2.md` § 6. */
   provenance: Provenance;
@@ -104,25 +153,7 @@ export function Artifact({
           rendered only for the shapes case. */}
       {shapes ? (
         <Surface elevation={elevation} live={live} className="vos-artifact-body">
-          <svg
-            className="vos-artifact-svg"
-            viewBox={`0 0 ${view.w} ${view.h}`}
-            preserveAspectRatio="xMidYMid meet"
-            aria-hidden="true"
-            focusable="false"
-          >
-            {shapes.map(([x, y, w, h, tone = 'dim', r = 4], i) => (
-              <rect
-                key={`${x}-${y}-${i}`}
-                x={x}
-                y={y}
-                width={w}
-                height={h}
-                rx={r}
-                className={TONE_CLASS[tone]}
-              />
-            ))}
-          </svg>
+          <Schematic shapes={shapes} view={view} />
         </Surface>
       ) : (
         children

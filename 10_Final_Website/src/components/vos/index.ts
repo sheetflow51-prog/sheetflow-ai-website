@@ -9,7 +9,11 @@
  * Everything exported here is a **server component or a pure constant**. The
  * whole system's client-JavaScript cost is zero, which is what makes it
  * affordable to put on every section: `VISUAL_DNA_V2.md` § 9 keeps the 360 kB
- * gzip budget hard, and the site is at 349.1 kB.
+ * gzip budget hard.
+ *
+ * RC5 added the page-level tier. Every engine below `Chapter` composes *within*
+ * a section; `Chapter` composes the sections themselves, which is the level the
+ * homepage's actual defect lived at — nine self-contained pages on one route.
  */
 
 export { Ambient, type AmbientTier, type AmbientTone } from './Ambient';
@@ -17,9 +21,26 @@ export { Surface, type Elevation, type SurfaceProps } from './Surface';
 export { Spine, SpineNode, type SpineProps } from './Spine';
 export {
   Artifact,
+  Schematic,
   type ArtifactProps,
   type ArtifactTone,
   type Provenance,
+  type SchematicProps,
   type Shape,
 } from './Artifact';
-export { DeviceFrame, type DeviceFrameProps } from './Frames';
+export {
+  BrowserFrame,
+  DeviceFrame,
+  type BrowserFrameProps,
+  type DeviceFrameProps,
+} from './Frames';
+export {
+  Metric,
+  MetricGroup,
+  Sparkline,
+  type MetricGroupProps,
+  type MetricProps,
+  type SparklineProps,
+} from './Metric';
+export { Drift, type DriftProps } from './Drift';
+export { Chapter, type ChapterProps } from './Chapter';

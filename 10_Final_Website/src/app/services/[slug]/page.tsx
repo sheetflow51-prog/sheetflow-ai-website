@@ -119,10 +119,12 @@ export default async function ServiceDetailPage({
               <Button variant="primary" size="lg" href="/book">
                 Book free audit
               </Button>
-              {/* `/#product`, matching where the nav's "How we work" goes. The
-                  first version pointed the same label at `/#faq`, so two
-                  controls with identical text led to different places. */}
-              <Button variant="secondary" size="lg" href="/#product" trailing={false}>
+              {/* `/#how-it-works`, matching where the nav's "How we work"
+                  goes. Both moved off `/#product` in RC5 when the section that
+                  anchor named left the homepage narrative. An early version
+                  pointed this same label at `/#faq`, so two controls with
+                  identical text led to different places — hence the note. */}
+              <Button variant="secondary" size="lg" href="/#how-it-works" trailing={false}>
                 How we work
               </Button>
             </div>
