@@ -212,19 +212,30 @@ verified against the API on 2026-08-07 — no longer exists. The site's form,
 validation, prefill parameters and no-JS fallback are all still correct; they
 now point at nothing.
 
-**The fix is one action in the Calendly dashboard: recreate a 30-minute event
-whose slug is `30min`.** Nothing needs redeploying — the moment that event
-exists, every CTA on the live site works again.
+**Resolved 2026-08-13, on the founder's instruction.** The event was recreated
+through the Calendly API and the site now points at it:
 
-Two facts worth knowing before doing it: `google_conference` is already
-connected, so Google Meet needs no setup; and the only availability schedule,
-"Working hours" (Mon–Fri 09:00–17:00), is set to **America/New_York** while the
-account timezone is **Asia/Calcutta** — so slots would be offered in US hours
-unless that is changed too.
+| | Value |
+|---|---|
+| Event | Free Automation Audit — `2a45325e-c622-40c8-879b-7d7765b0009d` |
+| URL | `calendly.com/sheetflow51/free-automation-audit` |
+| Duration / location | 30 min · `google_conference` (already connected) |
+| Custom question at position 0 | "Please share anything that will help prepare for our meeting." — i.e. exactly the `a1` field `booking.ts` composes into |
+| Availability | Mon–Fri 09:00–17:00 **Asia/Calcutta** (was America/New_York) |
 
-This was not fixed here because creating a live booking surface on a real
-business calendar, and choosing its availability, is not a decision this session
-should make unilaterally — and the event may have been removed deliberately.
+Calendly derives a slug from the event's name and does not accept one, so
+`/30min` was unrecoverable — it was the *default* event's slug, never a name.
+`contact.ts` was repointed and redeployed rather than the slug being restored.
+
+The timezone was corrected at **event-type scope**, which leaves the shared
+"Working hours" schedule untouched for anything else that uses it. Verified
+numerically rather than by reading the setting back: the first bookable slot is
+`2026-08-14T03:30:00Z` = 09:00 IST and the last is `11:00Z` = 16:30 IST, with
+15–16 August (the weekend) correctly empty.
+
+End-to-end in production: the form submits to a real scheduling page titled
+"Free Automation Audit · 30 min" with name, email and the composed notes
+prefilled — no "not valid".
 
 ### 7.2 Minor defect — the analytics beacon 404s
 
@@ -234,9 +245,32 @@ console errors, because Web Analytics is not enabled on the Vercel project while
 Best Practices 96 rather than 100 — Lighthouse's single deduction on both
 profiles is "Browser errors were logged to the console".
 
-Fix: enable Analytics in Project → Analytics (no code change, no redeploy), or
-remove the component. Not done here because enabling it begins collecting
-visitor data.
+Fix: enable Analytics in **Project → Analytics** (no code change, no redeploy).
+
+Attempted on the founder's instruction and **not completable from here**, for a
+reason worth recording: the Vercel MCP connector is authenticated to a different
+scope and returns
+
+```
+403 forbidden — Not authorized: Trying to access resource under scope
+"sheetflow51-progs-projects". You must re-authenticate to this scope.
+```
+
+so it cannot read analytics, let alone enable it. There is also no
+enable-analytics tool in the connector's surface — only `get_web_analytics`,
+which requires it to be on already. The Vercel **CLI** is authenticated
+correctly (it deployed this release), but exposes no analytics command. This is
+therefore a dashboard toggle and nothing else.
+
+### 7.3 The hero's second CTA had no destination
+
+`Hero.tsx` rendered "See our work" as a `<button>` with **no `href`** — it fired
+`hero_demo_click` and navigated nowhere, which is why it read as redundant. It
+now points at `/work`, the canonical portfolio route the navbar and
+`/book/confirmed` already use. See commit `0276c6a`.
+
+Verified on production at 1440 and 390: mouse click, keyboard Enter and the
+browser Back button all behave correctly, with no new console errors.
 
 ---
 
