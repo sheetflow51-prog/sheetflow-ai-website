@@ -159,7 +159,85 @@ Deliberately **not** changed, and why:
   that cannot run the suite green would trade a measured problem for an
   unmeasured one.
 
+## 7. Production release — 2026-08-12
+
+Deployed from commit `5151dd6`.
+
+| Field | Value |
+|---|---|
+| Production URL | https://sheetflow-ai-website.vercel.app |
+| Deployment | `dpl_BrfoiS1TkDCG841Z9YqECyemUp58`, `target: production`, `READY` |
+| Preview | `dpl_2Fos78WnvkavBSoD8QXzXxvyc43q` (Deployment Protection on — auth wall) |
+| Build identity confirmed | `292c3effe2f00533.css` carries `--nav-h` ×2 and `scroll-margin-top` ×2, and **zero** `font-size:9px` — both fixes are provably live |
+
+**Verified on production, anonymously:**
+
+- **Routes** — all 21 sitemap URLs return 200; an unknown path returns 404.
+  (An earlier reading of "3 failures" was mine, not the site's: I invented the
+  slugs `crm-integration`, `invoice-automation`, `reporting`. The real ones are
+  `crm-automation`, `business-reports`, `invoice-reminders`.)
+- **Anchor fix** — nav bottom 64px; the How-it-works kicker now sits at 146px
+  and its heading at 180px. Both clear the nav. Before, the kicker was at ~66px.
+- **Responsive** — 0px horizontal overflow at 1440, 1024, 768 and 360; zero tap
+  targets under 24px at any of them; mobile menu opens with all 8 links.
+- **Assets and hydration** — 5 images, 0 missing `alt`, 0 broken; exactly one
+  failing request site-wide (below); **no hydration errors**; one `h1`.
+- **SEO** — every route self-canonicalises on the production host, JSON-LD
+  parses on every route, `/book/confirmed` is correctly `noindex`, and
+  `robots.txt` names GPTBot, ClaudeBot, PerplexityBot and peers explicitly.
+- **Lighthouse 13.4.1, against production:**
+
+  | | Perf | A11y | Best Practices | SEO |
+  |---|---|---|---|---|
+  | Mobile | 62 | **100** | 96 | **100** |
+  | Desktop | 86 | **100** | 96 | **100** |
+
+  Desktop FCP 0.4s, LCP 1.1s, TBT 120ms, CLS 0. Mobile FCP 2.5s, LCP 4.5s,
+  TBT 570ms, CLS 0.
+
+### 7.1 Blocking defect — the booking destination is dead
+
+Every "Book a free audit" CTA (7 on the homepage alone) submits to
+`calendly.com/sheetflow51/30min`, which renders **"This Calendly URL is not
+valid."** The bare account page renders **"No openings at the moment."**
+
+The cause is not in this repository. Queried through the Calendly API:
+
+- the account is live — `sheetflow51`, `sheetflow51@gmail.com`, updated 2026-08-10;
+- `event_types` returns an **empty collection** at both user and organization scope.
+
+The event `booking.ts` documents — "Free Automation Audit", 30 min, Google Meet,
+verified against the API on 2026-08-07 — no longer exists. The site's form,
+validation, prefill parameters and no-JS fallback are all still correct; they
+now point at nothing.
+
+**The fix is one action in the Calendly dashboard: recreate a 30-minute event
+whose slug is `30min`.** Nothing needs redeploying — the moment that event
+exists, every CTA on the live site works again.
+
+Two facts worth knowing before doing it: `google_conference` is already
+connected, so Google Meet needs no setup; and the only availability schedule,
+"Working hours" (Mon–Fri 09:00–17:00), is set to **America/New_York** while the
+account timezone is **Asia/Calcutta** — so slots would be offered in US hours
+unless that is changed too.
+
+This was not fixed here because creating a live booking surface on a real
+business calendar, and choosing its availability, is not a decision this session
+should make unilaterally — and the event may have been removed deliberately.
+
+### 7.2 Minor defect — the analytics beacon 404s
+
+`/_vercel/insights/script.js` returns 404 on every page load, logging two
+console errors, because Web Analytics is not enabled on the Vercel project while
+`<Analytics />` is mounted in `layout.tsx`. It is the **only** thing costing
+Best Practices 96 rather than 100 — Lighthouse's single deduction on both
+profiles is "Browser errors were logged to the console".
+
+Fix: enable Analytics in Project → Analytics (no code change, no redeploy), or
+remove the component. Not done here because enabling it begins collecting
+visitor data.
+
 ---
 
-*Generated during the RC9 recovery session. Figures in § 3 marked "suite
-running" or "stale" are explicitly not being claimed as current.*
+*Generated during the RC9 recovery session. Every figure above was executed, not
+inferred. Figures in § 3 marked "stale" are explicitly not claimed as current.*
