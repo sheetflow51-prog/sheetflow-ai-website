@@ -16,8 +16,15 @@
 import { useCallback } from 'react';
 
 type EventName =
-  | 'hero_cta_click'          // Primary CTA in Hero
-  | 'hero_demo_click'         // "See our work" in Hero
+  // Both hero CTAs, separated by a `variant` property rather than by two event
+  // names: 'audit' is the conversion journey, 'work' the proof one, and the
+  // question worth asking is their ratio. Two names made that a join.
+  //
+  // This replaces `hero_demo_click`, which was wrong twice over — the button it
+  // named showed no demo, and it had no `href`, so every event it ever recorded
+  // was a click that went nowhere. There is no continuity worth preserving in a
+  // metric that only ever counted a dead end.
+  | 'hero_cta_click'          // Either hero CTA — see `variant`
   | 'final_cta_click'         // Primary CTA in FinalCTA
   | 'final_case_studies_click'// "See our work" in FinalCTA
   | 'form_submit'           // Inquiry form submission

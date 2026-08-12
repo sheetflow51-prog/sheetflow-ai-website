@@ -57,7 +57,8 @@ every re-capture of a 1 MB frame as another 1 MB blob forever.
 | Portfolio | ✅ verified | WPC artifact claims re-counted against disk: `orchestrator.py` 1,261, `vector_compiler.py` 869, `catalog_pdf.py` 316 — **exact matches**; 7 production bundles, manifest, toolpath SVG and 1.36 MB dashboard all present | none |
 | Portfolio folders | ✅ present | `WPCDesign_Automation`, `whatsapp-accounting-os`, `r3s-realty`, `ai-voice-receptionist`, `PMA_Automation_Agency`, `Saraswati Dental Images`, `Dr. Manish Sharma (SPARC)` all found on disk | none |
 | Evidence model | ✅ sound | `live` / `demo` / `internal` are a discriminated union: `internal` carries no URL field at all, and `demo` cannot emit a client `Organization` node. The guarantee is held by the type, not by review | none |
-| Booking | ✅ pass | Real `<form method="get">` → `calendly.com/sheetflow51/30min`. Validation blocks a blank required field; the no-JS native GET produces a valid prefilled URL. No third-party script | none |
+| Booking (form) | ✅ pass | Real `<form method="get">`. Validation blocks a blank required field; the no-JS native GET produces a valid prefilled URL. No third-party script | none |
+| Booking (destination) | ✅ fixed | Pointed at a **deleted** Calendly event — see § 7.1. Event recreated via the API; `contact.ts` now points at `/free-automation-audit` | redeployed |
 | Pricing | ✅ serves | `/pricing` 200, 171.9 kB | design pass pending |
 | Visual system | 🟡 good | VOS in place; supervisor scores the homepage **73/100** | spacing (50), alignment (50), typography (42) |
 | Motion | 🟡 warn | 12 % of animations sit in a `prefers-reduced-motion` block against a 50 % target; 15 paint-class animations against a budget of 8 | improve |

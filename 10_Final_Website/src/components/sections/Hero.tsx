@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Sparkles, Play } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Magnetic } from '@/components/motion/Magnetic';
@@ -244,8 +244,36 @@ export function Hero() {
               )}
             </span>
           </Magnetic>
+          {/* The proof journey, next to the conversion one.
+
+              This button had **no `href`**. It rendered as a `<button>`, fired
+              an analytics event and navigated nowhere — the one CTA above the
+              fold that could not be followed. It read as redundant because it
+              was: the only thing separating it from decoration was a tracking
+              call.
+
+              `/work` is the canonical portfolio route, not a new one: it is
+              what the navbar's "Work" link points at and what `/book/confirmed`
+              already sends people to with this same `variant="secondary"`. The
+              homepage's other "See our work" (in `FinalCTA`) correctly uses
+              `#customers` instead, because by then the reader is already level
+              with that section — an anchor is right at the bottom of the page
+              and wrong at the top, where the whole story still sits in between.
+
+              The `Play` triangle is gone with it. It promised a video that does
+              not exist, and it carried no `.arrow` class, so it was also the
+              one CTA on the site with no hover response at all. The default
+              trailing arrow restores both: `.btn:hover .arrow` already
+              translates 3px over 0.2s, and `.btn-secondary:hover` already
+              lifts the surface. No new CSS — requirement met by the system
+              that was there. */}
           <Magnetic strength={8} inner={1.4}>
-            <Button variant="secondary" size="lg" trailing={<Play className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true" />} onClick={() => track('hero_demo_click')}>
+            <Button
+              variant="secondary"
+              size="lg"
+              href="/work"
+              onClick={() => track('hero_cta_click', { variant: 'work' })}
+            >
               See our work
             </Button>
           </Magnetic>
