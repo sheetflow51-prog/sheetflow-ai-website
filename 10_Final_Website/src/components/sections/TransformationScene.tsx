@@ -123,6 +123,14 @@ export function TransformationScene() {
           aria-label="Pause the before-and-after animation"
         />
 
+        <div className="stage-bar" aria-hidden="true">
+          <span className="stage-bar-label">Illustrative loop</span>
+          <label htmlFor="flow-pause" className="motion-btn">
+            <span className="motion-btn-pause">Pause</span>
+            <span className="motion-btn-play">Play</span>
+          </label>
+        </div>
+
         <div className="flow-stage" aria-hidden="true">
           <svg width="0" height="0" className="eco-defs" focusable="false">
             <defs>
@@ -136,11 +144,6 @@ export function TransformationScene() {
               </linearGradient>
             </defs>
           </svg>
-
-          <label htmlFor="flow-pause" className="motion-btn">
-            <span className="motion-btn-pause">Pause</span>
-            <span className="motion-btn-play">Play</span>
-          </label>
 
           {/* Without SheetFlow: enquiries pile up, stall and get dragged in. */}
           <div className="flow-col flow-col--chaos">
@@ -190,10 +193,22 @@ export function TransformationScene() {
           <Beams paths={BEAMS_OUT_ROW} dir="row" view="0 0 120 200" grad="flow-grad-out" />
           <Beams paths={BEAMS_OUT_COL} dir="col" view="0 0 200 80" grad="flow-grad-out" />
 
-          {/* With SheetFlow: the same four enquiries, finished. */}
+          {/* With SheetFlow: the same four enquiries, finished, row for row. */}
           <div className="flow-col flow-col--auto">
             <p className="flow-tag flow-tag--auto">With SheetFlow</p>
             <p className="flow-col-title">Autonomous flow</p>
+            <div className="flow-feed">
+              {OUTCOMES.map((card, i) => (
+                <div key={card.pill} className="flow-card" style={{ '--i': i } as React.CSSProperties}>
+                  <span className="flow-card-icon" />
+                  <span className="flow-card-text">
+                    <span className="flow-card-what">{card.what}</span>
+                    <span className="flow-card-via">{card.via}</span>
+                  </span>
+                  <span className="flow-ok">{card.pill}</span>
+                </div>
+              ))}
+            </div>
             <div className="flow-dash">
               <span className="flow-dash-label">Enquiries answered today</span>
               <span className="flow-dash-count" />
@@ -207,17 +222,6 @@ export function TransformationScene() {
                   />
                 ))}
               </span>
-            </div>
-            <div className="flow-feed">
-              {OUTCOMES.map((card, i) => (
-                <div key={card.pill} className="flow-card" style={{ '--i': i } as React.CSSProperties}>
-                  <span className="flow-card-text">
-                    <span className="flow-card-what">{card.what}</span>
-                    <span className="flow-card-via">{card.via}</span>
-                  </span>
-                  <span className="flow-ok">{card.pill}</span>
-                </div>
-              ))}
             </div>
           </div>
         </div>

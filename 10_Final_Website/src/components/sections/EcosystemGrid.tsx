@@ -24,12 +24,12 @@ import { EcosystemDefs, EcosystemMark } from './EcosystemMark';
  * Server component. Zero JavaScript.
  */
 
-/** Illustrative events for the floating badges. Decoration, not data. */
-const BADGES: { tool: string; text: string; at: React.CSSProperties; wide: boolean }[] = [
-  { tool: 'whatsapp', text: 'New enquiry received', at: { left: '3%', top: '9%' }, wide: false },
-  { tool: 'n8n', text: 'Workflow ran', at: { left: '6%', top: '56%' }, wide: true },
-  { tool: 'supabase', text: 'Row saved', at: { right: '3%', top: '17%' }, wide: true },
-  { tool: 'slack', text: 'Alert sent to #sales', at: { right: '4%', top: '62%' }, wide: false },
+/** Illustrative events for the floating badges, placed as two mirrored pairs. Decoration, not data. */
+const BADGES: { tool: string; text: string; at: React.CSSProperties }[] = [
+  { tool: 'whatsapp', text: 'New enquiry received', at: { left: '3%', top: '14%' } },
+  { tool: 'supabase', text: 'Row saved', at: { right: '3%', top: '14%' } },
+  { tool: 'n8n', text: 'Workflow ran', at: { left: '3%', top: '56%' } },
+  { tool: 'slack', text: 'Alert sent to #sales', at: { right: '3%', top: '56%' } },
 ];
 
 export function EcosystemGrid() {
@@ -48,11 +48,14 @@ export function EcosystemGrid() {
         className="motion-toggle sr-only"
         aria-label="Pause the orbiting logos"
       />
-      <div className="eco-orbit" aria-hidden="true">
+      <div className="stage-bar" aria-hidden="true">
+        <span className="stage-bar-label">Connected tools</span>
         <label htmlFor="eco-pause" className="motion-btn">
           <span className="motion-btn-pause">Pause</span>
           <span className="motion-btn-play">Play</span>
         </label>
+      </div>
+      <div className="eco-orbit" aria-hidden="true">
 
         <span className="eco-glow" />
         <div className="eco-wheel">
@@ -100,8 +103,7 @@ export function EcosystemGrid() {
             <span
               key={badge.tool}
               className="eco-badge"
-              data-wide={badge.wide || undefined}
-              style={{ ...badge.at, '--i': i, '--brand': tool.brand } as React.CSSProperties}
+              style={{ ...badge.at, '--i': Math.floor(i / 2), '--brand': tool.brand } as React.CSSProperties}
             >
               <span className="eco-badge-mark">
                 <EcosystemMark tool={tool} />
