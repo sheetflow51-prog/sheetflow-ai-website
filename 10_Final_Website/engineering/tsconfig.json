@@ -1,0 +1,36 @@
+{
+  // The engineering supervisor is Node tooling, not part of the Next app, and it
+  // is type-checked separately for three concrete reasons:
+  //
+  //   1. `lib` here is ES2023 with no DOM. The app's config includes `dom`, which
+  //      would let a typo like `document.querySelector` inside a Node script
+  //      type-check cleanly and then throw at runtime. The one place this code
+  //      touches the DOM — the in-page probe in VisualRegression.ts — is a string
+  //      that crosses into a browser, so it is correctly outside the type system.
+  //
+  //   2. `allowImportingTsExtensions` lets the modules import each other as
+  //      './x.ts'. That is not a style choice: Node 24 runs these files directly
+  //      by stripping types, and its ESM resolver requires the real extension.
+  //      There is no build step and no `tsx` dependency as a result.
+  //
+  //   3. `erasableSyntaxOnly` makes the compiler enforce what Node's type
+  //      stripping can actually handle — no enums, no namespaces, no parameter
+  //      properties. Without it the failure appears at runtime, in the tool whose
+  //      whole job is to run before other things fail.
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "types": ["node"],
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["**/*.ts"]
+}

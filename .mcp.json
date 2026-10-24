@@ -1,0 +1,38 @@
+{
+  "mcpServers": {
+    "context7": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "context7-mcp"],
+      "env": {}
+    },
+    "chrome-devtools": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "chrome-devtools-mcp"],
+      "env": {}
+    },
+    "sequential-thinking": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "mcp-server-sequential-thinking"],
+      "env": {}
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "playwright-mcp"],
+      "env": {}
+    },
+    "filesystem": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "mcp-server-filesystem",
+        "c:/Users/pc/OneDrive/Desktop/AI_MASTER_WORKSPACE/SheetFlow_AI_Website"
+      ],
+      "env": {}
+    }
+  }
+}

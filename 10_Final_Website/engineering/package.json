@@ -1,0 +1,5 @@
+{
+  "//": "Scope marker, not a package. The workspace package.json has no \"type\" field, so Node and tsc both treat every .ts file under it as CommonJS — which makes `import`/`export` a syntax error here and would force this tooling into require(). Declaring the module type on this directory alone turns these files into ESM without changing how the Next app or the .mjs scripts are interpreted. There is no `name` and no `version` because nothing installs this; it is resolved by path.",
+  "type": "module",
+  "private": true
+}

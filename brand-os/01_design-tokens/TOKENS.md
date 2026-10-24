@@ -42,9 +42,10 @@ The palette is **not negotiable per-feature**. Every color must come from the sy
 - **`void` (`#060608`)** — the canvas. Never replaced; only layered over.
 - **`surface.0–4`** — Z-stack. A surface at level *n* may only sit atop one at level *n−1*. Glass-on-glass is forbidden.
 - **`ink.50–950`** — type and dividers. Body text uses `ink.300`, headlines `ink.50`, muted `ink.400`. Never below `ink.500` for text on `void`.
-- **`accent.*`** — indigo. The brand's living signal. `bright` for gradient starts, `deep` for pressed states, `glow` for halo composition.
-- **`violet.*`** — secondary intelligence light. Only as gradient-mid or as fill-aurora.
+- **`accent.*`** — azure blue, from the logo. The brand's living signal. `bright` for gradient starts, `deep` for pressed states, `glow` for halo composition.
+- **`gold.*`** — the logo's second brand colour. Only as gradient-mid or as fill-aurora.
 - **`cyan.*`** — horizon light. Only as gradient end-stop or rim aurora.
+- **`violet.*`** — **deprecated alias of `gold`.** Do not use in new code.
 - **`signal.*`** — status only. **Never decoration.** A green that is not "live" is a bug.
 
 ### Forbidden color moves
@@ -123,11 +124,38 @@ Removing either breaks the brand. They are not optional polish; they are substra
 
 ---
 
+## Drift reconciliation — 2026-08-06
+
+The checklist below was run for the first time. It found real drift, and the
+direction mattered:
+
+| Token | `tokens.ts` (was) | `tailwind.config.ts` | Resolution |
+|---|---|---|---|
+| `accent.*` | Indigo `#6366F1` family | Blue `#3B82F6` family | **`tokens.ts` corrected** |
+| `violet.*` | Violet `#8B5CF6` family | Gold `#E9A23B` family | **`tokens.ts` corrected**; renamed `gold`, `violet` kept as deprecated alias |
+| `cyan.*` | present | **absent** | Added to Tailwind |
+| `void`, `surface.*`, `ink.*`, `signal.*` | — | — | No drift |
+
+**`tokens.ts` was the stale file, not the site.** Commit `0920b03`
+(*"rebrand palette to logo colors (blue + gold)"*) deliberately moved the
+shipped palette to the logo's azure blue and gold and repurposed the `violet`
+token to carry gold values. `tokens.ts` was never updated to follow, so it still
+described the pre-rebrand indigo/violet system.
+
+Reconciling in the naive direction — making Tailwind match `tokens.ts` — would
+have silently reverted an approved rebrand. The shipped values were treated as
+authoritative and this file was corrected to match.
+
+The `violet` name remains as a deprecated alias holding gold values so the 34
+existing `violet-*` usages keep resolving. Migrating them to `gold-*` is a
+mechanical follow-up; both names resolve to identical hex, so the migration
+carries no visual change.
+
 ## Adoption checklist
 
 When integrating tokens into the existing `10_Final_Website`:
 
-1. `tailwind.config.ts` already mirrors most tokens — confirm no drift exists by diffing against `tokens.ts`.
+1. `tailwind.config.ts` already mirrors most tokens — confirm no drift exists by diffing against `tokens.ts`. See the reconciliation above for the last run.
 2. New components must `import { tokens } from '@/brand-os/tokens'` (or the published package once exported).
 3. Use Tailwind utility classes for static styling. Drop to `tokens.*` only for dynamic / motion values.
 4. CSS-in-JS for motion (Framer/GSAP) reads `tokens.duration.*` and `tokens.easing.*` directly.

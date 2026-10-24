@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef } from 'react';
 import { useStore } from '@/lib/store';
 import { prefersReducedMotion } from '@/lib/utils';
+import { EASE } from '@/lib/motion';
 
 /**
  * Awakening — Signature Moment #1: HERO AI AWAKENING.
@@ -60,7 +61,7 @@ export default function Awakening() {
           transition={{
             duration: 1.6,
             times: [0, 0.18, 0.7, 1],
-            ease: [0.16, 1, 0.3, 1],
+            ease: EASE,
           }}
           onAnimationComplete={() => {
             // Once the awakening finishes, we let the component unmount
@@ -75,14 +76,14 @@ export default function Awakening() {
             transition={{
               duration: 1.6,
               times: [0, 0.3, 0.6, 1],
-              ease: [0.16, 1, 0.3, 1],
+              ease: EASE,
             }}
           >
             <div
               className="h-[40vh] w-[40vh] rounded-full"
               style={{
                 background:
-                  'radial-gradient(circle, rgba(129,140,248,0.45) 0%, rgba(99,102,241,0.18) 40%, transparent 70%)',
+                  'radial-gradient(circle, rgb(var(--color-accent-bright) / 0.45) 0%, rgb(var(--color-accent) / 0.18) 40%, transparent 70%)',
                 filter: 'blur(20px)',
               }}
             />
@@ -101,10 +102,10 @@ export default function Awakening() {
               duration: 1.2,
               delay: 0.3,
               times: [0, 0.3, 1],
-              ease: [0.16, 1, 0.3, 1],
+              ease: EASE,
             }}
             style={{
-              boxShadow: '0 0 40px rgba(129,140,248,0.4)',
+              boxShadow: '0 0 40px rgb(var(--color-accent-bright) / 0.4)',
             }}
           />
 
@@ -117,30 +118,36 @@ export default function Awakening() {
               duration: 1.2,
               delay: 0.2,
               times: [0, 0.4, 1],
-              ease: [0.16, 1, 0.3, 1],
+              ease: EASE,
             }}
             style={{
               background:
-                'radial-gradient(ellipse 70% 50% at 50% 50%, rgba(99,102,241,0.18), transparent 60%)',
+                'radial-gradient(ellipse 70% 50% at 50% 50%, rgb(var(--color-accent) / 0.18), transparent 60%)',
               mixBlendMode: 'screen',
             }}
           />
 
-          {/* Whisper line — single horizontal scan, low opacity */}
+          {/* Whisper line — single horizontal scan, low opacity.
+
+              Animates `y`, not `top`. Animating `top` drove a layout on every
+              frame and was the site's entire Cumulative Layout Shift (0.101 of
+              a 0.103 total). `y` compiles to a transform, which the compositor
+              handles without touching layout. Viewport units are safe here
+              because the parent is `fixed inset-0`. */}
           <motion.div
-            className="absolute left-0 right-0 h-px"
-            initial={{ top: '50%', opacity: 0 }}
-            animate={{ top: ['50%', '0%', '100%'], opacity: [0, 0.4, 0] }}
+            className="absolute left-0 right-0 top-0 h-px will-change-transform"
+            initial={{ y: '50vh', opacity: 0 }}
+            animate={{ y: ['50vh', '0vh', '100vh'], opacity: [0, 0.4, 0] }}
             transition={{
               duration: 1.4,
               delay: 0.4,
               times: [0, 0.5, 1],
-              ease: [0.16, 1, 0.3, 1],
+              ease: EASE,
             }}
             style={{
               background:
-                'linear-gradient(90deg, transparent, rgba(165,180,252,0.7), transparent)',
-              boxShadow: '0 0 20px rgba(165,180,252,0.5)',
+                'linear-gradient(90deg, transparent, rgb(var(--color-accent-light) / 0.7), transparent)',
+              boxShadow: '0 0 20px rgb(var(--color-accent-light) / 0.5)',
             }}
           />
         </motion.div>

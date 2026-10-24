@@ -38,3 +38,39 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.lighthouse/
+test-results/
+playwright-report/
+.shots/
+
+# Release Candidate screenshot matrix — 10 routes x 5 breakpoints.
+#
+# Ignored for the same reason as `.shots/`: these are review artifacts, not
+# build output, and they are deterministic — `node
+# scripts/capture-release-preview.mjs` against a production server reproduces
+# them exactly. The matrix is ~80 MB of PNG, which is not something to carry in
+# git history for something a command regenerates in minutes.
+#
+# The committed screenshots are the ones in `public/work/` — those are
+# *published evidence*, pinned deliberately so what we show cannot drift when a
+# third-party site changes.
+#
+# The glob covers the per-phase copies as well: RC2 keeps the RC1 matrix as
+# `release-preview-rc1/` so the before/after comparison has a before, and both
+# are regenerable review artifacts rather than source.
+release-preview*/
+
+# Session Supervisor: quarantined artifacts + last-run snapshot.
+# Moved here rather than deleted so a crash always has a before-picture —
+# the RC6.1 recovery deleted test-results/ and had to reconstruct the
+# chrome-headless-shell OOM from Windows Event Log alone.
+.env-quarantine/
+
+# Engineering Supervisor: machine-local state.
+#
+# Baselines, locks, caches and saved page audits. Gitignored deliberately: a
+# perf baseline is a claim about *this* host — 4 cores, Intel HD 620, 7.88 GB —
+# and committing it would let a faster machine's numbers silently become this
+# machine's budget, turning every subsequent comparison into an artefact of
+# where the number came from.
+.engineering/

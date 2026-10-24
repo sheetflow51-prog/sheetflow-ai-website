@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="SheetFlow">
+  <title>SheetFlow</title>
+  <defs><clipPath id="sfSphere"><circle cx="122.18" cy="97.85" r="65.32"/></clipPath></defs>
+  <circle cx="128" cy="128" r="124" fill="none" stroke="#FFFFFF" stroke-width="8"/>
+  <g transform="translate(5.82 30.15)">
+  <g clip-path="url(#sfSphere)">
+    <path d="M182.72 95.66 A36.53 16.44 125.01 0 1 140.81 155.49 A36.53 16.44 125.01 0 1 182.72 95.66 Z" fill="none" stroke="#FFFFFF" stroke-width="18.29"/>
+    <path d="M177.69 66.31 A57.67 25.95 125.01 0 1 111.51 160.79 A57.67 25.95 125.01 0 1 177.69 66.31 Z" fill="none" stroke="#FFFFFF" stroke-width="18.29"/>
+    <path d="M159.66 44.35 A65.32 29.39 125.01 0 1 84.70 151.35 A65.32 29.39 125.01 0 1 159.66 44.35 Z" fill="none" stroke="#FFFFFF" stroke-width="18.29"/>
+    <path d="M132.85 34.91 A57.67 25.95 125.01 0 1 66.67 129.39 A57.67 25.95 125.01 0 1 132.85 34.91 Z" fill="none" stroke="#FFFFFF" stroke-width="18.29"/>
+    <path d="M103.55 40.21 A36.53 16.44 125.01 0 1 61.64 100.04 A36.53 16.44 125.01 0 1 103.55 40.21 Z" fill="none" stroke="#FFFFFF" stroke-width="18.29"/>
+  </g></g>
+</svg>

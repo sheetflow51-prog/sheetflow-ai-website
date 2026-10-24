@@ -1,0 +1,33 @@
+# What not to upload when deploying from the repository root.
+#
+# `vercel deploy` runs here, at the repo root, while the Next.js app that
+# actually gets built lives in `10_Final_Website/` (the project's Root Directory
+# setting). Everything else in this repository is documentation and evidence:
+# necessary to the project, irrelevant to the build.
+#
+# Without this file the CLI uploaded ~129 MB per deploy, of which ~93 MB was
+# `docs/_captures/` — 129 PNG frames from visual-regression runs that no build
+# step reads. Nothing here changes what is built; it changes how much is sent
+# over a domestic uplink before the build can start.
+#
+# Anything the build needs lives under 10_Final_Website/ and is not listed here.
+
+# Visual-regression frames and browser-session output.
+docs/_captures/
+.playwright-mcp/
+.env-quarantine/
+test-results/
+playwright-report/
+
+# Long-form documentation and archived asset-production material.
+Documentation/
+brand-os/
+
+# Local build artefacts and dependencies — restated rather than assumed, since
+# .vercelignore replaces the default ignore behaviour rather than extending it.
+node_modules/
+.next/
+.git/
+
+# Config backups.
+*.rc8-backup

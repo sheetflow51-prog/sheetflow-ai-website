@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "env": {
+    "MCP_TIMEOUT": "60000"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"${CLAUDE_PROJECT_DIR:-c:/Users/pc/OneDrive/Desktop/AI_MASTER_WORKSPACE/SheetFlow_AI_Website}/10_Final_Website\" && node scripts/session-supervisor.mjs 2>/dev/null || true",
+            "timeout": 45,
+            "statusMessage": "Checking development environment..."
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"${CLAUDE_PROJECT_DIR:-c:/Users/pc/OneDrive/Desktop/AI_MASTER_WORKSPACE/SheetFlow_AI_Website}/10_Final_Website\" && node scripts/session-supervisor.mjs --quiet 2>/dev/null || true",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -15,9 +15,13 @@ export default function CustomCursor() {
   const [enabled, setEnabled] = useState(false);
   const variant = useStore((s) => s.cursorVariant);
   const setVariant = useStore((s) => s.setCursorVariant);
+  const reducedMotion = useStore((s) => s.reducedMotion);
 
   useEffect(() => {
-    if (isTouchDevice()) return;
+    if (isTouchDevice() || reducedMotion) {
+      setEnabled(false);
+      return;
+    }
     setEnabled(true);
     document.documentElement.classList.add('cursor-none-all');
 
@@ -74,7 +78,7 @@ export default function CustomCursor() {
       document.removeEventListener('mouseup', onUp);
       document.documentElement.classList.remove('cursor-none-all');
     };
-  }, [setVariant]);
+  }, [setVariant, reducedMotion]);
 
   if (!enabled) return null;
 
@@ -82,12 +86,12 @@ export default function CustomCursor() {
     variant === 'hover' ? 64 : variant === 'click' ? 24 : 36;
   const ringBg =
     variant === 'hover'
-      ? 'rgba(99, 102, 241, 0.12)'
-      : 'rgba(255, 255, 255, 0.04)';
+      ? 'rgb(var(--color-accent) / 0.12)'
+      : 'rgb(var(--c-fg) / 0.04)';
   const ringBorder =
     variant === 'hover'
-      ? 'rgba(99, 102, 241, 0.6)'
-      : 'rgba(255, 255, 255, 0.4)';
+      ? 'rgb(var(--color-accent) / 0.6)'
+      : 'rgb(var(--c-fg) / 0.4)';
 
   return (
     <>
@@ -108,7 +112,7 @@ export default function CustomCursor() {
         ref={dotRef}
         className="pointer-events-none fixed left-0 top-0 z-[9999] h-1.5 w-1.5 rounded-full bg-white"
         style={{
-          boxShadow: '0 0 12px rgba(99, 102, 241, 0.8)',
+          boxShadow: '0 0 12px rgb(var(--color-accent) / 0.8)',
         }}
         aria-hidden="true"
       />

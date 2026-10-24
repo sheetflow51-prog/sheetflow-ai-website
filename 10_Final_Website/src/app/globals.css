@@ -2,13 +2,111 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Registered so the angle can be *interpolated* — an unregistered custom
+   property is a string to the animation engine and jumps from 0deg to 360deg in
+   one step. Declared at top level because `@property` is not a nested rule.
+
+   Where `@property` is unsupported the angle simply stays at its initial value:
+   `.border-beam` degrades to a static gradient edge, which is a resting state
+   the design already uses, rather than to a broken one. */
+@property --beam-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
 /* ==========================================================================
    SHEETFLOW AI — DESIGN TOKENS
    The intelligence layer's visual foundation.
    ========================================================================== */
 
 @layer base {
-  :root {
+  /* ==========================================================================
+     THEME TOKENS
+     Light is the default and the OS colour-scheme is ignored on purpose (see the
+     inline script in layout.tsx). The dark block below is the original palette,
+     value for value: dark is the same site it always was. [data-theme="dark"]
+     matches any element, so a section can opt back into dark on its own (the
+     3D "stage" panels) without leaving the light page.
+     ========================================================================== */
+  :root,
+  html[data-theme="light"] {
+    color-scheme: light;
+
+    /* Foundation surfaces */
+    --color-void: 246 247 250;
+    --color-bg: 246 247 250;
+    --color-surface-1: 255 255 255;
+    --color-surface-2: 240 242 247;
+    --color-surface-3: 232 235 242;
+    --color-border-subtle: 226 230 239;
+    --color-border: 205 211 224;
+
+    /* Text: every pairing below is >= 4.5:1 on --color-bg and on --color-surface-1 */
+    --color-text-primary: 15 17 23;
+    --color-text-secondary: 74 81 104;
+    --color-text-tertiary: 91 100 128;
+    --color-text-disabled: 150 158 180;
+
+    /* Accent: deeper than the dark theme so it can carry text on a light page */
+    --color-accent: 37 99 235;
+    /* 30 58 138 on purpose: this token carries small translucent text (kickers, labels at 80%), which blends
+       to ~4.1:1 with the previous 29 78 216 and fails WCAG AA. At 80% this passes everywhere it is used. */
+    --color-accent-bright: 30 58 138;
+    --color-accent-light: 30 64 175;
+    --color-accent-deep: 37 99 235;
+    --color-gold: 161 98 7;
+    --color-gold-bright: 180 83 9;
+    --color-gold-deep: 120 53 15;
+    --color-violet: var(--color-gold);
+    --color-violet-bright: var(--color-gold-bright);
+    --color-cyan: 14 116 144;
+    --color-cyan-bright: 8 145 178;
+
+    /* Status */
+    --color-success: 4 120 87;
+    --color-warning: 180 83 9;
+    --color-danger: 190 18 60;
+    --color-info: 14 116 144;
+
+    /* Foreground / shadow primitives. Tailwind "white" and every translucent white wash resolve through --c-fg. */
+    --c-fg: 15 17 23;
+    --c-shadow: 30 41 82;
+    --k-shadow: 0.35;
+
+    /* Tailwind ink + surface scales */
+    --c-ink-50: 15 17 23;
+    --c-ink-100: 26 31 46;
+    --c-ink-200: 51 58 80;
+    --c-ink-300: 74 81 104;
+    --c-ink-400: 91 100 128;
+    --c-ink-500: 140 148 170;
+    --c-ink-600: 190 196 212;
+    --c-ink-700: 214 219 230;
+    --c-ink-800: 232 235 242;
+    --c-ink-900: 240 242 247;
+    --c-ink-950: 246 247 250;
+    --c-surface-0: 246 247 250;
+    --c-surface-1: 255 255 255;
+    --c-surface-2: 240 242 247;
+    --c-surface-3: 232 235 242;
+    --c-surface-4: 223 227 236;
+
+    /* Alpha of small foreground text that used to be a fixed white/55 and white/40; higher in Light so it still reads */
+    --nav-a: 0.7;
+    --load-a: 0.62;
+
+    /* Accent headline gradient stops */
+    --g1: #1d4ed8;
+    --g2: #2563eb;
+    --g3: #3b82f6;
+    --g4: #c27c14;
+    --g5: #a16207;
+  }
+
+  [data-theme="dark"] {
+    color-scheme: dark;
+
     /* Foundation surfaces */
     --color-void: 6 6 8;
     --color-bg: 10 11 15;
@@ -21,18 +119,21 @@
     /* Text */
     --color-text-primary: 255 255 255;
     --color-text-secondary: 160 168 188;
-    --color-text-tertiary: 107 116 144;
+    --color-text-tertiary: 120 129 157;
     --color-text-disabled: 61 68 96;
 
-    /* Accent — Intelligence */
-    --color-accent: 99 102 241;
-    --color-accent-bright: 129 140 248;
-    --color-accent-light: 165 180 252;
-    --color-accent-deep: 79 70 229;
-
-    /* Accent — Depth */
-    --color-violet: 139 92 246;
-    --color-violet-bright: 167 139 250;
+    /* Accent: logo azure blue and gold */
+    --color-accent: 59 130 246;
+    --color-accent-bright: 96 165 250;
+    --color-accent-light: 147 197 253;
+    --color-accent-deep: 37 99 235;
+    --color-gold: 233 162 59;
+    --color-gold-bright: 244 192 99;
+    --color-gold-deep: 196 131 42;
+    --color-violet: var(--color-gold);
+    --color-violet-bright: var(--color-gold-bright);
+    --color-cyan: 6 182 212;
+    --color-cyan-bright: 34 211 238;
 
     /* Status */
     --color-success: 16 185 129;
@@ -40,6 +141,38 @@
     --color-danger: 244 63 94;
     --color-info: 6 182 212;
 
+    --c-fg: 255 255 255;
+    --c-shadow: 0 0 0;
+    --k-shadow: 1;
+
+    --c-ink-50: 255 255 255;
+    --c-ink-100: 245 247 250;
+    --c-ink-200: 214 220 232;
+    --c-ink-300: 160 168 188;
+    --c-ink-400: 113 123 152;
+    --c-ink-500: 61 68 96;
+    --c-ink-600: 42 48 69;
+    --c-ink-700: 30 36 53;
+    --c-ink-800: 20 23 32;
+    --c-ink-900: 15 17 23;
+    --c-ink-950: 10 11 15;
+    --c-surface-0: 6 6 8;
+    --c-surface-1: 10 11 15;
+    --c-surface-2: 15 17 23;
+    --c-surface-3: 20 23 32;
+    --c-surface-4: 26 31 46;
+
+    --nav-a: 0.55;
+    --load-a: 0.4;
+
+    --g1: #3b82f6;
+    --g2: #60a5fa;
+    --g3: #93c5fd;
+    --g4: #f6d089;
+    --g5: #f4c063;
+  }
+
+  :root {
     /* Spacing scale */
     --space-1: 4px;
     --space-2: 8px;
@@ -75,6 +208,34 @@
     text-rendering: optimizeLegibility;
   }
 
+  /**
+   * Anchor targets clear the fixed navigation.
+   *
+   * `Navigation` is `fixed top-0` at `h-16`, and every anchor target on the
+   * site had `scroll-margin-top: 0`. So each of the six in-page links —
+   * "How we work", "Integrations", "FAQ", and the three in the footer — parked
+   * the section's top edge at y=0, which is 64px *underneath* the nav bar. The
+   * kicker and the first line of every section heading landed behind it. The
+   * link worked, the destination was simply not the thing the reader was shown.
+   *
+   * Declared as a variable rather than a literal because the number is not a
+   * design choice, it is `h-16` restated: if the nav's height changes and this
+   * does not, the bug returns silently and only at the one scroll position
+   * nobody tests. The extra 1.5rem is the choice — a heading pinned flush to
+   * the nav reads as clipped even when it is fully visible.
+   *
+   * Set on `[id]` rather than on `html { scroll-padding-top }` because Lenis
+   * drives programmatic scrolling and reads the target's own scroll-margin.
+   */
+  :root {
+    --nav-h: 4rem;
+  }
+
+  section[id],
+  [id][data-anchor] {
+    scroll-margin-top: calc(var(--nav-h) + 1.5rem);
+  }
+
   body {
     background: rgb(var(--color-void));
     color: rgb(var(--color-text-primary));
@@ -91,7 +252,7 @@
 
   /* Selection */
   ::selection {
-    background: rgba(99, 102, 241, 0.3);
+    background: rgb(var(--color-accent) / 0.3);
     color: #FFFFFF;
   }
 
@@ -104,16 +265,16 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(99, 102, 241, 0.2);
+    background: rgb(var(--color-accent) / 0.2);
     border-radius: 999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(99, 102, 241, 0.4);
+    background: rgb(var(--color-accent) / 0.4);
   }
 
   /* Focus rings — accessible but not ugly */
   :focus-visible {
-    outline: 2px solid rgba(99, 102, 241, 0.6);
+    outline: 2px solid rgb(var(--color-accent) / 0.6);
     outline-offset: 2px;
     border-radius: 6px;
   }
@@ -171,34 +332,72 @@
     @apply h-px w-6 bg-accent-bright/40;
   }
 
+  /* The same eyebrow typography without the 24px lead-in rule, for eyebrows
+     inside cards.
+
+     Before RC2 this was a hand-copied class string — `text-[11px] font-medium
+     uppercase tracking-widest text-accent-bright/80` — repeated on the `/work`
+     grid cards and the case-study "More work" cards. It was `.kicker` minus its
+     one identifying rule, so the eyebrow above a section had a lead-in and the
+     eyebrow on every card below it did not, for no stated reason.
+
+     The rule is dropped rather than added because ten cards on `/work` each
+     carrying a lead-in reads as decoration; at page level it reads as
+     structure. Same type, different scale, one definition each. */
+  .kicker-bare {
+    @apply text-[11px] font-medium uppercase tracking-widest text-accent-bright/80;
+  }
+
   /* ---------- Headline systems ---------- */
   /* Mobile minimums tightened: avoid the 9vw clamp jumping straight from
      mobile-floor to desktop-ceiling, which produced cramped 64px monoliths
      on 390px viewports. New floors give a smoother responsive curve. */
   .headline-monument {
+    font-family: var(--font-display);
     font-size: clamp(52px, 11vw, 128px);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 0.95;
-    letter-spacing: -0.04em;
+    letter-spacing: -0.01em;
   }
 
   .headline-cinematic {
+    font-family: var(--font-display);
     font-size: clamp(42px, 7.5vw, 96px);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 0.98;
-    letter-spacing: -0.035em;
+    letter-spacing: -0.01em;
   }
 
   .headline-section {
+    font-family: var(--font-display);
     font-size: clamp(32px, 5.6vw, 64px);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.02;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.01em;
   }
 
-  /* Apple-style fade gradient on headlines */
+  /* Apple-style fade gradient on headlines.
+
+     RC6 raised the floor from 0.55 to 0.82, and moved the ramp late (72% →
+     100%) so only the final descender band is affected.
+
+     The old curve was tuned for a headline sitting on pure void. It has not
+     sat on pure void since the ambient engine landed: on a lit chapter the
+     bottom third of every headline resolved to roughly #8C8F96 against a
+     background the wash had already lifted, which measured under 4.5:1 and,
+     more to the point, read as a headline that had been *dimmed* rather than
+     one that was catching light. At monument scale that is the largest object
+     on the screen looking faded.
+
+     A gradient from 100% to 82% still reads as a light falloff — it is the
+     same gesture, priced for the surface it is actually on. */
   .text-fade {
-    background: linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.55) 100%);
+    background: linear-gradient(
+      180deg,
+      rgb(var(--c-fg)) 0%,
+      rgb(var(--c-fg)) 72%,
+      rgb(var(--c-fg) / 0.82) 100%
+    );
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -206,43 +405,68 @@
   }
 
   .text-accent-gradient {
-    background: linear-gradient(135deg, #818CF8 0%, #A78BFA 50%, #06B6D4 100%);
+    /* Shiny: a blue→gold→blue band that sweeps continuously across the text,
+       so accent headlines shimmer like brushed metal (the logo's gold sheen). */
+    background: linear-gradient(
+      110deg,
+      var(--g1) 0%,
+      var(--g2) 25%,
+      var(--g3) 40%,
+      var(--g4) 50%,
+      var(--g5) 60%,
+      var(--g2) 78%,
+      var(--g1) 100%
+    );
+    background-size: 220% auto;
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
+    animation: text-shine 6.5s linear infinite;
+  }
+
+  @keyframes text-shine {
+    to {
+      background-position: 220% center;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .text-accent-gradient {
+      animation: none;
+    }
   }
 
   .text-glow {
     text-shadow:
-      0 0 20px rgba(99, 102, 241, 0.4),
-      0 0 60px rgba(99, 102, 241, 0.2);
+      0 0 20px rgb(var(--color-accent) / 0.4),
+      0 0 60px rgb(var(--color-accent) / 0.2);
   }
 
   /* ---------- Glass surfaces ---------- */
   .glass {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgb(var(--c-fg) / 0.03);
+    border: 1px solid rgb(var(--c-fg) / 0.06);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.05) inset,
-      0 8px 24px rgba(0, 0, 0, 0.3);
+      0 1px 0 rgb(var(--c-fg) / 0.05) inset,
+      0 8px 24px rgb(var(--c-shadow) / calc(0.3 * var(--k-shadow)));
   }
 
   .glass-strong {
-    background: rgba(15, 17, 23, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgb(var(--color-surface-1) / 0.7);
+    border: 1px solid rgb(var(--c-fg) / 0.08);
     backdrop-filter: blur(40px) saturate(200%);
     -webkit-backdrop-filter: blur(40px) saturate(200%);
     box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.08) inset,
-      0 16px 60px rgba(0, 0, 0, 0.5);
+      0 1px 0 rgb(var(--c-fg) / 0.08) inset,
+      0 16px 60px rgb(var(--c-shadow) / calc(0.5 * var(--k-shadow)));
   }
 
   .glass-subtle {
-    background: rgba(255, 255, 255, 0.015);
-    border: 1px solid rgba(255, 255, 255, 0.04);
+    background: rgb(var(--c-fg) / 0.015);
+    border: 1px solid rgb(var(--c-fg) / 0.04);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
   }
@@ -257,21 +481,24 @@
   }
 
   .card-interactive:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(99, 102, 241, 0.35);
+    background: rgb(var(--c-fg) / 0.05);
+    border-color: rgb(var(--color-accent) / 0.35);
     transform: translateY(-4px);
     box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.08) inset,
-      0 20px 60px rgba(0, 0, 0, 0.4),
-      0 0 0 1px rgba(99, 102, 241, 0.1),
-      0 0 40px rgba(99, 102, 241, 0.1);
+      0 1px 0 rgb(var(--c-fg) / 0.08) inset,
+      0 20px 60px rgb(var(--c-shadow) / calc(0.4 * var(--k-shadow))),
+      0 0 0 1px rgb(var(--color-accent) / 0.1),
+      0 0 40px rgb(var(--color-accent) / 0.1);
   }
 
-  /* Feature card with mouse-tracked highlight */
+  /* Feature card with mouse-tracked highlight.
+     20px radius, not 28px: `.card` is `rounded-2xl` and the `.tsx` layer runs
+     18 × `rounded-2xl` to 1 × `rounded-xl`, so 20px is the system value and
+     this was the outlier — visible wherever the two sit on one page. */
   .feature-card {
-    @apply relative overflow-hidden rounded-3xl p-8;
-    background: rgba(255, 255, 255, 0.025);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    @apply relative overflow-hidden rounded-2xl p-8;
+    background: rgb(var(--c-fg) / 0.025);
+    border: 1px solid rgb(var(--c-fg) / 0.06);
     transition: border-color 0.3s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
@@ -281,7 +508,7 @@
     inset: 0;
     background: radial-gradient(
       circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-      rgba(99, 102, 241, 0.08),
+      rgb(var(--color-accent) / 0.08),
       transparent 60%
     );
     opacity: 0;
@@ -294,7 +521,29 @@
   }
 
   .feature-card:hover {
-    border-color: rgba(99, 102, 241, 0.2);
+    border-color: rgb(var(--color-accent) / 0.2);
+  }
+
+  /* ---------- Closing CTA panel (RC2) ---------- */
+  /* The homepage's `FinalCTA` sits on an ambient treatment. The equivalent
+     block on the eleven `/work` routes was a headline, a paragraph and two
+     controls on flat void — indistinguishable from any other section, and the
+     last thing a visitor sees before leaving (`RC2_VISUAL_AUDIT.md` § V7).
+
+     This introduces no new visual vocabulary. It composes three things the
+     design system already defines — the aurora wash, the signature top edge and
+     the 20px glass radius — so the CTA is promoted using the language the rest
+     of the site is written in. */
+  .cta-panel {
+    @apply signature-edge relative overflow-hidden rounded-2xl px-6 py-12 sm:px-10 md:px-14 md:py-16;
+    background:
+      radial-gradient(ellipse 70% 120% at 15% 0%, rgb(var(--color-accent) / 0.13), transparent 62%),
+      radial-gradient(ellipse 60% 110% at 88% 20%, rgb(var(--color-gold) / 0.09), transparent 62%),
+      rgb(var(--c-fg) / 0.02);
+    border: 1px solid rgb(var(--c-fg) / 0.08);
+    box-shadow:
+      0 1px 0 rgb(var(--c-fg) / 0.05) inset,
+      0 20px 60px rgb(var(--c-shadow) / calc(0.35 * var(--k-shadow)));
   }
 
   /* ---------- Badge / pill ---------- */
@@ -303,9 +552,9 @@
   }
 
   .badge-live {
-    background: rgba(16, 185, 129, 0.12);
+    background: rgb(var(--color-success) / 0.12);
     color: rgb(var(--color-success));
-    border: 1px solid rgba(16, 185, 129, 0.2);
+    border: 1px solid rgb(var(--color-success) / 0.2);
   }
 
   .badge-live::before {
@@ -318,15 +567,15 @@
   }
 
   .badge-ai {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
-    color: #A5B4FC;
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    background: linear-gradient(135deg, rgb(var(--color-accent) / 0.15), rgb(var(--color-gold) / 0.15));
+    color: rgb(var(--color-accent-light));
+    border: 1px solid rgb(var(--color-accent) / 0.2);
   }
 
   .badge-new {
-    background: rgba(99, 102, 241, 0.12);
-    color: #818CF8;
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    background: rgb(var(--color-accent) / 0.12);
+    color: rgb(var(--color-accent-bright));
+    border: 1px solid rgb(var(--color-accent) / 0.2);
   }
 
   /* ---------- Buttons ---------- */
@@ -335,21 +584,26 @@
     letter-spacing: -0.01em;
   }
 
+  /* accent-deep, not accent: white on #3B82F6 measures 3.68:1, under the
+     4.5:1 AA floor, and axe flagged it. #2563EB measures 5.17:1.
+
+     Hover lifts and brightens the glow rather than lightening the fill. The
+     old hover went to accent-bright, which dropped the label to 2.54:1 — the
+     state a user is most likely to be reading was the least legible one. */
   .btn-primary {
-    background: rgb(var(--color-accent));
+    background: rgb(var(--color-accent-deep));
     color: #FFFFFF;
     box-shadow:
-      0 0 0 1px rgba(99, 102, 241, 0.5),
-      0 4px 16px rgba(99, 102, 241, 0.35),
-      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      0 0 0 1px rgb(var(--color-accent) / 0.5),
+      0 4px 16px rgb(var(--color-accent) / 0.35),
+      inset 0 1px 0 rgb(var(--c-fg) / 0.15);
   }
   .btn-primary:hover {
-    background: rgb(var(--color-accent-bright));
     transform: translateY(-1px);
     box-shadow:
-      0 0 0 1px rgba(99, 102, 241, 0.7),
-      0 8px 24px rgba(99, 102, 241, 0.5),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      0 0 0 1px rgb(var(--color-accent-bright) / 0.85),
+      0 8px 28px rgb(var(--color-accent) / 0.55),
+      inset 0 1px 0 rgb(var(--c-fg) / 0.22);
   }
   .btn-primary:active {
     transform: scale(0.98);
@@ -357,24 +611,24 @@
   }
 
   .btn-secondary {
-    background: rgba(255, 255, 255, 0.06);
-    color: rgba(255, 255, 255, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgb(var(--c-fg) / 0.06);
+    color: rgb(var(--c-fg) / 0.85);
+    border: 1px solid rgb(var(--c-fg) / 0.1);
     backdrop-filter: blur(20px);
   }
   .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
-    color: #FFFFFF;
+    background: rgb(var(--c-fg) / 0.1);
+    border-color: rgb(var(--c-fg) / 0.2);
+    color: rgb(var(--c-fg));
   }
 
   .btn-ghost {
     @apply h-10 px-4 text-[13px] font-normal;
     background: transparent;
-    color: rgba(255, 255, 255, 0.55);
+    color: rgb(var(--c-fg) / 0.55);
   }
   .btn-ghost:hover {
-    color: rgba(255, 255, 255, 0.95);
+    color: rgb(var(--c-fg) / 0.95);
   }
 
   /* Arrow micro-interaction */
@@ -388,47 +642,47 @@
   /* ---------- Inputs ---------- */
   .input {
     @apply h-11 w-full rounded-lg px-4 text-sm transition-all duration-150;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: #FFFFFF;
+    background: rgb(var(--c-fg) / 0.04);
+    border: 1px solid rgb(var(--c-fg) / 0.08);
+    color: rgb(var(--c-fg));
   }
   .input::placeholder {
-    color: rgba(255, 255, 255, 0.25);
+    color: rgb(var(--c-fg) / 0.25);
   }
   .input:hover {
-    border-color: rgba(255, 255, 255, 0.15);
+    border-color: rgb(var(--c-fg) / 0.15);
   }
   .input:focus {
     outline: none;
-    border-color: rgba(99, 102, 241, 0.6);
-    background: rgba(99, 102, 241, 0.05);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    border-color: rgb(var(--color-accent) / 0.6);
+    background: rgb(var(--color-accent) / 0.05);
+    box-shadow: 0 0 0 3px rgb(var(--color-accent) / 0.15);
   }
 
   .command-input {
     @apply h-14 w-full rounded-xl pl-12 pr-5 text-[15px] font-mono;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(99, 102, 241, 0.3);
-    color: #FFFFFF;
+    background: rgb(var(--c-fg) / 0.05);
+    border: 1px solid rgb(var(--color-accent) / 0.3);
+    color: rgb(var(--c-fg));
     backdrop-filter: blur(20px);
     box-shadow:
-      0 0 40px rgba(99, 102, 241, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      0 0 40px rgb(var(--color-accent) / 0.1),
+      inset 0 1px 0 rgb(var(--c-fg) / 0.08);
   }
 
   /* ---------- Aurora background ---------- */
   .aurora-bg {
     background:
-      radial-gradient(ellipse 80% 60% at 20% 20%, rgba(99, 102, 241, 0.18), transparent 60%),
-      radial-gradient(ellipse 60% 50% at 80% 30%, rgba(139, 92, 246, 0.12), transparent 60%),
-      radial-gradient(ellipse 100% 60% at 50% 100%, rgba(6, 182, 212, 0.06), transparent 70%);
+      radial-gradient(ellipse 80% 60% at 20% 20%, rgb(var(--color-accent) / 0.18), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 30%, rgb(var(--color-gold) / 0.12), transparent 60%),
+      radial-gradient(ellipse 100% 60% at 50% 100%, rgb(var(--color-cyan) / 0.06), transparent 70%);
   }
 
   /* Grid backdrop */
   .grid-backdrop {
     background-image:
-      linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      linear-gradient(rgb(var(--c-fg) / 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(var(--c-fg) / 0.025) 1px, transparent 1px);
     background-size: 64px 64px;
     mask-image: radial-gradient(ellipse 60% 50% at 50% 50%, #000 30%, transparent 70%);
     -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 50%, #000 30%, transparent 70%);
@@ -441,8 +695,8 @@
     background: linear-gradient(
       90deg,
       transparent,
-      rgba(255, 255, 255, 0.08) 30%,
-      rgba(255, 255, 255, 0.08) 70%,
+      rgb(var(--c-fg) / 0.08) 30%,
+      rgb(var(--c-fg) / 0.08) 70%,
       transparent
     );
   }
@@ -463,7 +717,7 @@
     background: linear-gradient(
       90deg,
       transparent,
-      rgba(165, 180, 252, 0.55),
+      rgb(var(--color-accent-light) / 0.55),
       transparent
     );
     pointer-events: none;
@@ -481,23 +735,3176 @@
     pointer-events: none;
     background-image: repeating-linear-gradient(
       0deg,
-      rgba(255, 255, 255, 0.04) 0px,
-      rgba(255, 255, 255, 0.04) 1px,
+      rgb(var(--c-fg) / 0.04) 0px,
+      rgb(var(--c-fg) / 0.04) 1px,
       transparent 1px,
       transparent 4px
     );
     border-radius: inherit;
   }
 
+  /* ---------- Workflow glyph (RC2) ---------- */
+  /* The pipeline diagram on `/work` tiles, case-study headers and the
+     architecture rail. See `components/work/WorkflowGlyph.tsx` for why it is
+     markup rather than an SVG.
+
+     All geometry hangs off `--glyph-node`. The connector meets the node at
+     `calc(var(--glyph-node) / 2)`, so tuning a size in one place cannot leave
+     the connector floating above or below the icons. */
+  .glyph {
+    --glyph-node: 44px;
+    --glyph-gap: 10px;
+    --glyph-label: 11px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .glyph-tile {
+    --glyph-node: 38px;
+    --glyph-gap: 8px;
+    --glyph-label: 10px;
+  }
+
+  .glyph-panel {
+    --glyph-node: 52px;
+    --glyph-gap: 12px;
+    --glyph-label: 12px;
+  }
+
+  .glyph-rail {
+    --glyph-node: 40px;
+    --glyph-gap: 9px;
+    --glyph-label: 11px;
+  }
+
+  @media (min-width: 768px) {
+    .glyph-tile {
+      --glyph-node: 48px;
+      --glyph-label: 11px;
+    }
+    .glyph-panel {
+      --glyph-node: 64px;
+      --glyph-label: 13px;
+    }
+  }
+
+  .glyph-node {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--glyph-node);
+    height: var(--glyph-node);
+    border-radius: 14px;
+    /* Opaque enough to occlude the connector passing behind it — a dashed line
+       crossing the icon reads as a rendering fault rather than as a pipeline. */
+    background: linear-gradient(160deg, rgb(var(--color-surface-3) / 0.96), rgb(var(--color-bg) / 0.96));
+    border: 1px solid rgb(var(--color-accent-light) / 0.18);
+    box-shadow:
+      0 1px 0 rgb(var(--c-fg) / 0.06) inset,
+      0 6px 18px rgb(var(--c-shadow) / calc(0.45 * var(--k-shadow)));
+    transition:
+      border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .glyph-icon {
+    width: calc(var(--glyph-node) * 0.42);
+    height: calc(var(--glyph-node) * 0.42);
+    color: rgb(var(--color-accent-light));
+  }
+
+  /* The terminal node is where the work ends up — a ledger, a workbook, a
+     booked appointment. Gold is the logo's second colour and is used here for
+     exactly one node per glyph, so the eye lands on the outcome. */
+  .glyph-step:last-child .glyph-node {
+    border-color: rgb(var(--color-gold-bright) / 0.28);
+  }
+  .glyph-step:last-child .glyph-icon {
+    color: rgb(var(--color-gold-bright));
+  }
+
+  .glyph-label {
+    margin-top: var(--glyph-gap);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--glyph-label);
+    line-height: 1.25;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    text-align: center;
+    /* ink-200. ink-400 measures 4.81:1 on void but these labels sit at 10px in
+       the tile variant, where AA wants the larger ratio. */
+    color: rgb(var(--color-text-secondary));
+  }
+
+  .glyph-detail {
+    margin-top: 5px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    line-height: 1.3;
+    text-align: center;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  /* Connector. Spans from this node's centre back to the previous node's
+     centre — `right: 50%; width: 100%` is exactly one column, so it holds at
+     any number of stages and any container width. Sits behind the nodes. */
+  .glyph-link {
+    position: absolute;
+    top: calc(var(--glyph-node) / 2);
+    right: 50%;
+    width: 100%;
+    height: 1px;
+    z-index: 0;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+      90deg,
+      rgb(var(--color-accent-light) / 0.5) 0px,
+      rgb(var(--color-accent-light) / 0.5) 5px,
+      transparent 5px,
+      transparent 11px
+    );
+    /* Fades under both nodes so the dashes never appear to touch an icon. */
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+            mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+  }
+
+  .glyph-node,
+  .glyph-label,
+  .glyph-detail {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Hover — the only continuous motion this component has, and it runs only
+     while a pointer is on the card. At rest every glyph on `/work` costs
+     nothing, which is the whole reason five of them can sit on a route that
+     scores 64 on mobile. */
+  .group:hover .glyph-link,
+  .glyph:hover .glyph-link {
+    animation: glyph-flow 1.1s linear infinite;
+  }
+
+  .group:hover .glyph-node,
+  .glyph:hover .glyph-node {
+    border-color: rgb(var(--color-accent-light) / 0.34);
+    box-shadow:
+      0 1px 0 rgb(var(--c-fg) / 0.08) inset,
+      0 8px 22px rgb(var(--c-shadow) / calc(0.5 * var(--k-shadow))),
+      0 0 18px rgb(var(--color-accent) / 0.16);
+  }
+
+  .group:hover .glyph-step:last-child .glyph-node,
+  .glyph:hover .glyph-step:last-child .glyph-node {
+    border-color: rgb(var(--color-gold-bright) / 0.45);
+    box-shadow:
+      0 1px 0 rgb(var(--c-fg) / 0.08) inset,
+      0 8px 22px rgb(var(--c-shadow) / calc(0.5 * var(--k-shadow))),
+      0 0 18px rgb(var(--color-gold) / 0.18);
+  }
+
+  @keyframes glyph-flow {
+    to {
+      background-position: 11px 0;
+    }
+  }
+
+  /* One-shot entrance, `panel` variant only — the case-study header, where the
+     glyph is the page's first visual and is above the fold on every viewport.
+     It plays once and stops; nothing here loops.
+
+     The 100% keyframe is the resting state deliberately. The global
+     reduced-motion rule collapses `animation-duration` to 0.01ms, which lands
+     the element on its final frame — so a visitor who asked for no motion gets
+     the correct static rendering rather than an element stuck at opacity 0. */
+  .glyph-panel .glyph-node,
+  .glyph-panel .glyph-label,
+  .glyph-panel .glyph-detail {
+    animation: glyph-node-in 0.62s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--glyph-i) * 110ms);
+  }
+
+  .glyph-panel .glyph-link {
+    animation: glyph-link-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--glyph-i) * 110ms - 40ms);
+    transform-origin: right center;
+  }
+
+  @keyframes glyph-node-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes glyph-link-in {
+    from {
+      opacity: 0;
+      transform: scaleX(0);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* The global reduced-motion rule collapses `animation-duration` but leaves
+     `animation-delay` alone, which would hold the last node invisible for
+     440ms before snapping it in — a flash of missing content, which is the
+     failure mode reduced-motion exists to prevent. Zero the delay here, and
+     stop the hover drift outright rather than running it at 0.01ms. */
+  @media (prefers-reduced-motion: reduce) {
+    .glyph-panel .glyph-node,
+    .glyph-panel .glyph-label,
+    .glyph-panel .glyph-detail,
+    .glyph-panel .glyph-link {
+      animation-delay: 0s !important;
+    }
+
+    .group:hover .glyph-link,
+    .glyph:hover .glyph-link {
+      animation: none !important;
+    }
+  }
+
   /* The proprietary signature grid — sparse 64px lattice that fades
      toward the edges. Used as the "intelligence canvas" backdrop. */
   .signature-grid {
     background-image:
-      linear-gradient(rgba(165, 180, 252, 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(165, 180, 252, 0.04) 1px, transparent 1px);
+      linear-gradient(rgb(var(--color-accent-light) / 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(var(--color-accent-light) / 0.04) 1px, transparent 1px);
     background-size: 64px 64px;
     mask-image: radial-gradient(ellipse 60% 50% at 50% 50%, #000 30%, transparent 80%);
     -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 50%, #000 30%, transparent 80%);
+  }
+
+  /* ======================================================================
+     RC3 — DEPTH SYSTEM
+     Geometry and motion live here rather than in JavaScript. `audit-bundle.mjs`
+     sums every emitted chunk, so lazy-loading buys no budget: at plan time RC3
+     had 9.0 kB of JS headroom against 28.4 kB of CSS headroom. See
+     `docs/RC3_COMPONENT_PLAN.md`.
+     ====================================================================== */
+
+  /* ---------- Elevation tier 4 ---------- */
+  /* `.glass`, `.glass-strong` and `.glass-subtle` sit within ~1.5% alpha of one
+     another, so stacking them does not read as a hierarchy. This is the tier
+     that is meant to look *lifted* — used where one surface must clearly sit
+     above the composition rather than within it. */
+  .glass-elevated {
+    background: linear-gradient(
+      180deg,
+      rgb(var(--c-fg) / 0.055),
+      rgb(var(--c-fg) / 0.022)
+    );
+    border: 1px solid rgb(var(--c-fg) / 0.1);
+    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    box-shadow:
+      0 1px 0 rgb(var(--c-fg) / 0.1) inset,
+      0 24px 70px rgb(var(--c-shadow) / calc(0.5 * var(--k-shadow)));
+  }
+
+  /* ---------- Animated border ---------- */
+  /* Magic UI's Border Beam look, rebuilt. Theirs animates `offsetDistance`
+     along `offset-path: rect()` with framer-motion, and ships Tailwind v4
+     syntax — neither compiles here (this repo is Tailwind 3.4), and `rect()`
+     support is thin. A rotating conic gradient behind a padding-box mask is the
+     same effect with zero JavaScript and universal support. */
+  .border-beam {
+    position: relative;
+  }
+
+  .border-beam::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    pointer-events: none;
+    background: conic-gradient(
+      from var(--beam-angle),
+      transparent 0deg,
+      transparent 232deg,
+      rgb(var(--color-accent-light) / 0.65) 296deg,
+      rgb(var(--color-gold-bright) / 0.55) 330deg,
+      transparent 360deg
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+  }
+
+  /* The beam *travels* only while the surface is hovered or focused.
+     A conic gradient rotating on a loop repaints its element every frame for
+     the entire life of the page, including while scrolled far out of view —
+     the permanent-compositor-load pattern `MOTION_INVENTORY.md` § 2 already
+     flags as worth auditing. At rest this is a lit gradient edge, which is a
+     finished look rather than a degraded one; motion is spent on interaction,
+     which is the same rule the RC2 glyph hover established. */
+  .border-beam:hover::before,
+  .border-beam:focus-within::before {
+    animation: border-beam-spin 4.5s linear infinite;
+  }
+
+  @keyframes border-beam-spin {
+    to {
+      --beam-angle: 360deg;
+    }
+  }
+
+  /* ---------- Scroll choreography ---------- */
+  /* The `/work` entrance reveal RC2 abandoned (`MOTION_INVENTORY.md` § 6).
+     Its objection was correct and is designed around here, not ignored:
+
+       1. NEVER put this on an LCP candidate. An `opacity: 0` headline delays
+          LCP by the reveal delay, and `/work` measures LCP at 4.7s on mobile.
+          Below-the-fold content only — content a scroll is required to reach.
+       2. Pure CSS behind `@supports`. No IntersectionObserver, no JS, no
+          hydration cost. Where scroll-driven animations are unsupported the
+          rule never applies and today's static page renders unchanged, so
+          there is no path on which an element is stranded invisible. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .reveal-view {
+        animation: reveal-view-in linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 58%;
+      }
+    }
+  }
+
+  @keyframes reveal-view-in {
+    from {
+      opacity: 0;
+      transform: translateY(26px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* ======================================================================
+     RC6 — AUTOMATION ORCHESTRATION
+     See `components/sections/UniverseStage.tsx` for why the orbit is a true
+     circle, why the hexagon is flat-top, and why the six are in lifecycle
+     order. Two rules govern this whole block:
+
+       1. The HTML layer and the SVG layer share one coordinate system. `--u`
+          is *one viewBox user unit, expressed as a length*, so a node written
+          as `112` here lands on the same pixel as `112` in the viewBox at
+          every width. Nothing is positioned in a number unrelated to the
+          geometry.
+       2. Continuous motion is capped at three (`VISUAL_DNA.md` § 2): the
+          travelling signals, the core pulse, the orbit trace. Everything else
+          is a transition on a state change.
+     ====================================================================== */
+
+  .universe {
+    position: relative;
+    max-width: 980px;
+    /* The stage is the query container for its own contents. `--u` is declared
+       on the child rather than here, because an element carrying
+       `container-type` is a container for its *descendants* and not for
+       itself — `cqw` in this rule would resolve against an outer container. */
+    container-type: inline-size;
+  }
+
+  /* Depth fog. The chapter's ambient wash and the page's particle field both
+     sit behind this section, and at RC5 they were brighter at the centre of
+     the composition than the connectors drawn on top of them — the hierarchy
+     was inverted, so the diagram competed with its own background. This is a
+     single non-blurred radial that sinks the middle of the stage, scoped to
+     the stage, so the shared ambient engine is untouched and only the area the
+     diagram occupies is quietened. */
+  .universe::before {
+    content: '';
+    position: absolute;
+    inset: -6% -4%;
+    z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      58% 58% at 50% 50%,
+      rgb(var(--color-void) / 0.72) 0%,
+      rgb(var(--color-void) / 0.42) 46%,
+      rgb(var(--color-void) / 0) 78%
+    );
+  }
+
+  /* Below md the radial diagram is illegible — six nodes on an orbit inside
+     360px gives ~20px labels — so the SVG is dropped and the same buttons
+     become a vertical spine hanging off the engine. The DOM and the copy are
+     identical; only the decorative geometry differs. */
+  .universe-canvas {
+    display: none;
+  }
+
+  .universe-nodes {
+    /* Static fallback ≈ the value a 980px stage resolves to, so a browser
+       without container queries gets the desktop scale rather than the
+       guaranteed-invalid value. */
+    --u: 0.9px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  @supports (container-type: inline-size) {
+    .universe-nodes {
+      --u: calc(100cqw / var(--universe-units, 1080));
+    }
+  }
+
+  /* The mobile trunk — one continuous line behind the badge column, so the six
+     automations read as one system rather than six list items. It starts at
+     the engine, not at the first automation. */
+  .universe-nodes::before {
+    content: '';
+    position: absolute;
+    left: 23px;
+    top: 24px;
+    bottom: 26px;
+    width: 1px;
+    background: linear-gradient(
+      180deg,
+      rgb(var(--color-accent-light) / 0.42),
+      rgb(var(--color-accent-light) / 0.3) 14%,
+      rgb(var(--color-accent-light) / 0.3) 88%,
+      transparent
+    );
+  }
+
+  /* ---------- The engine, at the head of the mobile column ---------- */
+  .universe-origin {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 0 14px;
+  }
+
+  .universe-origin-mark {
+    position: relative;
+    flex: none;
+    width: 46px;
+    height: 46px;
+    border-radius: 15px;
+    background:
+      radial-gradient(70% 70% at 50% 34%, rgb(var(--color-accent) / 0.34), rgb(var(--color-bg) / 0.98) 72%),
+      linear-gradient(160deg, rgb(var(--color-surface-3) / 0.98), rgb(var(--color-bg) / 0.98));
+    border: 1px solid rgb(var(--color-accent-light) / 0.4);
+    box-shadow:
+      0 1px 0 rgb(var(--c-fg) / 0.08) inset,
+      0 0 24px rgb(var(--color-accent) / 0.22);
+  }
+
+  /* The logo's three stacked rules, at badge scale. */
+  .universe-origin-mark::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(rgb(var(--color-accent-light) / 0.8), rgb(var(--color-accent-light) / 0.8)) center 17px / 14px 2px no-repeat,
+      linear-gradient(rgb(var(--color-accent-light) / 0.8), rgb(var(--color-accent-light) / 0.8)) center 22px / 20px 2px no-repeat,
+      linear-gradient(rgb(var(--color-accent-light) / 0.8), rgb(var(--color-accent-light) / 0.8)) center 27px / 14px 2px no-repeat;
+  }
+
+  .universe-origin-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .universe-origin-name {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: rgb(var(--c-fg));
+  }
+
+  .universe-origin-role {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  /* ---------- The node ---------- */
+  .universe-node {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 7px 10px 7px 0;
+    text-align: left;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* The plate. A flat-top hexagon in the same orientation as the orbit —
+     vertices due left and due right. `clip-path` does not respect the box
+     model, so the 1px edge is a second, inset hexagon stacked under the
+     content rather than a border. */
+  .universe-plate {
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 48px;
+    height: 48px;
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+    background: linear-gradient(160deg, rgb(var(--color-accent-light) / 0.34), rgb(var(--color-accent-light) / 0.13));
+    transition:
+      transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+      filter 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Opaque, deliberately: the connectors and the trunk pass *behind* the
+     nodes, and a translucent plate would show a beam running through the icon.
+     Depth comes from the gradient, the inset highlight and the cast shadow —
+     not from `backdrop-filter`, which would put six blur surfaces on the one
+     section the page's paint profiler already flags. */
+  .universe-plate-face {
+    position: absolute;
+    inset: 1.25px;
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+    background:
+      radial-gradient(84% 62% at 50% 6%, rgb(var(--c-fg) / 0.11), rgb(var(--c-fg) / 0) 70%),
+      linear-gradient(162deg, rgb(var(--color-border-subtle) / 0.99), rgb(var(--color-bg) / 0.99));
+    transition: background 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .universe-plate-icon {
+    position: relative;
+    width: 19px;
+    height: 19px;
+    transform: translateY(-2px);
+  }
+
+  /* The automation's state, at a glance. Sits inside the hexagon rather than
+     on its corner, because the clip would cut a corner-mounted dot in half. */
+  .universe-plate-dot {
+    position: absolute;
+    left: 50%;
+    bottom: 22%;
+    width: 4px;
+    height: 4px;
+    margin-left: -2px;
+    border-radius: 999px;
+    opacity: 0.75;
+    transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .universe-node-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .universe-node-label {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    color: rgb(var(--color-text-secondary));
+    transition: color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* The transformation, in one line: event on the left, outcome on the right.
+     This is the whole reason a reader can parse a node in under two seconds
+     without opening it. */
+  .universe-node-flow {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    line-height: 1.3;
+    color: rgb(var(--color-text-tertiary));
+    transition: color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* ---------- Active + engaged ---------- */
+  .universe-node[data-active='true'] .universe-plate {
+    filter: drop-shadow(0 6px 18px rgb(var(--c-shadow) / calc(0.5 * var(--k-shadow))))
+      drop-shadow(0 0 16px rgb(var(--color-accent) / 0.42));
+  }
+
+  .universe-node[data-active='true'] .universe-plate-face {
+    background:
+      radial-gradient(84% 62% at 50% 6%, rgb(var(--c-fg) / 0.16), rgb(var(--c-fg) / 0) 70%),
+      linear-gradient(162deg, rgb(var(--color-border) / 0.99), rgb(var(--color-bg) / 0.99));
+  }
+
+  .universe-node[data-active='true'] .universe-plate-dot {
+    opacity: 1;
+  }
+
+  .universe-node[data-active='true'] .universe-node-label {
+    color: rgb(var(--c-fg));
+  }
+
+  .universe-node[data-active='true'] .universe-node-flow {
+    color: rgb(var(--color-text-secondary));
+  }
+
+  /* The other five recede *only while the reader is engaging*. At rest the
+     diagram is a whole system with one node lit; permanently suppressing five
+     of its six subjects would be a worse drawing, not a calmer one. 0.5 rather
+     than lower: below that the labels stop meeting contrast, and dimming is
+     decoration — it may never cost a node its readability. */
+  .universe[data-engaged='true'] .universe-node:not([data-active='true']) {
+    opacity: 0.5;
+  }
+
+  /* ---------- Detail panel ---------- */
+  .universe-detail {
+    position: relative;
+    margin: 28px 0 0;
+    max-width: 620px;
+    border-radius: 20px;
+    padding: 22px 24px;
+  }
+
+  .universe-detail-title {
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: rgb(var(--c-fg));
+  }
+
+  .universe-detail-body {
+    margin-top: 8px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgb(var(--color-text-secondary));
+  }
+
+  /* The mechanism, in four beats. A wrapping flex row rather than a grid: the
+     four beats are different lengths in every automation, and four equal
+     columns would put "AI qualifies" in the middle of a large empty cell. */
+  .universe-steps {
+    list-style: none;
+    margin: 16px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px 0;
+  }
+
+  .universe-step {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    line-height: 1;
+    color: rgb(var(--color-text-tertiary));
+    white-space: nowrap;
+  }
+
+  /* The chevron is the connector between beats, so it belongs to the gap and
+     not to a beat — hence `::after` on all but the last, which is the only
+     placement that survives wrapping without leaving a dangling arrow. */
+  .universe-step:not(:last-child)::after {
+    content: '';
+    width: 18px;
+    height: 1px;
+    margin: 0 9px;
+    background: linear-gradient(90deg, rgb(var(--color-accent-light) / 0.15), rgb(var(--color-accent-light) / 0.5));
+  }
+
+  .universe-step:last-child {
+    color: rgb(var(--color-text-secondary));
+  }
+
+  .universe-detail-impact {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 18px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  .universe-detail-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+  }
+
+  /* ---------- md+ : the orchestration ---------- */
+  @media (min-width: 768px) {
+    .universe {
+      /* Published by the component from its own `VIEW` constant, so the canvas
+         ratio and the node coordinates can never drift apart. */
+      aspect-ratio: var(--universe-ratio, 1080 / 880);
+    }
+
+    .universe-canvas {
+      display: block;
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+    }
+
+    .universe-nodes {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: block;
+    }
+
+    .universe-nodes::before,
+    .universe-origin {
+      display: none;
+    }
+
+    /* A zero-size anchor sitting exactly on the orbit point. */
+    .universe-slot {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: 0;
+      height: 0;
+    }
+
+    /* Every dimension below is a viewBox user unit multiplied by `--u`, so the
+       HTML nodes scale in exact lockstep with the SVG beneath them — no
+       breakpoint steps, no measurement, no drift. The `max()` floors are the
+       one exception: type may not shrink below legibility just because the
+       geometry can. */
+
+    /* What sits on the orbit is the **plate**, not the node's bounding box.
+       Centring the box was the first attempt and it was wrong in a way only a
+       measurement catches: the box is plate + label, so its centre is half a
+       label-height away from the plate, and each node was pushed off-radius by
+       a different amount depending on which side its label was on. Measured on
+       the render, the six angular gaps came out 53.4° / 62.1° / 64.5° instead
+       of 60°, and the connectors missed the plates.
+
+       So the button *is* the plate, and the label is hung off it absolutely.
+       Text can now wrap to two lines, or change entirely, and no node can move
+       off its own radius. */
+    .universe-node {
+      position: absolute;
+      left: 0;
+      top: 0;
+      display: block;
+      width: calc(112 * var(--u));
+      height: calc(112 * var(--u));
+      transform: translate(-50%, -50%);
+      padding: 0;
+      gap: 0;
+      text-align: center;
+    }
+
+    .universe-plate {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Labels always sit on the side facing away from the core, so no label is
+       ever laid over the connector arriving at its own node. Absolutely
+       positioned, but still inside the `<button>` — so it remains part of the
+       hit area and clicking the title activates the node. */
+    .universe-node-text {
+      position: absolute;
+      left: 50%;
+      top: calc(100% + 14 * var(--u));
+      width: calc(210 * var(--u));
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: calc(5 * var(--u));
+      text-align: center;
+    }
+
+    .universe-slot[data-above='true'] .universe-node-text {
+      top: auto;
+      bottom: calc(100% + 14 * var(--u));
+    }
+
+    .universe-plate-face {
+      inset: calc(1.4 * var(--u));
+    }
+
+    .universe-plate-icon {
+      width: calc(38 * var(--u));
+      height: calc(38 * var(--u));
+      transform: translateY(calc(-5 * var(--u)));
+    }
+
+    .universe-plate-dot {
+      width: calc(8 * var(--u));
+      height: calc(8 * var(--u));
+      margin-left: calc(-4 * var(--u));
+    }
+
+    .universe-node-label {
+      font-size: max(11.5px, calc(16 * var(--u)));
+      text-wrap: balance;
+    }
+
+    .universe-node-flow {
+      font-size: max(9px, calc(12 * var(--u)));
+    }
+
+    /* Hover elevation. `translateY` on the plate only — moving the whole node
+       would move its label off the geometry it is anchored to. */
+    .universe-node:hover .universe-plate,
+    .universe-node:focus-visible .universe-plate {
+      transform: translateY(calc(-6 * var(--u)));
+    }
+
+    .universe-detail {
+      margin-top: 4px;
+    }
+  }
+
+  /* Below lg the labels have less room than the geometry implies, so the flow
+     line is dropped rather than wrapped to two lines under a shrinking title.
+     The node keeps its plate, its title and its status dot — it loses the one
+     element that was never load-bearing. */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .universe-node-flow {
+      display: none;
+    }
+  }
+
+  /* ---------- SVG layer ---------- */
+  /* The orbit through all six node centres. It exists at all only because the
+     radius is a scalar — on the RC5 ellipse there was no single circle the six
+     nodes sat on, which is the geometric fact a reader was perceiving as
+     "manually positioned" without being able to name it. */
+  .universe-orbit {
+    fill: none;
+    stroke: rgb(var(--color-accent-light) / 0.12);
+    stroke-width: 1;
+  }
+
+  /* One short dash on that same circle, rotating. This is the diagram's
+     slowest movement and the only one that reads as orbital rather than as
+     traffic; a solid ring rotating would be invisible, being symmetric. */
+  .universe-orbit-trace {
+    fill: none;
+    stroke: rgb(var(--color-accent-light) / 0.5);
+    stroke-width: 1.25;
+    stroke-linecap: round;
+    stroke-dasharray: 74 2088;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: universe-orbit 44s linear infinite;
+  }
+
+  @keyframes universe-orbit {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* 0.42, not the 0.22 this shipped at first. Measured on a capture rather than
+     judged in the editor: at 0.22 over the section's ambient wash the beams
+     were effectively invisible and the diagram read as six loose icons around a
+     disc — the network was there in the DOM and absent on screen. */
+  /* 0.68, not the 0.5 this was designed at. Judged on a 1440 capture rather
+     than in the editor: at 0.5, over the section's ambient wash and behind the
+     stage fog, the resting connectors were present in the DOM and effectively
+     absent on screen — the diagram read as six hexagons floating near a disc,
+     and only the *hovered* connector was ever visible. A network whose links
+     you cannot see at rest is not a network. */
+  .universe-beam {
+    fill: none;
+    stroke: rgb(var(--color-accent-light) / 0.68);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* A second rail bowed the *same* way as the first but less, so the pair runs
+     roughly parallel and reads as a channel. Mirroring it — the first attempt —
+     produced two symmetric arcs meeting at both ends, which at this scale is an
+     eye, not a conduit. */
+  .universe-beam-alt {
+    fill: none;
+    stroke: rgb(var(--color-accent-light) / 0.2);
+    stroke-width: 1;
+    stroke-linecap: round;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* The lit state is a third path stacked on the resting pair, so activating a
+     node changes opacity only — no geometry is recomputed and nothing reflows. */
+  .universe-beam-lit {
+    fill: none;
+    stroke: rgb(var(--color-accent-light) / 0.9);
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    opacity: 0;
+    filter: drop-shadow(0 0 5px rgb(var(--color-accent) / 0.55));
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  [data-lit='true'] .universe-beam-lit {
+    opacity: 1;
+  }
+
+  /* While the reader is engaging, the five unselected channels recede so the
+     lit one is unambiguously the subject. Matched to the node dimming above,
+     and driven by the same single attribute. */
+  .universe[data-engaged='true'] .universe-link:not([data-lit='true']) .universe-beam {
+    opacity: 0.32;
+  }
+
+  .universe[data-engaged='true'] .universe-link:not([data-lit='true']) .universe-beam-alt {
+    opacity: 0.4;
+  }
+
+  .universe-ring {
+    fill: none;
+    stroke: rgb(var(--color-accent-light) / 0.16);
+    stroke-width: 1;
+  }
+
+  /* Near-opaque. At 0.92 the page's `ParticleField` drifted visibly *through*
+     the brand mark, which reads as a speck on the screen rather than as depth. */
+  .universe-core {
+    fill: rgb(var(--color-bg) / 0.985);
+    stroke: rgb(var(--color-accent-light) / 0.38);
+    stroke-width: 1.25;
+  }
+
+  /* The core's own heartbeat: one ring leaving the disc. The centre has to be
+     the most important object in the composition (it is what the other six
+     point at), and at RC5 it was the only element that never moved. */
+  .universe-pulse {
+    fill: none;
+    stroke: rgb(var(--color-accent-bright) / 0.5);
+    stroke-width: 1.25;
+    transform-box: fill-box;
+    transform-origin: center;
+    opacity: 0;
+    animation: universe-pulse 5.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  }
+
+  /* The engine answers when a node is engaged — one step brighter and one step
+     faster. Subtle by design: the core acknowledging the reader is the point,
+     the core competing with the node they are reading is not. */
+  .universe[data-engaged='true'] .universe-pulse {
+    stroke: rgb(var(--color-accent-bright) / 0.72);
+    animation-duration: 3.4s;
+  }
+
+  @keyframes universe-pulse {
+    0% {
+      transform: scale(1);
+      opacity: 0;
+    }
+    18% {
+      opacity: 0.62;
+    }
+    100% {
+      transform: scale(1.62);
+      opacity: 0;
+    }
+  }
+
+  /* The logo's three stacked rules — spreadsheet rows
+     (SHEETFLOW_VISUAL_DNA.md § 6.1). The core is the brand mark, not a blob. */
+  .universe-rule {
+    stroke: rgb(var(--color-accent-light) / 0.75);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+  }
+
+  /* The core names itself. Sized in user units, so it scales with the viewBox
+     exactly like every other part of the drawing. */
+  /* Sizes are in viewBox user units, so they scale with the drawing — which is
+     the point, and also the trap: at the 768 stage the first pass rendered the
+     role line at under 6 device pixels, a smear rather than a word. Both were
+     raised to land the role on the site's own micro-label scale (~10px) at full
+     size, and below lg it is dropped entirely rather than shown illegibly. */
+  .universe-core-name {
+    fill: rgb(var(--c-fg));
+    font-family: var(--font-mono);
+    font-size: 17px;
+    font-weight: 500;
+    letter-spacing: 2.1px;
+    text-anchor: middle;
+  }
+
+  .universe-core-role {
+    fill: rgb(var(--color-accent-light) / 0.72);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 1.7px;
+    text-anchor: middle;
+  }
+
+  .universe-core-dot {
+    fill: rgb(var(--color-accent-light));
+    opacity: 0.9;
+  }
+
+  /* Below lg the stage renders at roughly 0.6 of full size. The engine still
+     names itself — the name is enlarged and re-centred — but the role line and
+     the activity dot are removed rather than drawn at a size nobody can read.
+     Nothing is lost: below md the mobile column's own header carries
+     "SheetFlow / Automation engine" as real HTML text. `x`/`y` are not CSS
+     properties on `<text>`, so the re-centring is a transform. */
+  @media (max-width: 1023px) {
+    .universe-core-role,
+    .universe-core-dot {
+      display: none;
+    }
+
+    .universe-core-name {
+      font-size: 26px;
+      letter-spacing: 3.4px;
+      transform: translateY(4px);
+    }
+  }
+
+  /* The travelling signal. `offset-path` reuses the beam's own `d` string, so a
+     dot cannot drift off its beam, and moving a 6px dot repaints the dot —
+     not the path's bounding box, which is the cost that ruled out
+     `stroke-dashoffset` path-draw in RC2 (`MOTION_INVENTORY.md` § 6).
+
+     Hidden unless `offset-path` is supported: a dot parked at the origin would
+     be a bright artifact in the corner of the diagram. */
+  .universe-signal {
+    fill: rgb(var(--color-accent-light));
+    opacity: 0;
+  }
+
+  @supports (offset-path: path('M 0 0')) {
+    .universe-signal {
+      animation: universe-travel 3.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+      /* 6 nodes × 0.53s ≈ the 3.2s cycle, so exactly one signal is in flight at
+         any moment — VISUAL_DNA.md § 2 caps simultaneous active motion at 3.
+         The stagger follows array order, which is lifecycle order, so the ring
+         is traced clockwise: lead in, answered, booked, recorded, invoiced,
+         reported. */
+      animation-delay: calc(var(--i) * 0.53s);
+      filter: drop-shadow(0 0 6px rgb(var(--color-accent-bright) / 0.9));
+    }
+  }
+
+  @keyframes universe-travel {
+    0% {
+      offset-distance: 0%;
+      opacity: 0;
+    }
+    14% {
+      opacity: 1;
+    }
+    76% {
+      opacity: 1;
+    }
+    100% {
+      offset-distance: 100%;
+      opacity: 0;
+    }
+  }
+
+  /* The four beats arrive in order, because the order *is* the content — four
+     words appearing at once is a list, four words appearing in sequence is a
+     pipeline. Replays on every change: the component keys the list on the
+     automation id, so React remounts it and the animation restarts. */
+  .universe-step {
+    animation: universe-step-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation-delay: calc(var(--i) * 0.07s);
+  }
+
+  @keyframes universe-step-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+
+  /* ---------- Glyph signal (RC3) ---------- */
+  /* Brief requirement 2: every case study shows its workflow *animated*. RC2
+     shipped `WorkflowGlyph` static.
+
+     The dot is painted as a background on a full-width pseudo-element and moved
+     with `translateX`, so this is transform-only and composited — no layout, and
+     no per-frame repaint of anything wider than the 1px connector. Staggered by
+     stage index so the packet reads as travelling down the pipeline rather than
+     as every connector blinking at once. */
+  .glyph-panel .glyph-link::after,
+  .glyph-rail .glyph-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle 3px at 3px 50%, rgba(191, 219, 254, 1), transparent 72%);
+    background-repeat: no-repeat;
+    animation: glyph-travel 2.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+    animation-delay: calc(var(--glyph-i) * 0.42s);
+  }
+
+  @keyframes glyph-travel {
+    0% {
+      transform: translateX(0);
+      opacity: 0;
+    }
+    12% {
+      opacity: 1;
+    }
+    72% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(calc(100% - 6px));
+      opacity: 0;
+    }
+  }
+
+  /* ======================================================================
+     RC4 — INFRASTRUCTURE DISTRIBUTION BUS
+     See `components/sections/AIInfrastructure.tsx` for why there is no SVG
+     here: branch rows are content-sized, so curve endpoints are unknown until
+     layout runs, and every way of learning them costs either a ResizeObserver
+     per branch or a distorted signal under `preserveAspectRatio="none"`.
+     A spine with stubs needs no coordinate system, so nothing can drift.
+     ====================================================================== */
+
+  /* Capped and centred for the same reason `.universe` is: at the full
+     container width the six branch rows stretch to ~925px while their chips
+     fill about 40% of that, so each row ends in a long empty gutter and the
+     tree reads as sparse rather than as tidy. Measured on a 1440 capture. */
+  /* No `margin-top` and no auto centring: the chapter owns the gap to its
+     subject, and the subject starts at the chapter's left edge like every
+     other one on the page. */
+  .infra {
+    max-width: 1040px;
+  }
+
+  /* ---------- Hub plate ---------- */
+  .infra-hub {
+    position: relative;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* The ambient glow, and the only thing that breathes. The `Breathing`
+     component this replaces scaled the hub itself — which would now also scale
+     the trunk leaving it, so the connector would visibly change length on a
+     6s loop. Opacity and transform on a detached glow are composited and move
+     nothing structural. */
+  .infra-hub::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 210px;
+    height: 210px;
+    transform: translate(-50%, -50%);
+    border-radius: 999px;
+    background: radial-gradient(circle, rgb(var(--color-accent) / 0.32), transparent 70%);
+    filter: blur(26px);
+    pointer-events: none;
+    animation: infra-breathe 6s ease-in-out infinite;
+  }
+
+  @keyframes infra-breathe {
+    0%,
+    100% {
+      opacity: 0.72;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.06);
+    }
+  }
+
+  .infra-hub-plate {
+    position: relative;
+    z-index: 1;
+    width: 168px;
+    padding: 18px 16px 16px;
+    border-radius: 18px;
+    text-align: center;
+    background: linear-gradient(170deg, rgb(var(--color-surface-3) / 0.96), rgb(var(--color-bg) / 0.96));
+    border: 1px solid rgb(var(--color-accent-light) / 0.28);
+    box-shadow:
+      0 1px 0 rgb(var(--c-fg) / 0.08) inset,
+      0 18px 50px rgb(var(--c-shadow) / calc(0.5 * var(--k-shadow))),
+      0 0 40px rgb(var(--color-accent) / 0.16);
+  }
+
+  /* The trunk. Vertical below md, horizontal at md+ — see the media query. */
+  .infra-hub-plate::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    width: 1px;
+    height: 36px;
+    background: linear-gradient(180deg, rgb(var(--color-accent-light) / 0.7), rgb(var(--color-accent-light) / 0.2));
+  }
+
+  /* The logo's three stacked rules — spreadsheet rows
+     (SHEETFLOW_VISUAL_DNA.md § 6.1). This is what keeps the hub and the
+     Automation Universe's core one family rather than two unrelated drawings,
+     while the plate silhouette keeps them from reading as the same object. */
+  .infra-hub-rules {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 11px;
+  }
+
+  .infra-hub-rules i {
+    display: block;
+    height: 2px;
+    border-radius: 2px;
+    background: rgb(var(--color-accent-light) / 0.75);
+  }
+
+  .infra-hub-rules i:nth-child(1),
+  .infra-hub-rules i:nth-child(3) {
+    width: 26px;
+  }
+
+  .infra-hub-rules i:nth-child(2) {
+    width: 34px;
+  }
+
+  .infra-hub-name {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: rgb(var(--c-fg));
+  }
+
+  .infra-hub-role {
+    margin-top: 2px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: rgb(var(--color-accent-light));
+  }
+
+  /* ---------- Branches ---------- */
+  .infra-branches {
+    position: relative;
+    list-style: none;
+    margin: 36px 0 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+  }
+
+  .infra-branch {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    border-radius: 14px;
+    border: 1px solid rgb(var(--c-fg) / 0.08);
+    background: rgb(var(--color-surface-1) / 0.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .infra-branch:hover {
+    border-color: rgb(var(--color-accent) / 0.4);
+  }
+
+  /* Opaque, because the stub passes behind it. */
+  .infra-branch-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    background: linear-gradient(160deg, rgb(var(--color-surface-3) / 0.97), rgb(var(--color-bg) / 0.97));
+    border: 1px solid rgb(var(--color-accent-light) / 0.18);
+    box-shadow:
+      0 1px 0 rgb(var(--c-fg) / 0.06) inset,
+      0 6px 18px rgb(var(--c-shadow) / calc(0.45 * var(--k-shadow)));
+  }
+
+  .infra-branch-label {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: rgb(var(--c-fg));
+  }
+
+  .infra-tools {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .infra-tool {
+    border-radius: 999px;
+    border: 1px solid rgb(var(--color-accent) / 0.25);
+    background: rgb(var(--color-surface-1) / 0.7);
+    padding: 3px 9px;
+    font-size: 11px;
+    font-weight: 500;
+    color: rgb(var(--c-fg) / 0.85);
+    transition: border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .infra-branch:hover .infra-tool {
+    border-color: rgb(var(--color-accent) / 0.45);
+  }
+
+  /* ---------- md+ : the bilateral tree ----------
+     Below this width the tree is dropped entirely and the hub simply sits above
+     six stacked cards. A 168px hub plus a 64px gutter leaves ~128px of branch
+     row at 360px, which is narrower than the word "GoHighLevel". Same call the
+     Automation Universe makes when it drops its SVG: the DOM and the copy are
+     identical, only the decorative geometry differs. */
+  @media (min-width: 768px) {
+    .infra {
+      margin-top: 64px;
+      display: grid;
+      /* The gap IS the trunk length — they are declared together so a change to
+         one cannot silently detach the hub from the spine. */
+      grid-template-columns: 168px 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .infra-hub {
+      justify-content: flex-start;
+    }
+
+    .infra-hub-plate::after {
+      top: 50%;
+      left: 100%;
+      width: 40px;
+      height: 1px;
+      background: linear-gradient(90deg, rgb(var(--color-accent-light) / 0.7), rgb(var(--color-accent-light) / 0.45));
+    }
+
+    .infra-branches {
+      margin-top: 0;
+      padding-left: 64px;
+    }
+
+    /* The spine. Both ends fade to transparent, so it does not matter that the
+       first and last rows are content-sized and their centres are unknown —
+       there is no hard endpoint to land wrong. Same trick as
+       `.universe-nodes::before`. */
+    .infra-branches::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: linear-gradient(
+        180deg,
+        transparent,
+        rgb(var(--color-accent-light) / 0.5) 10%,
+        rgb(var(--color-accent-light) / 0.5) 90%,
+        transparent
+      );
+    }
+
+    /* The stub, from the spine to this row. `-64px` is the branches column's
+       own padding, so the two are the same measurement by construction. */
+    .infra-branch::before {
+      content: '';
+      position: absolute;
+      left: -64px;
+      top: 50%;
+      width: 64px;
+      height: 1px;
+      background: linear-gradient(90deg, rgb(var(--color-accent-light) / 0.5), rgb(var(--color-accent-light) / 0.26));
+    }
+
+    /* The travelling packet. Painted as a background on the stub-width box and
+       moved with `translateX` — transform-only and composited, the same cost
+       model as the RC3 glyph signal. Six branches at 0.6s across a 3.6s cycle
+       puts exactly one packet in flight, honouring VISUAL_DNA.md § 2's cap of
+       three simultaneous motions. */
+    .infra-branch::after {
+      content: '';
+      position: absolute;
+      left: -64px;
+      top: 50%;
+      width: 64px;
+      height: 1px;
+      pointer-events: none;
+      background: radial-gradient(circle 3px at 3px 50%, rgba(191, 219, 254, 1), transparent 72%);
+      background-repeat: no-repeat;
+      animation: infra-travel 3.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+      animation-delay: calc(var(--i) * 0.6s);
+    }
+  }
+
+  @keyframes infra-travel {
+    0% {
+      transform: translateX(0);
+      opacity: 0;
+    }
+    12% {
+      opacity: 1;
+    }
+    72% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(calc(100% - 6px));
+      opacity: 0;
+    }
+  }
+
+  /* ======================================================================
+     RC4 — DIGITAL CRAFT DEVICE STAGE
+     Four visually-hidden radios drive everything below through `:checked ~`.
+     See `components/sections/DigitalCraft.tsx` for why a radio group rather
+     than a `role="tablist"`, and why the screens are wireframes.
+     ====================================================================== */
+
+  /* No `margin-top` of its own any more — the chapter owns the gap between a
+     head and its subject (`.chapter-stage`), so nine sections cannot each pick
+     a slightly different one. */
+  .craft {
+    position: relative;
+  }
+
+  /* Hidden from sight, never from the focus order. `display: none` here would
+     remove the radios from tab order and the entire control would stop working
+     for the keyboard — the one mistake this pattern actually punishes. */
+  .craft-radio {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* Left, not centred. RC5 made every chapter open at the same x — the rail's
+     edge — and a centred control row under a left-aligned head is the exact
+     mixed-alignment that made the page read as separate templates. */
+  .craft-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .craft-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 15px;
+    border-radius: 999px;
+    border: 1px solid rgb(var(--c-fg) / 0.09);
+    background: rgb(var(--color-surface-1) / 0.6);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1;
+    color: rgb(var(--color-text-secondary));
+    cursor: pointer;
+    transition:
+      color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+      background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .craft-tab:hover {
+    color: rgb(var(--c-fg));
+    border-color: rgb(var(--color-accent) / 0.35);
+  }
+
+  /* Index-based rather than `[for='craft-websites']`. The radios and the labels
+     are rendered from one array in one order, so position carries exactly the
+     same fact the `htmlFor` string does — and a selector that cannot mention a
+     slug cannot fall out of step with one that gets renamed. */
+  .craft-radio:nth-of-type(1):checked ~ .craft-tabs .craft-tab:nth-child(1),
+  .craft-radio:nth-of-type(2):checked ~ .craft-tabs .craft-tab:nth-child(2),
+  .craft-radio:nth-of-type(3):checked ~ .craft-tabs .craft-tab:nth-child(3),
+  .craft-radio:nth-of-type(4):checked ~ .craft-tabs .craft-tab:nth-child(4) {
+    color: rgb(var(--c-fg));
+    border-color: rgb(var(--color-accent) / 0.5);
+    background: rgb(var(--color-accent) / 0.12);
+  }
+
+  /* The radio is invisible, so its focus ring has to be borrowed by the label
+     it controls, or a keyboard user is moving through this control blind. */
+  .craft-radio:nth-of-type(1):focus-visible ~ .craft-tabs .craft-tab:nth-child(1),
+  .craft-radio:nth-of-type(2):focus-visible ~ .craft-tabs .craft-tab:nth-child(2),
+  .craft-radio:nth-of-type(3):focus-visible ~ .craft-tabs .craft-tab:nth-child(3),
+  .craft-radio:nth-of-type(4):focus-visible ~ .craft-tabs .craft-tab:nth-child(4) {
+    outline: 2px solid rgb(var(--color-accent-light));
+    outline-offset: 3px;
+  }
+
+  /* ---------- The frame ---------- */
+  .craft-stage {
+    margin-top: 22px;
+  }
+
+  /* The frame, the chrome, the omnibox, the screen and the sheen all moved to
+     the Browser Mockup engine in RC5 — `.vos-browser-*`, above. What is left
+     here is only the part that is genuinely this section's: the *swap*.
+
+     `.vos-browser-url` supplies the address bar's type and position; these two
+     rules add the cross-fade that the radio group drives, so four addresses can
+     occupy one omnibox. Same split for the panels. */
+  .craft-url {
+    opacity: 0;
+    transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .craft-panel {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .craft-panel .vos-artifact-svg {
+    height: 100%;
+  }
+
+  /* The window sits flush with the chapter's left edge rather than centred in
+     the column. The engine's default is `margin-inline: auto`, which is right
+     for a frame that is the only thing on its row and wrong for one that is a
+     chapter's subject. */
+  .craft-stage .vos-browser {
+    margin-inline: 0;
+  }
+
+  /* The provenance caption is emitted by the `Artifact` engine now rather than
+     hand-written here — which is the point of the migration: § 6's rule is no
+     longer something this section remembers to obey. */
+  .craft-stage .vos-artifact-note {
+    margin-top: 12px;
+  }
+
+  /* ---------- Caption, swapped in place ---------- */
+  .craft-captions {
+    position: relative;
+    margin-top: 18px;
+    min-height: 46px;
+  }
+
+  .craft-caption {
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    max-width: 520px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgb(var(--color-text-secondary));
+    opacity: 0;
+    transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Everything the selected radio reveals, in one rule: its screen, its address
+     bar and its caption all cross-fade together. */
+  .craft-radio:nth-of-type(1):checked ~ .craft-stage .craft-panel:nth-child(1),
+  .craft-radio:nth-of-type(1):checked ~ .craft-stage .craft-url:nth-child(1),
+  .craft-radio:nth-of-type(1):checked ~ .craft-captions .craft-caption:nth-child(1),
+  .craft-radio:nth-of-type(2):checked ~ .craft-stage .craft-panel:nth-child(2),
+  .craft-radio:nth-of-type(2):checked ~ .craft-stage .craft-url:nth-child(2),
+  .craft-radio:nth-of-type(2):checked ~ .craft-captions .craft-caption:nth-child(2),
+  .craft-radio:nth-of-type(3):checked ~ .craft-stage .craft-panel:nth-child(3),
+  .craft-radio:nth-of-type(3):checked ~ .craft-stage .craft-url:nth-child(3),
+  .craft-radio:nth-of-type(3):checked ~ .craft-captions .craft-caption:nth-child(3),
+  .craft-radio:nth-of-type(4):checked ~ .craft-stage .craft-panel:nth-child(4),
+  .craft-radio:nth-of-type(4):checked ~ .craft-stage .craft-url:nth-child(4),
+  .craft-radio:nth-of-type(4):checked ~ .craft-captions .craft-caption:nth-child(4) {
+    opacity: 1;
+  }
+
+  @media (min-width: 768px) {
+    .craft-tab {
+      font-size: 13.5px;
+      padding: 10px 18px;
+    }
+  }
+
+  /* ======================================================================
+     THE VISUAL OPERATING SYSTEM
+     Primitives, not components. See `VISUAL_OPERATING_SYSTEM.md` for the
+     engine roster and `VISUAL_DNA_V2.md` for the rules each one enforces.
+     Every engine below is server-rendered: the system's client-JS cost is 0.
+     ====================================================================== */
+
+  /* ---------------------------------------------------------------
+     AMBIENT BACKGROUND ENGINE            VISUAL_DNA_V2.md § 8.3
+     v1 mandated four atmospheric layers on every page and never priced
+     them; paint is 73–91% of this site's main thread. Atmosphere is now
+     budgeted, and the emotional arc is carried by the tier sequence.
+     --------------------------------------------------------------- */
+  .vos-ambient {
+    position: absolute;
+    inset: 0;
+    z-index: -10;
+    pointer-events: none;
+    /* Fade the wash out at its own top and bottom edges.
+       Added in RC5, and it is the difference between chapters that flow and
+       chapters that end. Each tone is a radial gradient whose value at the
+       section's top edge is non-zero, so without this the wash terminates in a
+       visible horizontal seam exactly at the boundary — measured at y≈250 on
+       the 1440px capture, right where chapter 01 meets the hero. A seam at
+       every join is the page telling the reader a scene has ended nine times.
+       `VISUAL_DNA_V2.md` § 8.3 makes atmosphere carry the arc; an arc cannot
+       be carried by ten separately-terminated washes. */
+    -webkit-mask-image: linear-gradient(
+      180deg,
+      transparent 0%,
+      #000 14%,
+      #000 86%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(180deg, transparent 0%, #000 14%, #000 86%, transparent 100%);
+  }
+
+  .vos-ambient--grid::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.3;
+    background-image:
+      linear-gradient(rgb(var(--c-fg) / 0.028) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(var(--c-fg) / 0.028) 1px, transparent 1px);
+    background-size: 64px 64px;
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, #000, transparent 78%);
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, #000, transparent 78%);
+  }
+
+  /* quiet — void plus grain only. For dense sections where the content is
+     already the light and a wash would just lift the black floor. */
+  .vos-ambient--quiet {
+    background: none;
+  }
+
+  .vos-ambient--standard.vos-ambient--accent {
+    background: radial-gradient(
+      ellipse 68% 52% at 50% 38%,
+      rgb(var(--color-accent) / 0.1),
+      transparent 72%
+    );
+  }
+
+  .vos-ambient--standard.vos-ambient--gold {
+    background: radial-gradient(
+      ellipse 68% 52% at 50% 38%,
+      rgb(var(--color-gold) / 0.07),
+      transparent 72%
+    );
+  }
+
+  /* dual — the two brand colours from opposite corners. This is the key/fill
+     pair from v1 § 6.4, corrected to the palette the product actually uses. */
+  .vos-ambient--standard.vos-ambient--dual,
+  .vos-ambient--full.vos-ambient--dual {
+    background:
+      radial-gradient(ellipse 52% 44% at 22% 26%, rgb(var(--color-accent) / 0.13), transparent 70%),
+      radial-gradient(ellipse 46% 40% at 82% 78%, rgb(var(--color-gold) / 0.07), transparent 70%);
+  }
+
+  .vos-ambient--full.vos-ambient--accent {
+    background:
+      radial-gradient(ellipse 56% 46% at 24% 22%, rgb(var(--color-accent) / 0.16), transparent 70%),
+      radial-gradient(ellipse 48% 42% at 78% 76%, rgb(var(--color-accent-deep) / 0.1), transparent 70%),
+      linear-gradient(180deg, transparent 55%, rgb(var(--color-cyan) / 0.05) 100%);
+  }
+
+  /* ---------------------------------------------------------------
+     PREMIUM CARD ENGINE — the Liquid Glass ladder   VISUAL_DNA_V2.md § 4
+     Five tiers where alpha, blur AND shadow move together. One property
+     alone does not read as depth — which is why the three legacy glass
+     classes, within ~1.5% alpha of each other, never formed a hierarchy.
+     --------------------------------------------------------------- */
+  .vos-surface {
+    position: relative;
+    border: 1px solid transparent;
+    border-radius: 16px;
+    /* Two-layer background: fill on the padding box, edge on the border box.
+       That is what makes the border *graded* — lighter at the top than the
+       bottom — which reads as an edge catching light rather than as a stroke
+       drawn round a rectangle (§ 4.2). */
+    background:
+      linear-gradient(
+          180deg,
+          rgba(255, 255, 255, var(--vos-fill-a)),
+          rgba(255, 255, 255, var(--vos-fill-b))
+        )
+        padding-box,
+      linear-gradient(
+          180deg,
+          rgba(255, 255, 255, var(--vos-edge-a)),
+          rgba(255, 255, 255, var(--vos-edge-b))
+        )
+        border-box;
+    /* `saturate` is the whole difference between glass and fog (§ 4.2). */
+    backdrop-filter: blur(var(--vos-blur)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--vos-blur)) saturate(180%);
+    box-shadow: var(--vos-shadow);
+  }
+
+  .vos-surface--e0 {
+    --vos-fill-a: 0.02;
+    --vos-fill-b: 0.01;
+    --vos-edge-a: 0.05;
+    --vos-edge-b: 0.09;
+    --vos-blur: 4px;
+    --vos-shadow: inset 0 1px 3px rgb(var(--c-shadow) / calc(0.45 * var(--k-shadow)));
+  }
+
+  .vos-surface--e1 {
+    --vos-fill-a: 0.035;
+    --vos-fill-b: 0.018;
+    --vos-edge-a: 0.09;
+    --vos-edge-b: 0.05;
+    --vos-blur: 12px;
+    --vos-shadow: inset 0 1px 0 rgb(var(--c-fg) / 0.05);
+  }
+
+  .vos-surface--e2 {
+    --vos-fill-a: 0.055;
+    --vos-fill-b: 0.026;
+    --vos-edge-a: 0.12;
+    --vos-edge-b: 0.06;
+    --vos-blur: 20px;
+    --vos-shadow:
+      inset 0 1px 0 rgb(var(--c-fg) / 0.07),
+      0 12px 32px rgb(var(--c-shadow) / calc(0.4 * var(--k-shadow)));
+  }
+
+  .vos-surface--e3 {
+    --vos-fill-a: 0.08;
+    --vos-fill-b: 0.034;
+    --vos-edge-a: 0.16;
+    --vos-edge-b: 0.07;
+    --vos-blur: 28px;
+    --vos-shadow:
+      inset 0 1px 0 rgb(var(--c-fg) / 0.1),
+      0 24px 70px rgb(var(--c-shadow) / calc(0.5 * var(--k-shadow)));
+  }
+
+  /* At most one of these per viewport. If two things are presented, nothing
+     is (§ 4.1). The accent bloom is what makes it the subject. */
+  .vos-surface--e4 {
+    --vos-fill-a: 0.11;
+    --vos-fill-b: 0.045;
+    --vos-edge-a: 0.2;
+    --vos-edge-b: 0.08;
+    --vos-blur: 36px;
+    --vos-shadow:
+      inset 0 1px 0 rgb(var(--c-fg) / 0.13),
+      0 32px 90px rgb(var(--c-shadow) / calc(0.55 * var(--k-shadow))),
+      0 0 60px rgb(var(--color-accent) / 0.14);
+  }
+
+  /* The 4px scan line, demoted from v1's "mandatory on every surface" to a
+     mark meaning exactly one thing: the system is writing to this surface
+     (§ 3.3). */
+  .vos-surface--live::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+      0deg,
+      rgb(var(--c-fg) / 0.04) 0px,
+      rgb(var(--c-fg) / 0.04) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+  }
+
+  /* ---------------------------------------------------------------
+     ANIMATED PIPELINE ENGINE — the traced spine   VISUAL_DNA_V2.md § 7.2
+     Aceternity's Tracing Beam idea, without its implementation: no
+     useScroll, no springs, no measured svgHeight, no re-render per frame.
+     One scaleY on the compositor.
+     --------------------------------------------------------------- */
+  /* No `overflow: hidden` here, and that is load-bearing rather than tidy.
+     `overflow: hidden` makes an element a **scroll container**, so `view()` on
+     the beam inside it resolves against *this* box instead of the document.
+     The beam exactly fills it and it never scrolls, so the timeline is
+     degenerate and the animation freezes at a constant progress — measured at
+     `scaleY(0.7)` at every scroll position on the first build. The clip was
+     never needed anyway: the beam only ever scales *down* from `inset: 0`, so
+     there is nothing to overflow. */
+  .vos-spine {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    /* 2px, not 1. At 1px the traced portion and the untraced track were within
+       a hair of each other on a capture — the beam was doing its job and the
+       eye could not tell. Measured on a frame, not judged in the editor. */
+    width: 2px;
+    border-radius: 2px;
+    background: linear-gradient(
+      180deg,
+      transparent,
+      rgb(var(--color-accent-light) / 0.14) 5%,
+      rgb(var(--color-accent-light) / 0.14) 95%,
+      transparent
+    );
+  }
+
+  /* Rests fully traced. The animation starts at 0 and lives inside
+     `@supports`, so where scroll timelines are unsupported this renders
+     complete and static — never a rail stranded at zero height. */
+  .vos-spine-beam {
+    position: absolute;
+    inset: 0;
+    transform-origin: top center;
+    transform: scaleY(1);
+    border-radius: 2px;
+    background: linear-gradient(
+      180deg,
+      rgb(var(--color-accent-bright) / 1),
+      rgb(var(--color-accent-bright) / 0.85) 60%,
+      rgb(var(--color-accent-light) / 0.6)
+    );
+    box-shadow: 0 0 12px rgb(var(--color-accent) / 0.55);
+  }
+
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .vos-spine--traced .vos-spine-beam {
+        animation: vos-trace linear both;
+        animation-timeline: view();
+        /* `cover`, not `entry`: this element is taller than the viewport, so
+           the entry phase ends while most of the rail is still below the
+           fold and the beam would finish before the reader does. */
+        animation-range: cover 8% cover 68%;
+      }
+    }
+  }
+
+  @keyframes vos-trace {
+    from {
+      transform: scaleY(0);
+    }
+    to {
+      transform: scaleY(1);
+    }
+  }
+
+  .vos-spine-node {
+    position: absolute;
+    width: 11px;
+    height: 11px;
+    border-radius: 999px;
+    background: rgb(var(--color-bg));
+    border: 1px solid rgb(var(--color-accent-light) / 0.55);
+    box-shadow:
+      0 0 0 4px rgb(var(--color-void) / 0.9),
+      0 0 14px rgb(var(--color-accent) / 0.35);
+  }
+
+  /* ---------------------------------------------------------------
+     EVIDENCE OVERLAY ENGINE                VISUAL_DNA_V2.md § 6
+     Provenance is a required prop on the component; this is the mark it
+     emits. Coarse on purpose — convincing is the failure mode.
+     --------------------------------------------------------------- */
+  .vos-artifact {
+    margin: 0;
+  }
+
+  .vos-artifact-body {
+    overflow: hidden;
+  }
+
+  .vos-artifact-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .vos-artifact-note {
+    margin-top: 9px;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  /* ---------- The schematic palette ----------
+     RC6 retuned all four neutrals. The register is still coarse — § 3.5 is
+     right that *convincing is the failure mode*, and none of this makes a
+     wireframe photoreal — but coarse and *unstyled* are not the same register,
+     and these were reading as the second one.
+
+     Two things were wrong. They were neutral (pure white at low alpha), so
+     they belonged to no palette and picked up whatever the wash behind them
+     was doing; and the three tiers spanned 0.06–0.19, which at these shape
+     sizes is not enough separation to read as structure. Grey rounded
+     rectangles at low contrast with no hue is, precisely, the house style of a
+     loading skeleton — so the largest artifact on the page, the browser stage
+     in chapter 05, read as a page that had not finished loading.
+
+     Cool-tinted and spread wider, the same shapes read as a diagram drawn in
+     the brand's ink. Nothing about what they claim has changed, and the
+     provenance caption the engine emits is untouched. */
+  .vos-fill--dim {
+    fill: rgb(var(--color-accent-light) / 0.09);
+  }
+
+  .vos-fill--line {
+    fill: rgba(198, 216, 244, 0.17);
+  }
+
+  .vos-fill--mid {
+    fill: rgba(214, 228, 250, 0.28);
+  }
+
+  .vos-fill--accent {
+    fill: rgb(var(--color-accent-bright) / 0.55);
+  }
+
+  /* Gold marks an outcome, never a decoration (§ 2). One per composition. */
+  .vos-fill--gold {
+    fill: rgb(var(--color-gold-bright) / 0.62);
+  }
+
+  /* ---------------------------------------------------------------
+     DEVICE MOCKUP ENGINE                   VISUAL_DNA_V2.md § 3.2, § 10
+     The silhouette a visitor recognises, without the imitated surface
+     that would make it the pastiche § 9 rejects.
+     --------------------------------------------------------------- */
+  .vos-device {
+    position: relative;
+    width: 100%;
+    max-width: 208px;
+    padding: 14px 9px 9px;
+    border-radius: 26px;
+    border: 1px solid rgb(var(--c-fg) / 0.13);
+    background: linear-gradient(180deg, rgb(var(--color-surface-3) / 0.92), rgb(var(--color-bg) / 0.96));
+    box-shadow:
+      inset 0 1px 0 rgb(var(--c-fg) / 0.08),
+      0 20px 50px rgb(var(--c-shadow) / calc(0.5 * var(--k-shadow)));
+  }
+
+  .vos-device-notch {
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 48px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgb(var(--c-fg) / 0.16);
+  }
+
+  .vos-device-screen {
+    border-radius: 18px;
+    overflow: hidden;
+    background: rgb(var(--color-void) / 0.92);
+  }
+
+  /* The browser window. Lifted out of `sections/DigitalCraft.tsx` in RC5,
+     where it was inline and therefore un-reusable — item 1 of the VOS
+     migration list. Chrome is CSS so it stays crisp at any width; only the
+     screen contents are SVG. */
+  .vos-browser {
+    margin-inline: auto;
+    max-width: 880px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgb(var(--c-fg) / 0.1);
+    background: rgb(var(--color-bg) / 0.9);
+    box-shadow:
+      0 1px 0 rgb(var(--c-fg) / 0.07) inset,
+      0 30px 80px rgb(var(--c-shadow) / calc(0.55 * var(--k-shadow)));
+  }
+
+  .vos-browser-chrome {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 40px;
+    padding: 0 14px;
+    border-bottom: 1px solid rgb(var(--c-fg) / 0.07);
+    background: linear-gradient(180deg, rgb(var(--color-surface-3) / 0.85), rgb(var(--color-surface-1) / 0.85));
+  }
+
+  /* Three dots, flat and unlit. Rendered in traffic-light colours this becomes
+     the macOS pastiche `SHEETFLOW_VISUAL_DNA.md` § 9 rejects as
+     "Skeuomorphism 2.0" — the window is a recognisable object, not an imitated
+     surface. */
+  .vos-browser-dots {
+    display: inline-flex;
+    flex: none;
+    gap: 6px;
+  }
+
+  .vos-browser-dots i {
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background: rgb(var(--c-fg) / 0.14);
+  }
+
+  .vos-browser-omnibox {
+    position: relative;
+    flex: 1;
+    height: 22px;
+    border-radius: 999px;
+    background: rgb(var(--c-fg) / 0.05);
+    border: 1px solid rgb(var(--c-fg) / 0.06);
+  }
+
+  .vos-browser-url {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    padding-left: 12px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-style: normal;
+    letter-spacing: 0.02em;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  .vos-browser-screen {
+    position: relative;
+    aspect-ratio: var(--vos-browser-ratio, 640 / 380);
+    overflow: hidden;
+    background: linear-gradient(180deg, rgb(var(--color-surface-1) / 0.6), rgb(var(--color-bg) / 0.6));
+  }
+
+  /* One sweep across the glass, so the frame reads as a screen that is on
+     rather than a picture of one. A single element on the compositor. */
+  .vos-browser-sheen {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      105deg,
+      transparent 38%,
+      rgb(var(--c-fg) / 0.06) 50%,
+      transparent 62%
+    );
+    transform: translateX(-100%);
+    animation: vos-browser-sheen 7s ease-in-out infinite;
+  }
+
+  @keyframes vos-browser-sheen {
+    0%,
+    62% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  /* ---------------------------------------------------------------
+     LIVE METRICS ENGINE                    VISUAL_DNA_V2.md § 6
+     `provenance` is required on the group. A figure in a dashboard IS a
+     claim about a customer, and it reads as one even when the copy
+     around it says otherwise. Nothing counts up — see `Metric.tsx`.
+     --------------------------------------------------------------- */
+  .vos-metrics {
+    margin: 0;
+  }
+
+  .vos-metrics-body {
+    padding: clamp(20px, 2.4vw, 30px);
+  }
+
+  .vos-metrics-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  .vos-metric-value {
+    font-family: var(--font-display);
+    font-size: clamp(30px, 3.4vw, 44px);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: rgb(var(--c-fg));
+  }
+
+  /* One per composition, and it must mark an outcome (§ 2). */
+  .vos-metric-value--gold {
+    color: rgb(var(--color-gold-bright));
+  }
+
+  /* `wrap`, because at 412px "Bookings confirmed" takes two lines and an
+     unwrapped delta then hangs off the first line's baseline beside the second
+     — legible, but reading as a misalignment rather than as a pair. */
+  .vos-metric-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 8px;
+    margin-top: 8px;
+    font-size: 12px;
+  }
+
+  .vos-metric-label {
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  .vos-metric-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .vos-metric-delta--up {
+    color: rgb(var(--color-success));
+  }
+
+  .vos-metric-delta--down {
+    color: rgb(var(--color-danger));
+  }
+
+  .vos-spark {
+    position: relative;
+    height: 96px;
+    width: 100%;
+  }
+
+  .vos-spark-svg {
+    display: block;
+    height: 100%;
+    width: 100%;
+  }
+
+  .vos-spark-line {
+    fill: none;
+    stroke: rgb(var(--color-accent-light));
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* The trace. `pathLength` normalises the dash units so one constant works
+     for any series length — without it the dash offset would have to be the
+     measured path length, which is a `getTotalLength()` call and therefore
+     JavaScript. Rests **drawn**, for the same reason the spine rests traced. */
+  .vos-spark-line,
+  .vos-spark-area {
+    opacity: 1;
+  }
+
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .vos-spark-line {
+        stroke-dasharray: 1;
+        stroke-dashoffset: 0;
+        animation: vos-spark-draw linear both;
+        animation-timeline: view();
+        animation-range: entry 10% entry 70%;
+      }
+
+      .vos-spark-area {
+        animation: vos-spark-fill linear both;
+        animation-timeline: view();
+        animation-range: entry 30% entry 85%;
+      }
+    }
+  }
+
+  @keyframes vos-spark-draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes vos-spark-fill {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* The one continuously-moving element on the surface. 2px, on an opacity
+     loop rather than a transform, so it reads as a signal holding rather than
+     as something travelling. */
+  .vos-spark-tip {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: rgb(var(--color-accent-light));
+    box-shadow: 0 0 8px 2px rgb(var(--color-accent-light) / 0.7);
+    animation: vos-spark-tip 6s ease-in-out infinite;
+  }
+
+  @keyframes vos-spark-tip {
+    0%,
+    100% {
+      opacity: 0.45;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  /* ---------------------------------------------------------------
+     PARALLAX ENGINE                        VISUAL_DNA_V2.md § 7.2
+     Rests NEUTRAL, not finished — unlike the spine. The finished state
+     of a parallax is an element pushed off its layout position, and
+     shipping that statically would misalign rather than un-animate.
+     --------------------------------------------------------------- */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .vos-drift {
+        animation: vos-drift linear both;
+        animation-timeline: view();
+        animation-range: cover 0% cover 100%;
+      }
+    }
+  }
+
+  @keyframes vos-drift {
+    from {
+      transform: translate3d(0, var(--vos-drift-from, 40px), 0);
+    }
+    to {
+      transform: translate3d(0, var(--vos-drift-to, -40px), 0);
+    }
+  }
+
+  /* ---------------------------------------------------------------
+     NARRATIVE ENGINE — the chapter, and the line through all of them
+     See `components/vos/Chapter.tsx` for the page-level defect this
+     exists against: nine self-contained pages stacked on one route,
+     joined by ~275px of void and two different header alignments.
+     --------------------------------------------------------------- */
+  .chapter {
+    position: relative;
+    width: 100%;
+    /* `clip`, not `hidden`. `hidden` makes an element a scroll container, and
+       every scroll-driven animation inside — the chapter rail included —
+       would then resolve `view()` against *this* box instead of the document,
+       freezing at a constant progress. That is the exact defect the VOS notes
+       record from the first Spine build. */
+    overflow: clip;
+    /* Asymmetric, and this is the number the engine exists to change.
+       `.section` pays `clamp(64px, 9.5vw, 160px)` on both edges, so two
+       sections back to back put up to 320px of nothing between them —
+       measured at ~275px on the 1440px capture. Here the join is ~150px, and
+       the rail crosses it, so it is a transition rather than a gap.
+
+       RC6 tightens it again, to ~164px at 1440. RC5 set these numbers against
+       a page whose chapter heads were a stacked title-over-lede block; the
+       masthead grid above removed a lede-height from the top of every chapter,
+       and a join tuned for the taller head reads loose under the shorter one.
+       Padding is a relationship, so it moves when the things it separates
+       do. */
+    padding-block: clamp(44px, 4vw, 72px) clamp(52px, 5vw, 92px);
+  }
+
+  /* The rail is positioned against the *section*, not against the container,
+     so it spans the padding and meets its neighbours exactly. Its `left` is
+     computed from the same three numbers `.container-edge` uses for its own
+     padding and max-width — one source, so the rail cannot drift off the
+     content column's edge at any width. */
+  .chapter-rail {
+    left: max(1.5rem, calc((100% - 1280px) / 2 + 1.5rem));
+  }
+
+  @media (min-width: 640px) {
+    .chapter-rail {
+      left: max(2rem, calc((100% - 1280px) / 2 + 2rem));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .chapter-rail {
+      left: max(2.5rem, calc((100% - 1280px) / 2 + 2.5rem));
+    }
+  }
+
+  .chapter-content {
+    --chapter-indent: 30px;
+    position: relative;
+    padding-left: var(--chapter-indent);
+  }
+
+  @media (min-width: 768px) {
+    .chapter-content {
+      --chapter-indent: 56px;
+    }
+  }
+
+  .chapter-head {
+    max-width: 46rem;
+  }
+
+  /* ---------- The masthead, from lg up ----------
+     RC6. Below lg this is unchanged: kicker, title, lede, stacked.
+
+     The defect it answers is the most-repeated shape on the page. Every
+     chapter head was capped at 46rem inside a 1280px container, left-aligned,
+     with nothing else on its row — so on a 1440 capture roughly 400px of the
+     right-hand column was empty at the top of all eight chapters, and the
+     fixed ambient wash was the only thing in it. Eight times down one page,
+     that does not read as generous white space; it reads as a column somebody
+     forgot to fill. § 8.2 asks for an editorial layout and this is the part of
+     it the page never had.
+
+     The fix moves the lede rather than resizing anything. The title column is
+     still exactly 46rem, so no headline re-wraps and no line break the copy
+     was written around changes; the description simply relocates from *below*
+     the title into the space beside it. The page also gets shorter by roughly
+     one lede-height per chapter, which is the cheapest scroll-length
+     reduction available — nothing was cut.
+
+     `end` alignment sets the deck on the headline's last baseline, which is
+     what makes it read as one masthead rather than as two stacked blocks. */
+  @media (min-width: 1024px) {
+    .chapter-head {
+      max-width: none;
+      display: grid;
+      grid-template-columns: minmax(0, 46rem) minmax(0, 1fr);
+      column-gap: clamp(40px, 4vw, 80px);
+      align-items: end;
+    }
+
+    .chapter-kicker {
+      grid-column: 1 / -1;
+    }
+
+    /* Zeroed: in the stacked layout this gap separated the lede from the
+       title above it, and there is nothing above it any more. The 4px of
+       optical padding lands its final baseline level with the headline's. */
+    .chapter-lede {
+      margin-top: 0;
+      padding-bottom: 4px;
+    }
+  }
+
+  .chapter-kicker {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+  }
+
+  /* Back onto the rail. The 1px offset centres an 11px node on a 2px line:
+     the rail's own centre is 1px right of the indent origin. */
+  .chapter-node {
+    left: calc(1px - var(--chapter-indent));
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .chapter-mark {
+    color: rgb(var(--color-accent-light));
+  }
+
+  .chapter-kicker-text {
+    color: rgb(var(--color-accent-bright) / 0.8);
+  }
+
+  .chapter-title {
+    margin-top: 18px;
+    font-family: var(--font-display);
+    font-size: clamp(32px, 5.6vw, 60px);
+    font-weight: 600;
+    line-height: 1.02;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    /* Same correction as `.text-fade`, and it matters more here: a chapter
+       title is two or three lines, so at the old 0.55 floor an entire final
+       line — usually the half of the sentence carrying the claim — rendered
+       at roughly half white on a lit wash. */
+    background: linear-gradient(
+      180deg,
+      rgb(var(--c-fg)) 0%,
+      rgb(var(--c-fg)) 72%,
+      rgb(var(--c-fg) / 0.82) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  .chapter-lede {
+    margin-top: 20px;
+    max-width: 40rem;
+    font-size: 16px;
+    line-height: 1.65;
+    text-wrap: pretty;
+    color: rgb(var(--color-text-secondary));
+  }
+
+  @media (min-width: 768px) {
+    .chapter-lede {
+      font-size: 17px;
+    }
+  }
+
+  /* The chapter's centrepiece. A single named gap, so "how far below the head
+     does the subject start" is one decision rather than nine — § 8.1 makes gap
+     a statement of relationship, and this relationship is the same every time:
+     a chapter and the thing it is about. */
+  .chapter-stage {
+    margin-top: clamp(40px, 4.5vw, 72px);
+  }
+
+  /* ---------------------------------------------------------------
+     THE CLOSE — the descent
+     RC4 ran this from `useScroll` + a spring + five `useTransform`s.
+     One element, one property, on the compositor. Rests at full
+     intensity: a browser without scroll timelines gets the finished
+     closing scene, not a dim one (§ 7.2's degradation rule).
+     --------------------------------------------------------------- */
+  .cta-descent {
+    position: absolute;
+    inset: 0;
+    z-index: -6;
+    pointer-events: none;
+    opacity: 1;
+    mix-blend-mode: screen;
+    /* Gold 0.26 → 0.12, blue 0.20 → 0.26.
+
+       The warmth here is deliberate and stays — § 2 gives gold to the moment
+       the system has worked, and the close is that moment. What changed is
+       that this used to be the *second* gold layer on the closing frame; the
+       fixed global aurora was the first, and the two summed. With that one
+       corrected to 0.07 this became the brightest warm light on the route by a
+       wide margin, and on `screen` over void it was resolving to the same
+       brown the rest of the page had just been cleared of — on the one frame
+       a visitor is deciding, and now behind a glass panel that reads whatever
+       is under it. Warm, not muddy: the blue takes the lead and the gold
+       becomes the highlight on it. */
+    background:
+      radial-gradient(ellipse 80% 70% at 70% 50%, rgb(var(--color-gold) / 0.12), transparent 60%),
+      radial-gradient(circle 40vh at 50% 46%, rgb(var(--color-accent) / 0.26), transparent 62%);
+  }
+
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .cta-descent {
+        animation: cta-descend linear both;
+        animation-timeline: view();
+        animation-range: cover 0% cover 72%;
+      }
+    }
+  }
+
+  @keyframes cta-descend {
+    from {
+      opacity: 0.22;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* The panel the close now sits on. 28px, the system's largest radius —
+     the only surface on the route that takes it, which is part of how it
+     reads as the resolution rather than as a ninth card. */
+  .close-panel {
+    border-radius: 28px;
+    padding: clamp(36px, 4.6vw, 68px) clamp(24px, 4vw, 60px);
+  }
+
+  /* ---------------------------------------------------------------
+     THE TERMS — chapter 07, the pricing beat
+     Three peers, so the gap is 12–16px (§ 8.1) — not the 32–56px a
+     sequence gets. They are alternatives, not steps.
+     --------------------------------------------------------------- */
+  /* See the note on `.run-stages`: no `margin: 0`. Preflight has already done
+     it, and repeating it here silently shadows `.chapter-stage`. */
+  .terms {
+    display: grid;
+    gap: 14px;
+    list-style: none;
+  }
+
+  @media (min-width: 900px) {
+    .terms {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: stretch;
+    }
+  }
+
+  .terms-card {
+    display: flex;
+    flex-direction: column;
+    padding: 26px 24px;
+  }
+
+  /* ---------- The recommendation, made visible ----------
+     RC6. The section already passed `elevation={4}` to this card, which is
+     correct and was not enough: e4 differs from its e2 neighbours by 5.5% fill
+     alpha and 16px of blur, and against a lit wash at card scale that reads as
+     "slightly lighter", not as "this is the one". Measured on the 1440
+     capture, the three tiers were one flat row and the only thing marking the
+     middle was a 9px gold pill.
+
+     This is the page's single highest-leverage conversion surface, so it gets
+     three separations rather than one — the § 4.1 rule that depth needs alpha,
+     blur *and* shadow moving together, applied one level up: elevation, a
+     coloured ring, and displacement.
+
+     The overrides go through the engine's own custom properties rather than
+     around them. `.vos-surface` builds its border from a border-box gradient
+     on a transparent 1px border, so a `border-color` here would set a colour
+     on a border that is painted by the background — a rule that computes
+     cleanly, changes nothing, and is invisible in an editor. */
+  .terms-card--featured {
+    --vos-edge-a: 0.28;
+    --vos-edge-b: 0.1;
+    --vos-shadow:
+      inset 0 1px 0 rgb(var(--c-fg) / 0.16),
+      0 0 0 1px rgb(var(--color-accent-bright) / 0.34),
+      0 32px 90px rgb(var(--c-shadow) / calc(0.6 * var(--k-shadow))),
+      0 0 72px rgb(var(--color-accent) / 0.16);
+  }
+
+  /* The specular edge is gold on this card alone. § 2: gold marks the
+     resolution, and on a row of alternatives the resolution is the
+     recommendation — the same argument `content/pricing.ts` makes for the flag
+     it already carries, drawn at the scale of the whole card instead of a
+     9px pill. */
+  .terms-card--featured::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 16px;
+    right: 16px;
+    height: 1px;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgb(var(--color-gold-bright) / 0.6),
+      transparent
+    );
+  }
+
+  /* Displacement, only once the three are actually a row. Stacked on mobile
+     there is no row to break out of, and a card offset from a column of one
+     is just a misalignment.
+
+     Negative block margins against the row's `stretch`, **not** a transform.
+     A `transform: translateY(-10px)` here is the obvious way to write this and
+     it does nothing: this card also carries `.reveal-view`, whose keyframes
+     end on `transform: none`, and an animated value beats a normal
+     declaration whatever its specificity. So the card would rest at 0,
+     correctly, per the cascade — and the rule would look right in the file.
+     Only a capture taken after the reveal had run would show it.
+
+     Margins have the better result anyway. The card's margin box still fills
+     the row, so the border box grows 20px instead of sliding: the recommended
+     tier is *taller* than its neighbours as well as lifted, which is the
+     shape the pattern actually wants. */
+  @media (min-width: 900px) {
+    .terms-card--featured {
+      margin-block: -10px;
+      padding-block: 36px;
+    }
+  }
+
+  .terms-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: rgb(var(--color-accent-light));
+  }
+
+  /* The chapter's one gold element. § 2: gold marks a resolution, and on a
+     page of alternatives the resolution is the recommendation. */
+  .terms-flag {
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid rgb(var(--color-gold) / 0.34);
+    background: rgb(var(--color-gold) / 0.1);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: rgb(var(--color-gold-bright));
+  }
+
+  .terms-price {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 18px;
+    font-family: var(--font-display);
+    /* An engagement shape, not a figure, since D38: it can wrap, so it needs
+       a real line-height and a size that suits a phrase. */
+    font-size: clamp(21px, 2vw, 26px);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: rgb(var(--c-fg));
+  }
+
+  .terms-price-note {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  .terms-summary {
+    margin-top: 16px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgb(var(--color-text-secondary));
+  }
+
+  .terms-limit {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgb(var(--c-fg) / 0.07);
+    font-size: 13px;
+    line-height: 1.6;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  .terms-limit-mark {
+    display: block;
+    margin-bottom: 5px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: rgb(var(--color-gold-bright) / 0.72);
+  }
+
+  /* `margin-top: auto` pins every card's action to its bottom edge, so three
+     cards of different text lengths still present one horizontal line of
+     actions rather than a ragged one. */
+  .terms-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: auto;
+    padding-top: 22px;
+    font-size: 14px;
+    font-weight: 500;
+    color: rgb(var(--c-fg));
+    transition: color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .terms-cta:hover {
+    color: rgb(var(--color-accent-light));
+  }
+
+  .terms-foot {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-top: 30px;
+  }
+
+  @media (min-width: 1024px) {
+    .terms-foot {
+      flex-direction: row;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 48px;
+    }
+  }
+
+  /* `min-height: 24px`, not decoration. A 14px link's content box is 21px tall,
+     and WCAG 2.5.8 sets 24×24 as the floor for a target — which
+     `tests/e2e/responsive.spec.ts` asserts, and which this link failed at
+     312×21 on its first run. The width was never the problem; single-line
+     inline links are the shape that fails this. */
+  .terms-more {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    min-height: 24px;
+    font-size: 14px;
+    color: rgb(var(--c-fg));
+  }
+
+  .terms-own {
+    max-width: 46rem;
+    font-size: 13px;
+    line-height: 1.65;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  .terms-own-lead {
+    font-weight: 600;
+    color: rgb(var(--color-text-secondary));
+  }
+
+  /* ---------------------------------------------------------------
+     THE ANSWERS — chapter 08
+     The `<details>` list, on a flush surface. Padding lives here rather
+     than on the rows so the first and last questions are inset from the
+     surface's own edge by the same amount as the dividers between them.
+     --------------------------------------------------------------- */
+  .faq-panel {
+    border-radius: 20px;
+    padding: 6px clamp(18px, 2.4vw, 30px);
+  }
+
+  .faq-item {
+    padding-block: 20px;
+  }
+
+  .faq-item + .faq-item {
+    border-top: 1px solid rgb(var(--c-fg) / 0.07);
+  }
+
+  /* ---------------------------------------------------------------
+     THE REPORT — chapter 06, built on the Live Metrics engine
+     Subject and context on two planes (§ 4.3), rather than a tilting
+     card with two others overhanging it by 74px and 58px.
+     --------------------------------------------------------------- */
+  .report {
+    display: grid;
+    gap: 14px;
+  }
+
+  @media (min-width: 1024px) {
+    .report {
+      /* The subject gets the larger share, and `start` alignment keeps the two
+         context notes at the top rather than stretching them to match a taller
+         neighbour — equal heights would make three peers out of one subject
+         and two notes. */
+      grid-template-columns: 1.6fr 1fr;
+      align-items: start;
+      gap: 18px;
+    }
+  }
+
+  .report-figures {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+    margin-top: 22px;
+  }
+
+  .report-chart {
+    margin-top: 26px;
+  }
+
+  .report-chart-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  .report-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: rgb(var(--color-success));
+  }
+
+  .report-notes {
+    display: grid;
+    gap: 12px;
+  }
+
+  .report-note {
+    padding: 18px;
+  }
+
+  .report-note--success {
+    border-color: rgb(var(--color-success) / 0.3);
+  }
+
+  .report-note-head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 12px;
+    font-weight: 500;
+    color: rgb(var(--c-fg));
+  }
+
+  .report-note-body {
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: rgb(var(--color-text-secondary));
+  }
+
+  .report-note-foot {
+    margin-top: 10px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  .report-note-foot--success {
+    color: rgb(var(--color-success));
+  }
+
+  .report-bar {
+    display: block;
+    position: relative;
+    margin-top: 12px;
+    height: 4px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgb(var(--c-fg) / 0.06);
+  }
+
+  .report-bar-fill {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: rgb(var(--color-accent-bright));
+  }
+
+  /* ---------------------------------------------------------------
+     THE RUN — chapter 03
+     RC4 gave this section its own rail and its own held chapter column.
+     RC5 took both away, and that is the point rather than a loss: the
+     five stages now mount on the **page** rail, so the line that numbers
+     the chapters and the line the workflow hangs off are one line. A
+     private rail inside a page that already has one reads as two
+     systems; this reads as the page zooming in.
+     --------------------------------------------------------------- */
+  /* No `margin: 0` here, and that is load-bearing rather than tidy. Tailwind's
+     preflight already zeroes list margins, so writing it again did nothing
+     except shadow `.chapter-stage`'s `margin-top` — both are single-class
+     selectors in the same layer, and this one is later in the file, so it won
+     and the chapter head ran straight into stage 01 with a 20px gap where 65
+     was intended. Only visible in a capture. */
+  .run-stages {
+    position: relative;
+    list-style: none;
+  }
+
+  /* The gap IS the passage of time (§ 8.1 repeals the constant 12px). Steps
+     in a sequence are 32–56px apart; peers in a set are 12–16. */
+  .run-stage {
+    position: relative;
+    padding-bottom: 44px;
+  }
+
+  .run-stage:last-child {
+    padding-bottom: 0;
+  }
+
+  /* Onto the page rail, using the same expression as `.chapter-node` — one
+     indent value, inherited, so a stage station and a chapter mark cannot end
+     up on two different vertical lines. */
+  .run-node {
+    left: calc(1px - var(--chapter-indent));
+    top: 6px;
+    transform: translateX(-50%);
+  }
+
+  .run-index {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: rgb(var(--color-accent-light));
+  }
+
+  .run-title {
+    margin-top: 9px;
+    font-family: var(--font-display);
+    font-size: 23px;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: rgb(var(--c-fg));
+    text-wrap: balance;
+  }
+
+  .run-body {
+    margin-top: 10px;
+    max-width: 46ch;
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: rgb(var(--color-text-secondary));
+  }
+
+  .run-figure {
+    margin-top: 18px;
+    max-width: 420px;
+  }
+
+  .run-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  .run-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+  }
+
+  .run-coda {
+    margin-top: 40px;
+    font-size: 13px;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  /* ---------- The phone's contents (stage 02) ----------
+     Shapes, not words. `VISUAL_DNA_V2.md` § 6 forbids a drawn artifact from
+     containing a message body that is not already published, and there is no
+     published transcript — so the bubbles hold line shapes. The exchange is
+     legible from its rhythm: they ask, it answers at length, they reply short. */
+  /* Flush left, with the rest of the chapter. Centred, it drifted out of line
+     with the four schematics beside it in the sequence — five stages whose
+     artifacts start at five different x positions is not a sequence. */
+  .run-phone {
+    margin-inline: 0;
+  }
+
+  .run-chat {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 10px;
+    min-height: 190px;
+  }
+
+  .run-chat-bar {
+    height: 6px;
+    width: 56px;
+    border-radius: 999px;
+    background: rgb(var(--c-fg) / 0.14);
+    margin-bottom: 6px;
+  }
+
+  .run-chat-bubble {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-width: 78%;
+    padding: 9px 10px;
+    border-radius: 12px;
+  }
+
+  .run-chat-bubble i {
+    display: block;
+    height: 5px;
+    border-radius: 999px;
+  }
+
+  .run-chat-bubble--in {
+    align-self: flex-start;
+    background: rgb(var(--c-fg) / 0.07);
+    border-bottom-left-radius: 4px;
+  }
+
+  .run-chat-bubble--in i {
+    background: rgb(var(--c-fg) / 0.26);
+  }
+
+  .run-chat-bubble--in i:nth-child(1) {
+    width: 74px;
+  }
+
+  .run-chat-bubble--in i:nth-child(2) {
+    width: 52px;
+  }
+
+  /* The assistant's turn, in brand blue — the only coloured thing on this
+     screen, because it is the only thing the product did. */
+  .run-chat-bubble--out {
+    align-self: flex-end;
+    background: rgb(var(--color-accent) / 0.22);
+    border-bottom-right-radius: 4px;
+  }
+
+  .run-chat-bubble--out i {
+    background: rgb(var(--color-accent-light) / 0.75);
+  }
+
+  .run-chat-bubble--out i:nth-child(1) {
+    width: 88px;
+  }
+
+  .run-chat-bubble--out i:nth-child(2) {
+    width: 96px;
+  }
+
+  .run-chat-bubble--out i:nth-child(3) {
+    width: 62px;
+  }
+
+  @media (min-width: 1024px) {
+    /* Each stage becomes editorial in its own right: the sentence on the left,
+       the artifact it describes on the right. The full column width is
+       available now that the section is not spending 300px of it on a sticky
+       copy of the headline the chapter head already carries. */
+    .run-stage {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
+      align-items: start;
+      gap: 56px;
+      padding-bottom: 56px;
+    }
+
+    .run-figure {
+      margin-top: 4px;
+    }
+
+    .run-title {
+      font-size: 27px;
+    }
+
+    .run-body {
+      font-size: 15px;
+    }
+  }
+
+  /* ---------- RC3 reduced motion ---------- */
+  /* `VISUAL_DNA.md` § 5: reduced motion is a kill switch, never a slow-mo.
+     The global rule collapses `animation-duration` to 0.01ms, which would make
+     every signal *teleport* along its path — a flash of noise, strictly worse
+     than no signal. These are removed instead.
+
+     The delay resets exist because the global rule collapses duration but
+     leaves `animation-delay` untouched — the gap RC2 found and documented in
+     `MOTION_INVENTORY.md` § 7. Any staggered animation added here inherits it. */
+  @media (prefers-reduced-motion: reduce) {
+    .universe-signal,
+    .universe-orbit-trace,
+    .universe-pulse,
+    .glyph-panel .glyph-link::after,
+    .glyph-rail .glyph-link::after,
+    .infra-branch::after,
+    .vos-browser-sheen,
+    .vos-spark-tip {
+      display: none;
+    }
+
+    .border-beam::before,
+    .infra-hub::before {
+      animation: none;
+    }
+
+    /* The four pipeline beats are *content*, not decoration: their entrance is
+       `backwards`-filled, so cancelling the animation without also clearing the
+       delay would leave them at `opacity: 0` — the reader would lose the
+       mechanism entirely. Removed, not shortened, and the list is shown. */
+    .universe-step {
+      animation: none;
+    }
+
+    /* Hover elevation is a transition rather than an animation, so the global
+       rule does not reach it. The lit connector and the dimming are opacity
+       changes and are kept — they carry which node is selected, which is
+       information, and § 13 forbids conveying that through motion alone. */
+    .universe-node:hover .universe-plate,
+    .universe-node:focus-visible .universe-plate {
+      transform: none;
+    }
+
+    /* The hub glow is mid-cycle when its animation is cancelled, so it is
+       pinned to the resting end of the loop rather than left at whatever
+       opacity the frame happened to hold. */
+    .infra-hub::before {
+      opacity: 0.72;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .universe-signal,
+    .universe-step,
+    .infra-branch::after,
+    .reveal-view {
+      animation-delay: 0s !important;
+    }
   }
 }
 
@@ -581,6 +3988,1388 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ==========================================================================
+   THEME BEHAVIOUR  (Light by default, Dark by choice)
+   The tokens live in "THEME TOKENS" near the top of this file.
+   ========================================================================== */
+@layer base {
+  /* Short, class-scoped cross-fade. The class exists only for ~450 ms after the toggle is pressed,
+     so ordinary hover and entrance transitions are untouched the rest of the time. */
+  html.theme-anim,
+  html.theme-anim *,
+  html.theme-anim *::before,
+  html.theme-anim *::after {
+    transition:
+      background-color 0.35s ease,
+      color 0.35s ease,
+      border-color 0.35s ease,
+      fill 0.35s ease,
+      stroke 0.35s ease,
+      box-shadow 0.35s ease !important;
+  }
+
+  /* Stage panels: the hero, the Automation Universe diagram and the closing CTA stay dark inside the
+     light page (the elements also carry data-theme="dark", which re-scopes every token for their
+     children). In Dark mode these rules do not apply, so the dark site is exactly what it was. */
+  html[data-theme='light'] [data-stage] {
+    background-color: rgb(var(--color-void));
+    color: rgb(var(--color-text-primary));
+  }
+  html[data-theme='light'] [data-stage='panel'] {
+    padding: clamp(12px, 2.2vw, 28px);
+    border-radius: 28px;
+    border: 1px solid rgb(var(--color-border-subtle));
+    overflow: hidden;
+    box-shadow: 0 40px 90px -40px rgb(var(--c-shadow) / 0.55);
+  }
+
+  /* The fixed aurora is atmosphere for the dark theme; on a light page it is a whisper. */
+  html[data-theme='light'] .atmos-ambient {
+    opacity: 0.45;
+  }
+}
+
+/* ==========================================================================
+   DASHBOARD STORIES
+   Real interfaces as a short scroll narrative. Server-rendered, no client JS.
+   Everything below uses theme tokens, so both themes work without a second set.
+   See components/sections/DashboardStories.tsx for the reasoning.
+   ========================================================================== */
+@layer components {
+  .stories {
+    display: grid;
+    gap: clamp(72px, 9vw, 132px);
+  }
+
+  .story-head {
+    max-width: 46rem;
+  }
+  .story-kind {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgb(var(--color-text-tertiary));
+  }
+  .story-title {
+    margin-top: 12px;
+    font-family: var(--font-display), serif;
+    font-size: clamp(30px, 3.6vw, 48px);
+    font-weight: 600;
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+    color: rgb(var(--color-text-primary));
+    text-wrap: balance;
+  }
+  .story-sector {
+    margin-top: 8px;
+    font-size: 14px;
+    color: rgb(var(--color-text-tertiary));
+  }
+  .story-summary {
+    margin-top: 16px;
+    max-width: 40rem;
+    font-size: 17px;
+    line-height: 1.6;
+    color: rgb(var(--color-text-secondary));
+  }
+  .story-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+    padding: 0;
+    list-style: none;
+  }
+  .story-chip {
+    padding: 6px 11px;
+    border: 1px solid rgb(var(--color-border-subtle));
+    border-radius: 999px;
+    background: rgb(var(--color-surface-1) / 0.7);
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgb(var(--color-text-secondary));
+  }
+  .story-note {
+    margin-top: 12px;
+    max-width: 38rem;
+    font-size: 13px;
+    line-height: 1.55;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  .story-scenes {
+    display: grid;
+    gap: 24px;
+    margin: 40px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .scene {
+    position: relative;
+    display: grid;
+    gap: clamp(20px, 3vw, 44px);
+    align-items: center;
+    padding: clamp(18px, 2.4vw, 32px);
+    border: 1px solid rgb(var(--color-border-subtle));
+    border-radius: 28px;
+    background: rgb(var(--color-surface-1));
+    box-shadow:
+      0 36px 80px -44px rgb(var(--c-shadow) / calc(0.6 * var(--k-shadow))),
+      inset 0 1px 0 rgb(var(--c-fg) / 0.05);
+  }
+  .scene-copy {
+    display: grid;
+    gap: 10px;
+    align-content: center;
+  }
+  .scene-step {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    color: rgb(var(--color-accent-bright));
+  }
+  .scene-title {
+    font-family: var(--font-display), serif;
+    font-size: clamp(24px, 2.4vw, 32px);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    color: rgb(var(--color-text-primary));
+    text-wrap: balance;
+  }
+  .scene-body {
+    max-width: 30rem;
+    font-size: 15px;
+    line-height: 1.6;
+    color: rgb(var(--color-text-secondary));
+  }
+
+  /* glass browser window */
+  .scene-frame {
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid rgb(var(--color-border));
+    border-radius: 18px;
+    background: rgb(var(--color-surface-2));
+    box-shadow: 0 24px 60px -30px rgb(var(--c-shadow) / calc(0.7 * var(--k-shadow)));
+  }
+  .scene-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    border-bottom: 1px solid rgb(var(--color-border-subtle));
+    background: rgb(var(--color-surface-1) / 0.8);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+  .scene-bar i {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: rgb(var(--color-border));
+  }
+  .scene-bar span {
+    margin-left: 8px;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: rgb(var(--color-text-tertiary));
+  }
+  .scene-shot {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: rgb(var(--color-surface-2));
+  }
+  .scene-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 0%;
+  }
+
+  /* phone frame: a tall page seen through a 9:19 window */
+  .scene-frame--phone {
+    width: min(100%, 280px);
+    justify-self: center;
+    padding: 5px;
+    border: 5px solid #0b0d12; /* a physical bezel: dark in both themes */
+    border-radius: 34px;
+    background: #0b0d12;
+  }
+  .scene-frame--phone .scene-shot {
+    aspect-ratio: 9 / 18.5;
+    border-radius: 25px;
+  }
+
+  .story-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 28px;
+    min-height: 24px;
+    font-size: 14px;
+    color: rgb(var(--color-text-primary));
+    text-underline-offset: 4px;
+    transition: gap 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .story-link:hover {
+    gap: 12px;
+    text-decoration: underline;
+  }
+
+  @media (min-width: 1024px) {
+    .scene {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      min-height: 500px;
+    }
+    .scene[data-device='phone'] {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    }
+    /* Stacking: each desktop scene sticks a little lower than the one before it, so the next slides over it.
+       Phone scenes stay in normal flow so their drift has a scroll to run along. */
+    .scene[data-device='desktop'] {
+      position: sticky;
+      top: calc(88px + var(--i, 0) * 22px);
+    }
+  }
+}
+
+/* Scroll-driven motion: progressive enhancement only. Without support, or with reduced motion, every frame
+   simply shows the top of its page. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .scene[data-device='phone'] .scene-img {
+      animation: story-drift linear both;
+      animation-timeline: view();
+      animation-range: entry 15% exit 85%;
+    }
+    .scene[data-device='desktop'] .scene-shot {
+      animation: story-settle linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 70%;
+    }
+    .scene-copy > * {
+      animation: story-appear cubic-bezier(0.34, 1.3, 0.64, 1) both;
+      animation-timeline: view();
+    }
+    .scene-copy > :nth-child(1) { animation-range: entry 0% entry 50%; }
+    .scene-copy > :nth-child(2) { animation-range: entry 6% entry 58%; }
+    .scene-copy > :nth-child(3) { animation-range: entry 12% entry 66%; }
+    @keyframes story-appear {
+      from { opacity: 0.001; transform: translateY(10px); }
+      to { opacity: 1; transform: none; }
+    }
+    @keyframes story-drift {
+      from { object-position: 50% 0%; }
+      to { object-position: 50% 100%; }
+    }
+    @keyframes story-settle {
+      from { transform: scale(1.045); opacity: 0.55; }
+      to { transform: scale(1); opacity: 1; }
+    }
+  }
+}
+
+/* ==========================================================================
+   CAPABILITY TICKER
+   A CSS-only marquee with faded edges (wantace.com's logo strip, applied to our own
+   published capabilities). Pausable from the keyboard via the checkbox; stopped by
+   reduced motion. See components/sections/CapabilityTicker.tsx.
+   ========================================================================== */
+@layer components {
+  .ticker {
+    position: relative;
+    overflow: hidden;
+    padding-block: 20px;
+    border-block: 1px solid rgb(var(--color-border-subtle));
+    background: rgb(var(--color-surface-1) / 0.55);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 88%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 7%, #000 88%, transparent);
+  }
+  .ticker-track {
+    display: flex;
+    width: max-content;
+    animation: ticker-run 52s linear infinite;
+  }
+  .ticker:hover .ticker-track,
+  .ticker-toggle:checked ~ .ticker-track {
+    animation-play-state: paused;
+  }
+  .ticker-list {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .ticker-list li {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    font-family: var(--font-display), serif;
+    font-size: clamp(20px, 2.1vw, 28px);
+    letter-spacing: -0.01em;
+    color: rgb(var(--color-text-secondary));
+  }
+  .ticker-list li::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    margin-inline: clamp(20px, 3vw, 36px);
+    border-radius: 50%;
+    background: rgb(var(--color-accent-bright));
+    opacity: 0.7;
+  }
+  .ticker-btn {
+    position: absolute;
+    z-index: 2;
+    top: 50%;
+    right: clamp(16px, 4vw, 48px);
+    transform: translateY(-50%);
+    padding: 4px 9px;
+    border: 1px solid rgb(var(--color-border));
+    border-radius: 999px;
+    background: rgb(var(--color-surface-1));
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgb(var(--color-text-secondary));
+    cursor: pointer;
+  }
+  .ticker-btn-play { display: none; }
+  .ticker-toggle:checked ~ .ticker-btn .ticker-btn-pause { display: none; }
+  .ticker-toggle:checked ~ .ticker-btn .ticker-btn-play { display: inline; }
+  .ticker-toggle:focus-visible ~ .ticker-btn {
+    outline: 2px solid rgb(var(--color-accent));
+    outline-offset: 2px;
+  }
+  @keyframes ticker-run {
+    to { transform: translateX(-50%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ticker-track { animation: none; }
+    .ticker-btn { display: none; }
+  }
+}
+
+/* ==========================================================================
+   MOTION CONTROLS (D40)
+   One Pause control per looping stage, the capability ticker's pattern: a
+   visually hidden native checkbox carries the name and state; its visible
+   label sits inside the (aria-hidden) stage. Everything that loops for longer
+   than five seconds stops with it (WCAG 2.2.2). Reduced motion removes the
+   loops altogether, and with them the control.
+   ========================================================================== */
+/* Registered so the dashboard counter interpolates as an integer. Without
+   support it falls back to the static figure below. */
+@property --flow-n {
+  syntax: '<integer>';
+  inherits: false;
+  initial-value: 128;
+}
+
+@layer components {
+  /* The bar above each looping stage: a label on the left, Pause on the right,
+     so the stage itself keeps equal padding on every side. */
+  .stage-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+  .stage-bar-label {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgb(var(--color-text-tertiary));
+  }
+  .motion-btn {
+    min-width: 58px;
+    min-height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 12px;
+    border: 1px solid rgb(var(--color-border));
+    border-radius: 999px;
+    background: rgb(var(--color-surface-1) / 0.92);
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgb(var(--color-text-secondary));
+    cursor: pointer;
+  }
+  .motion-btn-play { display: none; }
+  .motion-toggle:checked ~ * .motion-btn-pause { display: none; }
+  .motion-toggle:checked ~ * .motion-btn-play { display: inline; }
+  .motion-toggle:focus-visible ~ * .motion-btn {
+    outline: 2px solid rgb(var(--color-accent));
+    outline-offset: 2px;
+  }
+  .motion-toggle:checked ~ .flow-stage *,
+  .motion-toggle:checked ~ .eco-orbit *,
+  .motion-toggle:checked ~ .eco-grid * {
+    animation-play-state: paused;
+  }
+  .eco-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+}
+
+/* ==========================================================================
+   BEFORE / AFTER PIPELINE (RC13 D39, continuous loop since D40)
+   Three columns on desktop (chaos | engine | flow) joined by SVG beams; one
+   column on phones with vertical beams. Every loop shares --flow-t, and each
+   enquiry/outcome pair is phased so the card lands just after its enquiry is
+   pulled in. --pull-* and --enter-* point the motion at the engine for the
+   current layout. Only transform and opacity animate, plus SVG dash offsets.
+   See TransformationScene.tsx.
+   ========================================================================== */
+@layer components {
+  .flow {
+    position: relative;
+    --flow-t: 10s;
+  }
+  .flow-stage {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    padding: clamp(20px, 3vw, 36px);
+    border: 1px solid rgb(var(--color-border-subtle));
+    border-radius: 28px;
+    background:
+      radial-gradient(60% 55% at 50% 50%, rgb(var(--color-accent) / 0.12), transparent 70%),
+      radial-gradient(40% 50% at 0% 100%, rgb(var(--color-danger) / 0.06), transparent 70%),
+      radial-gradient(40% 50% at 100% 0%, rgb(var(--color-success) / 0.07), transparent 70%),
+      rgb(var(--color-surface-1) / 0.9);
+    box-shadow:
+      inset 0 1px 0 rgb(var(--c-fg) / 0.04),
+      0 36px 80px -44px rgb(var(--c-shadow) / calc(0.6 * var(--k-shadow)));
+    overflow: hidden;
+    --pull-x: 0px;
+    --pull-y: 44px;
+    --enter-x: 0px;
+    --enter-y: -18px;
+  }
+  @media (min-width: 1024px) {
+    .flow-stage {
+      grid-template-columns: minmax(0, 1fr) 88px 184px 88px minmax(0, 1fr);
+      align-items: stretch;
+      --pull-x: 60px;
+      --pull-y: 0px;
+      --enter-x: -30px;
+      --enter-y: 0px;
+    }
+  }
+
+  .flow-tag {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .flow-tag--chaos { color: rgb(var(--color-danger)); }
+  .flow-tag--auto { color: rgb(var(--color-success)); }
+  .flow-col-title {
+    margin-top: 6px;
+    font-family: var(--font-display), serif;
+    font-size: clamp(20px, 2vw, 26px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: rgb(var(--color-text-primary));
+  }
+
+  /* Both columns share one structure: tag, title, four rows, one block, with
+     the block pinned to the bottom so the two sides line up row for row. */
+  .flow-col {
+    display: flex;
+    flex-direction: column;
+  }
+  .flow-pile,
+  .flow-feed {
+    display: grid;
+    gap: 10px;
+    margin-block: 16px 12px;
+  }
+  .flow-sheet,
+  .flow-dash {
+    margin-top: auto;
+    min-height: 132px;
+    border-radius: 14px;
+  }
+  .flow-lead,
+  .flow-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 10px 12px;
+    border-radius: 14px;
+  }
+
+  /* Left: enquiries that stall, shake and get dragged into the engine. */
+  .flow-lead {
+    border: 1px solid rgb(var(--color-border-subtle));
+    background: rgb(var(--color-surface-1));
+    box-shadow: 0 14px 30px -22px rgb(var(--c-shadow) / var(--k-shadow));
+    animation: flow-pull var(--flow-t) cubic-bezier(0.45, 0, 0.55, 1) infinite both;
+    animation-delay: calc(var(--flow-t) * (var(--i, 0) * 0.25 - 1));
+  }
+  .flow-lead-avatar,
+  .flow-card-icon {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 50% 38%, rgb(var(--color-surface-1)) 0 22%, transparent 23%),
+      rgb(var(--color-surface-3));
+  }
+  .flow-card-icon {
+    display: grid;
+    place-items: center;
+    background: rgb(var(--color-success) / 0.14);
+    color: rgb(var(--color-success));
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .flow-card-icon::before {
+    content: '\2713';
+  }
+  .flow-lead-text,
+  .flow-card-text {
+    display: grid;
+    min-width: 0;
+  }
+  .flow-lead-what,
+  .flow-card-what {
+    overflow: hidden;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: rgb(var(--color-text-primary));
+  }
+  .flow-lead-via,
+  .flow-card-via {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 11px;
+    color: rgb(var(--color-text-tertiary));
+  }
+  .flow-warn,
+  .flow-ok {
+    flex: none;
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .flow-warn {
+    color: rgb(var(--color-danger));
+    background: rgb(var(--color-danger) / 0.1);
+    border: 1px solid rgb(var(--color-danger) / 0.24);
+    animation: flow-throb 1.6s ease-in-out infinite;
+  }
+  .flow-warn::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .flow-sheet {
+    display: grid;
+    align-content: center;
+    border: 1px solid rgb(var(--color-border-subtle));
+    overflow: hidden;
+    background: rgb(var(--color-surface-1));
+  }
+  .flow-row {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 12px;
+    font-size: 12px;
+    color: rgb(var(--color-text-secondary));
+    animation: flow-stall 3.2s ease-in-out infinite;
+    animation-delay: calc(var(--i, 0) * -0.85s);
+  }
+  .flow-row + .flow-row {
+    border-top: 1px solid rgb(var(--color-border-subtle));
+  }
+  .flow-row-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: rgb(var(--color-surface-3));
+  }
+  .flow-row-status {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 11px;
+    color: rgb(var(--color-warning));
+  }
+
+  /* Beams: a static track, a marching dash and one travelling pulse each. */
+  .flow-beams {
+    overflow: visible;
+  }
+  .flow-beams path {
+    fill: none;
+    vector-effect: non-scaling-stroke;
+  }
+  .flow-beams--row { display: none; }
+  .flow-beams--col {
+    display: block;
+    justify-self: center;
+    width: min(100%, 260px);
+    height: 64px;
+    margin-block: 6px;
+  }
+  @media (min-width: 1024px) {
+    .flow-beams--row {
+      display: block;
+      align-self: center;
+      width: 100%;
+      height: 220px;
+    }
+    .flow-beams--col { display: none; }
+  }
+  .flow-beam-track {
+    stroke: rgb(var(--color-border));
+    stroke-width: 1.5;
+  }
+  .flow-beam-dash {
+    stroke-width: 2;
+    stroke-dasharray: 3 6;
+    animation: flow-march 0.9s linear infinite;
+  }
+  .flow-beam-pulse {
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 16 120;
+    filter: drop-shadow(0 0 4px rgb(var(--color-accent-bright) / 0.85));
+    animation: flow-comet 2.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  }
+  .flow-beams g:nth-child(2) .flow-beam-pulse { animation-delay: -0.7s; }
+  .flow-beams g:nth-child(3) .flow-beam-pulse { animation-delay: -1.4s; }
+
+  /* Centre: the engine. */
+  .flow-core {
+    position: relative;
+    justify-self: center;
+    align-self: center;
+    display: grid;
+    place-items: center;
+    width: 172px;
+    height: 172px;
+  }
+  .flow-core-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 0deg,
+      rgb(var(--color-accent-bright)),
+      rgb(var(--color-success)),
+      rgb(var(--color-accent) / 0.1),
+      rgb(var(--color-accent-bright))
+    );
+    -webkit-mask: radial-gradient(closest-side, transparent 86%, #000 88%);
+    mask: radial-gradient(closest-side, transparent 86%, #000 88%);
+    animation: flow-spin 5s linear infinite;
+  }
+  .flow-core-pulse {
+    position: absolute;
+    inset: 18px;
+    border-radius: 50%;
+    border: 2px solid rgb(var(--color-accent-bright) / 0.5);
+    animation: flow-ping 2.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+  .flow-core-pulse--late { animation-delay: -1.4s; }
+  .flow-core-face {
+    position: relative;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 3px;
+    width: 128px;
+    height: 128px;
+    border-radius: 50%;
+    border: 1px solid rgb(var(--color-accent) / 0.35);
+    background: radial-gradient(circle at 32% 24%, rgb(var(--color-surface-1)), rgb(var(--color-surface-2)));
+    box-shadow:
+      0 0 0 6px rgb(var(--color-accent) / 0.08),
+      0 0 56px -6px rgb(var(--color-accent-bright) / 0.7),
+      inset 0 1px 0 rgb(var(--c-fg) / 0.06);
+    animation: flow-breathe 3.2s ease-in-out infinite;
+  }
+  .flow-core-name {
+    font-family: var(--font-display), serif;
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: rgb(var(--color-text-primary));
+  }
+  .flow-core-sub {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgb(var(--color-text-tertiary));
+  }
+  .flow-core-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgb(var(--color-success));
+  }
+  .flow-core-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: flow-blink 1.1s steps(2, jump-none) infinite;
+  }
+
+  /* Right: the same four enquiries, finished, plus a ticking dashboard. */
+  .flow-dash {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'label demo'
+      'count bars';
+    align-items: end;
+    align-content: center;
+    gap: 6px 12px;
+    padding: 14px 16px;
+    border: 1px solid rgb(var(--color-success) / 0.28);
+    background:
+      radial-gradient(120% 120% at 100% 0%, rgb(var(--color-success) / 0.1), transparent 60%),
+      rgb(var(--color-surface-1));
+    box-shadow: 0 22px 50px -32px rgb(var(--c-shadow) / var(--k-shadow));
+  }
+  .flow-dash-label {
+    grid-area: label;
+    font-size: 12px;
+    color: rgb(var(--color-text-secondary));
+  }
+  .flow-dash-demo {
+    grid-area: demo;
+    justify-self: end;
+    padding: 2px 8px;
+    border: 1px solid rgb(var(--color-border-subtle));
+    border-radius: 999px;
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgb(var(--color-text-tertiary));
+  }
+  .flow-dash-count {
+    grid-area: count;
+    font-family: var(--font-display), serif;
+    font-size: 34px;
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: rgb(var(--color-text-primary));
+    counter-reset: flow var(--flow-n, 128);
+    animation: flow-count var(--flow-t) linear infinite;
+  }
+  .flow-dash-count::after {
+    content: counter(flow);
+  }
+  .flow-dash-bars {
+    grid-area: bars;
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    width: 96px;
+    height: 38px;
+  }
+  .flow-dash-bar {
+    flex: 1;
+    border-radius: 3px 3px 1px 1px;
+    background: linear-gradient(rgb(var(--color-success)), rgb(var(--color-success) / 0.35));
+    transform-origin: 50% 100%;
+    animation: flow-bar var(--flow-t) ease-in-out infinite;
+    animation-delay: calc(var(--i, 0) * -0.6s);
+  }
+  .flow-card {
+    border: 1px solid rgb(var(--c-fg) / 0.08);
+    background: rgb(var(--color-surface-1));
+    box-shadow:
+      inset 0 1px 0 rgb(var(--c-fg) / 0.04),
+      0 18px 40px -28px rgb(var(--c-shadow) / var(--k-shadow));
+    animation: flow-land var(--flow-t) cubic-bezier(0.34, 1.4, 0.64, 1) infinite both;
+    animation-delay: calc(var(--flow-t) * (var(--i, 0) * 0.25 - 1.17));
+  }
+  .flow-ok {
+    color: rgb(var(--color-success));
+    background: rgb(var(--color-success) / 0.12);
+    border: 1px solid rgb(var(--color-success) / 0.26);
+    animation: flow-pop var(--flow-t) ease-out infinite both;
+    animation-delay: calc(var(--flow-t) * (var(--i, 0) * 0.25 - 1.17));
+  }
+  .flow-ok::before {
+    content: '\2713';
+    font-size: 11px;
+  }
+
+  /* The same content in words, always visible. */
+  .flow-compare {
+    display: grid;
+    gap: 32px;
+    margin-top: clamp(28px, 3.4vw, 44px);
+  }
+  @media (min-width: 900px) {
+    .flow-compare {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: clamp(32px, 4vw, 64px);
+    }
+  }
+
+  .shift-tag {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgb(var(--color-text-tertiary));
+  }
+  .shift-tag--after {
+    color: rgb(var(--color-accent-bright));
+  }
+  .shift-title {
+    margin-top: 10px;
+    font-family: var(--font-display), serif;
+    font-size: clamp(24px, 2.6vw, 32px);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: rgb(var(--color-text-primary));
+  }
+  .shift-list {
+    margin: 18px 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 12px;
+  }
+  .shift-list li {
+    position: relative;
+    padding-left: 26px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: rgb(var(--color-text-secondary));
+  }
+  .shift-list li::before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 0.62em;
+    width: 12px;
+    height: 2px;
+    border-radius: 2px;
+    background: rgb(var(--color-danger) / 0.75);
+  }
+  .shift-list--after li {
+    color: rgb(var(--color-text-primary));
+  }
+  .shift-list--after li::before {
+    top: 0.42em;
+    width: 12px;
+    height: 7px;
+    background: none;
+    border-left: 2px solid rgb(var(--color-success));
+    border-bottom: 2px solid rgb(var(--color-success));
+    border-radius: 0;
+    transform: rotate(-45deg);
+  }
+  .shift-note-caption {
+    margin-top: 18px;
+    max-width: 60ch;
+    font-size: 13px;
+    line-height: 1.6;
+    color: rgb(var(--color-text-tertiary));
+  }
+
+  /* Kinetic typography: the lists land line by line. Resting state (no
+     support, reduced motion) is the finished frame. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .shift-list li {
+        animation: shift-line-in linear both;
+        animation-timeline: view();
+        animation-range: entry calc(4% + var(--i, 0) * 6%) entry calc(46% + var(--i, 0) * 6%);
+      }
+    }
+  }
+  @keyframes shift-line-in {
+    from {
+      opacity: 0.001;
+      transform: translateY(10px);
+    }
+  }
+
+  /* Every keyframe animates away from, and back to, the resting frame, so a
+     paused or motionless stage always shows finished content. */
+  @keyframes flow-pull {
+    0% { opacity: 0; transform: translateY(-10px) scale(0.96); }
+    8% { opacity: 1; transform: none; }
+    14%, 22%, 30% { transform: translateX(-2px); }
+    18%, 26% { transform: translateX(2px); }
+    34%, 62% { opacity: 1; transform: none; }
+    80%, 100% { opacity: 0; transform: translate(var(--pull-x), var(--pull-y)) scale(0.82); }
+  }
+  @keyframes flow-land {
+    0% { opacity: 0; transform: translate(var(--enter-x), var(--enter-y)) scale(0.94); }
+    7%, 72% { opacity: 1; transform: none; }
+    84%, 100% { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  }
+  @keyframes flow-pop {
+    0%, 6% { transform: scale(0.6); }
+    11% { transform: scale(1.1); }
+    15%, 100% { transform: none; }
+  }
+  @keyframes flow-throb {
+    50% { transform: scale(1.06); }
+  }
+  @keyframes flow-stall {
+    0%, 68%, 100% { transform: none; }
+    72%, 80% { transform: translateX(-3px); }
+    76%, 84% { transform: translateX(3px); }
+  }
+  @keyframes flow-march {
+    to { stroke-dashoffset: -18; }
+  }
+  @keyframes flow-comet {
+    from { stroke-dashoffset: 16; }
+    to { stroke-dashoffset: -120; }
+  }
+  @keyframes flow-spin {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes flow-ping {
+    from { opacity: 0.8; transform: scale(0.86); }
+    to { opacity: 0; transform: scale(1.5); }
+  }
+  @keyframes flow-breathe {
+    50% { transform: scale(1.04); }
+  }
+  @keyframes flow-blink {
+    50% { opacity: 0.25; }
+  }
+  @keyframes flow-bar {
+    0%, 100% { transform: scaleY(0.55); }
+    50% { transform: scaleY(1); }
+  }
+  @keyframes flow-count {
+    from { --flow-n: 112; }
+    to { --flow-n: 128; }
+  }
+}
+
+/* ==========================================================================
+   ECOSYSTEM ORBIT (RC13 D39, orbit and full-colour marks since D40)
+   A wheel 2r wide whose centre sits on the stage's bottom edge, so only its
+   upper half shows. Arms are zero-size boxes rotated to --a and pushed out by
+   r; the wheel spins and each tile face counter-spins at the same rate, so the
+   logos stay upright along the arc. Tiles are white in both themes so every
+   brand colour reads as intended; the glow is tinted with --brand. See
+   EcosystemGrid.tsx.
+   ========================================================================== */
+@layer components {
+  .eco {
+    margin-top: clamp(56px, 7vw, 96px);
+  }
+  .eco .stage-bar {
+    margin-top: clamp(28px, 3.4vw, 44px);
+  }
+  .eco-title {
+    max-width: 24ch;
+    font-family: var(--font-display), serif;
+    font-size: clamp(24px, 2.6vw, 34px);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: rgb(var(--color-text-primary));
+  }
+
+  .eco-orbit {
+    --r: clamp(136px, 34vw, 320px);
+    --chip: clamp(46px, 5.4vw, 64px);
+    --orbit-t: 60s;
+    position: relative;
+    height: calc(var(--r) + var(--chip) / 2 + 28px);
+    overflow: hidden;
+    border-bottom: 1px solid rgb(var(--color-accent) / 0.25);
+    border-radius: 28px 28px 0 0;
+  }
+  .eco-glow {
+    position: absolute;
+    left: 50%;
+    bottom: calc(var(--r) * -1.1);
+    width: calc(var(--r) * 2.6);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(
+      closest-side,
+      rgb(var(--color-accent) / 0.22),
+      rgb(var(--color-accent) / 0.06) 62%,
+      transparent
+    );
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+  .eco-wheel {
+    position: absolute;
+    left: 50%;
+    top: calc(var(--chip) / 2 + 20px);
+    width: calc(var(--r) * 2);
+    aspect-ratio: 1;
+    transform: translateX(-50%);
+  }
+  .eco-track {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgb(var(--color-accent) / 0.3);
+  }
+  .eco-track--outer {
+    inset: 0;
+    box-shadow:
+      0 0 28px rgb(var(--color-accent-bright) / 0.2),
+      inset 0 0 28px rgb(var(--color-accent-bright) / 0.14);
+  }
+  .eco-track--mid {
+    inset: 18%;
+    border-style: dashed;
+    border-color: rgb(var(--color-accent) / 0.26);
+  }
+  .eco-track--inner {
+    inset: 36%;
+    border-color: rgb(var(--color-accent) / 0.2);
+  }
+  .eco-spin {
+    position: absolute;
+    inset: 0;
+    animation: eco-spin var(--orbit-t) linear infinite;
+  }
+  .eco-spin--sparks {
+    animation-duration: 16s;
+    animation-direction: reverse;
+  }
+  .eco-spark {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    margin: -4px;
+    border-radius: 50%;
+    background: rgb(var(--color-accent-bright));
+    box-shadow: 0 0 12px 3px rgb(var(--color-accent-bright) / 0.7);
+    transform: rotate(var(--a)) translateY(calc(var(--r) * -0.64));
+  }
+  .eco-arm {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0;
+    height: 0;
+    transform: rotate(var(--a)) translateY(calc(var(--r) * -1));
+  }
+  .eco-chip {
+    position: absolute;
+    left: calc(var(--chip) / -2);
+    top: calc(var(--chip) / -2);
+    width: var(--chip);
+    height: var(--chip);
+    transform: rotate(calc(var(--a) * -1));
+  }
+  .eco-chip-face,
+  .eco-mark,
+  .eco-badge-mark {
+    display: grid;
+    place-items: center;
+    border: 1px solid #fff;
+    background: radial-gradient(50% 83% at 50% 50%, #fff 0%, #f3f4f6 100%);
+  }
+  .eco-chip-face {
+    width: 100%;
+    height: 100%;
+    border-radius: 30%;
+    box-shadow:
+      0 2px 4px rgb(0 0 0 / 0.05),
+      0 10px 18px -8px rgb(0 0 0 / 0.1),
+      0 16px 36px -10px rgb(var(--brand) / 0.62),
+      0 0 0 1px rgb(var(--brand) / 0.16);
+    animation: eco-unspin var(--orbit-t) linear infinite;
+  }
+  .eco-chip-face svg {
+    width: 52%;
+    height: 52%;
+  }
+
+  .eco-core {
+    position: absolute;
+    z-index: 2;
+    left: 50%;
+    bottom: 0;
+    display: grid;
+    place-content: end center;
+    justify-items: center;
+    gap: 2px;
+    width: max(150px, calc(var(--r) * 0.7));
+    aspect-ratio: 2 / 1;
+    padding-bottom: clamp(10px, 1.6vw, 22px);
+    border: 1px solid rgb(var(--color-accent) / 0.4);
+    border-bottom: 0;
+    border-radius: 999px 999px 0 0;
+    background:
+      radial-gradient(120% 130% at 50% 100%, rgb(var(--color-accent) / 0.26), transparent 70%),
+      rgb(var(--color-surface-1));
+    box-shadow: 0 -12px 60px -12px rgb(var(--color-accent-bright) / 0.6);
+    transform: translateX(-50%);
+  }
+  .eco-core-pulse {
+    position: absolute;
+    inset: -14px -14px 0;
+    border: 1.5px solid rgb(var(--color-accent-bright) / 0.5);
+    border-bottom: 0;
+    border-radius: 999px 999px 0 0;
+    transform-origin: 50% 100%;
+    animation: eco-ping 3.2s ease-out infinite;
+  }
+  .eco-core-pulse--late { animation-delay: -1.6s; }
+  .eco-core-name {
+    font-family: var(--font-display), serif;
+    font-size: clamp(18px, 2vw, 28px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: rgb(var(--color-text-primary));
+  }
+  .eco-core-sub {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgb(var(--color-accent-bright));
+  }
+
+  .eco-badge {
+    position: absolute;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px 6px 6px;
+    border: 1px solid rgb(var(--brand) / 0.38);
+    border-radius: 999px;
+    background: rgb(var(--color-surface-1) / 0.94);
+    box-shadow:
+      0 2px 6px rgb(0 0 0 / 0.05),
+      0 14px 32px -14px rgb(var(--brand) / 0.75);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: rgb(var(--color-text-primary));
+    animation: eco-bob 5s ease-in-out infinite;
+    animation-delay: calc(var(--i, 0) * -1.3s);
+  }
+  /* Mirrored pairs on wider screens; phones keep the orbit uncluttered. */
+  @media (max-width: 767px) {
+    .eco-badge { display: none; }
+  }
+  .eco-badge-mark {
+    width: 26px;
+    height: 26px;
+    border-radius: 9px;
+    box-shadow: 0 0 0 1px rgb(var(--brand) / 0.2);
+  }
+  .eco-badge-mark svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .eco-hub-line {
+    max-width: 52ch;
+    margin: 18px auto 0;
+    text-align: center;
+    font-size: 15px;
+    line-height: 1.55;
+    color: rgb(var(--color-text-secondary));
+  }
+
+  .eco-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin: clamp(28px, 3.4vw, 44px) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 1024px) {
+    .eco-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 399px) {
+    .eco-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  .eco-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 20px;
+    border: 1px solid rgb(var(--color-border-subtle));
+    border-radius: 20px;
+    background:
+      radial-gradient(90% 70% at 50% 0%, rgb(var(--brand) / 0.08), transparent 60%),
+      rgb(var(--color-surface-1));
+    box-shadow:
+      inset 0 1px 0 rgb(var(--c-fg) / 0.03),
+      0 24px 60px -40px rgb(var(--c-shadow) / calc(0.6 * var(--k-shadow)));
+    transition:
+      transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .eco-tile:hover {
+    transform: translateY(-4px);
+    border-color: rgb(var(--brand) / 0.45);
+    box-shadow:
+      inset 0 1px 0 rgb(var(--c-fg) / 0.03),
+      0 28px 60px -34px rgb(var(--brand) / 0.6);
+  }
+  .eco-mark {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 8px;
+    border-radius: 15px;
+    box-shadow:
+      0 2px 4px rgb(0 0 0 / 0.05),
+      0 12px 26px -10px rgb(var(--brand) / 0.6),
+      0 0 0 1px rgb(var(--brand) / 0.16);
+    transition: transform 0.45s cubic-bezier(0.34, 1.5, 0.64, 1);
+  }
+  .eco-tile:hover .eco-mark {
+    transform: scale(1.1);
+  }
+  .eco-mark svg {
+    width: 26px;
+    height: 26px;
+    animation: eco-bob-sm 4.6s ease-in-out infinite;
+    animation-delay: calc(var(--i, 0) * -0.55s);
+  }
+  .eco-group {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgb(var(--color-text-tertiary));
+  }
+  .eco-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: rgb(var(--color-text-primary));
+  }
+  .eco-habit {
+    font-size: 14px;
+    line-height: 1.5;
+    color: rgb(var(--color-text-secondary));
+  }
+  .eco-legal {
+    margin-top: 18px;
+    max-width: 80ch;
+    font-size: 12px;
+    line-height: 1.6;
+    color: rgb(var(--color-text-tertiary));
+  }
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .eco-tile {
+        animation: shift-line-in linear both;
+        animation-timeline: view();
+        animation-range: entry calc(var(--i, 0) * 3%) entry calc(40% + var(--i, 0) * 3%);
+      }
+    }
+  }
+  @keyframes eco-spin {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes eco-unspin {
+    to { transform: rotate(-360deg); }
+  }
+  @keyframes eco-ping {
+    from { opacity: 0.9; transform: scale(0.92); }
+    to { opacity: 0; transform: scale(1.3); }
+  }
+  @keyframes eco-bob {
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes eco-bob-sm {
+    50% { transform: translateY(-3px); }
+  }
+
+  /* Reduced motion: a still frame, every card shown, no control to offer. */
+  @media (prefers-reduced-motion: reduce) {
+    .flow-stage *,
+    .eco-orbit *,
+    .eco-mark svg {
+      animation: none;
+    }
+    .motion-btn {
+      display: none;
+    }
+    .eco-tile,
+    .eco-mark {
+      transition: none;
+    }
+    .eco-tile:hover,
+    .eco-tile:hover .eco-mark {
+      transform: none;
+    }
+  }
+  /* Windows High Contrast drops backgrounds; keep the stage legible. */
+  @media (forced-colors: active) {
+    .flow-warn,
+    .flow-ok,
+    .motion-btn {
+      border-color: CanvasText;
     }
   }
 }

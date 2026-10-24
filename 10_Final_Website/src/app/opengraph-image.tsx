@@ -1,7 +1,8 @@
 import { ImageResponse } from 'next/og';
+import { BRAND_MARK_DATA_URI } from '@/lib/brand-mark';
 
 export const runtime = 'edge';
-export const alt = 'SheetFlow AI — The intelligence layer your spreadsheets always deserved.';
+export const alt = 'SheetFlow AI — AI automation agency for growing businesses.';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -32,7 +33,7 @@ export default async function OpengraphImage() {
             position: 'absolute',
             inset: 0,
             background:
-              'radial-gradient(ellipse 80% 60% at 20% 20%, rgba(99,102,241,0.35), transparent 60%), radial-gradient(ellipse 60% 50% at 80% 30%, rgba(139,92,246,0.22), transparent 60%), radial-gradient(ellipse 100% 60% at 50% 100%, rgba(6,182,212,0.12), transparent 70%)',
+              'radial-gradient(ellipse 80% 60% at 20% 20%, rgba(59, 130, 246,0.35), transparent 60%), radial-gradient(ellipse 60% 50% at 80% 30%, rgba(233, 162, 59,0.22), transparent 60%), radial-gradient(ellipse 100% 60% at 50% 100%, rgba(6,182,212,0.12), transparent 70%)',
             display: 'flex',
           }}
         />
@@ -42,7 +43,7 @@ export default async function OpengraphImage() {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 12,
+              gap: 16,
               fontSize: 18,
               letterSpacing: '0.18em',
               textTransform: 'uppercase',
@@ -50,7 +51,7 @@ export default async function OpengraphImage() {
               fontFamily: 'monospace',
             }}
           >
-            <span style={{ width: 8, height: 8, borderRadius: 999, background: '#10B981', display: 'flex' }} />
+            <img src={BRAND_MARK_DATA_URI} width={56} height={56} alt="" />
             SHEETFLOW · AI
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#A0A8BC', fontSize: 18, letterSpacing: '0.12em', fontFamily: 'monospace' }}>
@@ -62,7 +63,9 @@ export default async function OpengraphImage() {
         <div style={{ display: 'flex', flexDirection: 'column', position: 'relative', maxWidth: 920 }}>
           <div
             style={{
-              fontSize: 96,
+              // 88, not 96: at 96 the headline wraps to three lines and pushes
+              // the description into the footer row.
+              fontSize: 88,
               lineHeight: 1.0,
               letterSpacing: '-0.035em',
               fontWeight: 700,
@@ -71,28 +74,28 @@ export default async function OpengraphImage() {
               gap: '0.25em',
             }}
           >
-            <span style={{ color: '#FFFFFF' }}>Spreadsheets,</span>
+            <span style={{ color: '#FFFFFF' }}>Stop doing the busywork.</span>
             <span
               style={{
-                background: 'linear-gradient(135deg, #818CF8 0%, #A78BFA 50%, #06B6D4 100%)',
+                background: 'linear-gradient(135deg, #60A5FA 0%, #F4C063 50%, #06B6D4 100%)',
                 backgroundClip: 'text',
                 color: 'transparent',
               }}
             >
-              finally alive.
+              Let SheetFlow run it.
             </span>
           </div>
           <div
             style={{
-              marginTop: 28,
-              fontSize: 26,
-              lineHeight: 1.4,
+              marginTop: 22,
+              fontSize: 24,
+              lineHeight: 1.35,
               color: '#A0A8BC',
-              maxWidth: 720,
+              maxWidth: 760,
               display: 'flex',
             }}
           >
-            The operational intelligence layer for spreadsheets. Watch your data, catch what matters, act before you have to ask.
+            AI automations for leads, WhatsApp follow-ups, bookings, and CRM — built for clinics, agencies, coaches and service businesses.
           </div>
         </div>
 
@@ -109,11 +112,11 @@ export default async function OpengraphImage() {
               letterSpacing: '0.12em',
             }}
           >
-            <span>WATCHING</span>
+            <span>CAPTURE</span>
             <span>·</span>
-            <span>RESOLVING</span>
+            <span>FOLLOW UP</span>
             <span>·</span>
-            <span>SIGNALING</span>
+            <span>BOOK</span>
           </div>
         </div>
 
@@ -131,8 +134,8 @@ export default async function OpengraphImage() {
               ...pos,
               width: 28,
               height: 28,
-              borderTop: '2px solid rgba(99,102,241,0.65)',
-              borderLeft: '2px solid rgba(99,102,241,0.65)',
+              borderTop: '2px solid rgba(59, 130, 246,0.65)',
+              borderLeft: '2px solid rgba(59, 130, 246,0.65)',
               display: 'flex',
             }}
           />

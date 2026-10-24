@@ -1,29 +1,68 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
 import { Button } from '@/components/ui/Button';
-import { AudioToggle } from '@/components/ui/AudioToggle';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
+import { EASE } from '@/lib/motion';
 
+/**
+ * Root-relative, not bare fragments.
+ *
+ * `#faq` resolves against whatever page you are on, so on `/services/...` every
+ * one of these silently pointed at a section that route does not contain. The
+ * leading `/` makes them resolve against the homepage from anywhere. On the
+ * homepage itself the browser still treats `/#faq` as a same-document
+ * fragment, so nothing about the scroll behaviour there changes.
+ */
+/**
+ * Six items, and the two that changed earn their place.
+ *
+ * `Work` and `Pricing` are the two questions a visitor evaluating an agency
+ * asks first — "what have you built" and "what does it cost" — and both are now
+ * real pages rather than anchors. They displaced `Reports` (a homepage section
+ * still reachable from the footer) and `Results` (which pointed at
+ * `/#customers`, the placeholder explaining that no results are published —
+ * a nav item promising results and delivering their absence).
+ */
+/**
+ * `How we work` points at `/#how-it-works` since RC5, not `/#product`.
+ *
+ * `#product` was `FeatureStorytelling`, the six-pillar grid the homepage
+ * narrative removed — five of its six pillars restated chapters 01 and 03. The
+ * label was always describing chapter 03 anyway: *"From first contact to
+ * booked"* is how we work, and *"Six pillars of automation"* was a second
+ * summary of what we automate.
+ */
 const NAV_LINKS = [
-  { label: 'Product', href: '#product' },
-  { label: 'Workflows', href: '#workflow' },
-  { label: 'Intelligence', href: '#intelligence' },
-  { label: 'Integrations', href: '#integrations' },
-  { label: 'Customers', href: '#customers' },
+  { label: 'Services', href: '/services' },
+  { label: 'Work', href: '/work' },
+  { label: 'Pricing', href: '/pricing' },
+  { label: 'How we work', href: '/#how-it-works' },
+  { label: 'Integrations', href: '/#integrations' },
+  { label: 'FAQ', href: '/#faq' },
 ];
 
 export function Navigation() {
   const navScrolled = useStore((s) => s.navScrolled);
   const setNavScrolled = useStore((s) => s.setNavScrolled);
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  // The homepage opens on a dark stage (the hero). While it is behind the bar, the bar keeps the dark
+  // palette so its text stays readable; once the page scrolls past it the bar follows the page theme.
+  const [overHero, setOverHero] = useState(true);
+  const overStage = pathname === '/' && overHero && !open;
 
   useEffect(() => {
-    const onScroll = () => setNavScrolled(window.scrollY > 24);
+    const onScroll = () => {
+      setNavScrolled(window.scrollY > 24);
+      setOverHero(window.scrollY < window.innerHeight * 0.85);
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -45,9 +84,34 @@ export function Navigation() {
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
+  /*
+   * Close the menu when the viewport reaches the desktop breakpoint.
+   *
+   * Without this the overlay is hidden by `lg:hidden` while `open` stays true,
+   * so the scroll lock above keeps `body { overflow: hidden }` applied — the
+   * page becomes unscrollable with no menu visible and nothing to click to
+   * restore it. Escape still works, but only for someone who guesses.
+   *
+   * The bug predates the breakpoint move, at `md`. Moving the switch from 768
+   * to 1024px is what makes it reachable in ordinary use: rotating a tablet
+   * from portrait to landscape now crosses the boundary with the menu open.
+   *
+   * 1024px must stay in step with the `lg:` classes in the markup below.
+   */
+  useEffect(() => {
+    const desktop = window.matchMedia('(min-width: 1024px)');
+    const sync = () => {
+      if (desktop.matches) setOpen(false);
+    };
+    sync();
+    desktop.addEventListener('change', sync);
+    return () => desktop.removeEventListener('change', sync);
+  }, []);
+
   return (
     <>
       <header
+        data-theme={overStage ? 'dark' : undefined}
         className={cn(
           'fixed left-0 top-0 z-50 flex h-16 w-full items-center transition-[background-color,backdrop-filter,border-color] duration-300',
           navScrolled || open
@@ -58,12 +122,20 @@ export function Navigation() {
         <div className="container-edge flex w-full items-center justify-between gap-4 md:gap-8">
           <div className="flex items-center gap-10">
             <Logo />
-            <nav className="hidden items-center gap-1 md:flex">
+            {/* Switches at `lg`, not `md`.
+                At 768–1023px the full bar renders logo + six links + a CTA, and
+                it does not fit: RC1's tablet capture (810px) showed "How we
+                work" wrapping onto three lines and "Book free audit" onto two,
+                which pushed the header to roughly double height. Tablets get
+                the sheet menu instead. The trigger and the overlay below use
+                the same breakpoint — all three must move together, or a width
+                exists with either no menu at all or two. */}
+            <nav className="hidden items-center gap-1 lg:flex">
               {NAV_LINKS.map((link) => (
                 <a
                   key={link.href}
                   href={link.href}
-                  className="rounded-md px-3 py-1.5 text-[13px] font-normal text-white/55 transition-colors duration-150 hover:bg-white/[0.06] hover:text-white/95"
+                  className="rounded-md px-3 py-1.5 text-[13px] font-normal text-white/[var(--nav-a)] transition-colors duration-150 hover:bg-white/[0.06] hover:text-white/95"
                   data-cursor="hover"
                 >
                   {link.label}
@@ -72,20 +144,22 @@ export function Navigation() {
             </nav>
           </div>
           <div className="flex items-center gap-2">
-            <AudioToggle className="hidden sm:inline-flex" />
-            <Button variant="ghost" size="sm" trailing={false} className="hidden sm:inline-flex">
-              Sign in
+            <Button
+              variant="primary"
+              size="sm"
+              href="/book"
+              className="hidden sm:inline-flex"
+            >
+              Book free audit
             </Button>
-            <Button variant="primary" size="sm" className="hidden sm:inline-flex">
-              Begin watching
-            </Button>
+            <ThemeToggle />
             {/* Mobile menu trigger */}
             <button
               type="button"
               aria-label={open ? 'Close menu' : 'Open menu'}
               aria-expanded={open}
               aria-controls="mobile-menu"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.03] text-white/80 backdrop-blur transition-colors hover:bg-white/[0.06] md:hidden"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.03] text-white/80 backdrop-blur transition-colors hover:bg-white/[0.06] lg:hidden"
               onClick={() => setOpen((v) => !v)}
             >
               {open ? <X className="h-4 w-4" strokeWidth={2} /> : <Menu className="h-4 w-4" strokeWidth={2} />}
@@ -102,11 +176,11 @@ export function Navigation() {
             role="dialog"
             aria-modal="true"
             aria-label="Site navigation"
-            className="fixed inset-0 z-40 flex flex-col bg-void/95 pt-20 backdrop-blur-2xl md:hidden"
+            className="fixed inset-0 z-40 flex flex-col bg-void/95 pt-20 backdrop-blur-2xl lg:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.25, ease: EASE }}
           >
             {/* Aurora wash to keep the brand atmosphere on mobile too */}
             <div
@@ -114,7 +188,7 @@ export function Navigation() {
               aria-hidden="true"
               style={{
                 background:
-                  'radial-gradient(ellipse 100% 60% at 20% 0%, rgba(99,102,241,0.2), transparent 60%), radial-gradient(ellipse 80% 50% at 100% 100%, rgba(139,92,246,0.14), transparent 65%)',
+                  'radial-gradient(ellipse 100% 60% at 20% 0%, rgb(var(--color-accent) / 0.2), transparent 60%), radial-gradient(ellipse 80% 50% at 100% 100%, rgb(var(--color-gold) / 0.14), transparent 65%)',
               }}
             />
             <nav className="container-edge flex flex-1 flex-col">
@@ -124,7 +198,7 @@ export function Navigation() {
                     key={link.href}
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.05 + i * 0.06, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 0.5, delay: 0.05 + i * 0.06, ease: EASE }}
                   >
                     <a
                       href={link.href}
@@ -140,18 +214,21 @@ export function Navigation() {
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.5, delay: 0.4, ease: EASE }}
                 className="mt-auto flex flex-col gap-3 pb-10"
               >
-                <Button variant="primary" size="lg" className="w-full justify-center">
-                  Begin watching
-                </Button>
-                <Button variant="ghost" size="lg" trailing={false} className="w-full justify-center">
-                  Sign in
+                <Button
+                  variant="primary"
+                  size="lg"
+                  href="/book"
+                  className="w-full justify-center"
+                  onClick={() => setOpen(false)}
+                >
+                  Book free audit
                 </Button>
                 <p className="mt-2 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-ink-400">
                   <span className="h-1.5 w-1.5 rounded-full bg-signal-success animate-pulse-live" />
-                  Live · 4 minutes to first signal
+                  Free 30-min audit · No commitment
                 </p>
               </motion.div>
             </nav>

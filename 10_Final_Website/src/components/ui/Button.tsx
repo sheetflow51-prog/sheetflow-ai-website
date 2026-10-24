@@ -25,15 +25,16 @@ const buttonVariants = cva('btn', {
 });
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onClick'>,
     VariantProps<typeof buttonVariants> {
   trailing?: 'arrow' | React.ReactNode | false;
   leading?: React.ReactNode;
   href?: string;
+  onClick?: () => void;
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, trailing = 'arrow', leading, href, children, ...props }, ref) => {
+  ({ className, variant, size, trailing = 'arrow', leading, href, onClick, children, ...props }, ref) => {
     const trail =
       trailing === 'arrow' ? (
         <ArrowRight className="arrow h-4 w-4" strokeWidth={2.2} aria-hidden="true" />
@@ -55,6 +56,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           href={href}
           className={cn(buttonVariants({ variant, size }), className)}
           data-cursor="hover"
+          onClick={onClick}
         >
           {content}
         </a>
@@ -66,6 +68,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         className={cn(buttonVariants({ variant, size }), className)}
         data-cursor="hover"
+        onClick={onClick}
         {...props}
       >
         {content}

@@ -1,105 +1,184 @@
-'use client';
+import Link from 'next/link';
+import Image from 'next/image';
+import { ArrowRight, ArrowUpRight } from 'lucide-react';
+import { Chapter } from '@/components/vos';
+import { beat } from '@/content/narrative';
+import { publishedCaseStudies } from '@/content/proof';
+import type { CaseStudyCard } from '@/content/work';
+import { DashboardStories } from '@/components/sections/DashboardStories';
+import { featuredStories } from '@/content/dashboards';
 
-import { motion } from 'framer-motion';
-import { ArrowUpRight, Quote } from 'lucide-react';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { SectionHeader } from '@/components/ui/SectionHeader';
+/**
+ * The homepage work section — chapter 04, the *Proof* beat.
+ *
+ * ## Why this is no longer a client component
+ *
+ * It was `'use client'` for one reason: `ScrollReveal`, an
+ * IntersectionObserver-driven entrance stagger on the card grid. RC5 replaced
+ * it with `.reveal-view`, which is the same gesture in CSS behind
+ * `@supports (animation-timeline: view())`, with no observer and no hydration.
+ *
+ * The stagger is expressed as a per-card `animation-delay` rather than by
+ * `ScrollReveal`'s children-mapping, which also fixes a subtlety the JS version
+ * had: it revealed all three cards off a single observer on the *container*, so
+ * on a narrow viewport where the cards stack, card three animated in while it
+ * was still 900px below the fold.
+ *
+ * ## What changed, and the distinction that drives it
+ *
+ * This section used to render a placeholder reading "we publish results only
+ * once we can prove them", because no customer evidence had been permissioned.
+ * Publication permission arrived on 2026-08-07 (D24) — but **only for the work,
+ * not for outcomes**. Those are two different claims and the section now treats
+ * them as such:
+ *
+ *   - **The builds are shown.** Real clients, real screenshots, links to
+ *     running deployments. A visitor can verify every one by clicking it.
+ *   - **The metrics are still absent**, and the section still says so. No
+ *     outcome has been measured against a stated method and confirmed with a
+ *     client, so `publishedCaseStudies()` still returns nothing and the
+ *     measured-results block below still does not render.
+ *
+ * When a verified case study does arrive, `publishedCaseStudies()` starts
+ * returning it and the metric strip appears with no change here — which is the
+ * property `content/proof.ts` exists to guarantee.
+ */
 
-const STUDIES = [
-  {
-    company: 'Strata Ops',
-    industry: 'Series B SaaS',
-    metric: '$847K',
-    metricLabel: 'caught in surface anomalies',
-    quote: 'SheetFlow AI monitors 47 spreadsheets for our operations team. It catches problems we didn\'t even know to look for.',
-    role: 'Director of Operations',
-    accent: 'from-accent-bright/15 via-transparent to-transparent',
-  },
-  {
-    company: 'Northfield Capital',
-    industry: 'Investment fund',
-    metric: '92%',
-    metricLabel: 'reduction in manual reporting time',
-    quote: 'Our weekly board prep used to take a full day. Now the deck is in our inbox at 7am Monday — generated overnight.',
-    role: 'Chief of Staff',
-    accent: 'from-violet/15 via-transparent to-transparent',
-  },
-  {
-    company: 'Parallel Logistics',
-    industry: 'Supply chain ops',
-    metric: '4 sec',
-    metricLabel: 'time-to-detection on supplier outliers',
-    quote: 'A human auditor might catch this in a monthly review. SheetFlow AI caught it in 4 seconds. The procurement team was notified before the next order.',
-    role: 'VP of Operations',
-    accent: 'from-signal-info/15 via-transparent to-transparent',
-  },
-];
+export function CaseStudy({ cards }: { cards: CaseStudyCard[] }) {
+  // Verified, permissioned *outcome* entries — still empty, deliberately.
+  const measured = publishedCaseStudies();
+  const hasMeasured = measured.length > 0;
+  const { mark, tier, tone, grid } = beat('customers');
 
-export function CaseStudy() {
   return (
-    <section id="customers" className="section relative">
-      <div className="container-edge">
-        <div className="mb-12 max-w-3xl md:mb-16">
-          <SectionHeader
-            kicker="In the Field"
-            title={
-              <>
-                The teams who never miss a signal{' '}
-                <span className="text-ink-300">use SheetFlow AI.</span>
-              </>
-            }
-            description="From two-person startups to global operations teams — the intelligence layer has caught the silent errors, surfaced the hidden patterns, and compounded the saved hours."
-          />
-        </div>
+    <Chapter
+      id="customers"
+      mark={mark}
+      tier={tier}
+      tone={tone}
+      grid={grid}
+      kicker="Selected work"
+      title={
+        <>
+          Built, deployed,{' '}
+          <span className="text-ink-300">and still running.</span>
+        </>
+      }
+      description="Production systems for healthcare and real estate, shown as industry archetypes: the client is not named and identifying details are redacted. Every case study states what was built and how it was checked."
+    >
+      {/* The homepage shows the client builds that carry a redacted screenshot
+          (two since D39). `/work` carries the rest, including the internal
+          systems, which have no screenshot by construction. */}
+      <div className="chapter-stage grid gap-4 md:grid-cols-2">
+        {cards.map((p, i) => (
+          <Link
+            key={p.slug}
+            href={`/work/${p.slug}`}
+            className="card-interactive reveal-view group flex h-full flex-col overflow-hidden p-0"
+            data-cursor="hover"
+            style={{ animationDelay: `${i * 80}ms` }}
+          >
+            <div className="relative aspect-[16/10] w-full overflow-hidden border-b border-white/[0.06]">
+              {/* These three screenshots are the only photographic evidence on
+                  the homepage — real, shipped, linked to the running
+                  deployment — and RC5 was dimming them with a scrim that ran
+                  to 75% void. It was reading as an image treatment; on the
+                  capture it read as three washed-out thumbnails, which is an
+                  expensive thing to do to the one asset class that needs no
+                  provenance caption because a photograph of a shipped thing is
+                  self-evidencing.
+                  The scrim is kept — the card's title needs a floor to sit on
+                  — at 45% and confined to the bottom third, plus a small
+                  contrast lift that resolves on hover. */}
+              <Image
+                src={p.shot.src}
+                alt={p.shot.alt}
+                fill
+                sizes="(min-width: 768px) 30vw, 92vw"
+                className="object-cover object-top brightness-[0.94] saturate-[1.05] transition-[transform,filter] duration-700 ease-cinematic group-hover:scale-[1.03] group-hover:brightness-100"
+              />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 bg-gradient-to-t from-void/45 from-0% via-transparent via-34% to-transparent"
+              />
+            </div>
 
-        <div className="grid gap-3.5 md:grid-cols-3">
-          {STUDIES.map((s, i) => (
-            <motion.div
-              key={s.company}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-10%' }}
-              transition={{ duration: 0.7, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <GlassCard variant="feature" className="group h-full" interactive>
-                <div className="flex h-full flex-col gap-6">
-                  <div
-                    className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${s.accent} opacity-50`}
-                    aria-hidden="true"
-                  />
-                  <div className="relative flex items-center justify-between">
-                    <div>
-                      <h3 className="font-display text-[18px] font-semibold text-white">{s.company}</h3>
-                      <p className="font-mono text-[10px] uppercase tracking-widest text-ink-400">
-                        {s.industry}
-                      </p>
-                    </div>
-                    <ArrowUpRight
-                      className="h-5 w-5 text-ink-400 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent-bright"
-                      strokeWidth={1.6}
-                    />
-                  </div>
+            <div className="flex flex-1 flex-col gap-2 p-6">
+              <div className="flex items-start justify-between gap-3">
+                {/* `min-h` on the title, not on the card. Three clients whose
+                    names run to one, two and two lines gave three different
+                    meta baselines on the 1440 capture — the row read as ragged
+                    even though `h-full` had already equalised the cards. Two
+                    lines of 18px display leading-snug is 52px. */}
+                <h3 className="min-h-[52px] font-display text-[18px] font-semibold leading-snug text-white text-balance">
+                  {p.client}
+                </h3>
+                <ArrowUpRight
+                  className="mt-0.5 h-5 w-5 shrink-0 text-ink-400 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent-bright"
+                  strokeWidth={1.6}
+                  aria-hidden="true"
+                />
+              </div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-ink-400">
+                {p.sector} · {p.location}
+              </p>
+            </div>
+          </Link>
+        ))}
+      </div>
 
-                  <div className="relative">
-                    <Quote className="mb-3 h-4 w-4 text-accent-bright/60" strokeWidth={1.5} />
-                    <p className="text-[15px] leading-relaxed text-white/85 text-balance">
-                      "{s.quote}"
-                    </p>
-                    <p className="mt-3 text-[12px] text-ink-400">— {s.role}</p>
-                  </div>
-
-                  <div className="relative mt-auto border-t border-white/[0.06] pt-5">
-                    <div className="font-display text-3xl font-semibold text-accent-gradient">
-                      {s.metric}
-                    </div>
-                    <p className="mt-1 text-[12px] text-ink-300">{s.metricLabel}</p>
-                  </div>
-                </div>
-              </GlassCard>
-            </motion.div>
-          ))}
+      {/* Inside the dashboards: two real interfaces as a short scroll story (the other two are on /work).
+          Each states its data basis and the only outcome line the evidence rules allow. */}
+      <div className="mt-20 md:mt-28">
+        <span className="kicker">Inside the dashboards</span>
+        <h3 id="home-stories-heading" className="headline-section text-fade text-balance mt-5 max-w-3xl">
+          What the work looks like when you open it.
+        </h3>
+        <div className="mt-12">
+          <DashboardStories stories={featuredStories()} headingId="home-stories-heading" />
         </div>
       </div>
-    </section>
+
+      {/* The measured-outcome strip. Renders only when a verified,
+          permissioned figure exists — which today it does not. */}
+      {hasMeasured && (
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+          {measured.map((s) => (
+            <div key={s.slug} className="rounded-2xl glass p-7">
+              <div className="font-display text-3xl font-semibold text-accent-gradient">
+                {s.metric}
+              </div>
+              <p className="mt-1 text-[12px] text-ink-300">{s.metricLabel}</p>
+              <p className="mt-2 text-[11px] leading-snug text-ink-300">
+                {s.verification.methodology}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3">
+        <Link
+          href="/work"
+          className="group inline-flex min-h-[24px] items-center gap-2 text-[14px] text-white transition-colors"
+          data-cursor="hover"
+        >
+          Read the case studies
+          <ArrowRight
+            className="h-4 w-4 transition-transform duration-300 ease-cinematic group-hover:translate-x-1"
+            strokeWidth={2.2}
+            aria-hidden="true"
+          />
+        </Link>
+
+        {!hasMeasured && (
+          <p className="max-w-xl text-[13px] leading-relaxed text-ink-300">
+            You will not find percentages on those pages. We publish a result only once it is
+            measured against a stated method and confirmed with the client — until then each
+            case study says so plainly.
+          </p>
+        )}
+      </div>
+    </Chapter>
   );
 }

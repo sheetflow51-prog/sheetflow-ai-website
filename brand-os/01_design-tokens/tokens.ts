@@ -36,7 +36,7 @@ export const color = {
     100: '#F5F7FA', // headlines
     200: '#D6DCE8', // body strong
     300: '#A0A8BC', // body
-    400: '#6B7490', // muted
+    400: '#717B98', // muted — 4.81:1 on void, the AA floor for small text
     500: '#3D4460', // hint
     600: '#2A3045', // dividers strong
     700: '#1E2435', // dividers
@@ -45,24 +45,40 @@ export const color = {
     950: '#0A0B0F',
   },
 
-  // Intelligence — the brand's living color
+  // Intelligence — the brand's living color.
+  // Azure blue, taken from the logo (rebrand 0920b03, 2026-07-23).
   accent: {
-    DEFAULT: '#6366F1', // Indigo 500 — primary
-    bright: '#818CF8', // Indigo 400 — gradient start
-    light: '#A5B4FC', // Indigo 300 — quiet hover
-    deep: '#4F46E5', // Indigo 600 — pressed
-    glow: 'rgba(99, 102, 241, 0.15)', // halo base
+    DEFAULT: '#3B82F6', // Blue 500 — primary
+    bright: '#60A5FA', // Blue 400 — gradient start
+    light: '#93C5FD', // Blue 300 — quiet hover
+    deep: '#2563EB', // Blue 600 — pressed
+    glow: 'rgba(59, 130, 246, 0.15)', // halo base
   },
 
-  violet: {
-    DEFAULT: '#8B5CF6',
-    bright: '#A78BFA', // gradient mid
-    deep: '#7C3AED',
+  // The logo's second brand color. Gradient-mid and fill-aurora.
+  gold: {
+    DEFAULT: '#E9A23B',
+    bright: '#F4C063',
+    deep: '#C4832A',
   },
 
   cyan: {
     DEFAULT: '#06B6D4', // gradient end / horizon
     bright: '#22D3EE',
+  },
+
+  /**
+   * @deprecated Alias of `gold`.
+   *
+   * Until this file was reconciled it still held the pre-rebrand indigo/violet
+   * palette (`#8B5CF6`), while the shipped site had moved to blue + gold and
+   * repurposed its `violet` token to carry gold values. The name is retained
+   * only so existing `violet-*` utilities keep resolving. Use `gold` instead.
+   */
+  violet: {
+    DEFAULT: '#E9A23B',
+    bright: '#F4C063',
+    deep: '#C4832A',
   },
 
   // Status signals — never decoration

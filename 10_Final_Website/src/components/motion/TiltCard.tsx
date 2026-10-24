@@ -42,7 +42,7 @@ export function TiltCard({
 
   const background = useTransform([mx, my], (latest) => {
     const [x, y] = latest as number[];
-    return `radial-gradient(circle at ${x}% ${y}%, rgba(165, 180, 252, ${glow}), transparent 55%)`;
+    return `radial-gradient(circle at ${x}% ${y}%, rgba(147, 197, 253, ${glow}), transparent 55%)`;
   });
 
   React.useEffect(() => {

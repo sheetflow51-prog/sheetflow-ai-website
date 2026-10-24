@@ -1,9 +1,12 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useStore } from '@/lib/store';
 import { prefersReducedMotion } from '@/lib/utils';
+import { EASE } from '@/lib/motion';
 
 /**
  * Intelligence Boot Sequence.
@@ -13,10 +16,35 @@ import { prefersReducedMotion } from '@/lib/utils';
  *   2 — status text cycles + progress fills (700ms)
  *   3 — clip-path reveal (300ms)
  * Total ≈ 1600ms.
+ *
+ * ## Homepage only — and this was a measured decision, not a taste one
+ *
+ * This renders `fixed inset-0 z-[100] bg-void`: an opaque overlay across the
+ * whole viewport, held ~1,850 ms before the reveal starts. It lived in the root
+ * layout, so once the site gained routes it played on **every** one of them.
+ *
+ * That pinned Largest Contentful Paint to a timer instead of to content. Mobile
+ * LCP measured **4.3–4.5 s on three routes with wildly different payloads** —
+ * the homepage and two service pages, one of which scores 97 on desktop. A
+ * metric that refuses to move with content is not measuring content. FCP stayed
+ * fast (0.8–0.9 s) throughout, because the thing painting quickly *was* this
+ * overlay.
+ *
+ * It is also the wrong experience off the homepage. A service page is a search
+ * landing surface; someone arriving from a Google result for "whatsapp
+ * automation" should not sit through a brand boot animation before reading the
+ * answer they clicked for.
+ *
+ * The sequence is kept exactly as designed where it was designed to live — the
+ * homepage, first impression, once per session. Everywhere else it marks the
+ * app booted immediately and renders nothing.
+ *
+ * Reverting is one line: drop the `isHome` guard. Doing so also reverts the
+ * measured LCP improvement recorded in TOOLING_MANIFEST.
  */
 const STATUS_LINES = [
-  'Initializing Intelligence...',
-  'Loading systems...',
+  'Loading automations...',
+  'Connecting your stack...',
   'Ready.',
 ];
 
@@ -25,9 +53,13 @@ export default function LoadingScreen() {
   const [statusIndex, setStatusIndex] = useState(0);
   const setBooted = useStore((s) => s.setBooted);
   const hasBooted = useStore((s) => s.hasBooted);
+  const isHome = usePathname() === '/';
 
   useEffect(() => {
     if (hasBooted) return;
+    // Off the homepage there is no boot sequence — mark the app booted so any
+    // consumer gated on `hasBooted` proceeds immediately.
+    if (!isHome) { setBooted(true); return; }
     // Reduced-motion: skip the cinematic boot sequence entirely.
     if (prefersReducedMotion()) { setBooted(true); return; }
     const t1 = setTimeout(() => setStage(1), 600);
@@ -37,7 +69,13 @@ export default function LoadingScreen() {
     const t5 = setTimeout(() => setStage(3), 1500);
     const t6 = setTimeout(() => setBooted(true), 1850);
     return () => [t1, t2, t3, t4, t5, t6].forEach(clearTimeout);
-  }, [hasBooted, setBooted]);
+  }, [hasBooted, setBooted, isHome]);
+
+  // Short-circuit the render, not just the timers. The effect above runs after
+  // the first paint, so relying on it alone would flash a full-screen opaque
+  // overlay for one frame on every sub-page — which is the exact thing being
+  // removed, briefly.
+  if (!isHome) return null;
 
   return (
     <AnimatePresence>
@@ -50,59 +88,36 @@ export default function LoadingScreen() {
               ? { clipPath: 'inset(0 0 100% 0)' }
               : { clipPath: 'inset(0 0 0 0)' }
           }
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.5, ease: EASE }}
           aria-hidden="true"
         >
-          <div className="relative flex flex-col items-center gap-8">
-            {/* Logo mark — drawn by SVG */}
-            <motion.svg
-              width="56"
-              height="56"
-              viewBox="0 0 56 56"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="overflow-visible"
-            >
-              <motion.path
-                d="M14 18 L42 18 M14 28 L42 28 M14 38 L42 38"
-                stroke="url(#bootGrad)"
-                strokeWidth="2"
-                strokeLinecap="round"
-                initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: 1 }}
-                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              />
-              <motion.circle
-                cx="28"
-                cy="28"
-                r="22"
-                stroke="url(#bootGrad)"
-                strokeWidth="1"
-                fill="none"
-                initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: 0.6 }}
-                transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-              />
-              <defs>
-                <linearGradient id="bootGrad" x1="0" y1="0" x2="56" y2="56">
-                  <stop offset="0%" stopColor="#818CF8" />
-                  <stop offset="100%" stopColor="#A78BFA" />
-                </linearGradient>
-              </defs>
-            </motion.svg>
-
-            {/* Wordmark */}
+          <div className="relative flex flex-col items-center gap-7">
+            {/* Brand logo — scales up and settles as the system boots */}
             <motion.div
-              className="font-display text-2xl font-semibold tracking-tight"
-              initial={{ opacity: 0, y: 8, filter: 'blur(8px)' }}
-              animate={
-                stage >= 1
-                  ? { opacity: 1, y: 0, filter: 'blur(0px)' }
-                  : { opacity: 0, y: 8, filter: 'blur(8px)' }
-              }
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="relative"
+              initial={{ opacity: 0, scale: 0.82, filter: 'blur(10px)' }}
+              animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+              transition={{ duration: 0.9, ease: EASE }}
             >
-              SheetFlow<span className="text-accent-bright">.</span>AI
+              {/* Soft brand glow behind the mark */}
+              <div
+                className="absolute inset-0 -m-8 rounded-full"
+                style={{
+                  background: 'radial-gradient(circle, rgb(var(--color-accent) / 0.4), transparent 70%)',
+                  filter: 'blur(24px)',
+                }}
+                aria-hidden="true"
+              />
+              {/* The full canonical lockup, cut from logo.png per DEC-301.
+                  A fixed 112px slot needs no vector. */}
+              <Image
+                src="/brand/raster/lockup-256.png"
+                alt="SheetFlow"
+                width={112}
+                height={112}
+                priority
+                className="relative"
+              />
             </motion.div>
 
             {/* Status + progress */}
@@ -117,13 +132,13 @@ export default function LoadingScreen() {
                   className="h-full bg-gradient-to-r from-accent-bright to-violet-bright"
                   initial={{ width: '0%' }}
                   animate={stage >= 2 ? { width: '100%' } : { width: '0%' }}
-                  transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                  transition={{ duration: 0.7, ease: EASE }}
                 />
               </div>
               <AnimatePresence mode="wait">
                 <motion.p
                   key={statusIndex}
-                  className="font-mono text-[10px] uppercase tracking-widest text-white/40"
+                  className="font-mono text-[10px] uppercase tracking-widest text-white/[var(--load-a)]"
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}

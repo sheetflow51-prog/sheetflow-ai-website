@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { EASE } from '@/lib/motion';
 
 interface BracketsProps {
   /** Inset from the edges of the parent container, in px. */
@@ -33,13 +34,13 @@ export function Brackets({
   inset = 16,
   size = 18,
   thickness = 1,
-  color = 'rgba(165, 180, 252, 0.45)',
+  color = 'rgb(var(--color-accent-light) / 0.45)',
   animate = true,
   corners = ['tl', 'tr', 'bl', 'br'],
   className,
 }: BracketsProps) {
   const reveal = animate
-    ? { initial: { opacity: 0, scale: 0.92 }, animate: { opacity: 1, scale: 1 }, transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.4 } }
+    ? { initial: { opacity: 0, scale: 0.92 }, animate: { opacity: 1, scale: 1 }, transition: { duration: 0.9, ease: EASE, delay: 0.4 } }
     : {};
 
   const arm = (orientation: 'tl' | 'tr' | 'bl' | 'br') => {
