@@ -2,18 +2,6 @@
 
 import { useId, useState } from 'react';
 
-import { tiers } from '@/content/pricing';
-
-/**
- * The published monthly retainer, read from the pricing content rather than
- * retyped. If the price changes, the break-even line below changes with it —
- * a hard-coded copy here is how a page ends up quoting two different prices.
- */
-const RETAINER_PER_MONTH = (() => {
-  const automation = tiers.find((t) => t.id === 'automation');
-  return automation?.price.kind === 'recurring' ? automation.price.amount : 0;
-})();
-
 /**
  * The recovery calculator.
  *
@@ -107,19 +95,11 @@ export function RecoveryCalculator() {
   const perMonth = Math.round(missed * 4.33 * value * (recovery / 100));
   const perYear = perMonth * 12;
 
-  /**
-   * Break-even against the published retainer.
-   *
-   * This is the one piece of return messaging on the site that is **not** a
-   * claim, and the distinction is worth stating precisely: it divides our own
-   * published price (₹4,999/month — D25, a fact) by the visitor's own figure
-   * for what a customer is worth. Neither input is an assertion about what
-   * SheetFlow has achieved for anyone, so the output cannot be one either.
-   *
-   * `Math.ceil`, not `round`: recovering 1.2 customers does not cover the
-   * retainer, and rounding down would overstate the case in our favour.
+  /*
+   * There is no break-even line any more. It divided the published ₹4,999
+   * retainer by the visitor's customer value; D38 withdrew that price, and a
+   * break-even against a number nobody has quoted would be invented.
    */
-  const breakEven = value > 0 ? Math.ceil(RETAINER_PER_MONTH / value) : null;
 
   return (
     <div className="rounded-2xl glass p-7 md:p-9">
@@ -182,26 +162,11 @@ export function RecoveryCalculator() {
             </div>
           </div>
 
-          {breakEven !== null && (
-            <div className="border-t border-white/[0.06] pt-5">
-              <p className="font-mono text-[11px] uppercase tracking-widest text-ink-400">
-                Break-even on the retainer
-              </p>
-              <p className="mt-2 text-[15px] leading-relaxed text-ink-100 text-pretty">
-                At {INR.format(value)} per customer, recovering{' '}
-                <span className="font-display text-[19px] font-semibold text-white">
-                  {breakEven} {breakEven === 1 ? 'customer' : 'customers'}
-                </span>{' '}
-                a month covers the {INR.format(RETAINER_PER_MONTH)} retainer.
-              </p>
-            </div>
-          )}
-
           <p className="border-t border-white/[0.06] pt-5 text-[12px] leading-relaxed text-ink-300">
             The figures above are your three inputs multiplied together, using 4.33 weeks per
-            month. The break-even divides our published retainer by your customer value. Both are
-            arithmetic — <span className="text-white/80">not a forecast</span>, and not a claim
-            about what SheetFlow has achieved for anyone.
+            month. That is arithmetic &mdash; <span className="text-white/80">not a forecast</span>,
+            and not a claim about what SheetFlow has achieved for anyone. Weigh it against the
+            written quote you get after the audit.
           </p>
         </div>
       </div>

@@ -77,7 +77,7 @@ export default function AmbientBackground() {
             className="absolute left-[12%] top-[8%] h-[68%] w-[68%]"
             style={{
               background:
-                'radial-gradient(circle at center, rgba(59, 130, 246, 0.30), rgba(96, 165, 250, 0.12) 38%, transparent 64%)',
+                'radial-gradient(circle at center, rgb(var(--color-accent) / 0.30), rgb(var(--color-accent-bright) / 0.12) 38%, transparent 64%)',
             }}
           />
         </div>
@@ -99,7 +99,7 @@ export default function AmbientBackground() {
             className="absolute bottom-[10%] right-[14%] h-[60%] w-[60%]"
             style={{
               background:
-                'radial-gradient(circle at center, rgba(233, 162, 59, 0.07), rgba(244, 192, 99, 0.035) 40%, transparent 66%)',
+                'radial-gradient(circle at center, rgb(var(--color-gold) / 0.07), rgb(var(--color-gold-bright) / 0.035) 40%, transparent 66%)',
             }}
           />
         </div>
@@ -116,7 +116,7 @@ export default function AmbientBackground() {
             className="absolute left-1/2 top-1/2 h-[70%] w-[70%] -translate-x-1/2 -translate-y-1/2"
             style={{
               background:
-                'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.13), rgba(96, 165, 250, 0.05) 45%, transparent 68%)',
+                'radial-gradient(ellipse at center, rgb(var(--color-accent) / 0.13), rgb(var(--color-accent-bright) / 0.05) 45%, transparent 68%)',
             }}
           />
         </div>
@@ -127,7 +127,7 @@ export default function AmbientBackground() {
         className="ambient-sheen absolute -inset-1/4 will-change-transform"
         style={{
           background:
-            'linear-gradient(115deg, transparent 38%, rgba(147, 197, 253, 0.06) 50%, transparent 62%)',
+            'linear-gradient(115deg, transparent 38%, rgb(var(--color-accent-light) / 0.06) 50%, transparent 62%)',
           mixBlendMode: 'screen',
         }}
       />
@@ -140,7 +140,7 @@ export default function AmbientBackground() {
         className="absolute inset-0"
         style={{
           background:
-            'radial-gradient(ellipse 100% 60% at 50% 100%, rgba(6, 182, 212, 0.05), transparent 70%)',
+            'radial-gradient(ellipse 100% 60% at 50% 100%, rgb(var(--color-cyan) / 0.05), transparent 70%)',
         }}
       />
 
@@ -157,7 +157,7 @@ export default function AmbientBackground() {
              was looking at — the one place on the page a colour cast is least
              affordable. */
           background:
-            'radial-gradient(circle, rgba(96, 165, 250, 0.20) 0%, rgba(147, 197, 253, 0.07) 42%, transparent 70%)',
+            'radial-gradient(circle, rgb(var(--color-accent-bright) / 0.20) 0%, rgb(var(--color-accent-light) / 0.07) 42%, transparent 70%)',
           mixBlendMode: 'plus-lighter',
           transition: 'opacity 700ms ease-out',
         }}

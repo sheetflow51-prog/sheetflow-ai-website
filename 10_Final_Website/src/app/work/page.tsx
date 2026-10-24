@@ -9,6 +9,14 @@ import { Button } from '@/components/ui/Button';
 import { SectionHandoff } from '@/components/signature/SectionHandoff';
 import { WorkflowGlyph } from '@/components/work/WorkflowGlyph';
 import { projects, INTERNAL_ONLY_LABEL } from '@/content/work';
+
+/** The short marker a card carries, by evidence kind and origin. */
+function cardMarker(p: (typeof projects)[number]): string {
+  if (p.evidence.kind === 'internal') return INTERNAL_ONLY_LABEL;
+  return p.evidence.origin === 'demonstration' ? 'Demonstration · not commissioned' : 'Client build · not named';
+}
+import { dashboardStories } from '@/content/dashboards';
+import { DashboardStories } from '@/components/sections/DashboardStories';
 import { workIndexGraph } from '@/lib/structured-data';
 import { cn } from '@/lib/utils';
 
@@ -33,7 +41,7 @@ import { cn } from '@/lib/utils';
 export const metadata: Metadata = {
   title: 'Client work',
   description:
-    'Production websites and automation systems SheetFlow has built and deployed — the architecture, the stack and the engineering decisions behind each one. Every project links to the running site.',
+    'Production websites and automation systems SheetFlow has built and deployed, presented as industry archetypes — the architecture, the stack and the engineering decisions behind each one. Client identities are withheld.',
   alternates: { canonical: '/work' },
   openGraph: {
     title: 'Client work · SheetFlow AI',
@@ -64,11 +72,11 @@ export default function WorkIndexPage() {
               Built, deployed, and still running.
             </h1>
             <p className="mt-7 max-w-2xl text-[17px] leading-relaxed text-ink-200 text-pretty md:text-[19px]">
-              Client sites you can open and check, demonstration builds we made
-              uncommissioned, and the internal systems behind them — a double-entry ledger,
-              a CNC production pipeline, an outbound engine. Each case study covers the
-              architecture, the stack and the decisions, and says plainly which of the three
-              it is.
+              Client systems shown as industry archetypes, with the business unnamed and every
+              identifying detail redacted; demonstration builds we made uncommissioned; and the
+              internal systems behind them — a double-entry ledger, a CNC production pipeline,
+              an outbound engine. Each case study covers the architecture, the stack and the
+              decisions, and says plainly which of the three it is.
             </p>
           </div>
 
@@ -113,7 +121,7 @@ export default function WorkIndexPage() {
                       stored frames are all 1280x800; this enforces it in CSS
                       as well, rather than trusting the assets to stay uniform. */}
                   <div className="relative aspect-[16/10] w-full overflow-hidden border-b border-white/[0.06]">
-                    {p.evidence.kind === 'live' || p.evidence.kind === 'demo' ? (
+                    {p.evidence.kind === 'confidential' && p.evidence.shot ? (
                       <>
                         <Image
                           src={p.evidence.shot.src}
@@ -131,11 +139,9 @@ export default function WorkIndexPage() {
                             not have to open a page to learn that this build was
                             never commissioned — that is exactly the impression
                             a portfolio grid creates by default. */}
-                        {p.evidence.kind === 'demo' && (
-                          <span className="absolute left-4 top-4 rounded-full border border-white/20 bg-void/80 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-white backdrop-blur-sm">
-                            Demonstration
-                          </span>
-                        )}
+                        <span className="absolute left-4 top-4 rounded-full border border-white/20 bg-void/80 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-white backdrop-blur-sm">
+                          {p.evidence.origin === 'demonstration' ? 'Demonstration' : 'Client · not named'}
+                        </span>
                       </>
                     ) : (
                       /* Internal builds have no screenshot, by construction —
@@ -166,7 +172,7 @@ export default function WorkIndexPage() {
                           className="pointer-events-none absolute inset-0 signature-grid opacity-60"
                         />
                         <span className="relative font-mono text-[10px] uppercase tracking-widest text-ink-200">
-                          {INTERNAL_ONLY_LABEL}
+                          {cardMarker(p)}
                         </span>
 
                         {/* The glyph centres in whatever space the label and
@@ -190,8 +196,9 @@ export default function WorkIndexPage() {
                             it, which is what once forced the column to 431px
                             and clipped every card on every phone. */}
                         <p className="relative min-w-0 truncate font-mono text-[11px] text-accent-bright">
-                          {p.evidence.artifacts.length} source artifacts ·{' '}
-                          {p.evidence.artifacts[0].name}
+                          {p.evidence.kind === 'internal'
+                            ? `${p.evidence.artifacts.length} source artifacts · ${p.evidence.artifacts[0].name}`
+                            : `${p.sector} · screenshot withheld`}
                         </p>
                       </div>
                     )}
@@ -233,6 +240,25 @@ export default function WorkIndexPage() {
             Where that has not happened, the case study says{' '}
             <span className="text-white/80">Not publicly disclosed</span> rather than estimating.
           </p>
+        </div>
+      </section>
+
+      <SectionHandoff />
+
+      {/* Dashboards, shown as they run. One story per interface; each carries its own data-basis line. */}
+      <section id="dashboards" className="section" aria-labelledby="stories-heading">
+        <div className="container-edge">
+          <span className="kicker">Inside the dashboards</span>
+          <h2 id="stories-heading" className="headline-section text-fade text-balance mt-5 max-w-3xl">
+            Four interfaces, shown as they run.
+          </h2>
+          <p className="mt-5 max-w-2xl text-[16px] leading-relaxed text-ink-300 text-pretty">
+            A clinic CRM, a luxury storefront&apos;s back office, a developer&apos;s site and our own control
+            tower. Each says whose data it is, and none of them shows a result we have not measured.
+          </p>
+          <div className="mt-14">
+            <DashboardStories stories={dashboardStories} />
+          </div>
         </div>
       </section>
 

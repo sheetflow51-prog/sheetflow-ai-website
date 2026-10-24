@@ -87,41 +87,14 @@ export type CaseStudyEntry = VerifiedCaseStudy | PendingCaseStudy;
 /**
  * Delivery pipeline.
  *
- * The four entries below were named by the founder as real engagements. They
- * could not be corroborated anywhere in this repository or the surrounding
- * workspace, so they are recorded as `pending` and carry no claims. They will
- * not render until each is confirmed and permissioned.
+ * Empty, deliberately. Four `pending` entries used to sit here, each carrying a
+ * real business name in `internalRef`. D39 removes every client identity from
+ * the site source — including a field that never renders — and nothing read
+ * them: `publishedCaseStudies()` returns verified entries only. They were
+ * therefore deleted rather than renamed. Anonymised client work is published
+ * through `content/work.ts`, which carries no outcome claims either.
  */
-export const caseStudies: CaseStudyEntry[] = [
-  {
-    status: 'pending',
-    slug: 'r3s-realty',
-    sector: 'Real estate',
-    internalRef: 'R3S Realty',
-    blockedOn: 'Engagement scope, measured outcome, and written permission.',
-  },
-  {
-    status: 'pending',
-    slug: 'saraswati-dental',
-    sector: 'Dental clinic',
-    internalRef: 'Saraswati Dental',
-    blockedOn: 'Engagement scope, measured outcome, and written permission.',
-  },
-  {
-    status: 'pending',
-    slug: 'sparc-physiotherapy',
-    sector: 'Physiotherapy',
-    internalRef: 'Sparc Physiotherapy',
-    blockedOn: 'Engagement scope, measured outcome, and written permission.',
-  },
-  {
-    status: 'pending',
-    slug: 'elevate-wpc',
-    sector: 'Building materials',
-    internalRef: 'Elevate WPC',
-    blockedOn: 'Engagement scope, measured outcome, and written permission.',
-  },
-];
+export const caseStudies: CaseStudyEntry[] = [];
 
 /* ------------------------------------------------------------------ */
 /* Testimonials                                                        */

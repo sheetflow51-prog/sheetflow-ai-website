@@ -1,17 +1,18 @@
 import { test, expect } from '@playwright/test';
-import { tiers, comparison, pricingFaqs, formatPrice } from '../../src/content/pricing';
+import { tiers, comparison, pricingFaqs, engagementSteps } from '../../src/content/pricing';
 import { projects } from '../../src/content/work';
 import { services } from '../../src/content/services';
-import { buildBookingUrl, composeNotes, NOTES_PARAM } from '../../src/lib/booking';
+import { buildBookingUrl, composeNotes, NOTES_PARAM, tierBookingUrl } from '../../src/lib/booking';
 import { BOOKING_URL } from '../../src/lib/contact';
 
 /**
  * The two commercial surfaces: `/pricing` and `/book`.
  *
- * Both publish commitments — a price, and a booking hand-off to a third party.
- * A regression on either is a commercial fault rather than a cosmetic one:
- * a wrong price is a wrong quote, and a broken hand-off loses the conversion
- * the whole site exists to produce.
+ * Both publish commitments — what each engagement includes and how it is
+ * quoted, and a booking hand-off to a third party. A regression on either is a
+ * commercial fault rather than a cosmetic one: a price reappearing is a quote
+ * nobody authorised (D38), and a broken hand-off loses the conversion the
+ * whole site exists to produce.
  */
 
 async function graph(page: import('@playwright/test').Page) {
@@ -26,23 +27,77 @@ const byType = (nodes: Array<Record<string, unknown>>, type: string) =>
   nodes.find((n) => n['@type'] === type);
 
 test.describe('pricing', () => {
-  test('renders every tier with its published price', async ({ page }) => {
+  test('renders every tier with how it is quoted', async ({ page }) => {
     await page.goto('/pricing');
-    await expect(page.locator('h1')).toHaveText('What it costs, before you call.');
+    await expect(page.locator('h1')).toHaveText('Scoped to your systems, not to a price list.');
 
+    expect(tiers.map((t) => t.name)).toEqual([
+      'Foundation Audit & Rapid Sprint',
+      'Autonomous Operations Engine',
+      'Enterprise Bespoke Infrastructure',
+    ]);
     for (const tier of tiers) {
       const section = page.locator(`#${tier.id}`);
       await expect(section, `missing tier section #${tier.id}`).toBeVisible();
       await expect(section.getByRole('heading', { name: tier.name, exact: true })).toBeVisible();
-      // The displayed price must come from the same formatter the schema uses.
-      await expect(section.getByText(formatPrice(tier.price).lead, { exact: false }).first())
-        .toBeVisible();
+      await expect(section.getByText(tier.engagement.model, { exact: true })).toBeVisible();
+      await expect(section.getByText(tier.engagement.quote, { exact: true })).toBeVisible();
     }
   });
 
-  test('the schema price matches the rendered price, per tier', async ({ page }) => {
-    // The failure this prevents: a price edited on the page but not in the
-    // graph, so search results advertise a figure the page contradicts.
+  test('publishes no price, range or currency figure anywhere a tier is shown (D38)', async ({
+    page,
+    request,
+  }) => {
+    // The failure this prevents: a figure creeping back into copy, schema or
+    // llms.txt after the founder withdrew every published price.
+    const money = /(₹|rs\.?\s?\d|inr\s?\d|\$\s?\d|\d[\d,]*\s?(\/|per)\s?month|\bfrom\s+\d)/i;
+    for (const path of ['/pricing', '/']) {
+      await page.goto(path);
+      const text = path === '/'
+        ? await page.locator('#pricing-beat').innerText()
+        : await page.locator('main').innerText();
+      // The calculator on /pricing labels the visitor's own figures in rupees;
+      // it is the one place a currency symbol is allowed, so it is excluded.
+      const withoutCalculator = path === '/pricing'
+        ? text.replace(await page.locator('[aria-labelledby="calculator-heading"]').innerText(), '')
+        : text;
+      expect(withoutCalculator, `${path} states a price`).not.toMatch(money);
+    }
+    const llms = await (await request.get('/llms.txt')).text();
+    const pricingSection = llms.slice(llms.indexOf('## Pricing'), llms.indexOf('## Work'));
+    expect(pricingSection, 'llms.txt states a price').not.toMatch(money);
+  });
+
+  test('every tier CTA books the audit directly, tagged with the tier', async ({ page }) => {
+    await page.goto('/pricing');
+    for (const tier of tiers) {
+      const section = page.locator(`#${tier.id}`);
+      const book = section.getByRole('link', { name: tier.cta });
+      await expect(book).toHaveAttribute('href', tierBookingUrl(tier));
+      // The secondary path keeps the qualification form reachable.
+      await expect(section.locator('a[href="/book"]')).toHaveCount(1);
+    }
+    // The homepage beat books through the same links, so the two cannot drift.
+    await page.goto('/');
+    for (const tier of tiers) {
+      await expect(page.locator(`#pricing-beat a[href="${tierBookingUrl(tier)}"]`)).toHaveCount(1);
+    }
+  });
+
+  test('shows how an engagement runs', async ({ page }) => {
+    await page.goto('/pricing');
+    const steps = page.locator('[aria-labelledby="scope-heading"] ol > li');
+    await expect(steps).toHaveCount(engagementSteps.length);
+    for (const step of engagementSteps) {
+      await expect(steps.getByRole('heading', { name: step.name, exact: true })).toBeVisible();
+    }
+  });
+
+  test('the schema carries one Offer per tier and no price node', async ({ page }) => {
+    // The failure this prevents: a price left in the graph after the page
+    // stopped stating one, so search results advertise a figure the page
+    // does not contain (D38).
     await page.goto('/pricing');
     const nodes = await graph(page);
     const catalogue = byType(nodes, 'OfferCatalog')!;
@@ -53,19 +108,9 @@ test.describe('pricing', () => {
     for (const tier of tiers) {
       const offer = offers.find((o) => o['@id']?.endsWith(`#${tier.id}`));
       expect(offer, `no Offer node for ${tier.id}`).toBeTruthy();
-
-      if (tier.price.kind === 'from') {
-        // minPrice, not price — ₹19,999 is a floor and the page says so.
-        expect(offer!.priceSpecification.minPrice).toBe(tier.price.amount);
-        expect(offer!.priceSpecification.priceCurrency).toBe('INR');
-        expect(offer!.priceSpecification.price, 'a "from" price must not assert a fixed price')
-          .toBeUndefined();
-      } else if (tier.price.kind === 'recurring') {
-        expect(offer!.priceSpecification.price).toBe(tier.price.amount);
-        expect(offer!.priceSpecification.unitCode).toBe('MON');
-      } else {
-        expect(offer!.priceSpecification, 'a quoted tier must carry no price node').toBeUndefined();
-      }
+      expect(offer!.priceSpecification, `${tier.id} must carry no price node`).toBeUndefined();
+      expect(offer!.price, `${tier.id} must carry no price`).toBeUndefined();
+      expect(offer!.description).toContain(tier.engagement.quote);
     }
   });
 
@@ -215,8 +260,8 @@ test.describe('booking URL construction', () => {
   // malformed one loses the lead silently — Calendly renders its normal page
   // with nothing filled in, so there is no error to observe.
   const answers = {
-    name: 'Priya Sharma',
-    email: 'priya@example.com',
+    name: 'Asha Verma',
+    email: 'asha@example.com',
     sector: 'Clinic or healthcare practice',
     bottleneck: 'Enquiries go unanswered too long',
     notes: 'Two locations.',
@@ -225,8 +270,8 @@ test.describe('booking URL construction', () => {
   test('prefills name, email and the notes parameter', () => {
     const url = new URL(buildBookingUrl(answers));
     expect(url.origin + url.pathname).toBe(BOOKING_URL);
-    expect(url.searchParams.get('name')).toBe('Priya Sharma');
-    expect(url.searchParams.get('email')).toBe('priya@example.com');
+    expect(url.searchParams.get('name')).toBe('Asha Verma');
+    expect(url.searchParams.get('email')).toBe('asha@example.com');
     expect(url.searchParams.get(NOTES_PARAM)).toContain('Clinic or healthcare practice');
     expect(url.searchParams.get(NOTES_PARAM)).toContain('Two locations.');
   });
@@ -246,9 +291,20 @@ test.describe('booking URL construction', () => {
     // The utm_* values must not leak who the person is.
     for (const key of ['utm_source', 'utm_medium', 'utm_campaign']) {
       const v = url.searchParams.get(key) ?? '';
-      expect(v).not.toContain('priya');
-      expect(v).not.toContain('Priya');
+      expect(v).not.toContain('asha');
+      expect(v).not.toContain('Asha');
     }
+  });
+
+  test('tierBookingUrl names the tier but never the visitor', () => {
+    const tier = tiers[0];
+    const url = new URL(tierBookingUrl(tier));
+    expect(url.origin + url.pathname).toBe(BOOKING_URL);
+    expect(url.searchParams.get(NOTES_PARAM)).toBe(`Interested in: ${tier.name}.`);
+    expect(url.searchParams.get('utm_medium')).toBe('pricing');
+    expect(url.searchParams.get('utm_content')).toBe(`tier-${tier.id}`);
+    expect(url.searchParams.has('name')).toBe(false);
+    expect(url.searchParams.has('email')).toBe(false);
   });
 
   test('composeNotes omits sections it has no answer for', () => {
@@ -275,16 +331,18 @@ test.describe('discovery', () => {
     }
   });
 
-  test('llms.txt describes the published pricing and work, and forbids inventing outcomes', async ({
+  test('llms.txt describes the engagements and work, and forbids inventing prices or outcomes', async ({
     request,
   }) => {
     // This file is a directive addressed to the systems most likely to follow
-    // it. The previous revision told them SheetFlow publishes no client names
-    // and no pricing — both false once these routes shipped.
+    // it. Since D38 it must tell them there is no published price, and not to
+    // estimate one.
     const body = await (await request.get('/llms.txt')).text();
 
-    expect(body).toContain('19,999');
-    expect(body).toContain('4,999');
+    expect(body).toContain('does not publish fixed prices');
+    for (const tier of tiers) expect(body).toContain(tier.name);
+    expect(body).not.toContain('19,999');
+    expect(body).not.toContain('4,999');
     for (const project of projects) {
       expect(body, `llms.txt does not mention ${project.client}`).toContain(project.client);
       expect(body).toContain(`/work/${project.slug}`);

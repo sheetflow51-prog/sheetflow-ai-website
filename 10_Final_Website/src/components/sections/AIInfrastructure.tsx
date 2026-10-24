@@ -1,6 +1,7 @@
 import { MessageCircle, Users, CalendarClock, Workflow, CreditCard, Boxes } from 'lucide-react';
 import { Chapter } from '@/components/vos';
 import { beat } from '@/content/narrative';
+import { EcosystemGrid } from '@/components/sections/EcosystemGrid';
 
 /**
  * AI Infrastructure — the distribution bus.
@@ -194,6 +195,8 @@ export function AIInfrastructure() {
         <p className="mt-10 max-w-md text-[13px] text-ink-400 md:mt-12">
           50+ integrations supported · Custom connections built on request · Your stack stays yours
         </p>
+
+        <EcosystemGrid />
     </Chapter>
   );
 }

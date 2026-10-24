@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
 import { Button } from '@/components/ui/Button';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { EASE } from '@/lib/motion';
@@ -50,9 +52,17 @@ export function Navigation() {
   const navScrolled = useStore((s) => s.navScrolled);
   const setNavScrolled = useStore((s) => s.setNavScrolled);
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  // The homepage opens on a dark stage (the hero). While it is behind the bar, the bar keeps the dark
+  // palette so its text stays readable; once the page scrolls past it the bar follows the page theme.
+  const [overHero, setOverHero] = useState(true);
+  const overStage = pathname === '/' && overHero && !open;
 
   useEffect(() => {
-    const onScroll = () => setNavScrolled(window.scrollY > 24);
+    const onScroll = () => {
+      setNavScrolled(window.scrollY > 24);
+      setOverHero(window.scrollY < window.innerHeight * 0.85);
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -101,6 +111,7 @@ export function Navigation() {
   return (
     <>
       <header
+        data-theme={overStage ? 'dark' : undefined}
         className={cn(
           'fixed left-0 top-0 z-50 flex h-16 w-full items-center transition-[background-color,backdrop-filter,border-color] duration-300',
           navScrolled || open
@@ -124,7 +135,7 @@ export function Navigation() {
                 <a
                   key={link.href}
                   href={link.href}
-                  className="rounded-md px-3 py-1.5 text-[13px] font-normal text-white/55 transition-colors duration-150 hover:bg-white/[0.06] hover:text-white/95"
+                  className="rounded-md px-3 py-1.5 text-[13px] font-normal text-white/[var(--nav-a)] transition-colors duration-150 hover:bg-white/[0.06] hover:text-white/95"
                   data-cursor="hover"
                 >
                   {link.label}
@@ -141,6 +152,7 @@ export function Navigation() {
             >
               Book free audit
             </Button>
+            <ThemeToggle />
             {/* Mobile menu trigger */}
             <button
               type="button"
@@ -176,7 +188,7 @@ export function Navigation() {
               aria-hidden="true"
               style={{
                 background:
-                  'radial-gradient(ellipse 100% 60% at 20% 0%, rgba(59, 130, 246,0.2), transparent 60%), radial-gradient(ellipse 80% 50% at 100% 100%, rgba(233, 162, 59,0.14), transparent 65%)',
+                  'radial-gradient(ellipse 100% 60% at 20% 0%, rgb(var(--color-accent) / 0.2), transparent 60%), radial-gradient(ellipse 80% 50% at 100% 100%, rgb(var(--color-gold) / 0.14), transparent 65%)',
               }}
             />
             <nav className="container-edge flex flex-1 flex-col">

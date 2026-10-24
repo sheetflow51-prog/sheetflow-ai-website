@@ -1,16 +1,21 @@
 /**
  * Case studies — the content source for `/work` and `/work/[slug]`.
  *
- * ## The permission this file operates under
+ * ## The decision this file operates under (D39)
  *
- * The founder granted publication permission on 2026-08-07 with an explicit
- * boundary, recorded verbatim in `DECISIONS.md` (D24):
+ * An earlier permission (D24) allowed client names, screenshots and project
+ * links. The founder's decision recorded as D39 withdraws all of it: **every
+ * client identity is removed from the site.** No business name, person name,
+ * registration number, phone number, address, identifying locality, client
+ * domain, tagline or brand monogram appears anywhere in this file — in code or
+ * in comments. Client engagements are published as industry archetypes: the
+ * system and the problem it solves, never whose business it runs.
  *
- * > You may use company names, screenshots, project links, architecture
- * > diagrams and implementation details. Do NOT fabricate: revenue, conversion
- * > improvements, ROI, customer metrics, testimonials, timelines. If measurable
- * > business outcomes are unavailable, clearly label them as
- * > "Not publicly disclosed."
+ * What D24 forbade, D39 still forbids:
+ *
+ * > Do NOT fabricate: revenue, conversion improvements, ROI, customer metrics,
+ * > testimonials, timelines. If measurable business outcomes are unavailable,
+ * > clearly label them as "Not publicly disclosed."
  *
  * That boundary is enforced by the `ProjectOutcome` union below rather than by
  * reviewer discipline, in the same spirit as `content/proof.ts`: the
@@ -20,11 +25,16 @@
  *
  * ## The evidence rule
  *
- * Every technical statement in this file was read off the live deployment on
- * 2026-08-07 and is independently checkable by opening `liveUrl` and viewing
- * source. Nothing here is inferred from what a build of this kind "would"
- * contain. Where a detail could not be observed, it is absent rather than
- * assumed.
+ * Every technical statement about a client or demonstration build was read off
+ * its production deployment on 2026-08-07/08, or from source where the source
+ * is ours; every statement about an internal build was read from the code and
+ * outputs on disk. Nothing here is inferred from what a build of this kind
+ * "would" contain. Where a detail could not be observed, it is absent rather
+ * than assumed.
+ *
+ * Anonymisation changes who can check, not what was checked. A reader can no
+ * longer open the deployment, so each decision's `evidence` states what was
+ * inspected and when, rather than inviting the reader to inspect it.
  *
  * Specifically **not** present, because none of it could be verified:
  * engagement dates, delivery timelines, contract values, traffic, enquiry
@@ -34,35 +44,34 @@
  *
  * Phase Y's forensic audit surfaced substantial systems that are **real, but
  * not reachable** — a double-entry accounting engine, a CNC production
- * pipeline, an outbound engine. The original type could not express them:
- * `liveUrl` was required and documented "must return HTTP 200", and a test
- * asserted exactly that against every project.
+ * pipeline, an outbound engine. They became the `internal` variant, which
+ * **has no field a URL can be typed into** and carries an `artifacts` ledger of
+ * what was inspected instead.
  *
- * Weakening `liveUrl` to optional would have quietly dropped the guarantee the
- * field exists to provide — that nothing on `/work` links to something a
- * visitor cannot open. `ProjectEvidence` keeps it instead, by making the two
- * cases structurally different:
+ * D39 then took the URL away from client and demonstration work too, for a
+ * different reason: a link to a client deployment *is* the client's identity,
+ * and so is an unredacted screenshot of it. The former `live` and `demo`
+ * variants collapsed into one `confidential` variant which, like `internal`,
+ * has no URL field at all:
  *
- *   - `live` carries a `liveUrl` and a `shot`, and is fetched by test.
- *   - `internal` **has no field a URL can be typed into**, and carries an
- *     `artifacts` ledger of what was inspected instead. It renders no outbound
- *     link and no screenshot, so it cannot accidentally imply a visitable site.
+ *   - `confidential` carries an `origin` (client or demonstration), a mandatory
+ *     `disclosure` sentence, and an optional redacted `shot`.
+ *   - `internal` carries an `artifacts` ledger, and renders no screenshot.
  *
- * Same technique as `ProjectOutcome` below, applied to reachability rather than
- * to metrics: the honest state is the one the compiler enforces.
+ * Nothing on `/work` links out to any project. That is held by the type, not by
+ * whoever edits this file next — the same technique as `ProjectOutcome` below,
+ * applied to identity rather than to metrics.
  *
- * ## Elevate WPC
+ * ## Why old slugs redirect to `/work`, not to their new slug
  *
- * Still not listed, and the reason has changed. Earlier revisions of this file
- * said it had "no verifiable artifact … nothing in the workspace". **Both
- * halves were wrong** (see `docs/EVIDENCE_MATRIX.md` §2.5). A live Google Sites
- * presence exists, and the Manus prototype — recorded as dead in Phase M on a
- * single failed request — was re-tested in Phase Y and returns **HTTP 200**.
+ * Every slug that used to carry a client's name now redirects to the `/work`
+ * index. An old→new mapping would be a public lookup table from each client's
+ * name to its archetype, and would undo the anonymisation for anyone holding an
+ * old link. The redirect map lives with the routing, not here.
  *
- * What remains unverified is the thing that matters: **SheetFlow's authorship**.
- * Neither artifact is built on anything in this account. The WPC *automation
- * pipeline* below is the same product domain, is unambiguously ours, and is
- * listed in its place.
+ * ## Excluded builds
+ *
+ * One further build stays excluded: authorship unverified (D27).
  */
 
 import type { Verification } from '@/content/proof';
@@ -99,7 +108,11 @@ export const NOT_DISCLOSED_LABEL = 'Not publicly disclosed.';
 /* Evidence                                                            */
 /* ------------------------------------------------------------------ */
 
-/** A captured frame of a running deployment, stored under `public/work/`. */
+/**
+ * A captured frame of a running deployment, stored under `public/work/`.
+ * Every identifying detail — name, wordmark, contact line, headline where it
+ * named the business — is redacted before a frame is stored (D39).
+ */
 export interface ProjectShot {
   src: string;
   width: number;
@@ -124,80 +137,40 @@ export interface InternalArtifact {
 }
 
 /**
- * Whether this project is something a visitor can open — and on what basis it
- * is published.
+ * On what basis this project is published, and what of it can be shown.
  *
- * The `internal` variant carries **no URL field of any kind**. That is the
- * entire point: `/work` guarantees every outbound project link resolves, and
- * the guarantee is held by the type rather than by whoever edits this file
- * next.
+ * Neither variant carries **a URL field of any kind**. `internal` has nothing
+ * to open; `confidential` has something to open that would name the client.
+ * Either way `/work` links out to nothing, and the guarantee is held by the
+ * type rather than by whoever edits this file next.
  *
- * ## Why `demo` exists, and why it is not just `live` with a flag
+ * ## Why `origin` exists, and why it is not a separate variant
  *
- * Phase Z's Netlify enumeration — the account audit Phase M recorded as a
- * coverage gap after a single 502 — surfaced live builds for **real, named
- * clinics that never commissioned them**: `ak-dental-demo`, `keen-griffin-feb211`.
- * They are unambiguously ours (they sit on SheetFlow's own Netlify account,
- * `sheetflow51@gmail.com`), they are reachable, and they are substantial.
+ * D32 separated commissioned client work from SheetFlow's own uncommissioned
+ * demonstration builds: presenting a demonstration as a client engagement
+ * asserts a commercial relationship that does not exist. Before D39 that took
+ * two variants, because the client one emitted an organisation node naming the
+ * business and a demonstration had to be structurally unable to. D39 removed
+ * the name, so the structural difference went with it — but the provenance
+ * claim did not, and it still has to be stated honestly.
  *
- * The `live` variant could not hold them without lying. It emits an
- * `about: Organization` node naming the client, which asserts a commercial
- * relationship — precisely the claim `EVIDENCE_MATRIX.md` §2.4 forbids for work
- * nobody paid for, and the same disqualifier that keeps Elevate WPC off this
- * page.
+ * `origin` carries it, and selects which label renders —
+ * `CONFIDENTIAL_CLIENT_LABEL` or `DEMO_BUILD_LABEL` — so a demonstration
+ * cannot be labelled as commissioned by forgetting to check a flag.
  *
- * A boolean on `live` would have been the smaller diff and the worse type: the
- * `about` node would still have been reachable by forgetting to check it. A
- * separate variant means the JSON-LD builder branches on the discriminant, and
- * a demonstration build **cannot** emit a client organisation — asserted by
- * test, not by review.
- *
- * The three cases are therefore: `live` (commissioned, visitable), `demo`
- * (ours, visitable, uncommissioned), `internal` (ours, not visitable).
+ * The cases are therefore: `confidential` + `client` (commissioned, unnamed),
+ * `confidential` + `demonstration` (ours, uncommissioned, unnamed), and
+ * `internal` (ours, nothing to open).
  */
-/**
- * A second surface belonging to the same engagement.
- *
- * Some builds ship more than one page worth showing — the Saraswati engagement
- * includes an internal CRM dashboard that the public site does not link to.
- * `note` is **required**, because every companion surface published so far has
- * needed a qualification that the screenshot alone would not convey: the
- * dashboard runs on seeded demonstration data, and showing a lead pipeline
- * without saying so would imply real patient records.
- */
-export interface CompanionSurface {
-  /** The surface. Fetched by the same reachability test as `liveUrl`. */
-  url: string;
-  /** Short label, e.g. "CRM dashboard". */
-  label: string;
-  /** The qualification a reader needs in order to read the screenshot correctly. */
-  note: string;
-  shot: ProjectShot;
-}
-
 export type ProjectEvidence =
   | {
-      kind: 'live';
-      /** The deployment this case study describes. Must return HTTP 200. */
-      liveUrl: string;
-      shot: ProjectShot;
-      /** A second page of the same engagement, if one is worth showing. */
-      companion?: CompanionSurface;
-    }
-  | {
-      kind: 'demo';
-      /** The deployment this case study describes. Must return HTTP 200. */
-      liveUrl: string;
-      shot: ProjectShot;
-      /**
-       * How we know this build is ours, and what it is *not*.
-       *
-       * Required rather than optional: a demonstration build names a real third
-       * party without a commission behind it, so the page must state the basis
-       * on which it is published. There is no way to add one of these without
-       * writing that sentence.
-       */
-      basis: string;
+      kind: 'confidential';
+      /** Commissioned by a client, or SheetFlow's own uncommissioned demonstration build. D32's distinction survives anonymization. */
+      origin: 'client' | 'demonstration';
+      /** Why the business is unnamed and nothing is linked, in the page's own voice. Required: there is no way to add one without writing it. */
+      disclosure: string;
+      /** A redacted screenshot. Omitted where no frame could be redacted honestly. */
+      shot?: ProjectShot;
     }
   | {
       kind: 'internal';
@@ -206,8 +179,8 @@ export type ProjectEvidence =
       /**
        * What was inspected to write this case study — **at least one**.
        *
-       * A non-empty tuple rather than an array, for the same reason `basis` is
-       * a mandatory string on a demonstration: a case study about work nobody
+       * A non-empty tuple rather than an array, for the same reason `disclosure`
+       * is a mandatory string on a confidential build: a case study about work nobody
        * can open earns its place only by being specific, and an internal build
        * with an empty ledger would be a page asserting engineering with nothing
        * behind it. The type refuses it rather than a reviewer having to notice.
@@ -225,6 +198,9 @@ export const INTERNAL_ONLY_LABEL = 'Internal build — no public deployment.';
 
 /** The single string every demonstration build renders. Asserted by test. */
 export const DEMO_BUILD_LABEL = 'Demonstration build — not a commissioned engagement.';
+
+/** The single string every confidential client build renders (D39). */
+export const CONFIDENTIAL_CLIENT_LABEL = 'Client build — the business is not named and the deployment is not linked.';
 
 /* ------------------------------------------------------------------ */
 /* Project shape                                                       */
@@ -263,7 +239,7 @@ export interface EngineeringDecision {
   title: string;
   /** Why — the constraint that made it the right call. */
   rationale: string;
-  /** How a reader can confirm it on the live site. */
+  /** What was inspected to establish it, and when — a reader can no longer open the deployment (D39). */
   evidence: string;
 }
 
@@ -277,15 +253,15 @@ export interface WorkProject {
   /** URL segment and breadcrumb identity. */
   slug: string;
   /**
-   * The client name for `live` client engagements, published under the
-   * permission recorded above — or the system's own name where the build is
-   * SheetFlow's (`evidence.kind === 'internal'`). Nothing here names a third
-   * party who did not commission the work.
+   * The archetype name for a confidential build ("Healthcare & Clinical
+   * Operations Engine"), or the system's own name where the build is
+   * SheetFlow's (`evidence.kind === 'internal'`). Never a third party's name —
+   * client or otherwise (D39).
    */
   client: string;
   /** Sector label. */
   sector: string;
-  /** City/region for client work, or the build's context for internal work. */
+  /** A non-identifying context ("Dental practice, India"), never a locality that identifies a client. */
   location: string;
   /** Short crumb/card label where `client` is too long. */
   shortLabel: string;
@@ -298,7 +274,7 @@ export interface WorkProject {
   headline: string;
   lede: string;
 
-  /** Whether a visitor can open this, and the proof either way. */
+  /** On what basis this is published, and the proof behind it. */
   evidence: ProjectEvidence;
 
   /** What the build had to solve, observable from the finished artifact. */
@@ -307,7 +283,7 @@ export interface WorkProject {
   /** Data flow, as implemented. */
   architecture: ArchitectureStage[];
 
-  /** Observed stack facts. Every row checkable by viewing source. */
+  /** Observed stack facts. Every row read from the deployment or its source. */
   build: BuildFact[];
 
   /** Notable implementation choices, each with how to verify it. */
@@ -336,51 +312,43 @@ export interface WorkProject {
  * This is not alphabetical or chronological, and it is not arbitrary.
  *
  * Two things go wrong when it drifts. The first is editorial: the `/work` lede
- * introduces the three kinds in exactly this order, so a grid in a different
- * order contradicts the sentence directly above it. The second is visual, and
- * it is how the problem was actually found — during the RC1 screenshot pass the
- * demonstrations sat last, which put **five image-bearing cards, then five
- * text-only tiles, then two more image cards** on one page. The rhythm broke in
- * the middle and the newest, strongest imagery landed where fewest people would
- * scroll to it.
+ * introduces the kinds in exactly this order, so a grid in a different order
+ * contradicts the sentence directly above it. The second is visual, and it is
+ * how the problem was first found — during the RC1 screenshot pass the
+ * demonstrations sat last, which split the image-bearing cards around a run of
+ * text-only tiles. The rhythm broke in the middle and the strongest imagery
+ * landed where fewest people would scroll to it.
  *
- * Grouping visitable work first fixes both: five screenshots, then five artifact
- * ledgers, in the order the page has already promised.
+ * Under D39 two of the five confidential builds carry a redacted screenshot
+ * and three carry none, because no frame of them could be redacted honestly.
+ * The grid is no longer pictures-then-text, but keeping the confidential work
+ * together still keeps every screenshot in the first half of the page.
  *
  * If you add a project, insert it in its kind's group rather than appending.
  */
 export const projects: WorkProject[] = [
   {
-    slug: 'saraswati-dental-clinic',
-    client: 'Saraswati Dental Clinic',
-    sector: 'Dental practice',
-    location: 'Etmadpur, Agra',
-    shortLabel: 'Saraswati Dental',
-    metaTitle: 'Saraswati Dental Clinic — clinic site with a validated booking intake',
+    slug: 'healthcare-clinical-operations-engine',
+    client: 'Healthcare & Clinical Operations Engine',
+    sector: 'Healthcare · dental practice',
+    location: 'India',
+    shortLabel: 'Clinical Operations',
+    metaTitle: 'Healthcare & Clinical Operations Engine — treatment-led intake and a tracked follow-up pipeline',
     metaDescription:
-      'A treatment-led clinic site for Saraswati Dental, Agra: a validated appointment form with spam trapping and consent, WhatsApp hand-off with pre-filled intent, and a Dentist entity graph.',
-    kicker: 'Dental practice · Agra',
+      'A client build for a dental practice: treatment-led intake through a validated appointment form with spam trapping and consent, WhatsApp hand-off with pre-filled intent, a CRM pipeline from first enquiry to treated, and a Dentist entity graph.',
+    kicker: 'Healthcare · Client build',
     headline: 'A clinic site that takes the booking, not just the call.',
-    lede: 'Saraswati Dental needed the enquiry captured before the visitor left the page — and routed somewhere a busy practice actually reads. The build pairs a validated intake form with a WhatsApp hand-off that arrives already knowing what the patient asked for.',
+    lede: 'A busy dental practice needed the enquiry captured before the visitor left the page — tagged with the treatment the patient chose, and routed somewhere the practice actually reads. The build pairs a validated intake form with a WhatsApp hand-off that arrives already knowing what the patient asked for, and a dashboard that lays out the follow-up pipeline from first enquiry to treated.',
     evidence: {
-      kind: 'live',
-      liveUrl: 'https://saraswati-dental-clinic.vercel.app',
+      kind: 'confidential',
+      origin: 'client',
+      disclosure:
+        'A client build. At SheetFlow’s decision the practice is not named and the deployment is not linked. The screenshot is the engagement’s CRM dashboard with its header redacted, and it runs on seeded demonstration data — invented patient names, placeholder numbers and sequential record IDs — so no real patient appears in it. That is deliberate: the dashboard is reachable without a login, so real patient records on it would be a data-protection exposure rather than a better demo. Read it as a working surface, not as a real pipeline.',
       shot: {
-        src: '/work/saraswati-dental-clinic.jpg',
+        src: '/work/healthcare-operations-dashboard.jpg',
         width: 1280,
         height: 800,
-        alt: 'Saraswati Dental Clinic homepage — an editorial hero reading “Your Smile, Our Masterpiece.” above a Hindi subhead, with the clinician’s name and registration number.',
-      },
-      companion: {
-        url: 'https://saraswati-dental-clinic.vercel.app/dashboard.html',
-        label: 'CRM dashboard',
-        note: 'Every lead, name and number on this dashboard is seeded demonstration data — “Priya Sharma”, sequential placeholder phone numbers, IDs running SDC-001 onward. That is deliberate and it is the right call: the page is publicly reachable with no authentication, so real patient records here would be a data-protection exposure rather than a better demo. Read it as a working surface, not as a real pipeline.',
-        shot: {
-          src: '/work/saraswati-dental-clinic-dashboard.jpg',
-          width: 1280,
-          height: 800,
-          alt: 'Saraswati Dental Clinic CRM dashboard — four summary tiles for total leads, this month, converted and pending follow-up, above a bar chart of pipeline by status, a pie chart of leads by source, and a kanban pipeline.',
-        },
+        alt: 'Clinical operations CRM dashboard, practice name redacted — four summary tiles for total leads, this month, converted (treated) and pending follow-up, above a bar chart of the lead pipeline by status, a pie chart of leads by source, and the start of the kanban pipeline.',
       },
     },
     brief: [
@@ -392,7 +360,7 @@ export const projects: WorkProject[] = [
       {
         stage: 'Capture',
         detail:
-          'A structured intake sits in the page rather than behind a mailto link, so the enquiry is typed while intent is highest.',
+          'A structured, treatment-led intake sits in the page rather than behind a mailto link, so the enquiry is typed — and tagged with the treatment the patient chose — while intent is highest.',
         nodes: ['Appointment form', 'Treatment selector', 'Preferred date'],
       },
       {
@@ -409,8 +377,10 @@ export const projects: WorkProject[] = [
       },
       {
         stage: 'Track',
+        // Status names (NEW … TREATED … CLOSED) and the "converted (treated)" tile are read off the
+        // committed dashboard frames, not inferred.
         detail:
-          'A separate dashboard turns captured enquiries into a worked pipeline — four summary tiles, two charts, and a kanban running the six statuses from new enquiry to closed.',
+          'A separate dashboard turns captured enquiries into a worked pipeline — four summary tiles, two charts, and a kanban running the six statuses from new enquiry through treated and follow-up to closed.',
         nodes: ['Summary tiles', 'Pipeline by status', 'Leads by source', 'Kanban board'],
       },
       {
@@ -423,11 +393,11 @@ export const projects: WorkProject[] = [
     build: [
       { label: 'Delivery', value: 'Static HTML, single document' },
       { label: 'Hosting', value: 'Vercel edge CDN' },
-      { label: 'Motion', value: 'GSAP 3.12.5 + ScrollTrigger' },
-      { label: 'Typefaces', value: 'Playfair Display, Cormorant Garamond, Inter, Noto Sans Devanagari' },
+      { label: 'Motion', value: 'GSAP with ScrollTrigger' },
+      { label: 'Typefaces', value: 'Serif display faces, a sans body face, and a Devanagari face' },
       { label: 'Structured data', value: 'Dentist, FAQPage, AggregateRating, OpeningHoursSpecification, GeoCoordinates, PostalAddress' },
       { label: 'Contact channels', value: 'In-page form, WhatsApp click-to-chat, direct dial, Maps directions' },
-      { label: 'CRM dashboard', value: 'Chart.js 4.4.1, six-column kanban, appointment list — seeded data' },
+      { label: 'CRM dashboard', value: 'Chart.js charts, six-column kanban, appointment list — seeded data' },
     ],
     decisions: [
       {
@@ -435,92 +405,91 @@ export const projects: WorkProject[] = [
         rationale:
           'A booking with an unreachable number is not a booking. The field constrains input to a valid Indian mobile — ten digits opening 6–9, with an optional country code — and explains the rule in place instead of failing silently after submission.',
         evidence:
-          'View source on the booking form: the phone input carries a pattern attribute, a numeric inputmode, and its own error message element.',
+          'Read from the production booking form on 2026-08-07: the phone input carries a pattern attribute, a numeric inputmode, and its own error message element.',
       },
       {
         title: 'A honeypot, not a CAPTCHA',
         rationale:
           'A public clinic form attracts bot submissions, and a CAPTCHA taxes every real patient to stop them. An off-screen field that humans never see and scripts routinely fill costs the patient nothing and drops the automated traffic.',
         evidence:
-          'The form contains a visually hidden, aria-hidden field with tabindex -1 and autocomplete off, labelled to be ignored.',
+          'Read from the production booking form on 2026-08-07: a visually hidden, aria-hidden field with tabindex -1 and autocomplete off, labelled to be ignored.',
       },
       {
         title: 'Consent is a gate, not a footnote',
         rationale:
           'The practice contacts patients on WhatsApp afterwards. Making the tick a submission requirement means every record it holds was volunteered on the record, rather than assumed from a pre-checked box.',
-        evidence: 'The consent checkbox is required; the form will not submit without it.',
+        evidence:
+          'Read from the production booking form on 2026-08-07: the consent checkbox is required, and the form will not submit without it.',
       },
       {
         title: 'The CRM dashboard ships with invented patients, on purpose',
         rationale:
           'The dashboard is reachable at a public URL with no login. Seeding it with real enquiry records would have made a demonstration surface into a data-protection exposure — names, phone numbers and treatments for identifiable people, served to anyone who guessed the path. Fictional records make the surface reviewable without putting a single real patient on the open web. The constraint the page is actually under is privacy, not fidelity.',
         evidence:
-          'Open the dashboard and read the records: “Priya Sharma”, sequential placeholder numbers, IDs running SDC-001 onward.',
+          'Read from the production dashboard on 2026-08-07: invented patient names, placeholder numbers and sequential record IDs throughout.',
       },
       {
         title: 'The dashboard is not linked from the public site',
         rationale:
           'It is an internal surface for the practice, not a page for patients, so it earns no navigation entry and no sitemap presence. Reachable by URL for whoever is given it; absent from the path a visitor takes.',
-        evidence: 'The public site contains no reference to dashboard.html — search the source and there are zero matches.',
+        evidence:
+          'Searched in the production site’s source on 2026-08-07: the public pages contain no reference to the dashboard’s path — zero matches.',
       },
       {
         title: 'Devanagari is loaded as a first-class face',
         rationale:
           'Serving Hindi through a fallback renders it visibly worse than the English beside it. Noto Sans Devanagari ships alongside the Latin faces so both scripts are set deliberately.',
-        evidence: 'The Google Fonts request includes Noto Sans Devanagari with the Latin families.',
+        evidence:
+          'Read from the production document on 2026-08-07: the Google Fonts request includes Noto Sans Devanagari with the Latin families.',
       },
     ],
     outcome: { disclosure: 'not-disclosed' },
     faqs: [
       {
-        id: 'saraswati-what-was-built',
-        question: 'What did SheetFlow build for Saraswati Dental Clinic?',
+        id: 'healthcare-clinical-operations-engine-what-was-built',
+        question: 'What did SheetFlow build for this dental practice?',
         answer:
-          'A treatment-led clinic website with an in-page appointment intake, WhatsApp click-to-chat hand-off carrying a pre-filled message, direct dial and map directions, and a structured-data entity graph describing the practice, its opening hours and its treatment questions. The site is live at saraswati-dental-clinic.vercel.app.',
+          'A treatment-led clinic website with an in-page appointment intake, WhatsApp click-to-chat hand-off carrying a pre-filled message, direct dial and map directions, and a structured-data entity graph describing the practice, its opening hours and its treatment questions — plus a CRM dashboard that tracks every enquiry from first contact to treated. The practice is not named and the deployment is not linked, at SheetFlow’s decision.',
       },
       {
-        id: 'saraswati-booking-flow',
-        question: 'How does the appointment booking work on the Saraswati Dental site?',
+        id: 'healthcare-clinical-operations-engine-booking-flow',
+        question: 'How does the appointment booking work?',
         answer:
           'A visitor selects a treatment, gives a name and mobile number, optionally picks a preferred date, and ticks a consent box. The number is validated against Indian mobile format before submission, and a hidden honeypot field drops automated submissions. Visitors who prefer to message instead get a WhatsApp link that opens with the reason for contact already written.',
       },
       {
-        id: 'saraswati-dashboard',
-        question: 'What does the Saraswati Dental CRM dashboard do?',
+        id: 'healthcare-clinical-operations-engine-dashboard',
+        question: 'What does the clinical operations CRM dashboard do?',
         answer:
-          'It turns captured enquiries into a worked pipeline: four summary tiles covering total leads, this month, converted and pending follow-up; a bar chart of the pipeline by status and a pie chart of leads by source; a kanban running the six statuses from new enquiry through to closed; and an upcoming-appointments list. Every record on it is seeded demonstration data, not a real patient — the page is publicly reachable with no login, so fictional records are what keeps a demonstration surface from becoming a privacy exposure.',
+          'It turns captured enquiries into a worked pipeline: four summary tiles covering total leads, this month, converted and pending follow-up; a bar chart of the pipeline by status and a pie chart of leads by source; a kanban running the six statuses from new enquiry through treated and follow-up to closed; and an upcoming-appointments list. Every record on it is seeded demonstration data, not a real patient — the page is publicly reachable with no login, so fictional records are what keeps a demonstration surface from becoming a privacy exposure.',
       },
       {
-        id: 'saraswati-results',
-        question: 'What business results did the Saraswati Dental project produce?',
+        id: 'healthcare-clinical-operations-engine-results',
+        question: 'What business results did this project produce?',
         answer:
           'Not publicly disclosed. SheetFlow publishes outcome figures only once they have been measured against a stated method and confirmed with the client in writing. No such measurement has been published for this project, so no figure is claimed.',
       },
     ],
-    related: ['sparc-physiotherapy', 'r3s-realty'],
+    related: ['rehab-clinic-intake-engine', 'real-estate-acquisition-engine'],
     services: ['appointment-booking', 'whatsapp-automation', 'lead-capture'],
   },
   {
-    slug: 'sparc-physiotherapy',
-    client: 'SPARC Physiotherapy Centre',
-    sector: 'Physiotherapy clinic',
-    location: 'Nagasandra, Bengaluru',
-    shortLabel: 'SPARC Physiotherapy',
-    metaTitle: 'SPARC Physiotherapy — a rehab clinic site that books into WhatsApp',
+    slug: 'rehab-clinic-intake-engine',
+    client: 'Rehabilitation Clinic Intake Engine',
+    sector: 'Healthcare · physiotherapy and rehab',
+    location: 'India',
+    shortLabel: 'Rehab Intake',
+    metaTitle: 'Rehabilitation Clinic Intake Engine — a rehab clinic site that books into WhatsApp',
     metaDescription:
-      'A neuro and orthopaedic rehab site for SPARC Physiotherapy, Bengaluru: a nine-service intake that submits straight into WhatsApp, an accessible live status region, and a verifiable credential graph.',
-    kicker: 'Physiotherapy · Bengaluru',
+      'A client build for a neuro and orthopaedic rehab clinic: a nine-service intake that submits straight into WhatsApp, an accessible live status region, and a verifiable credential graph.',
+    kicker: 'Physiotherapy · Client build',
     headline: 'Rehab is chosen on credentials. So the site publishes them.',
-    lede: 'Someone choosing a neuro-rehab clinician checks qualifications before price. SPARC needed those credentials stated where both a patient and a search engine could verify them — and an intake that reaches the clinic on the channel it already answers.',
+    lede: 'Someone choosing a neuro-rehab clinician checks qualifications before price. The clinic needed those credentials stated where both a patient and a search engine could verify them — and an intake that reaches the clinic on the channel it already answers.',
     evidence: {
-      kind: 'live',
-      liveUrl: 'https://sparc-physiotherapy.vercel.app',
-      shot: {
-        src: '/work/sparc-physiotherapy.jpg',
-        width: 1280,
-        height: 800,
-        alt: 'SPARC Physiotherapy Centre homepage — hero reading “Repair. Regain. Restore.”',
-      },
+      kind: 'confidential',
+      origin: 'client',
+      disclosure:
+        'A client build. At SheetFlow’s decision the clinic is not named and the deployment is not linked. There is no screenshot: every frame of the site identified the clinic or its clinician, so none could be redacted honestly.',
     },
     brief: [
       'Nine distinct rehab programmes, from paediatric to cardio-pulmonary, each with a different patient.',
@@ -557,7 +526,7 @@ export const projects: WorkProject[] = [
       { label: 'Delivery', value: 'Static HTML, single document' },
       { label: 'Hosting', value: 'Vercel edge CDN' },
       { label: 'Icons', value: 'Inline SVG sprite, referenced by <use> — no icon requests' },
-      { label: 'Typefaces', value: 'Fraunces, Manrope' },
+      { label: 'Typefaces', value: 'A serif display face with a geometric sans' },
       { label: 'Structured data', value: 'MedicalBusiness, Person, EducationalOccupationalCredential, CollegeOrUniversity, ItemList, AggregateRating, FAQPage' },
       { label: 'Contact channels', value: 'Form-to-WhatsApp, direct dial, Maps embed, Instagram' },
     ],
@@ -567,73 +536,76 @@ export const projects: WorkProject[] = [
         rationale:
           'The clinic answers WhatsApp and not email, so a form that sent email would have captured requests nobody read. Routing the intake to the channel the clinic actually monitors is worth more than owning the submission — and telling the visitor up front means the app switch is expected rather than jarring.',
         evidence:
-          'The hint above the form reads that the request opens in WhatsApp, straight to the clinic.',
+          'Read from the production booking form on 2026-08-07: the hint above it states that the request opens in WhatsApp, straight to the clinic.',
       },
       {
         title: 'Credentials modelled as entities, not adjectives',
         rationale:
           '“Award-winning” is unverifiable and search engines treat it as such. A qualification linked to the institution that granted it, plus a professional registration number, is a checkable claim — which is what a patient comparing clinicians is looking for.',
         evidence:
-          'The structured data includes an EducationalOccupationalCredential linked to a CollegeOrUniversity, and the registration is stated in the credentials section.',
+          'Read from the production structured data on 2026-08-07: an EducationalOccupationalCredential linked to a CollegeOrUniversity, with the registration stated in the credentials section.',
       },
       {
         title: 'Validation is custom, and its result is announced',
         rationale:
           'Native validation bubbles are inconsistent across browsers and invisible to screen readers once dismissed. Turning them off and reporting into an ARIA live region means the same message reaches a sighted user and a screen-reader user.',
         evidence:
-          'The form carries novalidate, and its status paragraph is marked role="status".',
+          'Read from the production booking form on 2026-08-07: the form carries novalidate, and its status paragraph is marked role="status".',
       },
       {
         title: 'Icons inline as one sprite',
         rationale:
           'A rehab site needs a large icon set for nine programmes. Inlining them as a single referenced sprite removes an entire class of network request and eliminates the icon-swap flash on first paint.',
-        evidence: 'Icons are <use> references to symbol ids defined once in the document.',
+        evidence:
+          'Read from the production document on 2026-08-07: icons are <use> references to symbol ids defined once in the document.',
       },
     ],
     outcome: { disclosure: 'not-disclosed' },
     faqs: [
       {
-        id: 'sparc-what-was-built',
-        question: 'What did SheetFlow build for SPARC Physiotherapy Centre?',
+        id: 'rehab-clinic-intake-engine-what-was-built',
+        question: 'What did SheetFlow build for this rehabilitation clinic?',
         answer:
-          'A rehabilitation clinic website covering nine treatment programmes, with a booking intake that submits directly into WhatsApp, accessible custom form validation, an inline SVG icon system, and a structured-data graph publishing the clinician, their qualification, the awarding institution and their professional registration. The site is live at sparc-physiotherapy.vercel.app.',
+          'A rehabilitation clinic website covering nine treatment programmes, with a booking intake that submits directly into WhatsApp, accessible custom form validation, an inline SVG icon system, and a structured-data graph publishing the clinician, their qualification, the awarding institution and their professional registration. The clinic is not named and the deployment is not linked, at SheetFlow’s decision.',
       },
       {
-        id: 'sparc-booking-flow',
-        question: 'How does the SPARC Physiotherapy booking form work?',
+        id: 'rehab-clinic-intake-engine-booking-flow',
+        question: 'How does the rehab clinic booking form work?',
         answer:
           'The patient gives a name and phone number, selects one of nine programmes — neuro rehabilitation, orthopaedic, sports injury, post-operative, paediatric, geriatric, antenatal and postnatal, cardio-pulmonary, or a home visit — and can add a note describing their condition. Submitting composes the request and opens WhatsApp to the clinic, which the form states before it is filled in.',
       },
       {
-        id: 'sparc-results',
-        question: 'What business results did the SPARC Physiotherapy project produce?',
+        id: 'rehab-clinic-intake-engine-results',
+        question: 'What business results did this project produce?',
         answer:
           'Not publicly disclosed. SheetFlow publishes outcome figures only once they have been measured against a stated method and confirmed with the client in writing. No such measurement has been published for this project, so no figure is claimed.',
       },
     ],
-    related: ['saraswati-dental-clinic', 'r3s-realty'],
+    related: ['healthcare-clinical-operations-engine', 'real-estate-acquisition-engine'],
     services: ['appointment-booking', 'whatsapp-automation'],
   },
   {
-    slug: 'r3s-realty',
-    client: 'R³S Realty & Developers',
-    sector: 'Real estate developer',
-    location: 'Etmadpur, Agra — NH-19 corridor',
-    shortLabel: 'R³S Realty',
-    metaTitle: 'R³S Realty — a plot-discovery site built for local property search',
+    slug: 'real-estate-acquisition-engine',
+    client: 'High-Ticket Real Estate Acquisition Engine',
+    sector: 'Real estate · plotted development',
+    location: 'Highway corridor development, India',
+    shortLabel: 'Real Estate Acquisition',
+    metaTitle: 'High-Ticket Real Estate Acquisition Engine — a plot-discovery site built for local property search',
     metaDescription:
-      'A property discovery site for R³S Realty on the NH-19 corridor near Agra: a code-split React application, a RealEstateAgent and Product entity graph with priced inventory, and WhatsApp enquiry routing.',
-    kicker: 'Real estate · Agra',
+      'A client build for a plotted-development developer on a highway corridor: a code-split React application, a RealEstateAgent and Product entity graph with its inventory published as structured data, site-visit calls to action and WhatsApp enquiry routing.',
+    kicker: 'Real estate · Client build',
     headline: 'Land is searched for by place. The site was built to be found by it.',
-    lede: 'Plot buyers search corridors and landmarks, not developer names. R³S needed a site that answered locality queries directly, published its inventory in a form search engines can read, and moved an interested buyer to WhatsApp in one tap.',
+    lede: 'Plot buyers search corridors and landmarks, not developer names. The developer needed a site that answered locality queries directly, published its inventory in a form search engines can read, and moved an interested buyer towards a site visit or a WhatsApp conversation in one tap.',
     evidence: {
-      kind: 'live',
-      liveUrl: 'https://r3s-realty-agra.vercel.app',
+      kind: 'confidential',
+      origin: 'client',
+      disclosure:
+        'A client build. At SheetFlow’s decision the developer is not named and the deployment is not linked. The screenshot is the production hero with the developer’s name, contact details and headline redacted.',
       shot: {
-        src: '/work/r3s-realty.jpg',
+        src: '/work/real-estate-acquisition.jpg',
         width: 1280,
         height: 800,
-        alt: 'R³S Realty homepage — a hero reading “Where roots meet rising horizons.” over a plotted development road, with residential plots on NH-19 starting at ₹8.99L.',
+        alt: 'Real estate acquisition site — a hero over a plotted development road with “Schedule site visit” and “View projects” buttons; the developer’s name, contact details and headline are redacted.',
       },
     },
     brief: [
@@ -658,22 +630,22 @@ export const projects: WorkProject[] = [
         stage: 'Publish inventory',
         short: 'Publish',
         detail:
-          'The project is modelled as a product with a priced offer and availability, so listings are machine-readable rather than image text.',
+          'The project is modelled as a product with a priced offer and availability, so the inventory is machine-readable rather than image text.',
         nodes: ['Product', 'Offer', 'RealEstateAgent', 'LocalBusiness'],
       },
       {
         stage: 'Route',
         detail:
-          'An interested buyer moves to WhatsApp in one tap, which is how this market transacts.',
-        nodes: ['WhatsApp click-to-chat', 'Direct dial'],
+          'Site-visit calls to action lead the first screen, and an interested buyer moves to WhatsApp in one tap, which is how this market transacts.',
+        nodes: ['Site-visit calls to action', 'WhatsApp click-to-chat', 'Direct dial'],
       },
     ],
     build: [
       { label: 'Framework', value: 'React, single-page application' },
-      { label: 'Bundler', value: 'Vite with the Rolldown runtime' },
+      { label: 'Bundler', value: 'Vite' },
       { label: 'Hosting', value: 'Vercel edge CDN' },
-      { label: 'Code splitting', value: 'Four chunks — app, vendor, motion, charts — plus a separate stylesheet' },
-      { label: 'Typefaces', value: 'DM Serif Display, Cormorant Garamond, DM Sans' },
+      { label: 'Code splitting', value: 'Split into separate chunks, plus a stylesheet' },
+      { label: 'Typefaces', value: 'Serif display faces with a sans body face' },
       { label: 'Structured data', value: 'RealEstateAgent, LocalBusiness, Product + Offer, FAQPage, PostalAddress, GeoCoordinates' },
       { label: 'Installability', value: 'Web app manifest, SVG favicon, theme colour' },
     ],
@@ -683,80 +655,75 @@ export const projects: WorkProject[] = [
         rationale:
           'Charting and motion are the two heaviest dependencies in this build. Splitting them into their own chunks lets the browser cache them independently of application code, so a content change does not invalidate the vendor payload.',
         evidence:
-          'The document module-preloads four separate chunks — application, vendor, motion and charts — alongside a small runtime.',
+          'Read from the production document on 2026-08-07: it module-preloads four separate chunks — application, vendor, motion and charts — alongside a small runtime.',
       },
       {
         title: 'Inventory published as a priced Offer',
         rationale:
           'A price rendered inside a hero image is invisible to every consumer that is not a human eye. Modelling the project as a Product with a currency-denominated Offer and an availability state makes the listing readable by search engines and assistants.',
         evidence:
-          'The JSON-LD graph contains a Product node whose offers carry priceCurrency, price and availability.',
+          'Read from the production JSON-LD on 2026-08-07: a Product node whose offers carry priceCurrency, price and availability.',
       },
       {
         title: 'The entity is typed twice, deliberately',
         rationale:
           'RealEstateAgent describes what the business does; LocalBusiness carries the address and opening hours that local search reads. Publishing both, with a shared address, satisfies both consumers without either claim being untrue.',
         evidence:
-          'The graph contains both a RealEstateAgent and a LocalBusiness node for the same organisation.',
+          'Read from the production JSON-LD on 2026-08-07: both a RealEstateAgent and a LocalBusiness node for the same organisation.',
       },
       {
         title: 'Search Console verified at build time',
         rationale:
           'A property site lives or dies on local search. Shipping the verification token in the document means indexing coverage is observable from day one rather than after someone remembers to connect it.',
-        evidence: 'A google-site-verification meta tag is present in the head.',
+        evidence:
+          'Read from the production document head on 2026-08-07: a google-site-verification meta tag is present.',
       },
     ],
     outcome: { disclosure: 'not-disclosed' },
     faqs: [
       {
-        id: 'r3s-what-was-built',
-        question: 'What did SheetFlow build for R³S Realty & Developers?',
+        id: 'real-estate-acquisition-engine-what-was-built',
+        question: 'What did SheetFlow build for this real estate developer?',
         answer:
-          'A property discovery website for plots and highway shops on the NH-19 corridor near Agra, built as a code-split React application. It publishes the developer, the project inventory as a priced offer, and the five questions plot buyers ask most as structured data, and routes enquiries to WhatsApp and direct dial. The site is live at r3s-realty-agra.vercel.app.',
+          'A property discovery website for plots and highway shops on a highway corridor, built as a code-split React application. It publishes the developer, the project inventory as a priced offer, and the five questions plot buyers ask most as structured data, leads with site-visit calls to action, and routes enquiries to WhatsApp and direct dial. The developer is not named and the deployment is not linked, at SheetFlow’s decision.',
       },
       {
-        id: 'r3s-seo-approach',
-        question: 'How was the R³S Realty site built to be found in local search?',
+        id: 'real-estate-acquisition-engine-seo-approach',
+        question: 'How was the site built to be found in local search?',
         answer:
           'Locality and corridor terms are targeted directly rather than the developer brand, an India-scoped language alternate keeps the page aimed at its market, the business is published as both a RealEstateAgent and a LocalBusiness with a full postal address and coordinates, inventory is modelled as a Product with a priced Offer, and the five most common buyer questions ship as a FAQPage.',
       },
       {
-        id: 'r3s-results',
-        question: 'What business results did the R³S Realty project produce?',
+        id: 'real-estate-acquisition-engine-results',
+        question: 'What business results did this project produce?',
         answer:
           'Not publicly disclosed. SheetFlow publishes outcome figures only once they have been measured against a stated method and confirmed with the client in writing. No such measurement has been published for this project, so no figure is claimed.',
       },
     ],
-    related: ['saraswati-dental-clinic', 'sparc-physiotherapy'],
+    related: ['healthcare-clinical-operations-engine', 'rehab-clinic-intake-engine'],
     services: ['lead-capture', 'whatsapp-automation'],
   },
 
   /* ---------------------------------------------------------------- */
-  /* Internal builds — real systems, nothing a visitor can open        */
+  /* Demonstration builds — ours, uncommissioned, unnamed              */
   /* ---------------------------------------------------------------- */
   {
-    slug: 'ak-dental-diagnostic-centre',
-    client: 'Dr. A.K Gupta Dental & Diagnostic Centre',
-    sector: 'Dental practice · Demonstration build',
-    location: 'Tundla, Uttar Pradesh',
-    shortLabel: 'AK Dental',
-    metaTitle: 'AK Dental & Diagnostic Centre — a single-file clinic build',
+    slug: 'clinic-site-demonstration',
+    client: 'Dental Clinic Demonstration Site',
+    sector: 'Healthcare · demonstration build',
+    location: 'Built as a sales demonstration',
+    shortLabel: 'Clinic Site Demo',
+    metaTitle: 'Dental Clinic Demonstration Site — a single-file clinic demonstration build',
     metaDescription:
-      'A demonstration clinic site for a Tundla dental and diagnostic centre: ten sections, WhatsApp and dial routing on every screen, and the entire build — photography included — delivered as one self-contained HTML document.',
-    kicker: 'Dental practice · Tundla',
+      'A demonstration clinic site for a dental practice with in-house imaging: ten sections, WhatsApp and dial routing on every screen, and the entire build — photography included — delivered as one self-contained HTML document.',
+    kicker: 'Healthcare · Demonstration build',
     headline: 'One file. No build step. Ten sections and the photography inside it.',
-    lede: 'A demonstration build for a dental and diagnostic centre in Tundla, put together to show the practice what its site could be. The interesting constraint was delivery: the whole thing is a single HTML document with the clinic photography embedded in it, so it runs from any host — or from a USB stick — with nothing to install.',
+    lede: 'A demonstration build for a dental practice with an in-house diagnostics centre, put together to show the practice what its site could be. The interesting constraint was delivery: the whole thing is a single HTML document with the clinic photography embedded in it, so it runs from any host — or from a USB stick — with nothing to install.',
     evidence: {
-      kind: 'demo',
-      liveUrl: 'https://ak-dental-demo.netlify.app',
-      basis:
-        'Deployed from SheetFlow’s own Netlify account (project ak-dental-demo, enumerated 2026-08-08) — which is how authorship is established. It is a demonstration made to show the practice what is possible, not a commissioned engagement, and no fee, brief or agreement sits behind it.',
-      shot: {
-        src: '/work/ak-dental-diagnostic-centre.jpg',
-        width: 1280,
-        height: 800,
-        alt: 'Dr. A.K Gupta Dental & Diagnostic Centre demonstration site — a dark hero reading “Complete Dental Care, Expert Results.” beside a photograph of the treatment room, with call and WhatsApp buttons and the Tundla location beneath.',
-      },
+      kind: 'confidential',
+      origin: 'demonstration',
+      disclosure:
+        'SheetFlow’s own uncommissioned demonstration build, deployed from SheetFlow’s own hosting account (enumerated 2026-08-08) — which is how authorship is established. It was made to show a practice what is possible; it is not a client engagement, and no fee, brief or agreement sits behind it. The practice is not named and the deployment is not linked, at SheetFlow’s decision, and there is no screenshot because every frame carried the practice’s identity.',
     },
     brief: [
       'The practice pairs a dental clinic with an in-house OPG imaging centre — a real differentiator that no template accounts for.',
@@ -790,11 +757,11 @@ export const projects: WorkProject[] = [
       },
     ],
     build: [
-      { label: 'Delivery', value: 'Static HTML, single document — 429,734 bytes' },
-      { label: 'Hosting', value: 'Netlify' },
-      { label: 'Photography', value: '5 clinic images base64-inlined (379 kB, 88% of the document)' },
-      { label: 'Typefaces', value: 'Inter, Playfair Display (Google Fonts)' },
-      { label: 'Motion', value: 'GSAP; three.js r128 via cdnjs' },
+      { label: 'Delivery', value: 'Static HTML, single document of about 0.4 MB' },
+      { label: 'Hosting', value: 'Static hosting' },
+      { label: 'Photography', value: 'Clinic images base64-inlined (most of the document)' },
+      { label: 'Typefaces', value: 'A sans body face with a serif display face' },
+      { label: 'Motion', value: 'GSAP; three.js from a CDN' },
       { label: 'Contact channels', value: 'WhatsApp click-to-chat, direct dial, in-page appointment form' },
       { label: 'Structured data', value: 'None — see the decisions below' },
     ],
@@ -802,76 +769,73 @@ export const projects: WorkProject[] = [
       {
         title: 'The photography is inside the document, and that is a trade, not a free win',
         rationale:
-          'Embedding the clinic images as base64 makes the build a single portable file: it opens from any host, any folder, or an email attachment, with no broken image paths. The cost is real and worth stating — 379,084 bytes of the 429,734-byte payload, about 88%, is images that a browser cannot cache separately, cannot serve responsively, and must download before the page is complete. For a demonstration that gets forwarded, portability won. For a production build it would not.',
+          'Embedding the clinic images as base64 makes the build a single portable file: it opens from any host, any folder, or an email attachment, with no broken image paths. The cost is real and worth stating — most of the payload, close to nine-tenths, is images that a browser cannot cache separately, cannot serve responsively, and must download before the page is complete. For a demonstration that gets forwarded, portability won. For a production build it would not.',
         evidence:
-          'View source: five img elements carry src="data:image/jpeg;base64,…". The remaining four are Unsplash URLs standing in as placeholders.',
+          'Read from the production document on 2026-08-08: five img elements carry src="data:image/jpeg;base64,…"; the remaining four are Unsplash URLs standing in as placeholders.',
       },
       {
         title: 'The diagnostics centre gets its own section rather than a service row',
         rationale:
           'In-house OPG imaging is the reason a patient would choose this practice over the one nearer to them — it means the scan and the treatment happen in one visit. Listing it as a sixth bullet among treatments would have buried the single thing that is not interchangeable.',
-        evidence: 'The services section carries a dedicated “Vedika OPG Centre” entry under an “In-House Diagnostics” heading.',
+        evidence:
+          'Read from the production document on 2026-08-08: the services section carries a dedicated OPG centre entry under its own diagnostics heading.',
       },
       {
         title: 'Contact repeats six times instead of sitting in a header',
         rationale:
           'On a phone, a sticky header costs vertical space on every screen of a long page. Repeating the WhatsApp and dial links at the end of each persuasive section instead puts the action next to the reason for taking it, and costs nothing when the visitor is not ready.',
-        evidence: 'Six wa.me links and six tel: links appear through the document, one pair per major section.',
+        evidence:
+          'Counted in the production document on 2026-08-08: six wa.me links and six tel: links, one pair per major section.',
       },
       {
         title: 'No structured data, and it is a gap rather than a decision',
         rationale:
-          'The Saraswati build publishes a full Dentist entity graph; this one publishes none, and has no meta description either. Naming it here rather than quietly omitting the row is the point: this is a demonstration of the visual and conversion layer, and the discoverability work that a production clinic site needs was not part of it.',
-        evidence: 'View source: the document contains no application/ld+json block and no meta name="description".',
+          'The commissioned clinical operations build publishes a full Dentist entity graph; this one publishes none, and has no meta description either. Naming it here rather than quietly omitting the row is the point: this is a demonstration of the visual and conversion layer, and the discoverability work that a production clinic site needs was not part of it.',
+        evidence:
+          'Read from the production document on 2026-08-08: no application/ld+json block and no meta name="description".',
       },
     ],
     outcome: { disclosure: 'not-disclosed' },
     faqs: [
       {
-        id: 'ak-dental-what-is-it',
-        question: 'Is the AK Dental site a client project?',
+        id: 'clinic-site-demonstration-what-is-it',
+        question: 'Is this clinic site a client project?',
         answer:
-          'No. It is a demonstration build — SheetFlow made it to show the practice what its site could be, and it is published here on that basis. It is unambiguously our work, deployed from our own Netlify account, but no fee, brief or agreement sits behind it and no commercial relationship is implied.',
+          'No. It is a demonstration build — SheetFlow made it to show a practice what its site could be, and it is published here on that basis. It is unambiguously our work, deployed from our own hosting account, but no fee, brief or agreement sits behind it and no commercial relationship is implied. The practice is not named and the build is not linked.',
       },
       {
-        id: 'ak-dental-single-file',
-        question: 'Why is the AK Dental build a single 429 kB HTML file?',
+        id: 'clinic-site-demonstration-single-file',
+        question: 'Why is this clinic build a single 429 kB HTML file?',
         answer:
           'So it survives being forwarded. Everything — styles, scripts and five clinic photographs — is embedded in one document, which means it opens correctly from any host, any folder, or an email attachment with no broken paths and nothing to install. The trade is that about 88% of that payload is images the browser cannot cache separately or serve responsively, which is acceptable for a demonstration and would not be for a production build.',
       },
       {
-        id: 'ak-dental-results',
-        question: 'What business results has the AK Dental build produced?',
+        id: 'clinic-site-demonstration-results',
+        question: 'What business results has this demonstration build produced?',
         answer:
           'Not publicly disclosed, and in this case there are none to disclose. It is a demonstration that was not commissioned, so there is no engagement behind it and no outcome has been measured or claimed.',
       },
     ],
-    related: ['align-dental-system', 'saraswati-dental-clinic'],
+    related: ['multi-speciality-clinic-demonstration', 'healthcare-clinical-operations-engine'],
     services: ['appointment-booking', 'whatsapp-automation', 'lead-capture'],
   },
   {
-    slug: 'align-dental-system',
-    client: 'Align Dental Care & Multi Speciality Clinic',
-    sector: 'Dental practice · Demonstration build',
-    location: 'Tundla, Uttar Pradesh',
-    shortLabel: 'Align Dental',
-    metaTitle: 'Align Dental — a componentised clinic build on React 19 and Vite',
+    slug: 'multi-speciality-clinic-demonstration',
+    client: 'Multi-Speciality Clinic System',
+    sector: 'Healthcare · demonstration build',
+    location: 'Built as a sales demonstration',
+    shortLabel: 'Clinic System Demo',
+    metaTitle: 'Multi-Speciality Clinic System — a componentised clinic build on React 19 and Vite',
     metaDescription:
-      'A demonstration clinic site for Align Dental, Tundla, built as a typed React 19 application: every piece of clinic content lives in one typed module, so the same system re-points at another practice by editing data rather than markup.',
-    kicker: 'Dental practice · Tundla',
+      'A demonstration clinic site built as a typed React 19 application: every piece of clinic content lives in one typed module, so the same system re-points at another practice by editing data rather than markup.',
+    kicker: 'Healthcare · Demonstration build',
     headline: 'The second clinic build is where you find out what was a template.',
     lede: 'Built after the single-file demonstrations, and deliberately not like them. Every clinic-specific fact — name, address, treatments, hours, contact links — sits in one typed module, separate from the fourteen components that render it. Re-pointing the system at a different practice is a data edit, not a rebuild.',
     evidence: {
-      kind: 'demo',
-      liveUrl: 'https://sheetflow51-prog.github.io/dental-demo/',
-      basis:
-        'Deployed to SheetFlow’s own GitHub Pages account, and the source is on this workspace — 1,326 lines of TypeScript and CSS across 20 files, inspected 2026-08-08. The build says so itself: its hero carries a badge reading “Premium website demo for clinic sales”. It was not commissioned, and no commercial relationship is implied.',
-      shot: {
-        src: '/work/align-dental-system.jpg',
-        width: 1280,
-        height: 800,
-        alt: 'Align Dental Care demonstration site — a light editorial hero reading “Brighten Every Visit With a Premium Dental Experience”, above a badge that labels the page a premium website demo for clinic sales.',
-      },
+      kind: 'confidential',
+      origin: 'demonstration',
+      disclosure:
+        'SheetFlow’s own uncommissioned demonstration build, deployed from SheetFlow’s own hosting account, with the source in this workspace — about 1,300 lines of TypeScript and CSS across 20 files, inspected 2026-08-08. The build says so itself: its hero carries a badge identifying it as a sales demonstration. It was not commissioned and no commercial relationship is implied. The practice it was made for is not named and the deployment is not linked, at SheetFlow’s decision. There is no screenshot: the page’s own headline and copy are distinctive enough to find the deployment by search.',
     },
     brief: [
       'A third clinic build in the same sector is where copy-paste stops being cheaper than structure.',
@@ -883,7 +847,7 @@ export const projects: WorkProject[] = [
         stage: 'Model',
         detail:
           'One typed module holds every clinic-specific fact — identity, address, hours, treatments, gallery, testimonials and the contact links built from the number.',
-        nodes: ['clinic.ts', 'Service type', 'Testimonial type', 'GalleryImage type'],
+        nodes: ['Typed clinic data module', 'Service type', 'Testimonial type', 'Gallery image type'],
       },
       {
         stage: 'Compose',
@@ -895,36 +859,36 @@ export const projects: WorkProject[] = [
         stage: 'Route',
         detail:
           'Contact actions are derived from the single stored number rather than written per link, so one edit changes every call, chat and directions target on the site.',
-        nodes: ['ctaLinks.whatsapp', 'ctaLinks.call', 'ctaLinks.directions'],
+        nodes: ['WhatsApp link', 'Call link', 'Directions link'],
       },
       {
         stage: 'Reach',
         detail:
           'A floating WhatsApp control and a sticky booking action persist as the visitor scrolls, so the two actions that matter are never more than a tap away.',
-        nodes: ['FloatingWhatsAppButton', 'StickyBookButton'],
+        nodes: ['Floating WhatsApp button', 'Sticky booking button'],
       },
     ],
     build: [
-      { label: 'Framework', value: 'React 19.2 (SPA) on Vite 8' },
-      { label: 'Language', value: 'TypeScript 6.0, strict project references' },
-      { label: 'Styling', value: 'Tailwind CSS 4.2 via @tailwindcss/vite' },
-      { label: 'Motion', value: 'framer-motion 12.38' },
-      { label: 'Icons', value: 'lucide-react 1.8' },
-      { label: 'Source size', value: '1,326 lines across 20 files — 14 section components, one data module' },
-      { label: 'Hosting', value: 'GitHub Pages' },
+      { label: 'Framework', value: 'React (SPA) on Vite' },
+      { label: 'Language', value: 'TypeScript, strict project references' },
+      { label: 'Styling', value: 'Tailwind CSS' },
+      { label: 'Motion', value: 'framer-motion' },
+      { label: 'Icons', value: 'lucide-react' },
+      { label: 'Source size', value: 'About 1,300 lines across 20 files — 14 section components, one data module' },
+      { label: 'Hosting', value: 'Static hosting' },
     ],
     decisions: [
       {
         title: 'Clinic content is a typed module, not markup',
         rationale:
           'The recurring failure in clinic sites is stale detail — an old number, last year’s hours, a treatment no longer offered — because those facts are scattered across the markup and only some get updated. Putting them in one typed object makes the update a single edit, and makes a missing field a compile error rather than a blank space on a live page.',
-        evidence: 'src/data/clinic.ts is 159 lines and exports the Service, Testimonial and GalleryImage types alongside the clinic object the components consume.',
+        evidence: 'The clinic data lives in one typed module of about 160 lines, exporting the service, testimonial and gallery types alongside the clinic object the components consume.',
       },
       {
         title: 'Contact links are derived from the number, not written beside it',
         rationale:
           'A clinic that changes its phone number changes it once. Storing the number and building the wa.me, tel: and Maps targets from it removes the class of bug where the header dials the new number and the footer dials the old one.',
-        evidence: 'clinic.ctaLinks holds whatsapp, call and directions, all built from the stored whatsappNumber and mapQuery.',
+        evidence: 'The WhatsApp, call and directions links are all built from one stored phone number and one stored map query.',
       },
       {
         title: 'Fourteen small components rather than one page file',
@@ -935,34 +899,38 @@ export const projects: WorkProject[] = [
       {
         title: 'The Google rating on the page is the clinic’s, and is not ours to claim',
         rationale:
-          'The build renders a 5.0 rating and a review count taken from the practice’s own public Google listing. That is the clinic’s data, displayed on the clinic’s own site as it would be anywhere else. It is not a SheetFlow outcome metric, and it is not offered here as evidence of anything we did — which is why no figure from it appears on this page outside this sentence.',
-        evidence: 'The values originate in the practice’s public Google Business listing, stored in clinic.ts as rating and reviewCount.',
+          'The build renders a rating and a review count taken from the practice’s own public Google listing. That is the clinic’s data, displayed on the clinic’s own site as it would be anywhere else. It is not a SheetFlow outcome metric, and it is not offered here as evidence of anything we did — which is why no figure from it appears on this page.',
+        evidence: 'The values originate in the practice’s public Google Business listing, stored in the data module as a rating and a review count.',
       },
     ],
     outcome: { disclosure: 'not-disclosed' },
     faqs: [
       {
-        id: 'align-dental-what-is-it',
-        question: 'Is the Align Dental site a client project?',
+        id: 'multi-speciality-clinic-demonstration-what-is-it',
+        question: 'Is the multi-speciality clinic site a client project?',
         answer:
-          'No. It is a demonstration build, made to show the practice what its site could be and published here on that basis. The source is ours and it is deployed from our own GitHub Pages account, but it was not commissioned and no commercial relationship is implied.',
+          'No. It is a demonstration build, made to show a practice what its site could be and published here on that basis. The source is ours and it is deployed from our own hosting account, but it was not commissioned and no commercial relationship is implied. The practice is not named and the build is not linked.',
       },
       {
-        id: 'align-dental-vs-single-file',
+        id: 'multi-speciality-clinic-demonstration-vs-single-file',
         question: 'Why is this build structured differently from the other clinic demonstrations?',
         answer:
           'Because it is the third one. The single-file builds are portable and ideal for something that gets forwarded, but every clinic-specific fact is embedded in the markup, so re-pointing one at another practice means editing prose in a 400 kB document. Here the practice details live in one typed module that fourteen components read, which makes the same job a data edit — and makes a missing field a compile error instead of a gap on a live page.',
       },
       {
-        id: 'align-dental-results',
-        question: 'What business results has the Align Dental build produced?',
+        id: 'multi-speciality-clinic-demonstration-results',
+        question: 'What business results has this demonstration build produced?',
         answer:
           'Not publicly disclosed, and none exist to disclose. It is an uncommissioned demonstration, so there is no engagement behind it and no outcome has been measured or claimed. The rating shown on the build itself is the practice’s own public Google listing data, not a result of ours.',
       },
     ],
-    related: ['ak-dental-diagnostic-centre', 'saraswati-dental-clinic'],
+    related: ['clinic-site-demonstration', 'healthcare-clinical-operations-engine'],
     services: ['appointment-booking', 'whatsapp-automation', 'lead-capture'],
   },
+
+  /* ---------------------------------------------------------------- */
+  /* Internal builds — real systems, nothing a visitor can open        */
+  /* ---------------------------------------------------------------- */
   {
     slug: 'whatsapp-accounting-os',
     client: 'WhatsApp Accounting OS',
@@ -1650,47 +1618,63 @@ export function getProject(slug: string): WorkProject | undefined {
   return projects.find((p) => p.slug === slug);
 }
 
-/** A commissioned client engagement, carrying a fetchable URL and a screenshot. */
-export type LiveProject = WorkProject & {
-  evidence: Extract<ProjectEvidence, { kind: 'live' }>;
+/**
+ * A client or demonstration build, published without its identity (D39).
+ *
+ * Neither origin carries a URL, so nothing in this set is fetched by test or
+ * linked from a page. The narrowed type is still the point: callers that render
+ * a disclosure or an origin label cannot be handed an internal build by a later
+ * edit to the array above.
+ */
+export type ConfidentialProject = WorkProject & {
+  evidence: Extract<ProjectEvidence, { kind: 'confidential' }>;
 };
 
-/**
- * Any project a visitor can open — commissioned or demonstration.
- *
- * Both variants carry `liveUrl` and `shot`, so this is the correct input for
- * anything whose concern is *reachability*: the screenshot capture script and
- * the test that fetches every published URL.
- */
-export type VisitableProject = WorkProject & {
-  evidence: Extract<ProjectEvidence, { kind: 'live' | 'demo' }>;
-};
+/** Every confidential build — client first, then demonstration, each in array order. */
+export function confidentialProjects(): ConfidentialProject[] {
+  const all = projects.filter(
+    (p): p is ConfidentialProject => p.evidence.kind === 'confidential',
+  );
+  return [
+    ...all.filter((p) => p.evidence.origin === 'client'),
+    ...all.filter((p) => p.evidence.origin === 'demonstration'),
+  ];
+}
 
 /**
  * Commissioned client engagements only.
  *
- * The narrowed return type is the point: callers that make a *client* claim
- * cannot be handed a demonstration build or an internal one by a later edit to
- * the array above.
- *
- * Use `visitableProjects()` instead where the concern is whether a URL resolves
- * — that question has the same answer for both visitable variants, and using
- * this one there would silently stop fetching the demo URLs.
+ * Callers that make a *client* claim — the client label, a client count —
+ * cannot be handed a demonstration build by a later edit to the array above.
+ * Use `confidentialProjects()` where the concern is anonymised work of either
+ * origin.
  */
-export function liveProjects(): LiveProject[] {
-  return projects.filter((p): p is LiveProject => p.evidence.kind === 'live');
+export function clientProjects(): ConfidentialProject[] {
+  return confidentialProjects().filter((p) => p.evidence.origin === 'client');
 }
 
-/** Projects a visitor can open, of either visitable kind. */
-export function visitableProjects(): VisitableProject[] {
-  return projects.filter(
-    (p): p is VisitableProject =>
-      p.evidence.kind === 'live' || p.evidence.kind === 'demo',
+/** A confidential build that carries a redacted screenshot. */
+export type ShotProject = ConfidentialProject & { evidence: { shot: ProjectShot } };
+
+/**
+ * Confidential builds with a screenshot, in `confidentialProjects()` order.
+ *
+ * The correct input for anything that renders a picture: the homepage grid and
+ * the screenshot check. A build whose every frame identified the client has no
+ * `shot`, and so cannot reach a component that would render an empty frame.
+ */
+export function projectsWithShots(): ShotProject[] {
+  return confidentialProjects().filter(
+    (p): p is ShotProject => p.evidence.shot !== undefined,
   );
 }
 
 /**
- * The six fields the homepage grid renders, and nothing else.
+ * The fields the homepage grid renders, and nothing else.
+ *
+ * Under D39 `client` holds the archetype name, never a business name, and
+ * `location` holds a non-identifying context ("Dental practice, India"),
+ * never a locality.
  *
  * ## Why this exists here rather than in the component
  *
@@ -1717,8 +1701,8 @@ export interface CaseStudyCard {
   shot: { src: string; alt: string };
 }
 
-/** Narrows a visitable project to what the homepage grid needs. Server-side only. */
-export function toCard(project: VisitableProject): CaseStudyCard {
+/** Narrows a confidential build with a screenshot to what the homepage grid needs. Server-side only. */
+export function toCard(project: ShotProject): CaseStudyCard {
   return {
     slug: project.slug,
     client: project.client,

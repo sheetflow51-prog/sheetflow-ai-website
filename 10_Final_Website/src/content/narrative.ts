@@ -65,16 +65,19 @@ export interface Beat {
 
 const ARC: Beat[] = [
   { id: 'hero', tier: 'full', tone: 'accent' },
-  { id: 'workflows', mark: '01', tier: 'standard', tone: 'accent', grid: true },
-  { id: 'integrations', mark: '02', tier: 'quiet', tone: 'accent' },
-  { id: 'how-it-works', mark: '03', tier: 'standard', tone: 'dual', grid: true },
-  { id: 'customers', mark: '04', tier: 'quiet', tone: 'accent' },
-  { id: 'build', mark: '05', tier: 'standard', tone: 'accent' },
-  { id: 'reports', mark: '06', tier: 'quiet', tone: 'accent' },
+  // RC13: the week before SheetFlow, then the week after. The hinge between the
+  // promise and the machinery, so it is read first.
+  { id: 'shift', mark: '01', tier: 'quiet', tone: 'accent' },
+  { id: 'workflows', mark: '02', tier: 'standard', tone: 'accent', grid: true },
+  { id: 'integrations', mark: '03', tier: 'quiet', tone: 'accent' },
+  { id: 'how-it-works', mark: '04', tier: 'standard', tone: 'dual', grid: true },
+  { id: 'customers', mark: '05', tier: 'quiet', tone: 'accent' },
+  { id: 'build', mark: '06', tier: 'standard', tone: 'accent' },
+  { id: 'reports', mark: '07', tier: 'quiet', tone: 'accent' },
   // The one gold-toned beat on the page. § 2: gold is the system having
   // worked — and the terms are where the visitor decides it has.
-  { id: 'pricing-beat', mark: '07', tier: 'standard', tone: 'gold' },
-  { id: 'faq', mark: '08', tier: 'quiet', tone: 'accent' },
+  { id: 'pricing-beat', mark: '08', tier: 'standard', tone: 'gold' },
+  { id: 'faq', mark: '09', tier: 'quiet', tone: 'accent' },
   { id: 'contact', tier: 'full', tone: 'dual' },
 ];
 

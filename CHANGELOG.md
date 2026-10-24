@@ -1,5 +1,66 @@
 # SheetFlow v2 Changelog
 
+## Release Candidate 14 — Motion: a live before-and-after and an orbiting ecosystem (2026-10-24)
+
+Decision: D40 (amends D39's switch and monochrome marks).
+
+- **Before and after runs on its own.** A continuous loop: enquiries stall with red badges and are pulled
+  through SVG beams into a glowing engine; finished cards land with green pills while a demo counter ticks.
+  Pause control (WCAG 2.2.2), still frame under reduced motion, captioned as illustrative.
+- **Ecosystem orbit.** A half-circle wheel of the eight tools turns around a SheetFlow core, with floating
+  event badges; the cards below keep the names and habits in text.
+- **Full-colour marks** on white tiles with brand-tinted glows and hover lift, in Light and Dark.
+- Zero new client JavaScript. Verified with `tsc` and the production build only.
+
+## Release Candidate 13 — Industry archetypes, a before-and-after, and the ecosystem (2026-10-24)
+
+Decision: D39 (supersedes the naming part of D24; replaces the `live`/`demo` evidence kinds).
+
+- **No client is named anywhere.** Case studies and dashboard stories are industry archetypes; identifying
+  regions in screenshots are irreversibly redacted, six unredactable frames removed, files renamed; no case
+  study links out; old client URLs redirect to `/work` (not to their archetype).
+- **New chapter 01, "Before and after".** A keyboard- and no-JS-operable switch between an operational-friction
+  week and the SheetFlow flow, with glass layers and line-by-line kinetic reveals; captioned as illustrative.
+- **Ecosystem grid** inside the integrations chapter: eight tools around a SheetFlow hub, each with the habit
+  the client keeps. Monochrome marks (Simple Icons, pinned), monograms where no licensable mark exists, and a
+  trademark line.
+- **Guards.** `smoke.spec.ts` fails on any former client name in rendered pages, `llms.txt` or the sitemap;
+  `work.spec.ts` fails on an outbound link or a client organisation in a case study, and checks the redirects.
+- Zero new client JavaScript; both new sections are server components.
+
+## Release Candidate 12 — Scoped engagements instead of a price list (2026-10-23)
+
+Decision: D38 (supersedes D25, amends D26).
+
+- **No published prices.** `/pricing` and the homepage pricing beat show three engagement tiers:
+  Foundation Audit & Rapid Sprint, Autonomous Operations Engine (recommended), and Enterprise Bespoke
+  Infrastructure. Each says how it is quoted, what it includes and where it stops.
+- **Every tier books directly.** "Book automation audit" links straight to the Calendly audit event
+  with the tier attached (`utm_content`, notes field). A "Custom scope? Share details first" link keeps
+  the `/book` qualification form. Still no embed and no third-party JavaScript.
+- **New on `/pricing`:** how an engagement runs (audit, sprint, build, operate), what the audit
+  measures to set a quote, and FAQs on why there is no price, the sprint, and usage charges.
+- **Founder-authorised commitments:** the sprint's 48–72 hour time-box (bounded: once scope and access
+  are agreed, one workflow, demonstration grade) and an SLA in the Enterprise contract.
+- **Machine-readable:** price nodes removed from the JSON-LD; `llms.txt` tells assistants not to state
+  or estimate a price. The calculator's break-even line is gone (it depended on the withdrawn price).
+- **Tests:** `commerce.spec.ts` now fails on any currency figure in the pricing surfaces, checks every
+  tier CTA's Calendly link on `/pricing` and the homepage, and checks the schema carries no price.
+
+## Release Candidate 11 — Light by default, and the dashboards open up (2026-10-21)
+
+Full write-up: [`docs/RC11_THEME_AND_STORIES.md`](docs/RC11_THEME_AND_STORIES.md). Decisions: D36, D37.
+
+- **Light theme is the default; Dark is a toggle in the nav.** The OS colour-scheme is ignored on
+  purpose. Dark is the original palette. The hero, the Automation Universe diagram and the closing CTA
+  stay dark stage panels inside the light page.
+- **Dashboard stories.** Four real interfaces (Saraswati, HEMLIFESTYLE, R³S Realty, SheetFlow
+  Operations) as stacked scroll scenes with a phone frame that drifts through the page. CSS only, no
+  client JavaScript. Each states its data basis; outcomes stay "Not publicly disclosed."
+- **Capability ticker** under the hero: a CSS marquee of names the site already publishes, pausable.
+- **Weight.** JS 409.4 to 410.2 kB gzip (+0.8 kB), CSS 17.0 to 18.6 kB. No new dependencies.
+- **Tests.** New `theme.spec.ts` and `stories.spec.ts`; `a11y.spec.ts` now also audits Dark.
+
 ## Release Candidate 4 — two more sections stop being the same rectangle, and the bundle gets smaller (2026-08-10)
 
 Full write-up: [`docs/RC4_SUMMARY.md`](docs/RC4_SUMMARY.md). The design rules

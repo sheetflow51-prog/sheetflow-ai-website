@@ -320,6 +320,8 @@ export function UniverseStage() {
   return (
     <>
       <div
+        data-theme="dark"
+        data-stage="panel"
         className="universe chapter-stage"
         data-engaged={engaged ? 'true' : undefined}
         /* The canvas ratio and the stage's unit scale are both published from
@@ -355,16 +357,16 @@ export function UniverseStage() {
         >
           <defs>
             <radialGradient id="universe-core-fill" cx="50%" cy="42%" r="62%">
-              <stop offset="0%" stopColor="rgb(96,165,250)" stopOpacity="0.30" />
-              <stop offset="55%" stopColor="rgb(59,130,246)" stopOpacity="0.12" />
-              <stop offset="100%" stopColor="rgb(59,130,246)" stopOpacity="0" />
+              <stop offset="0%" stopColor="rgb(var(--color-accent-bright))" stopOpacity="0.30" />
+              <stop offset="55%" stopColor="rgb(var(--color-accent))" stopOpacity="0.12" />
+              <stop offset="100%" stopColor="rgb(var(--color-accent))" stopOpacity="0" />
             </radialGradient>
             {/* The core lights from within. Filled flat, it read as a hole
                 punched in the composition rather than as a source. */}
             <radialGradient id="universe-core-inner" cx="50%" cy="34%" r="76%">
-              <stop offset="0%" stopColor="rgb(59,130,246)" stopOpacity="0.34" />
-              <stop offset="46%" stopColor="rgb(37,99,235)" stopOpacity="0.14" />
-              <stop offset="100%" stopColor="rgb(10,11,15)" stopOpacity="0.05" />
+              <stop offset="0%" stopColor="rgb(var(--color-accent))" stopOpacity="0.34" />
+              <stop offset="46%" stopColor="rgb(var(--color-accent-deep))" stopOpacity="0.14" />
+              <stop offset="100%" stopColor="rgb(var(--color-bg))" stopOpacity="0.05" />
             </radialGradient>
           </defs>
 

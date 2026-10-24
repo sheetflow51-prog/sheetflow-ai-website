@@ -51,6 +51,22 @@ const nextConfig = {
       'lucide-react',
     ],
   },
+  /**
+   * Old case-study URLs (D39). Every client-named slug lands on the work index,
+   * never on its renamed archetype page: a one-to-one redirect would publish the
+   * very mapping anonymization exists to remove. 308 (permanent), so search
+   * engines drop the old URLs.
+   */
+  async redirects() {
+    return [
+      'saraswati-dental-clinic',
+      'sparc-physiotherapy',
+      'r3s-realty',
+      'ak-dental-diagnostic-centre',
+      'align-dental-system',
+    ].map((slug) => ({ source: `/work/${slug}`, destination: '/work', permanent: true }));
+  },
+
   async headers() {
     const securityHeaders = [
       { key: 'X-Content-Type-Options', value: 'nosniff' },

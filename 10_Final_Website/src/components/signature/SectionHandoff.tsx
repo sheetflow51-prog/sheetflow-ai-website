@@ -40,7 +40,7 @@ export function SectionHandoff() {
           className="absolute inset-0 origin-center"
           style={{
             background:
-              'linear-gradient(90deg, transparent, rgba(255,255,255,0.10) 30%, rgba(255,255,255,0.10) 70%, transparent)',
+              'linear-gradient(90deg, transparent, rgb(var(--c-fg) / 0.10) 30%, rgb(var(--c-fg) / 0.10) 70%, transparent)',
             opacity,
             scaleX,
           }}
@@ -50,7 +50,7 @@ export function SectionHandoff() {
           className="absolute inset-0"
           style={{
             background:
-              'linear-gradient(90deg, transparent, rgba(96, 165, 250,0.5) 50%, transparent)',
+              'linear-gradient(90deg, transparent, rgb(var(--color-accent-bright) / 0.5) 50%, transparent)',
             opacity: glow,
             filter: 'blur(2px)',
           }}

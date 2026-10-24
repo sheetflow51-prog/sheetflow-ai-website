@@ -7,25 +7,41 @@ import { ServiceBreadcrumb } from '@/components/sections/ServiceBreadcrumb';
 import { Button } from '@/components/ui/Button';
 import { SectionHandoff } from '@/components/signature/SectionHandoff';
 import { RecoveryCalculator } from '@/components/pricing/RecoveryCalculator';
-import { tiers, comparison, pricingFaqs, formatPrice } from '@/content/pricing';
+import {
+  tiers,
+  comparison,
+  pricingFaqs,
+  engagementSteps,
+  scopeDrivers,
+  CUSTOM_SCOPE_LABEL,
+} from '@/content/pricing';
 import { pricingGraph } from '@/lib/structured-data';
+import { tierBookingUrl } from '@/lib/booking';
 import { WHATSAPP_URL } from '@/lib/contact';
 
 /**
  * `/pricing`.
  *
- * ## Why there are numbers on this page at all
+ * ## Why there are no numbers on this page
  *
- * Published under founder authorisation on 2026-08-07 (D25). ₹19,999 and
- * ₹4,999/month are the figures already quoted to prospects in the outreach
- * scripts — publishing them is disclosure, not a new commitment.
+ * D38 (2026-10-23) withdrew the D25 prices on the founder's instruction. Each
+ * tier is an engagement shape, quoted in writing after the audit call. So the
+ * missing number reads as "scoped" rather than "hidden", the page publishes
+ * what the audit measures (`scopeDrivers`) and how an engagement runs
+ * (`engagementSteps`).
  *
  * ## What this page refuses to do
  *
- * No struck-through anchor price, no countdown, no "most popular" badge on a
- * tier nobody has bought, no delivery timeline, and no ROI promise. Each of
- * those is a claim about something unmeasured, and the site's whole proof
- * architecture exists to stop exactly that.
+ * No price, range or anchor, no countdown, no "most popular" badge on a tier
+ * nobody has bought, no production delivery timeline, and no ROI promise. The
+ * one fixed time is the sprint's 48–72 hour time-box, authorised in D38.
+ *
+ * ## Every tier books directly
+ *
+ * Each card's primary CTA is a plain link to the Calendly audit event carrying
+ * the tier (`tierBookingUrl`), so the call starts knowing what was being
+ * considered. The secondary link keeps the qualification form at `/book` for
+ * anyone who wants to share details first.
  *
  * The `featured` tier is marked as the one **we recommend**, not as the one
  * most customers choose — the second is a sales statistic nobody here has.
@@ -34,12 +50,12 @@ import { WHATSAPP_URL } from '@/lib/contact';
 export const metadata: Metadata = {
   title: 'Pricing',
   description:
-    'SheetFlow pricing: a production site with lead capture from ₹19,999 one-time, ongoing AI automation from ₹4,999 per month, and scoped bespoke engagements. No delivery-timeline or ROI promises we have not measured.',
+    'SheetFlow engagements: a Foundation Audit & Rapid Sprint, an Autonomous Operations Engine, and Enterprise Bespoke Infrastructure. Each is scoped and quoted in writing after a free 30-minute automation audit.',
   alternates: { canonical: '/pricing' },
   openGraph: {
     title: 'Pricing · SheetFlow AI',
     description:
-      'A production site with lead capture from ₹19,999 one-time. Ongoing AI automation from ₹4,999 per month. Bespoke engagements scoped on a call.',
+      'Three engagements, each scoped and quoted in writing after a free 30-minute automation audit. No price list invented before we have seen your systems.',
     url: '/pricing',
     type: 'website',
   },
@@ -48,9 +64,10 @@ export const metadata: Metadata = {
 /**
  * Enterprise scope points.
  *
- * Every line describes **what is scoped**, not a service level. "Priority
- * support", "dedicated success manager" and "SLA" are the usual contents of a
- * band like this and all three are absent: none is offered, and inventing a
+ * Every line describes **what is scoped**. The service-level agreement is the
+ * one D38 added on the founder's authority, and it is stated as a contract term
+ * — its response times are agreed per engagement, so none is printed here.
+ * "Priority support" and "dedicated success manager" stay absent: inventing a
  * support tier to make the section look substantial is the same class of
  * fabrication as inventing a metric.
  */
@@ -59,8 +76,11 @@ const ENTERPRISE_POINTS = [
   'Enquiries route to the team that owns them, not to a shared inbox',
   'Reporting rolls up across locations and breaks down by each',
   'Integrations built against any API or webhook in your stack',
+  'Service levels written into the contract, then reviewed on a schedule',
   'Scope agreed in writing before any build starts',
 ];
+
+const enterpriseTier = tiers.find((t) => t.id === 'enterprise') ?? tiers[tiers.length - 1];
 
 /** Availability marker for the comparison grid. */
 function Availability({ included, capability, tier }: { included: boolean; capability: string; tier: string }) {
@@ -102,18 +122,18 @@ export default function PricingPage() {
           <div className="max-w-4xl">
             <span className="kicker">Pricing</span>
             <h1 id="pricing-heading" className="headline-cinematic text-fade text-balance mt-5">
-              What it costs, before you call.
+              Scoped to your systems, not to a price list.
             </h1>
             <p className="mt-7 max-w-2xl text-[17px] leading-relaxed text-ink-200 text-pretty md:text-[19px]">
-              Most agencies make you book a call to hear a number. Here it is up front, so you
-              can decide whether the conversation is worth your time.
+              Every business we automate runs a different stack, so we quote the work after we
+              have seen it. What does not change is published here: what each engagement
+              includes, where it stops, and how it is quoted.
             </p>
           </div>
 
           {/* ------------------------------------------------------- Tiers */}
           <div className="mt-16 grid gap-5 lg:grid-cols-3">
             {tiers.map((tier) => {
-              const price = formatPrice(tier.price);
               return (
                 <section
                   key={tier.id}
@@ -145,11 +165,11 @@ export default function PricingPage() {
                   </div>
 
                   <div className="border-y border-white/[0.06] py-6">
-                    <div className="font-display text-[32px] font-semibold leading-none text-white">
-                      {price.lead}
+                    <div className="font-display text-[24px] font-semibold leading-tight text-white">
+                      {tier.engagement.model}
                     </div>
                     <p className="mt-2 font-mono text-[11px] uppercase tracking-widest text-ink-400">
-                      {price.note}
+                      {tier.engagement.quote}
                     </p>
                   </div>
 
@@ -178,24 +198,81 @@ export default function PricingPage() {
                     {tier.limit}
                   </p>
 
-                  <Button
-                    variant={tier.featured ? 'primary' : 'secondary'}
-                    href={tier.cta.href}
-                    className="w-full justify-center"
-                  >
-                    {tier.cta.label}
-                  </Button>
+                  <div className="flex flex-col gap-3">
+                    <Button
+                      variant={tier.featured ? 'primary' : 'secondary'}
+                      href={tierBookingUrl(tier)}
+                      className="w-full justify-center"
+                    >
+                      {tier.cta}
+                    </Button>
+                    <Link
+                      href="/book"
+                      className="inline-flex min-h-[24px] items-center justify-center text-[13px] text-ink-300 underline decoration-white/20 underline-offset-4 transition-colors hover:text-white hover:decoration-white"
+                      data-cursor="hover"
+                    >
+                      {CUSTOM_SCOPE_LABEL}
+                    </Link>
+                  </div>
                 </section>
               );
             })}
           </div>
 
           <p className="mt-10 max-w-3xl border-l border-white/[0.08] pl-5 text-[13px] leading-relaxed text-ink-300">
-            Prices are in Indian rupees and exclude tax. Foundation starts at ₹19,999 — scope
-            moves it. We publish no delivery timeline and no return figure, because neither has
-            been measured across enough projects to state honestly; you get both, specific to
-            your business, on the audit call.
+            Every engagement is quoted in writing after the free audit call, in Indian rupees and
+            excluding tax, never from a price list. We publish no return figure and no timeline
+            for production builds, because neither has been measured across enough projects to
+            state honestly. The one fixed time on this page is the sprint&rsquo;s 48&ndash;72 hour
+            time-box, a limit we set on our own work once scope and access are agreed. Usage
+            charges &mdash; WhatsApp message fees from Meta, AI model usage, hosting &mdash; are
+            billed by those providers to your own accounts, never through us.
           </p>
+        </div>
+      </section>
+
+      <SectionHandoff />
+
+      {/* ----------------------------------------------- How it is scoped */}
+      <section className="section" aria-labelledby="scope-heading">
+        <div className="container-edge">
+          <span className="kicker">How it is scoped</span>
+          <h2 id="scope-heading" className="headline-section text-fade text-balance mt-5 max-w-3xl">
+            Four steps, and a decision of yours at each.
+          </h2>
+
+          <ol className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+            {engagementSteps.map((step, i) => (
+              <li
+                key={step.id}
+                className="glass flex flex-col gap-3 rounded-2xl border border-white/[0.06] p-6"
+              >
+                <span className="font-mono text-[11px] uppercase tracking-widest text-ink-400">
+                  {`Step ${i + 1}`}
+                </span>
+                <h3 className="font-display text-[19px] font-semibold text-white">{step.name}</h3>
+                <p className="text-[14px] leading-relaxed text-ink-200 text-pretty">{step.detail}</p>
+              </li>
+            ))}
+          </ol>
+
+          <div className="mt-12 max-w-3xl">
+            <h3 className="font-display text-[19px] font-semibold text-white">
+              What the audit measures to set the quote
+            </h3>
+            <ul className="mt-5 flex flex-col gap-3">
+              {scopeDrivers.map((driver) => (
+                <li key={driver} className="flex items-start gap-2.5">
+                  <Check
+                    className="mt-1 h-3.5 w-3.5 shrink-0 text-accent-bright/80"
+                    strokeWidth={2.6}
+                    aria-hidden="true"
+                  />
+                  <span className="text-[15px] leading-relaxed text-ink-100">{driver}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </section>
 
@@ -303,7 +380,7 @@ export default function PricingPage() {
             {/* Decorative only; the section reads correctly without it. */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_15%_0%,rgba(59,130,246,0.14),transparent_65%)]"
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_15%_0%,rgb(var(--color-accent) / 0.14),transparent_65%)]"
             />
 
             <div className="relative grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-16">
@@ -317,8 +394,8 @@ export default function PricingPage() {
                 </h2>
                 <p className="mt-6 max-w-xl text-[16px] leading-relaxed text-ink-200 text-pretty">
                   Branches with their own calendars, enquiries that must route to the right team,
-                  a stack with something in it nobody else integrates. These do not fit a tier,
-                  and pricing them from a page would be a number invented to fill a column.
+                  a stack with something in it nobody else integrates. Pricing these from a page
+                  would be a number invented to fill a column.
                 </p>
                 <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-ink-300 text-pretty">
                   The audit is the same 30 minutes. What changes is that we map every location and
@@ -326,8 +403,8 @@ export default function PricingPage() {
                 </p>
 
                 <div className="mt-10 flex flex-wrap items-center gap-3">
-                  <Button variant="primary" size="lg" href="/book">
-                    Talk to us about scope
+                  <Button variant="primary" size="lg" href={tierBookingUrl(enterpriseTier)}>
+                    Book automation audit
                   </Button>
                   <a
                     href={WHATSAPP_URL}
@@ -395,7 +472,7 @@ export default function PricingPage() {
             id="pricing-cta-heading"
             className="headline-section text-fade text-balance max-w-3xl"
           >
-            Find out what yours would cost.
+            Find out what yours would take.
           </h2>
           <p className="mt-5 max-w-2xl text-[16px] leading-relaxed text-ink-300 text-pretty">
             Thirty minutes, no commitment. We map where your enquiries arrive, where they stall,

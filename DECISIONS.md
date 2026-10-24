@@ -732,3 +732,173 @@ silenced are the largest engineering on the site.
 stage has no icon keyed to its exact string, and fails if a compact `short`
 label is not a literal word of the stage it shortens — so the diagram cannot
 acquire a claim the case study does not make.
+
+
+### D36 — Light is the default theme; Dark is a choice, and the stages stay dark (2026-10-21)
+
+**Decision (founder, in chat).** The site loads in **Light** mode regardless of the visitor's
+operating-system setting, with a Light/Dark toggle in the navigation. The hero and the other 3D
+"stage" panels stay high-contrast dark inside the light page.
+
+**What it amends.** `VISUAL_DNA_V2.md` § 0 says "Dark is the canvas, light is the subject". That is
+amended, not repealed: dark is still the canvas of the *stages* (the hero, the Automation Universe
+diagram, the closing CTA), whose artwork was built for it, and is still a full theme a visitor can
+choose. Light is now the page those stages sit in.
+
+**How it is built.** Every colour reads a CSS variable. The light palette is new; the dark palette is
+the original, value for value, under `[data-theme="dark"]`, which matches *any* element, so a section
+opts back into dark with one attribute (`data-theme="dark"` + `data-stage`). Tailwind's `white` now
+means "foreground" (it already did in every use except on-button text, which has its own class).
+There is deliberately **no** `prefers-color-scheme` anywhere: `tests/e2e/theme.spec.ts` fails if the
+site opens dark for a dark-mode OS. To flip the default, change `DEFAULT_THEME` in `src/lib/theme.ts`.
+
+**What it costs, stated plainly.** About six translucent overlay colours in `globals.css` were snapped
+to the nearest existing token so they could theme; in Dark they differ from the old literals by at
+most 7/255. Everything else in Dark is identical. The particle canvas and film grain are Dark-theme
+atmosphere and are not mounted at all in Light (no canvas loop, less paint).
+
+### D37 — Dashboard stories; HEMLIFESTYLE is a showcase; one sanitized internal capture (2026-10-21)
+
+**Decision (founder, in chat).** Real dashboards are shown as a short scroll story on the homepage
+(two) and on `/work` (four): Saraswati Dental Clinic, HEMLIFESTYLE, R³S Realty and SheetFlow
+Operations. They live in `content/dashboards.ts`, beside `work.ts` rather than inside it.
+
+**Same rules as D24/D34, enforced the same way.** `basis` (what the data is) is a required field and
+is rendered with every story; the only outcome text a story can show is "Not publicly disclosed.";
+`kind` separates a client build from an engineering showcase from an internal tool.
+
+- **Saraswati** keeps D34: its dashboard is seeded demonstration data and the story says so. Names and
+  numbers were also overwritten and blurred before the capture.
+- **HEMLIFESTYLE** is an **engineering showcase**: a full-stack prototype, not a paid client, by the
+  founder's own classification. Frames come from a local run on seeded mock data (phone numbers
+  masked). The only link is the public storefront.
+- **R³S Realty** is captured from the public site after every lazy image has loaded.
+- **SheetFlow Operations** is the real internal control tower, **sanitized**: lead counts, third-party
+  business names, credential hints and file paths removed, and the rendered text scanned for leaks
+  before a frame was saved.
+
+**What it narrows in D30.** D30 gives internal builds a ledger instead of a picture, because a picture
+can simulate a running deployment. The founder directed that one internal tool be shown. D30 holds for
+the other five internal builds. This capture is allowed because it is a **real capture of a real tool**
+(not a mock-up), is labelled "Internal tool, sanitized", carries no outbound link and names no client.
+Nothing in the story text may contain a percentage, an uplift or a currency figure; the e2e suite checks.
+
+**How a frame is remade.** Headless Chrome at 1600x1000 (phone frames 390 CSS px at 2x). The capture
+scripts and their leak scan are described in the header of `content/dashboards.ts`.
+
+### D38 — Prices withdrawn; three scoped engagement tiers that book directly *(2026-10-23)*
+
+**Decision (founder, in chat).** The published figures (₹19,999 one-time, ₹4,999/month — D25) are
+withdrawn: as fixed numbers on a page they read as arbitrary for bespoke automation work. `/pricing`
+and the homepage pricing beat now show three engagement tiers, each quoted in writing after the free
+audit call:
+
+1. **Foundation Audit & Rapid Sprint** — architecture audit, workflow map, and a proof of concept on
+   one workflow, time-boxed to 48–72 hours of build time. Fixed fee, quoted after the audit.
+2. **Autonomous Operations Engine** (recommended) — WhatsApp, CRM, booking, alerts, a custom
+   operations dashboard and monitoring. Build plus monthly operations, month to month.
+3. **Enterprise Bespoke Infrastructure** — custom agents, dedicated pipelines per location or team, a
+   service-level agreement in the contract, continuous optimisation.
+
+**What it supersedes.** D25 in full. The `priceSpecification` nodes are gone from the graph (an Offer
+without a price is valid schema.org; Google has no rich result for services, so nothing is lost),
+`llms.txt` now tells assistants not to state or estimate a price, and the recovery calculator loses its
+break-even line, which divided the withdrawn retainer by the visitor's figure.
+
+**Two commitments the founder authorised here, and how they are bounded.**
+- *The 48–72 hour time-box.* It is a limit set on the sprint's build work, starting once scope and
+  account access are agreed, for a demonstration-grade build of one workflow. It is not a measured
+  average and the copy says so. Production builds still have no published timeline (the D25 reasoning
+  holds for them), and the e2e test for "live in N days" style promises still runs.
+- *The SLA.* Stated as a contract term of the Enterprise tier. No response time is printed; terms are
+  agreed per engagement. This reverses the old `ENTERPRISE_POINTS` note that no SLA was offered.
+
+**Booking (amends D26).** Every tier's primary CTA, "Book automation audit", is a plain link straight
+to the Calendly audit event, with the tier in `utm_content` and in the notes field (`a1`), built by
+`tierBookingUrl` in `lib/booking.ts`. Still no embed and no third-party JavaScript. Under each tier a
+secondary link, "Custom scope? Share details first", keeps the `/book` qualification form.
+
+**Added disclosure.** Usage charges (WhatsApp message fees from Meta, AI model usage, hosting) are
+billed by those providers to the client's own accounts, never through SheetFlow. This follows from the
+existing "built in accounts you own" commitment and from Indian consumer-protection guidance on hidden
+charges. *Founder to confirm it matches how every engagement is actually billed.*
+
+**Research behind the shape** (October 2026, sources opened and cross-checked): agencies selling
+bespoke AI automation lead with a free audit, then a fixed-scope sprint, then build-plus-retainer, and
+mark the larger tiers "scoped at proposal" (Insidea, GeekyAnts, Goodspeed). Market "rate cards" carry
+uncited figures and are not quoted anywhere on the site.
+
+**Not decided here, for the founder:** whether the sprint fee is credited against a build started
+within N days (a common pattern that lowers the risk of the paid first step), and whether the sprint
+gets a published fixed fee again later.
+
+### D39 — Client identities withdrawn; industry archetypes; Before/After and ecosystem sections *(2026-10-24)*
+
+**Decision (founder, in chat).** Every client identity is removed from the site, and the work is shown as
+industry archetypes. This supersedes the naming part of D24 (permission to name is not withdrawn by the
+clients; SheetFlow chose not to use it) and replaces the `live` and `demo` evidence kinds.
+
+**How it is enforced.** `ProjectEvidence` is now `confidential | internal`. A confidential build carries
+`origin` (`client` or `demonstration`, so D32's distinction survives), a mandatory `disclosure`, an optional
+redacted `shot`, and **no URL field**: a client deployment cannot be linked by accident. The JSON-LD drops
+`url` and `about: Organization`. `llms.txt` tells assistants the clients are unnamed and must not be guessed.
+`smoke.spec.ts` fails if a former client's name reappears in a rendered page, `llms.txt` or the sitemap;
+`work.spec.ts` fails on any outbound link from a case study.
+
+| Was | Now (slug) |
+|---|---|
+| dental clinic build | Healthcare & Clinical Operations Engine (`healthcare-clinical-operations-engine`) |
+| physiotherapy build | Rehabilitation Clinic Intake Engine (`rehab-clinic-intake-engine`) |
+| real-estate build | High-Ticket Real Estate Acquisition Engine (`real-estate-acquisition-engine`) |
+| dental demonstration | Dental Clinic Demonstration Site (`clinic-site-demonstration`) |
+| multi-speciality demonstration | Multi-Speciality Clinic System (`multi-speciality-clinic-demonstration`) |
+| luxury retail showcase story | E-Commerce & Luxury Retail Flow (still a showcase, not a client) |
+
+**Redirects go to `/work`, never to the archetype.** A one-to-one redirect would publish the exact mapping the
+change exists to remove. The five old paths are listed in `next.config.mjs`.
+
+**Pixels, not just text.** 14 of 16 frames showed a client somewhere: names, a clinician's face and
+registration number, phone numbers, addresses, logos, distinctive headlines. Identifying regions were
+mosaicked and blurred (irreversible), and six frames that could not be redacted honestly were removed, so three
+case studies now have no screenshot and say why. Frames were renamed to archetype names. The capture script
+that would re-photograph the client sites unredacted was retired. **Limits, stated plainly:** the client
+deployments themselves remain public, earlier deployments of this site and this repository's history still
+contain the names, and a determined person can still reverse-match a redacted screenshot.
+
+**Archetype copy follows the build, not the brief.** The founder's framing (patient triage, follow-ups,
+treatment tracking; site-visit booking; WhatsApp checkout support, cart recovery, logistics CRM) is used only
+where it describes something that was built and is visible. "Zero-leak", "calendar sync", "investor dossier
+dispatch", "cart recovery" and "logistics CRM" are not claimed, because no build documents them.
+
+**Ecosystem grid (founder-confirmed tools).** WhatsApp Business API, Slack, Notion, NotebookLM, n8n, AWS,
+Supabase and Google Workspace, on the founder's confirmation that SheetFlow delivers with them; the FAQ
+integrations answer now names n8n, Supabase, AWS and NotebookLM so the tool-naming rule holds. Marks come from
+Simple Icons 16.35.0 (CC0 drawings, owners' trademarks); Slack, AWS and Google Workspace have no licensable
+mark there and their guidelines reserve their logos for partners, so they show a neutral monogram and the
+product name. A trademark line states no partnership or endorsement.
+
+**Before/After scene.** A new chapter 01 (`shift`) with a zero-JS radio switch. Its "5 seconds" and "48 hours"
+are the founder's illustration and the caption says, in plain text, that it is an illustrative week, not a
+measured result.
+
+### D40 — Continuous before/after loop, orbiting ecosystem, full-colour marks *(2026-10-24)*
+
+**Decision (founder, in chat).** The before/after switch becomes one continuously running pipeline
+(stalled enquiries, the engine, finished work) so both states are seen without a control. The ecosystem
+bento becomes a rotating half-circle orbit with floating badges above the eight cards. The monochrome
+marks of D39 are replaced by full-colour marks on white tiles with brand-tinted glows.
+
+**How it stays honest and accessible.** Both stages are `aria-hidden` decoration; the before/after lists
+and the tool cards carry the same content in text. Each loop has a Pause control (a native checkbox, the
+ticker's pattern) because it moves for longer than five seconds (WCAG 2.2.2); reduced motion shows a still
+frame. The counter and timings remain captioned as an illustrative loop, not live data. Zero JavaScript.
+
+**Marks.** WhatsApp, Notion, NotebookLM, n8n and Supabase are Simple Icons 16.35.0 paths in brand
+colours. Slack, AWS and Google Workspace are drawn from basic shapes in their palettes because no
+licensable file exists; their guidelines reserve the official logos for partners, so this is a founder-
+accepted trademark risk. Revert those three to monograms, or use the official files after joining the
+partner programmes, if any owner objects.
+
+**Verification.** Only `tsc --noEmit` and the webpack production build were run, at the founder's
+instruction (no local browser suite, to save memory and time).
+

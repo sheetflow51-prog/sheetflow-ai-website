@@ -119,7 +119,9 @@ test.describe('decorative payload is form-factor aware', () => {
    * `pointer: coarse`.
    */
   test('the particle canvas mounts on desktop and not on touch', async ({ page }) => {
-    await page.goto('/');
+    // The particle field is Dark-theme atmosphere (D36): it is not mounted at all in Light, which is the
+    // default. This test therefore selects Dark, so it keeps measuring the form-factor gate it was written for.
+    await page.goto('/?theme=dark');
     await page.waitForLoadState('load');
     // The atmosphere mounts on `load` then requestIdleCallback(timeout: 3000).
     // This wait must clear that timeout, or "absent" would just mean "early".
@@ -136,5 +138,12 @@ test.describe('decorative payload is form-factor aware', () => {
           'the mobile assertion above is no longer measuring anything',
       ).toBeGreaterThan(0);
     }
+  });
+
+  test('in Light, the default theme, no decorative canvas is mounted at all', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('load');
+    await page.waitForTimeout(4000);
+    expect(await page.locator('canvas').count(), 'the particle canvas should not run in Light').toBe(0);
   });
 });

@@ -17,7 +17,7 @@ export default function ScrollProgress() {
         className="h-full bg-gradient-to-r from-accent-bright via-violet-bright to-signal-info"
         style={{
           width: `${(progress * 100).toFixed(2)}%`,
-          boxShadow: '0 0 12px rgba(59, 130, 246,0.6)',
+          boxShadow: '0 0 12px rgb(var(--color-accent) / 0.6)',
           transition: 'width 80ms linear',
         }}
       />

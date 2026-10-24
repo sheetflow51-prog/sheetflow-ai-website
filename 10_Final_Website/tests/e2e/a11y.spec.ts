@@ -98,6 +98,23 @@ function summarise(violations: Awaited<ReturnType<AxeBuilder['analyze']>>['viola
     .join('\n\n');
 }
 
+/**
+ * Dark is a first-class theme, not a leftover. The default scans below run in Light (the default);
+ * this block runs the same WCAG 2.1 AA audit with Dark selected, on the three routes whose layouts
+ * differ most, so a token change that fixes one theme cannot quietly break the other.
+ */
+test.describe('accessibility, Dark theme', () => {
+  for (const path of ['/', '/work', '/pricing']) {
+    test(`${path} has no WCAG 2.1 AA violations in Dark`, async ({ page }) => {
+      await page.goto(`${path}?theme=dark`);
+      await settle(page);
+
+      const { violations } = await new AxeBuilder({ page }).withTags(TAGS).analyze();
+      expect(violations.length, `\n${summarise(violations)}\n`).toBe(0);
+    });
+  }
+});
+
 test.describe('accessibility', () => {
   // Timeout is set globally in playwright.config.ts — axe is slow here because
   // it walks the full DOM twice per assertion on a continuously repainting
@@ -204,7 +221,7 @@ test.describe('accessibility', () => {
    * catches best and reviewers catch worst.
    */
   /*
-   * `/work/ak-dental-diagnostic-centre` is audited as well, because a
+   * `/work/clinic-site-demonstration` is audited as well, because a
    * demonstration case study renders two surfaces no other page has: the
    * disclosure panel above the screenshot, and the "Demonstration" marker on
    * the `/work` card. Both are new tinted surfaces carrying text, and the last
@@ -229,8 +246,8 @@ test.describe('accessibility', () => {
    */
   for (const path of [
     '/work',
-    '/work/saraswati-dental-clinic',
-    '/work/ak-dental-diagnostic-centre',
+    '/work/healthcare-clinical-operations-engine',
+    '/work/clinic-site-demonstration',
     '/work/whatsapp-accounting-os',
     '/pricing',
     '/book',

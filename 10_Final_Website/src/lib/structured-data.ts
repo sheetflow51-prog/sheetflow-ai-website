@@ -99,7 +99,8 @@ export const organizationNode: Node = {
     'https://x.com/sheetflow51',
     'https://www.instagram.com/sheetflow51',
     'https://www.linkedin.com/in/sheet-flow-1173563a7',
-    'https://github.com/sheetflow51-prog',
+    // GitHub removed in D39: the profile's public repositories are named after
+    // former clients. Restore once they are private or renamed.
   ],
   /**
    * NOT typed as `LocalBusiness`. That subtype requires a `PostalAddress`, and
@@ -264,69 +265,37 @@ export function servicesIndexGraph(): Node[] {
 /* ------------------------------------------------------------------ */
 
 /**
- * `/pricing` — an OfferCatalog carrying real prices, plus the pricing FAQ.
+ * `/pricing` — an OfferCatalog of the three engagement tiers, plus the pricing FAQ.
  *
- * ## Why the prices are in the graph at all
+ * ## Why there is no price in the graph
  *
- * This is the highest-value GEO surface on the site. "How much does WhatsApp
- * automation cost" is a question assistants are asked constantly and can
- * almost never answer, because agencies publish "contact us". A machine-
- * readable `priceSpecification` is the difference between being quoted and
- * being skipped.
- *
- * ## The two price shapes are typed differently, deliberately
- *
- * A one-time build fee and a monthly retainer are not the same object.
- * Foundation carries a `PriceSpecification` with `minPrice` — it is a floor,
- * not a fixed price, and `price` would assert otherwise. Automation carries a
- * `UnitPriceSpecification` billed per month. Bespoke carries **no price node**:
- * it is quoted after an audit, and an invented figure to fill the slot is
- * exactly what this codebase refuses to do elsewhere.
+ * Until D38 this graph carried `priceSpecification` nodes for the D25 prices,
+ * because a machine-readable price is what gets an agency quoted by assistants.
+ * D38 withdrew those prices: every tier is now quoted in writing after the
+ * audit. A price node here would advertise a figure the page no longer states,
+ * so each Offer carries the tier, its summary and how it is quoted, and nothing
+ * numeric. `llms.txt` tells assistants the same thing in prose.
  */
 export function pricingGraph(): Node[] {
   const url = `${SITE_URL}/pricing`;
 
   const offers = tiers.map((tier) => {
-    const base: Node = {
+    const offer: Node = {
       '@type': 'Offer',
       '@id': `${url}#${tier.id}`,
       name: `${tier.name} — ${'SheetFlow AI'}`,
-      description: tier.summary,
+      description: `${tier.summary} ${tier.engagement.quote}.`,
       url,
       category: tier.name,
       seller: { '@id': ORG_ID },
       availability: 'https://schema.org/InStock',
     };
 
-    if (tier.price.kind === 'from') {
-      return {
-        ...base,
-        priceSpecification: {
-          '@type': 'PriceSpecification',
-          // minPrice, not price: ₹19,999 is a starting point and the page says
-          // so. Publishing it as `price` would advertise a fixed fee.
-          minPrice: tier.price.amount,
-          priceCurrency: tier.price.currency,
-          valueAddedTaxIncluded: false,
-        },
-      };
-    }
-
-    if (tier.price.kind === 'recurring') {
-      return {
-        ...base,
-        priceSpecification: {
-          '@type': 'UnitPriceSpecification',
-          price: tier.price.amount,
-          priceCurrency: tier.price.currency,
-          unitCode: 'MON',
-          billingIncrement: 1,
-          valueAddedTaxIncluded: false,
-        },
-      };
-    }
-
-    return base;
+    // No priceSpecification, on purpose (D38): every tier is quoted after the
+    // audit, so any price node would advertise a figure the page does not
+    // state. An Offer without a price is valid schema.org; it is simply not
+    // eligible for price-bearing rich results, which is the honest outcome.
+    return offer;
   });
 
   const webPage: Node = {
@@ -335,7 +304,7 @@ export function pricingGraph(): Node[] {
     url,
     name: 'Pricing',
     description:
-      'SheetFlow pricing — websites and lead capture from ₹19,999 one-time, ongoing automation from ₹4,999 per month, and scoped bespoke engagements.',
+      'SheetFlow engagements — a Foundation Audit & Rapid Sprint, an Autonomous Operations Engine and Enterprise Bespoke Infrastructure, each quoted in writing after a free automation audit.',
     isPartOf: { '@id': SITE_ID },
     about: { '@id': ORG_ID },
     inLanguage: 'en',
@@ -476,53 +445,32 @@ export function workIndexGraph(): Node[] {
  *
  * ## Why the project is a `CreativeWork` and not a `WebSite`
  *
- * `WebSite` is the more precise type for the thing delivered — it is, literally,
- * a website. It was rejected because the page **already carries a `WebSite`
- * node**: SheetFlow's own, pinned to `SITE_ID`. Emitting a second one puts two
- * `WebSite` entities in one graph, and Google reads `WebSite` to resolve the
- * site name and the sitelinks searchbox. Handing it a choice between
- * "SheetFlow AI" and "Saraswati Dental Clinic — website" is a risk with no
- * upside, and it was visible in the rendered graph as `WebSite, WebSite`.
+ * The page already carries SheetFlow's own `WebSite` node, pinned to
+ * `SITE_ID`; a second one would hand Google a choice of site names.
+ * `CreativeWork` carries what matters without the collision: `creator` is
+ * SheetFlow and `mainEntityOfPage` is the case study.
  *
- * `CreativeWork` carries everything that matters here without the collision:
- * `creator` is SheetFlow, `about` is the client organisation, and `url` is the
- * live deployment.
+ * ## What an anonymized build may not emit (D39)
  *
- * `mainEntityOfPage` points at the case study, not the client's site — the page
- * is about the build, and the build's own URL is carried by `url`.
- *
- * ## Demonstration builds emit `url` and `image` but never `about`
- *
- * A `demo` project is reachable and ours, so it keeps `url` and `image`. It
- * drops `about` — and that is the single most important line in this function.
- * `about: Organization` asserts the named practice is what the work was *for*,
- * which for an uncommissioned demonstration is a false claim about a real,
- * named third party. The name also reads "— demonstration build" rather than
- * "— website", so the distinction survives being read by a machine that never
- * renders the page.
+ * A `confidential` project names no business and links nothing, so its node
+ * carries **no `url`** (that would be the client's deployment) and **no
+ * `about: Organization`** (that would name, or invent, the client). Its name
+ * says what kind of work it is ("client build" or "demonstration build"), so
+ * the distinction survives a machine that never renders the page. `image`
+ * appears only when a redacted frame exists.
  *
  * ## Internal builds emit a deliberately smaller node
  *
- * A project with `evidence.kind === 'internal'` has no deployment and no client
- * organisation. Three properties are therefore omitted rather than filled with
- * a substitute:
- *
- *   - `url` — there is nothing to point at. Pointing it at the case study would
- *     duplicate `mainEntityOfPage` and assert the build *is* this page.
- *   - `about` — naming an Organization would invent a client for work nobody
- *     commissioned, which is the exact claim `EVIDENCE_MATRIX.md` §2.4 forbids.
- *   - `image` / `primaryImageOfPage` — there is no screenshot, and referencing
- *     a file that does not exist emits a broken image into the graph.
- *
- * The name also drops the "— website" suffix, because these are not websites.
+ * No deployment, no client organisation, no screenshot: `url`, `about` and
+ * `image` are omitted rather than filled with a substitute, and the name is
+ * the system's own.
  */
 export function workProjectGraph(project: WorkProject): Node[] {
   const url = `${SITE_URL}/work/${project.slug}`;
-  const kind = project.evidence.kind;
   // Narrowed inline rather than through an alias: an alias does not carry the
   // discriminant to the property accesses below.
   const shotUrl =
-    project.evidence.kind === 'live' || project.evidence.kind === 'demo'
+    project.evidence.kind === 'confidential' && project.evidence.shot
       ? `${SITE_URL}${project.evidence.shot.src}`
       : undefined;
 
@@ -530,39 +478,14 @@ export function workProjectGraph(project: WorkProject): Node[] {
     '@type': 'CreativeWork',
     '@id': `${url}#project`,
     name:
-      kind === 'live'
-        ? `${project.client} — website`
-        : kind === 'demo'
-          ? `${project.client} — demonstration build`
-          : project.client,
+      project.evidence.kind === 'confidential'
+        ? `${project.client} — ${project.evidence.origin === 'demonstration' ? 'demonstration build' : 'client build'}`
+        : project.client,
     description: project.metaDescription,
     inLanguage: 'en',
     creator: { '@id': ORG_ID },
     mainEntityOfPage: { '@id': `${url}#webpage` },
-    // `url` and `image` follow reachability: both visitable kinds have a
-    // deployment to point at and a frame of it to show.
-    ...(project.evidence.kind === 'live' || project.evidence.kind === 'demo'
-      ? { url: project.evidence.liveUrl, image: shotUrl }
-      : {}),
-    // `about` follows *commission*, and only `live` qualifies. This is the
-    // whole reason `demo` is a separate variant rather than a flag on `live`:
-    // an Organization node here asserts that the named practice engaged us.
-    // For a demonstration build nobody commissioned, that assertion would be
-    // false about a real, named third party — the exact claim
-    // `EVIDENCE_MATRIX.md` §2.4 forbids. Asserted by test, not by review.
-    ...(project.evidence.kind === 'live'
-      ? {
-          about: {
-            '@type': 'Organization',
-            name: project.client,
-            // The client's own deployment is the authoritative reference for the
-            // client entity. No address, phone or rating is restated here: those are
-            // the client's facts to publish, and mirroring them would make this site
-            // a second, drifting source for someone else's business data.
-            url: project.evidence.liveUrl,
-          },
-        }
-      : {}),
+    ...(shotUrl ? { image: shotUrl } : {}),
   };
   const webPage: Node = {
     '@type': 'WebPage',

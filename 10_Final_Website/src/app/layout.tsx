@@ -3,6 +3,7 @@ import { Inter, Fraunces, JetBrains_Mono } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import './globals.css';
+import { THEME_COLOR, themeInitScript } from '@/lib/theme';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sheetflow.ai';
 
@@ -137,8 +138,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#060608',
-  colorScheme: 'dark',
+  themeColor: THEME_COLOR.light,
+  colorScheme: 'light',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
@@ -146,7 +147,17 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${display.variable} ${mono.variable}`}>
+    <html
+      lang="en"
+      data-theme="light"
+      suppressHydrationWarning
+      className={`${inter.variable} ${display.variable} ${mono.variable}`}
+    >
+      <head>
+        {/* Light is the default and the OS colour scheme is ignored on purpose. This runs before first
+            paint, so a visitor who chose Dark never sees a flash of Light. See lib/theme.ts. */}
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="relative bg-void font-sans text-white antialiased">
         <MotionProvider>
           <LoadingScreen />

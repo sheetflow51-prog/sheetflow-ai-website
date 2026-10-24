@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { useTheme } from '@/lib/use-theme';
 import { prefersReducedMotion } from '@/lib/utils';
 
 /**
@@ -121,6 +122,9 @@ function useDeferredMount() {
 }
 
 export default function DeferredAtmosphere() {
+  // Light is the default theme. The particle canvas and the film grain are dark-theme atmosphere, so
+  // they are not mounted at all in Light: no canvas loop, no extra paint.
+  const light = useTheme() === 'light';
   // Resolves only when the page has loaded, the browser is idle, and the
   // visitor has not asked for reduced motion.
   const { ready, canvasOk } = useDeferredMount();
@@ -131,14 +135,16 @@ export default function DeferredAtmosphere() {
     <>
       <Awakening />
       <CustomCursor />
-      <AmbientBackground />
+      <div className="atmos-ambient">
+        <AmbientBackground />
+      </div>
       {/* Site-wide living wallpaper: the geometric data-network that drifts on
           a flow-field and reacts to the cursor. One fixed canvas behind every
           section. Pointer devices only — see `canvasOk`: the cursor reaction is
           the component's reason to be reactive, and its chunk is never even
           requested where there is no cursor to react to. */}
-      {canvasOk && <ParticleField fixed reactive className="z-0 opacity-80" />}
-      <NoiseTexture />
+      {canvasOk && !light && <ParticleField fixed reactive className="z-0 opacity-80" />}
+      {!light && <NoiseTexture />}
       <ScrollProgress />
       {/* Not a context provider despite the name — it renders its children
           untouched and only attaches listeners, so it sits here as a sibling

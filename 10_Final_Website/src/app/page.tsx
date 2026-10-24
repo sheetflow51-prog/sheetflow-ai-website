@@ -1,4 +1,6 @@
 import { Hero } from '@/components/sections/Hero';
+import { CapabilityTicker } from '@/components/sections/CapabilityTicker';
+import { TransformationScene } from '@/components/sections/TransformationScene';
 import { AutomationUniverse } from '@/components/sections/AutomationUniverse';
 import { AIInfrastructure } from '@/components/sections/AIInfrastructure';
 import { WorkflowPipeline } from '@/components/sections/WorkflowPipeline';
@@ -10,7 +12,7 @@ import { Faq } from '@/components/sections/Faq';
 import { FinalCTA } from '@/components/sections/FinalCTA';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { homeGraph } from '@/lib/structured-data';
-import { liveProjects, toCard } from '@/content/work';
+import { projectsWithShots, toCard } from '@/content/work';
 
 /**
  * The homepage — one narrative in ten beats.
@@ -82,6 +84,8 @@ export default function HomePage() {
       <JsonLd graph={homeGraph()} />
 
       <Hero />
+      <CapabilityTicker />
+      <TransformationScene />
 
       <AutomationUniverse />
       <AIInfrastructure />
@@ -90,7 +94,11 @@ export default function HomePage() {
       {/* Narrowed here, on the server, and kept that way now the section is no
           longer a client component: `/work`'s corpus is 100 kB of prose and
           this needs three cards from it. */}
-      <CaseStudy cards={liveProjects().map(toCard)} />
+      <CaseStudy
+        cards={projectsWithShots()
+          .filter((p) => p.evidence.origin === 'client')
+          .map(toCard)}
+      />
       <DigitalCraft />
 
       <AIDashboard />

@@ -103,7 +103,7 @@ export default function LoadingScreen() {
               <div
                 className="absolute inset-0 -m-8 rounded-full"
                 style={{
-                  background: 'radial-gradient(circle, rgba(59,130,246,0.4), transparent 70%)',
+                  background: 'radial-gradient(circle, rgb(var(--color-accent) / 0.4), transparent 70%)',
                   filter: 'blur(24px)',
                 }}
                 aria-hidden="true"
@@ -138,7 +138,7 @@ export default function LoadingScreen() {
               <AnimatePresence mode="wait">
                 <motion.p
                   key={statusIndex}
-                  className="font-mono text-[10px] uppercase tracking-widest text-white/40"
+                  className="font-mono text-[10px] uppercase tracking-widest text-white/[var(--load-a)]"
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}

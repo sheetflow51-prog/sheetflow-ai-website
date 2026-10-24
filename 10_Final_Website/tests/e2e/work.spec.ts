@@ -1,10 +1,11 @@
 import { test, expect } from '@playwright/test';
 import {
   projects,
-  visitableProjects,
+  confidentialProjects,
   NOT_DISCLOSED_LABEL,
   INTERNAL_ONLY_LABEL,
   DEMO_BUILD_LABEL,
+  CONFIDENTIAL_CLIENT_LABEL,
 } from '../../src/content/work';
 import { services } from '../../src/content/services';
 import { KNOWN_STAGES } from '../../src/components/work/WorkflowGlyph';
@@ -12,11 +13,11 @@ import { KNOWN_STAGES } from '../../src/components/work/WorkflowGlyph';
 /**
  * The case-study routes.
  *
- * These pages publish third-party company names under a written permission
- * (D24), which makes them the highest-consequence surface on the site: a
- * regression here misrepresents someone else's business, not just ours. The
- * assertions below are correspondingly strict about what may and may not
- * appear.
+ * Since D39 these pages describe real client work without naming the client,
+ * which makes them the highest-consequence surface on the site: a regression
+ * here either misrepresents someone else's business or quietly re-identifies
+ * it. The assertions below are correspondingly strict about what may and may
+ * not appear.
  */
 
 async function graph(page: import('@playwright/test').Page) {
@@ -47,12 +48,13 @@ test.describe('work index', () => {
     // It is also a visual constraint: interleaving means image cards and
     // text-only artifact tiles alternate, which is how RC1's screenshot pass
     // found the problem — two image cards stranded below five text tiles.
-    const rank = { live: 0, demo: 1, internal: 2 } as const;
-    const seen = projects.map((p) => rank[p.evidence.kind]);
+    const rank = (p: (typeof projects)[number]) =>
+      p.evidence.kind === 'internal' ? 2 : p.evidence.origin === 'demonstration' ? 1 : 0;
+    const seen = projects.map(rank);
 
     expect(
       seen,
-      `grid is interleaved: ${projects.map((p) => `${p.slug}=${p.evidence.kind}`).join(', ')}`,
+      `grid is interleaved: ${projects.map((p) => `${p.slug}=${rank(p)}`).join(', ')}`,
     ).toEqual([...seen].sort((a, b) => a - b));
   });
 
@@ -152,20 +154,19 @@ test.describe('work index', () => {
 test.describe('case studies', () => {
   for (const project of projects) {
     test.describe(project.slug, () => {
-      test('renders its heading, live link and every section', async ({ page }) => {
+      test('renders its heading, its disclosure and every section', async ({ page }) => {
         await page.goto(`/work/${project.slug}`);
 
         const h1 = page.locator('h1');
         await expect(h1).toHaveCount(1);
         await expect(h1).toHaveText(project.headline);
 
-        // For a visitable build the outbound link is the page's entire
-        // verifiability argument. For an internal build the artifact ledger is
-        // — so the assertion follows the evidence rather than being skipped.
-        if (project.evidence.kind === 'live' || project.evidence.kind === 'demo') {
+        // An anonymized build's argument is its disclosure, in words, above
+        // the fold. An internal build's is its artifact ledger.
+        if (project.evidence.kind === 'confidential') {
           await expect(
-            page.locator(`a[href="${project.evidence.liveUrl}"]`).first(),
-            'no link to the live deployment',
+            page.getByText(project.evidence.disclosure, { exact: false }).first(),
+            'the disclosure is not on the page',
           ).toBeVisible();
         } else {
           for (const artifact of project.evidence.artifacts) {
@@ -189,11 +190,12 @@ test.describe('case studies', () => {
       test('the screenshot loads and is not a broken image', async ({ page }) => {
         // Internal builds have no screenshot by construction — the `internal`
         // evidence variant has no `shot` field to point at an asset.
-        test.skip(project.evidence.kind === 'internal', 'internal build — no screenshot exists');
-        if (project.evidence.kind === 'internal') return;
+        const shot = project.evidence.kind === 'confidential' ? project.evidence.shot : undefined;
+        test.skip(!shot, 'no screenshot exists for this build');
+        if (!shot) return;
 
         await page.goto(`/work/${project.slug}`);
-        const img = page.locator(`img[alt="${project.evidence.shot.alt}"]`).first();
+        const img = page.locator(`img[alt="${shot.alt}"]`).first();
         await expect(img).toBeVisible();
 
         // `next/image` renders an <img> even when the source 404s; only
@@ -212,11 +214,10 @@ test.describe('case studies', () => {
 
         const work = byType(nodes, 'CreativeWork');
         expect(work, 'missing CreativeWork node for the project').toBeTruthy();
-        expect(work!.url).toBe(
-          project.evidence.kind === 'live' || project.evidence.kind === 'demo'
-            ? project.evidence.liveUrl
-            : undefined,
-        );
+        // No build links out any more (D39): a client deployment would name the
+        // client, and internal builds have none.
+        expect(work!.url).toBeUndefined();
+        expect(work!.about).toBeUndefined();
 
         // Regression guard. The project node was originally typed `WebSite`,
         // which put two WebSite entities in one graph — Google reads that type
@@ -363,69 +364,71 @@ test.describe('governance — the permission boundary', () => {
     }
   });
 
-  test('every published live URL is reachable', async ({ request }) => {
-    // These are deployments we link to by name. If one goes down or is
-    // replaced, the case study is making a claim about something that is no
-    // longer there.
-    //
-    // `visitableProjects()` is the whole guarantee: an internal build has no
-    // URL field to fetch, so it cannot silently opt out of this check by
-    // leaving one blank — it is a different shape entirely. Demonstration
-    // builds are included deliberately; being uncommissioned does not make a
-    // dead link acceptable.
-    //
-    // Retried once before failing. This repository has twice recorded a
-    // transient network result as a finding — Phase M called a live prototype
-    // dead on one failed request, and Phase Y hit a single ECONNRESET that
-    // passed on re-run. One attempt is not a measurement.
-    const urls = visitableProjects().flatMap((p) => [
-      { client: p.client, url: p.evidence.liveUrl },
-      // Companion surfaces are published links too, and a dead one is exactly
-      // as broken as a dead primary.
-      ...(p.evidence.kind === 'live' && p.evidence.companion
-        ? [{ client: `${p.client} (${p.evidence.companion.label})`, url: p.evidence.companion.url }]
-        : []),
-    ]);
+  test('anonymized builds link nowhere and name no client (D39)', async ({ page }) => {
+    // The failure this guards against is re-identification by the back door:
+    // an outbound link to the deployment, a client organisation in the graph,
+    // or an old client slug resurfacing. Every confidential build is checked,
+    // client and demonstration alike.
+    const builds = confidentialProjects();
+    expect(builds.length, 'no anonymized builds to check').toBeGreaterThan(0);
 
-    for (const { client, url } of urls) {
-      let status = 0;
-      for (let attempt = 0; attempt < 2 && status !== 200; attempt += 1) {
-        const response = await request.get(url, { timeout: 30_000 });
-        status = response.status();
-      }
-      expect(status, `${client}: ${url} returned ${status} on two attempts`).toBe(200);
+    for (const project of builds) {
+      await page.goto(`/work/${project.slug}`);
+
+      await expect(
+        page
+          .getByText(
+            project.evidence.origin === 'demonstration' ? DEMO_BUILD_LABEL : CONFIDENTIAL_CLIENT_LABEL,
+            { exact: false },
+          )
+          .first(),
+        `${project.slug} does not state what kind of build it is`,
+      ).toBeVisible();
+
+      // No link inside the case study may leave the site.
+      const external = await page.$$eval('main a[href^="http"]', (as) =>
+        as
+          .map((a) => (a as HTMLAnchorElement).href)
+          .filter((h) => !h.startsWith(window.location.origin)),
+      );
+      expect(external, `${project.slug} links out: ${external.join(', ')}`).toEqual([]);
+
+      const nodes = await graph(page);
+      const work = byType(nodes, 'CreativeWork')!;
+      expect(work.url, `${project.slug} emitted a deployment URL`).toBeUndefined();
+      expect(work.about, `${project.slug} named a client organisation`).toBeUndefined();
     }
   });
 
-  test('demonstration builds name no client organisation and say so on the page', async ({
-    page,
-  }) => {
-    // The failure this guards against is the one that makes `demo` a separate
-    // variant rather than a flag: a demonstration build drifting into looking
-    // commissioned. These pages name real practices that never engaged us, so
-    // two things have to hold — the page states it in words, and the graph
-    // emits no `about` Organization asserting the practice is what the work
-    // was *for*.
-    const demos = projects.filter((p) => p.evidence.kind === 'demo');
+  test('old client URLs redirect to the work index, not to their archetype', async ({ page }) => {
+    // A one-to-one redirect would publish the mapping anonymization removes.
+    for (const old of [
+      'saraswati-dental-clinic',
+      'sparc-physiotherapy',
+      'r3s-realty',
+      'ak-dental-diagnostic-centre',
+      'align-dental-system',
+    ]) {
+      const response = await page.goto(`/work/${old}`);
+      expect(response?.ok(), `/work/${old} did not resolve`).toBe(true);
+      expect(new URL(page.url()).pathname, `/work/${old} landed somewhere other than /work`).toBe('/work');
+    }
+  });
+
+  test('demonstration builds stay labelled as demonstrations', async ({ page }) => {
+    // D32's distinction survives anonymization: an uncommissioned build must
+    // never drift into reading as client work.
+    const demos = confidentialProjects().filter((p) => p.evidence.origin === 'demonstration');
     expect(demos.length, 'no demonstration builds to check').toBeGreaterThan(0);
 
     for (const project of demos) {
       await page.goto(`/work/${project.slug}`);
-
       await expect(
         page.getByText(DEMO_BUILD_LABEL, { exact: false }).first(),
         `${project.slug} does not state that it is a demonstration build`,
       ).toBeVisible();
-
-      const nodes = await graph(page);
-      const work = byType(nodes, 'CreativeWork')!;
-      expect(
-        work.about,
-        `${project.slug} named a client organisation for work nobody commissioned`,
-      ).toBeUndefined();
-      // It is still ours and still reachable, so these two must survive.
-      expect(work.url, `${project.slug} dropped its deployment URL`).toBeTruthy();
-      expect(work.image, `${project.slug} dropped its screenshot`).toBeTruthy();
+      const work = byType(await graph(page), 'CreativeWork')!;
+      expect(String(work.name)).toContain('demonstration build');
     }
   });
 

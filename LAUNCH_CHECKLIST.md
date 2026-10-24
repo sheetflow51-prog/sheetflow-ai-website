@@ -56,7 +56,7 @@ as one. Re-run it as a fresh batch before deploying (§ E).
 | B6 | Seeded demo data labelled | ✅ | `CompanionSurface.note`, type-mandatory |
 | B7 | **Diagram claims match page claims** | ✅ **RC2** | `WorkflowGlyph` renders published `architecture[].stage` only; asserted by test |
 | B8 | Services ↔ pages parity | ✅ 6/6 | asserted both directions |
-| B9 | Pricing published | ✅ | ₹19,999 / ₹4,999-mo under D25 |
+| B9 | Pricing published | ✅ | Three scoped engagement tiers, no published prices; every tier books the audit directly (D38, supersedes D25) |
 | B10 | Booking flow works without JS | ✅ | D26 |
 
 ---

@@ -51,7 +51,7 @@ export function FinalCTA() {
     /* 44 → 30 at md. The panel now carries up to 68px of its own padding, and
        176px of section padding on top of that put the closing headline most of
        a viewport away from the beat above it. */
-    <section id="contact" className="relative isolate overflow-hidden py-20 md:py-30">
+    <section id="contact" data-theme="dark" data-stage="band" className="relative isolate overflow-hidden py-20 md:py-30">
       <Ambient tier={tier} tone={tone} />
       {/* Continuous signal beam traveling the closing section's top edge —
           mirrors the hero's bottom-edge beam (gold-led here) so the two
@@ -66,8 +66,8 @@ export function FinalCTA() {
             className="absolute inset-y-0 left-0 w-40 rounded-full"
             style={{
               background:
-                'linear-gradient(90deg, transparent, rgba(244, 192, 99,0.9) 42%, rgba(96, 165, 250,0.85) 58%, transparent)',
-              boxShadow: '0 0 12px 1px rgba(244, 192, 99,0.45)',
+                'linear-gradient(90deg, transparent, rgb(var(--color-gold-bright) / 0.9) 42%, rgb(var(--color-accent-bright) / 0.85) 58%, transparent)',
+              boxShadow: '0 0 12px 1px rgb(var(--color-gold-bright) / 0.45)',
             }}
             initial={{ x: '-20vw', opacity: 0 }}
             animate={{ x: ['-20vw', '120vw'], opacity: [0, 1, 1, 0] }}
@@ -99,7 +99,7 @@ export function FinalCTA() {
         aria-hidden="true"
         style={{
           background:
-            'radial-gradient(ellipse 100% 80% at 50% 50%, transparent 30%, rgba(6,6,8,0.85) 90%)',
+            'radial-gradient(ellipse 100% 80% at 50% 50%, transparent 30%, rgb(var(--color-void) / 0.85) 90%)',
           opacity: 0.8,
         }}
       />
@@ -187,7 +187,7 @@ export function FinalCTA() {
                       className="absolute inset-y-0 left-0 w-1/2 -skew-x-12"
                       style={{
                         background:
-                          'linear-gradient(90deg, transparent, rgba(147, 197, 253,0.28) 38%, rgba(255,255,255,0.42) 50%, rgba(244, 192, 99,0.34) 62%, transparent)',
+                          'linear-gradient(90deg, transparent, rgb(var(--color-accent-light) / 0.28) 38%, rgb(var(--c-fg) / 0.42) 50%, rgb(var(--color-gold-bright) / 0.34) 62%, transparent)',
                       }}
                       initial={{ x: '-160%' }}
                       animate={{ x: ['-160%', '260%'] }}

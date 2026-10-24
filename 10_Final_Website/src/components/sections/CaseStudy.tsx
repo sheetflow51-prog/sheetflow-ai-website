@@ -5,6 +5,8 @@ import { Chapter } from '@/components/vos';
 import { beat } from '@/content/narrative';
 import { publishedCaseStudies } from '@/content/proof';
 import type { CaseStudyCard } from '@/content/work';
+import { DashboardStories } from '@/components/sections/DashboardStories';
+import { featuredStories } from '@/content/dashboards';
 
 /**
  * The homepage work section — chapter 04, the *Proof* beat.
@@ -62,13 +64,12 @@ export function CaseStudy({ cards }: { cards: CaseStudyCard[] }) {
           <span className="text-ink-300">and still running.</span>
         </>
       }
-      description="Production sites and automation systems for clinics, physiotherapy and real estate. Each one links to the live deployment — nothing here has to be taken on trust."
+      description="Production systems for healthcare and real estate, shown as industry archetypes: the client is not named and identifying details are redacted. Every case study states what was built and how it was checked."
     >
-      {/* The homepage shows the three client builds only. `/work` carries the
-          internal systems too, but they have no screenshot by construction —
-          an internal project has no `shot` field — and a three-up image grid
-          is the wrong surface to introduce them on. */}
-      <div className="chapter-stage grid gap-4 md:grid-cols-3">
+      {/* The homepage shows the client builds that carry a redacted screenshot
+          (two since D39). `/work` carries the rest, including the internal
+          systems, which have no screenshot by construction. */}
+      <div className="chapter-stage grid gap-4 md:grid-cols-2">
         {cards.map((p, i) => (
           <Link
             key={p.slug}
@@ -124,6 +125,18 @@ export function CaseStudy({ cards }: { cards: CaseStudyCard[] }) {
             </div>
           </Link>
         ))}
+      </div>
+
+      {/* Inside the dashboards: two real interfaces as a short scroll story (the other two are on /work).
+          Each states its data basis and the only outcome line the evidence rules allow. */}
+      <div className="mt-20 md:mt-28">
+        <span className="kicker">Inside the dashboards</span>
+        <h3 id="home-stories-heading" className="headline-section text-fade text-balance mt-5 max-w-3xl">
+          What the work looks like when you open it.
+        </h3>
+        <div className="mt-12">
+          <DashboardStories stories={featuredStories()} headingId="home-stories-heading" />
+        </div>
       </div>
 
       {/* The measured-outcome strip. Renders only when a verified,

@@ -171,7 +171,7 @@ export default function BookPage() {
               className="text-white/80 underline decoration-white/20 underline-offset-4 transition-colors hover:decoration-white"
               data-cursor="hover"
             >
-              what it costs
+              how engagements are scoped
             </Link>{' '}
             before you book if that helps you decide.
           </p>

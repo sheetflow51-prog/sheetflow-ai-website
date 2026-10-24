@@ -1,13 +1,18 @@
 /**
- * Pricing — the content source for `/pricing`.
+ * Pricing — the content source for `/pricing` and the homepage pricing beat.
  *
- * ## Where these figures come from
+ * ## Why there is no price on this page any more
  *
- * Published under founder authorisation on 2026-08-07 (D25). The figures are
- * not invented for this page: **₹19,999** is the price already quoted to
- * prospects in `AAA-Client-Work/call-script-simple.txt`, and **₹4,999/month**
- * is the recurring figure carried in the pipeline ledger. Publishing what is
- * already quoted verbally is a disclosure, not a new claim.
+ * D25 (2026-08-08) published ₹19,999 one-time and ₹4,999/month. D38
+ * (2026-10-23) withdraws both, on the founder's instruction: a fixed figure
+ * printed before anyone has seen the client's systems was arbitrary, and it
+ * mis-sold a bespoke engagement as a price list. Each tier is now an
+ * **engagement shape** — what it includes, where it stops, how it is quoted —
+ * and every quote is given in writing after the audit call.
+ *
+ * Nothing on this page may state, imply or anchor a number in its place: no
+ * "from", no range, no struck-through figure, no "typical cost" borrowed from
+ * a market rate card. `tests/e2e/commerce.spec.ts` fails on a currency figure.
  *
  * ## What may go in here
  *
@@ -16,126 +21,174 @@
  *
  *   - Every feature must map to a service in the `hasOfferCatalog` block in
  *     `lib/structured-data.ts`, or to something demonstrably delivered in a
- *     case study in `content/work.ts`. A test asserts the catalogue mapping.
+ *     case study in `content/work.ts` or `content/dashboards.ts`.
  *   - No tool may be named here that is not already in the integrations answer
  *     in `content/faq.ts`.
  *
- * Deliberately absent, and each for a specific reason:
+ * ## Two commitments the founder authorised in D38
  *
- *   - **Delivery timelines.** No measured baseline exists. "Live in two weeks"
- *     would be a promise nobody has ever timed.
- *   - **Outcome claims.** "Pays for itself in a month" is an ROI assertion, and
- *     no outcome has been measured for any engagement (see `content/work.ts`).
- *   - **Discount anchoring.** Struck-through "was ₹40,000" pricing invents a
- *     price nobody was ever charged.
- *   - **Client counts or seats sold.** Unverified.
+ *   - **The 48–72 hour time-box on the Rapid Sprint's proof of concept.** It is
+ *     a limit the founder sets on the build work once the scope is agreed, not
+ *     a measured average, and the copy says so. Production builds still carry
+ *     no published timeline.
+ *   - **A service-level agreement in the Enterprise tier.** Its terms are
+ *     agreed per contract; nothing here states a response time.
  *
- * ## On the currency
- *
- * Prices are stated in INR and labelled as such. The audience for these figures
- * is the market the founder actually sells into; a converted USD figure would
- * imply a USD price list that does not exist.
+ * Still deliberately absent: outcome or ROI claims (no outcome has been
+ * measured — D24), discount anchoring, client counts, and "most popular"
+ * badging (the featured tier is the one we *recommend*).
  */
 
-export type PriceShape =
-  | { kind: 'from'; amount: number; currency: 'INR'; unit: 'one-time' }
-  | { kind: 'recurring'; amount: number; currency: 'INR'; unit: 'per month'; plusSetup: true }
-  | { kind: 'quoted' };
+/** How a tier is quoted. Rendered in place of a price. */
+export interface Engagement {
+  /** The shape of the engagement, e.g. "Fixed-scope sprint". */
+  model: string;
+  /** How and when it is quoted. */
+  quote: string;
+}
 
 export interface PricingTier {
-  /** Stable id — DOM anchor and React key. */
+  /** Stable id — DOM anchor, React key, schema `@id` fragment, booking attribution. */
   id: string;
   name: string;
   /** One line on who this is for. */
   audience: string;
-  price: PriceShape;
+  engagement: Engagement;
   /** What the tier is, in one sentence. */
   summary: string;
-  /** Included capability lines. Each maps to a catalogued service. */
+  /** Included capability lines. Each maps to a catalogued service or a delivered build. */
   includes: string[];
   /** The honest limit of this tier — what it deliberately does not cover. */
   limit: string;
-  cta: { label: string; href: string };
-  /** Visually and programmatically marked as the common choice. */
+  /** Booking CTA label. The href is built per tier by `tierBookingUrl` in `lib/booking.ts`. */
+  cta: string;
+  /** Visually and programmatically marked as the one we recommend. */
   featured: boolean;
-}
-
-/** Formats a tier price for display. One place, so the page cannot disagree. */
-export function formatPrice(price: PriceShape): { lead: string; note: string } {
-  switch (price.kind) {
-    case 'from':
-      return { lead: `from ₹${price.amount.toLocaleString('en-IN')}`, note: 'one-time' };
-    case 'recurring':
-      return {
-        lead: `₹${price.amount.toLocaleString('en-IN')}`,
-        note: 'per month, plus one-time setup',
-      };
-    case 'quoted':
-      return { lead: 'Quoted', note: 'scoped on a call' };
-  }
 }
 
 export const tiers: PricingTier[] = [
   {
     id: 'foundation',
-    name: 'Foundation',
-    audience: 'A business whose enquiries currently arrive by phone and nowhere else.',
-    price: { kind: 'from', amount: 19999, currency: 'INR', unit: 'one-time' },
+    name: 'Foundation Audit & Rapid Sprint',
+    audience: 'A business that wants proof on one workflow before committing to a build.',
+    engagement: {
+      model: 'Fixed-scope sprint',
+      quote: 'Fixed fee, quoted in writing after the audit call',
+    },
     summary:
-      'The site and the intake that captures an enquiry while the visitor is still on the page, and routes it to a channel you actually read.',
+      'We audit the tools you already run, map where enquiries arrive, stall and drop, and build a working proof of concept of the workflow that matters most.',
     includes: [
-      'A production website, built and deployed',
-      'Structured enquiry intake with validation and spam trapping',
-      'Instant alerts the moment an enquiry lands',
-      'WhatsApp hand-off carrying the reason for contact',
-      'Structured data so search engines and AI assistants can read your business',
+      'Architecture audit of the tools and accounts you already run',
+      'A workflow map: where enquiries arrive, where they stall, where they are lost',
+      'A working proof of concept on one workflow, time-boxed to 48–72 hours of build time once scope and access are agreed',
+      'A written build plan with the scope and a fixed quote for the next step',
       'Built in accounts you own, and yours to keep',
     ],
     limit:
-      'No recurring automation. Enquiries reach you fast, but the follow-up after that is still yours to send.',
-    cta: { label: 'Book a free audit', href: '/book' },
+      'One workflow, proven end to end. A production rollout across the business is the Operations Engine.',
+    cta: 'Book automation audit',
     featured: false,
   },
   {
-    id: 'automation',
-    name: 'Automation',
+    id: 'operations',
+    name: 'Autonomous Operations Engine',
     audience: 'A business losing revenue between the first enquiry and the booked appointment.',
-    price: { kind: 'recurring', amount: 4999, currency: 'INR', unit: 'per month', plusSetup: true },
+    engagement: {
+      model: 'Build + monthly operations',
+      quote: 'Scoped from the audit, operations month to month',
+    },
     summary:
-      'Everything in Foundation, plus the systems that answer, qualify, book and record without anyone remembering to.',
+      'The systems that answer, qualify, book, record and report across your channels, built to production and kept running without anyone remembering to.',
     includes: [
-      'Everything in Foundation',
+      'Everything in the Foundation sprint',
       'AI assistant that replies and qualifies on WhatsApp, around the clock',
+      'CRM kept in sync automatically — HubSpot, Pipedrive or GoHighLevel',
       'Self-serve appointment booking, synced to your calendar',
-      'CRM kept up to date automatically — HubSpot, Pipedrive or GoHighLevel',
-      'Automated invoice reminders',
-      'One daily report covering leads, bookings and what needs you',
-      'Ongoing monitoring and changes as your process changes',
+      'Missed-lead alerts and automated invoice reminders',
+      'A custom operations dashboard, plus one daily report',
+      'Monitoring and changes as your process changes',
     ],
     limit:
-      'Scoped to one location and one core workflow set. Multi-branch routing and bespoke integrations sit in Bespoke.',
-    cta: { label: 'Book a free audit', href: '/book' },
+      'Scoped to one business and one core workflow set. Multiple locations, custom agents and contractual service levels sit in Enterprise.',
+    cta: 'Book automation audit',
     featured: true,
   },
   {
-    id: 'bespoke',
-    name: 'Bespoke',
-    audience: 'Multiple locations, an unusual stack, or a workflow nobody sells off the shelf.',
-    price: { kind: 'quoted' },
+    id: 'enterprise',
+    name: 'Enterprise Bespoke Infrastructure',
+    audience: 'Multiple locations or teams, an unusual stack, or a workflow nobody sells off the shelf.',
+    engagement: {
+      model: 'Bespoke engagement',
+      quote: 'Scoped at proposal, service levels set in the contract',
+    },
     summary:
-      'A scoped engagement for systems that do not fit a tier — because the honest answer is that they need to be looked at first.',
+      'Custom agents and dedicated pipelines built around your own processes, run under a written service-level agreement and improved on a schedule.',
     includes: [
-      'Everything in Automation',
-      'Multi-location and multi-team routing',
+      'Everything in the Operations Engine',
+      'Custom AI agents built around your own processes',
+      'Dedicated automation pipelines per location or team',
       'Custom integrations against any API or webhook',
-      'Bespoke internal tooling and reporting',
-      'Direct line for changes',
+      'A service-level agreement written into the contract',
+      'Continuous optimisation: scheduled reviews, then changes',
     ],
     limit:
-      'Priced only after the audit. Quoting this without seeing the systems would be a number invented to fill a column.',
-    cta: { label: 'Talk it through', href: '/book' },
+      'Quoted only after the audit maps every location and system. Service levels are agreed in writing per engagement, not promised from a page.',
+    cta: 'Book automation audit',
     featured: false,
   },
+];
+
+/** Label for the secondary path under every tier: qualify first, then book. */
+export const CUSTOM_SCOPE_LABEL = 'Custom scope? Share details first';
+
+/* ------------------------------------------------------------------ */
+/* How an engagement runs, and what sets the quote                     */
+/* ------------------------------------------------------------------ */
+
+export interface EngagementStep {
+  id: string;
+  name: string;
+  detail: string;
+}
+
+/**
+ * The stage gates every engagement passes through. Each ends in something the
+ * client keeps and a decision the client makes — which is why only the first
+ * step can be free and why later steps are quoted, not listed.
+ */
+export const engagementSteps: EngagementStep[] = [
+  {
+    id: 'audit',
+    name: 'Audit call',
+    detail: 'Free, 30 minutes. We map your tools and where enquiries stall. You leave with the map either way.',
+  },
+  {
+    id: 'sprint',
+    name: 'Rapid Sprint',
+    detail: 'A fixed-fee proof of concept on one workflow, time-boxed to 48–72 hours of build time once the scope is agreed and access to your accounts is granted.',
+  },
+  {
+    id: 'build',
+    name: 'Build',
+    detail: 'The production system, against a written scope and a fixed quote you approve first.',
+  },
+  {
+    id: 'operate',
+    name: 'Operate',
+    detail: 'Monitoring and changes, month to month — or under a contract with agreed service levels.',
+  },
+];
+
+/**
+ * What moves a quote. Published so that a page without a number reads as
+ * "scoped", not "hidden": the visitor can see exactly what the audit measures.
+ */
+export const scopeDrivers: string[] = [
+  'How many tools and accounts need connecting',
+  'How many locations, teams and WhatsApp numbers are involved',
+  'Message and enquiry volume',
+  'How much of the workflow is unusual to your business',
+  'The level of monitoring and the service levels you need',
 ];
 
 /* ------------------------------------------------------------------ */
@@ -158,48 +211,52 @@ export interface ComparisonRow {
  */
 export const comparison: ComparisonRow[] = [
   {
-    capability: 'Production website, built and deployed',
-    availability: { foundation: true, automation: true, bespoke: true },
+    capability: 'Architecture audit and workflow map',
+    availability: { foundation: true, operations: true, enterprise: true },
   },
   {
-    capability: 'Enquiry intake with validation and spam trapping',
-    availability: { foundation: true, automation: true, bespoke: true },
-  },
-  {
-    capability: 'Missed lead alerts',
-    availability: { foundation: true, automation: true, bespoke: true },
-  },
-  {
-    capability: 'Structured data and AI-assistant readability',
-    availability: { foundation: true, automation: true, bespoke: true },
+    capability: 'Proof of concept on one workflow',
+    availability: { foundation: true, operations: true, enterprise: true },
   },
   {
     capability: 'WhatsApp follow-ups, answered and qualified',
-    availability: { foundation: false, automation: true, bespoke: true },
-  },
-  {
-    capability: 'Appointment booking synced to your calendar',
-    availability: { foundation: false, automation: true, bespoke: true },
+    availability: { foundation: false, operations: true, enterprise: true },
   },
   {
     capability: 'CRM auto-updates',
-    availability: { foundation: false, automation: true, bespoke: true },
+    availability: { foundation: false, operations: true, enterprise: true },
   },
   {
-    capability: 'Invoice reminders',
-    availability: { foundation: false, automation: true, bespoke: true },
+    capability: 'Appointment booking synced to your calendar',
+    availability: { foundation: false, operations: true, enterprise: true },
   },
   {
-    capability: 'Daily business report',
-    availability: { foundation: false, automation: true, bespoke: true },
+    capability: 'Missed-lead alerts and invoice reminders',
+    availability: { foundation: false, operations: true, enterprise: true },
   },
   {
-    capability: 'Multi-location and multi-team routing',
-    availability: { foundation: false, automation: false, bespoke: true },
+    capability: 'Custom operations dashboard and daily report',
+    availability: { foundation: false, operations: true, enterprise: true },
+  },
+  {
+    capability: 'Monitoring and ongoing changes',
+    availability: { foundation: false, operations: true, enterprise: true },
+  },
+  {
+    capability: 'Custom AI agents',
+    availability: { foundation: false, operations: false, enterprise: true },
+  },
+  {
+    capability: 'Multi-location and multi-team pipelines',
+    availability: { foundation: false, operations: false, enterprise: true },
   },
   {
     capability: 'Custom integrations against any API or webhook',
-    availability: { foundation: false, automation: false, bespoke: true },
+    availability: { foundation: false, operations: false, enterprise: true },
+  },
+  {
+    capability: 'Service-level agreement in the contract',
+    availability: { foundation: false, operations: false, enterprise: true },
   },
 ];
 
@@ -215,22 +272,28 @@ export interface PricingFaq {
 
 export const pricingFaqs: PricingFaq[] = [
   {
-    id: 'pricing-whats-included',
-    question: 'What does the ₹19,999 actually cover?',
+    id: 'pricing-why-no-price',
+    question: 'Why is there no price on this page?',
     answer:
-      'A production website, built and deployed, with a structured enquiry intake that validates what visitors type, drops automated spam, alerts you the moment a real enquiry lands, and hands off to WhatsApp with the reason for contact already written. It also covers the structured data that lets search engines and AI assistants read your business correctly. It is a one-time fee, and ₹19,999 is the starting point rather than a fixed price — scope changes it.',
+      'Because the price depends on things we cannot see from here: how many tools need connecting, how many locations and WhatsApp numbers are involved, how much volume runs through them, and how much of your process is unusual. A number printed before seeing those would be invented to fill a column. The audit call maps them, and you get a written quote before any work starts.',
+  },
+  {
+    id: 'pricing-sprint',
+    question: 'What is the Rapid Sprint?',
+    answer:
+      'The paid first step after the free audit. We audit the tools you already run, map one workflow end to end, and build a working proof of concept of it, time-boxed to 48–72 hours of build time once the scope is agreed and access to your accounts is granted. It is a demonstration-grade build of that one workflow, not a production rollout. It is a fixed fee, quoted before it starts, and you keep the workflow map, the proof of concept and the written build plan whether or not you go further.',
   },
   {
     id: 'pricing-monthly',
-    question: 'What is the ₹4,999 per month for?',
+    question: 'What does the monthly part of the Operations Engine cover?',
     answer:
-      'The automations that keep running after the site is live: an AI assistant answering and qualifying on WhatsApp around the clock, appointment booking synced to your calendar, your CRM updated without manual entry, invoice reminders, and a daily report. It also covers monitoring and changes as your process changes. There is a one-time setup fee alongside it, scoped on the audit call.',
+      'Keeping the systems running and changing with you: monitoring, fixes when a connected tool changes, and adjustments as your process changes. It is part of the written quote, sized to the workflows and channels it covers.',
   },
   {
     id: 'pricing-why-no-timeline',
-    question: 'How long does it take to go live?',
+    question: 'How long does a full build take?',
     answer:
-      'We do not publish a delivery timeline, because we have not measured one across enough projects to state honestly. You will get a specific date on the audit call, once the scope is known. A published figure that no engagement was ever timed against would be a guess dressed as a commitment.',
+      'We do not publish a delivery timeline for production builds, because we have not measured one across enough projects to state honestly. The one fixed time on this page is the Rapid Sprint’s 48–72 hour time-box, which is a limit we set on our own work rather than an average we have measured. You get a specific build date on the audit call, once the scope is known.',
   },
   {
     id: 'pricing-results',
@@ -248,12 +311,18 @@ export const pricingFaqs: PricingFaq[] = [
     id: 'pricing-contract',
     question: 'Am I locked into a contract?',
     answer:
-      'The monthly automation plan runs month to month. Because the systems live in accounts you own, ending the plan does not switch anything off — you keep the automations and the data, and you lose the monitoring and the ongoing changes.',
+      'The monthly operations in the Operations Engine run month to month. Because the systems live in accounts you own, ending them does not switch anything off — you keep the automations and the data, and you lose the monitoring and the ongoing changes. Enterprise engagements run on a written contract, with the service levels agreed in it.',
   },
   {
     id: 'pricing-currency',
     question: 'Do you work with businesses outside India?',
     answer:
-      'Yes. The prices on this page are quoted in Indian rupees because that is the market these figures were set for. For work billed in another currency, the scope and the equivalent price are agreed on the audit call.',
+      'Yes. Quotes are in Indian rupees by default. For work billed in another currency, the scope and the price are agreed in that currency on the audit call.',
+  },
+  {
+    id: 'pricing-usage-costs',
+    question: 'Are WhatsApp and AI usage charges included in the quote?',
+    answer:
+      'No, and they are never marked up. Usage-based charges — WhatsApp message fees from Meta, AI model usage, hosting — are billed by those providers directly to your own accounts, because that is where everything is built. The audit tells you which ones apply to your setup before you approve anything.',
   },
 ];

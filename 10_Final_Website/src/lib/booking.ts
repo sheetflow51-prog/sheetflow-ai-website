@@ -106,6 +106,24 @@ export function buildBookingUrl(
 }
 
 /**
+ * The direct Calendly link behind each pricing tier's CTA (D38).
+ *
+ * A plain link, not an embed, so D26 still holds: zero third-party JavaScript
+ * on our pages. The tier travels two ways, because each is read by someone
+ * different — `utm_content` lands in Calendly's booking reports, and the notes
+ * field (`a1`) is what the founder reads in the calendar invite before the call.
+ * Neither carries anything about who the visitor is.
+ */
+export function tierBookingUrl(tier: { id: string; name: string }): string {
+  const url = new URL(BOOKING_URL);
+  url.searchParams.set(NOTES_PARAM, `Interested in: ${tier.name}.`);
+  url.searchParams.set('utm_source', 'sheetflow-site');
+  url.searchParams.set('utm_medium', 'pricing');
+  url.searchParams.set('utm_content', `tier-${tier.id}`);
+  return url.toString();
+}
+
+/**
  * The sectors offered in the qualification step.
  *
  * These mirror the audience the site already names in `content/faq.ts`

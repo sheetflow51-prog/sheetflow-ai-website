@@ -57,7 +57,7 @@ export function ArchitectureFlow({
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              'radial-gradient(ellipse 70% 120% at 50% 0%, rgba(59,130,246,0.10), transparent 70%)',
+              'radial-gradient(ellipse 70% 120% at 50% 0%, rgb(var(--color-accent) / 0.10), transparent 70%)',
           }}
         />
         {/* Deliberately narrower than the card grid below, and centred.

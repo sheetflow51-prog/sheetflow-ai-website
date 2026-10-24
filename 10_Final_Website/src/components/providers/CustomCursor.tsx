@@ -86,12 +86,12 @@ export default function CustomCursor() {
     variant === 'hover' ? 64 : variant === 'click' ? 24 : 36;
   const ringBg =
     variant === 'hover'
-      ? 'rgba(59, 130, 246, 0.12)'
-      : 'rgba(255, 255, 255, 0.04)';
+      ? 'rgb(var(--color-accent) / 0.12)'
+      : 'rgb(var(--c-fg) / 0.04)';
   const ringBorder =
     variant === 'hover'
-      ? 'rgba(59, 130, 246, 0.6)'
-      : 'rgba(255, 255, 255, 0.4)';
+      ? 'rgb(var(--color-accent) / 0.6)'
+      : 'rgb(var(--c-fg) / 0.4)';
 
   return (
     <>
@@ -112,7 +112,7 @@ export default function CustomCursor() {
         ref={dotRef}
         className="pointer-events-none fixed left-0 top-0 z-[9999] h-1.5 w-1.5 rounded-full bg-white"
         style={{
-          boxShadow: '0 0 12px rgba(59, 130, 246, 0.8)',
+          boxShadow: '0 0 12px rgb(var(--color-accent) / 0.8)',
         }}
         aria-hidden="true"
       />

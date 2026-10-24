@@ -91,7 +91,11 @@ export function Hero() {
        removed trace, put roughly 400px of nothing between the CTA microcopy
        and chapter 01's kicker on the 1440 capture — the second frame of the
        page was two-thirds empty. The fold itself is untouched. */
-    <section className="relative isolate min-h-[100svh] overflow-hidden pt-24 pb-16 md:pt-36 md:pb-18">
+    <section
+      data-theme="dark"
+      data-stage="band"
+      className="relative isolate min-h-[100svh] overflow-hidden pt-24 pb-16 md:pt-36 md:pb-18"
+    >
       {/* Layered backgrounds */}
       <div className="absolute inset-0 -z-10 signature-grid opacity-50" aria-hidden="true" />
 
@@ -168,7 +172,7 @@ export function Hero() {
         aria-hidden="true"
         style={{
           background:
-            'radial-gradient(ellipse 72% 78% at 50% 48%, rgba(6,6,8,0.58) 0%, rgba(6,6,8,0.4) 42%, rgba(6,6,8,0.82) 76%, rgba(6,6,8,0.97) 100%)',
+            'radial-gradient(ellipse 72% 78% at 50% 48%, rgb(var(--color-void) / 0.58) 0%, rgb(var(--color-void) / 0.4) 42%, rgb(var(--color-void) / 0.82) 76%, rgb(var(--color-void) / 0.97) 100%)',
         }}
       />
 
@@ -192,7 +196,7 @@ export function Hero() {
         </motion.h1>
 
         <motion.p
-          className="mx-auto mt-6 max-w-2xl text-balance text-[17px] leading-[1.55] text-ink-200 [text-shadow:0_2px_16px_rgba(6,6,8,0.85)] md:mt-7 md:text-xl"
+          className="mx-auto mt-6 max-w-2xl text-balance text-[17px] leading-[1.55] text-ink-200 [text-shadow:0_2px_16px_rgb(var(--color-void) / 0.85)] md:mt-7 md:text-xl"
           initial="hidden"
           animate="show"
           variants={reveal}
@@ -229,7 +233,7 @@ export function Hero() {
                     className="absolute inset-y-0 left-0 w-1/2 -skew-x-12"
                     style={{
                       background:
-                        'linear-gradient(90deg, transparent, rgba(147, 197, 253,0.28) 38%, rgba(255,255,255,0.42) 50%, rgba(244, 192, 99,0.34) 62%, transparent)',
+                        'linear-gradient(90deg, transparent, rgb(var(--color-accent-light) / 0.28) 38%, rgb(var(--c-fg) / 0.42) 50%, rgb(var(--color-gold-bright) / 0.34) 62%, transparent)',
                     }}
                     initial={{ x: '-160%' }}
                     animate={{ x: ['-160%', '260%'] }}
@@ -362,8 +366,8 @@ export function Hero() {
             className="absolute inset-y-0 left-0 w-40 rounded-full"
             style={{
               background:
-                'linear-gradient(90deg, transparent, rgba(96, 165, 250,0.9) 42%, rgba(244, 192, 99,0.85) 58%, transparent)',
-              boxShadow: '0 0 12px 1px rgba(96, 165, 250,0.5)',
+                'linear-gradient(90deg, transparent, rgb(var(--color-accent-bright) / 0.9) 42%, rgb(var(--color-gold-bright) / 0.85) 58%, transparent)',
+              boxShadow: '0 0 12px 1px rgb(var(--color-accent-bright) / 0.5)',
             }}
             initial={{ x: '-20vw', opacity: 0 }}
             animate={{ x: ['-20vw', '120vw'], opacity: [0, 1, 1, 0] }}

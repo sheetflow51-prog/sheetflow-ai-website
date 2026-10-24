@@ -2,12 +2,13 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { Chapter, Surface } from '@/components/vos';
 import { beat } from '@/content/narrative';
-import { formatPrice, tiers } from '@/content/pricing';
+import { tiers } from '@/content/pricing';
+import { tierBookingUrl } from '@/lib/booking';
 
 /**
  * The terms — chapter 07, the *Pricing* beat.
  *
- * ## Why the homepage has a price on it at all
+ * ## Why the homepage has a pricing beat at all
  *
  * The RC5 brief states the narrative a visitor should be able to follow without
  * leaving the page: what SheetFlow is → how the automation works → proof →
@@ -16,13 +17,13 @@ import { formatPrice, tiers } from '@/content/pricing';
  * between those two — *what does this cost* — was answered on a different
  * route, or not at all before the form.
  *
- * ## Every figure here is already published
+ * ## Nothing here is authored
  *
- * Nothing is authored in this file. The three tiers, their prices, their
- * one-line summaries and their **limits** all come from `content/pricing.ts`,
- * which carries the founder authorisation (D25) and the rule about what may go
- * in it. `formatPrice` is imported rather than reimplemented, so the homepage
- * and `/pricing` cannot state different numbers.
+ * The three tiers, how each is quoted, their one-line summaries and their
+ * **limits** all come from `content/pricing.ts`, which carries the founder's
+ * decision (D38: scoped engagements, no published prices) and the rule about
+ * what may go in it. The CTA is the same tier-tagged Calendly link `/pricing`
+ * uses, so the homepage and `/pricing` cannot book differently.
  *
  * ## The limit line is not padding
  *
@@ -62,15 +63,14 @@ export function Terms() {
       kicker="What it costs"
       title={
         <>
-          Published prices,{' '}
+          Three engagements,{' '}
           <span className="text-ink-300">and what each one does not cover.</span>
         </>
       }
-      description="A production site with lead capture from ₹19,999 one-time. Ongoing AI automation from ₹4,999 per month. Bespoke engagements scoped on a call."
+      description="From a fixed-scope sprint that proves one workflow, to the operations engine that runs them, to bespoke infrastructure under a service-level agreement. Each is quoted in writing after a free audit call."
     >
       <ul className="chapter-stage terms">
         {tiers.map((t, i) => {
-          const price = formatPrice(t.price);
           return (
             <Surface
               key={t.id}
@@ -98,8 +98,8 @@ export function Terms() {
               </p>
 
               <p className="terms-price">
-                {price.lead}
-                <span className="terms-price-note">{price.note}</span>
+                {t.engagement.model}
+                <span className="terms-price-note">{t.engagement.quote}</span>
               </p>
 
               <p className="terms-summary">{t.summary}</p>
@@ -112,10 +112,10 @@ export function Terms() {
                 {t.limit}
               </p>
 
-              <Link href={t.cta.href} className="terms-cta" data-cursor="hover">
-                {t.cta.label}
+              <a href={tierBookingUrl(t)} className="terms-cta" data-cursor="hover">
+                {t.cta}
                 <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.2} aria-hidden="true" />
-              </Link>
+              </a>
             </Surface>
           );
         })}

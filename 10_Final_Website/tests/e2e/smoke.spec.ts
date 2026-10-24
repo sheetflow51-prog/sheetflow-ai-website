@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { projects } from '../../src/content/work';
 
 /**
  * Smoke — the page renders, its metadata is intact, and nothing throws.
@@ -167,4 +168,19 @@ test.describe('proof architecture', () => {
     const found = fabricated.filter((n) => text.includes(n.toLowerCase()));
     expect(found, `fabricated names on the page: ${found.join(', ')}`).toEqual([]);
   });
+});
+
+test.describe('client anonymity (D39)', () => {
+  // Fragments of the identities removed in D39. Kept to the shortest strings
+  // that would still give a client away, so this file says as little as it can.
+  const removed = ['saraswati', 'sparc phys', 'r3s', 'r³s', 'hemlifestyle', 'hem lifestyle', 'etmadpur', 'tundla', 'nagasandra', 'ujjwal'];
+
+  // Every case study too: that is where most client-derived prose lives.
+  for (const path of ['/', '/work', '/pricing', '/services', '/llms.txt', '/sitemap.xml', ...projects.map((p) => `/work/${p.slug}`)]) {
+    test(`${path} names no former client`, async ({ request }) => {
+      const body = (await (await request.get(path)).text()).toLowerCase();
+      const found = removed.filter((n) => body.includes(n));
+      expect(found, `${path} still contains: ${found.join(', ')}`).toEqual([]);
+    });
+  }
 });

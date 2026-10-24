@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { ArrowRight, ArrowUpRight, Check, FileCode2, Info } from 'lucide-react';
+import { ArrowRight, Check, FileCode2, Info } from 'lucide-react';
 
 import { JsonLd } from '@/components/seo/JsonLd';
 import { ServiceBreadcrumb } from '@/components/sections/ServiceBreadcrumb';
@@ -17,8 +17,8 @@ import {
   NOT_DISCLOSED_LABEL,
   INTERNAL_ONLY_LABEL,
   DEMO_BUILD_LABEL,
+  CONFIDENTIAL_CLIENT_LABEL,
   type WorkProject,
-  type CompanionSurface,
 } from '@/content/work';
 import { getService } from '@/content/services';
 import { workProjectGraph } from '@/lib/structured-data';
@@ -134,7 +134,7 @@ function SystemPanel({
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(ellipse 65% 130% at 50% 0%, rgba(59,130,246,0.14), transparent 72%)',
+            'radial-gradient(ellipse 65% 130% at 50% 0%, rgb(var(--color-accent) / 0.14), transparent 72%)',
         }}
       />
       <p className="relative mb-9 text-center font-mono text-[10px] uppercase tracking-widest text-ink-300">
@@ -204,55 +204,22 @@ function Evidence({
 }
 
 /**
- * A second surface of the same engagement.
+ * The disclosure every anonymized build carries (D39), in the page's own voice
+ * and above the screenshot.
  *
- * The `note` renders *below the image and above nothing else* — it is the only
- * thing standing between a screenshot of a lead pipeline and a reader who
- * assumes those are real patients. The type makes it mandatory for that reason.
+ * It replaces two older notices: the demonstration notice (D32), whose sense
+ * survives as `origin: 'demonstration'`, and the companion caption, whose
+ * seeded-data qualification now lives in `disclosure`. A visitor who reads the
+ * headline, looks at the picture and leaves must still have passed the sentence
+ * saying who this is not, and why nothing links out.
  */
-function Companion({ companion }: { companion: CompanionSurface }) {
-  return (
-    <figure className="mt-10">
-      <div className="rounded-2xl glass overflow-hidden p-0">
-        <Image
-          src={companion.shot.src}
-          alt={companion.shot.alt}
-          width={companion.shot.width}
-          height={companion.shot.height}
-          sizes="(min-width: 1280px) 1100px, 94vw"
-          className="h-auto w-full"
-        />
-      </div>
-      <figcaption className="mt-4 space-y-2">
-        <p className="text-[12px] text-ink-400">
-          {companion.label}, captured from{' '}
-          <a
-            href={companion.url}
-            className="text-ink-300 underline decoration-white/20 underline-offset-4 transition-colors hover:text-white"
-            data-cursor="hover"
-          >
-            {companion.url.replace('https://', '')}
-          </a>
-          .
-        </p>
-        <p className="max-w-2xl text-[13px] leading-relaxed text-ink-300 text-pretty">
-          {companion.note}
-        </p>
-      </figcaption>
-    </figure>
-  );
-}
-
-/**
- * The disclosure a demonstration build carries.
- *
- * This page names a real practice that did not commission the work. The whole
- * governance position for `demo` rests on that being stated plainly, in the
- * page's own voice, above the fold — so this is not a badge or a footnote. It
- * renders the `basis` string, which the type makes mandatory precisely so no
- * demonstration can reach the page without one.
- */
-function DemoNotice({ basis }: { basis: string }) {
+function ConfidentialNotice({
+  origin,
+  disclosure,
+}: {
+  origin: 'client' | 'demonstration';
+  disclosure: string;
+}) {
   return (
     <aside className="mt-10 rounded-2xl border border-white/[0.10] bg-white/[0.03] p-6 md:p-7">
       <div className="flex items-start gap-3">
@@ -263,10 +230,10 @@ function DemoNotice({ basis }: { basis: string }) {
         />
         <div>
           <p className="font-display text-[17px] font-semibold text-white">
-            {DEMO_BUILD_LABEL}
+            {origin === 'demonstration' ? DEMO_BUILD_LABEL : CONFIDENTIAL_CLIENT_LABEL}
           </p>
           <p className="mt-2.5 max-w-2xl text-[15px] leading-relaxed text-ink-200 text-pretty">
-            {basis}
+            {disclosure}
           </p>
         </div>
       </div>
@@ -361,74 +328,50 @@ export default async function WorkProjectPage({
           </div>
 
           <div className="mt-10 flex flex-wrap items-center gap-3">
-            {(project.evidence.kind === 'live' || project.evidence.kind === 'demo') && (
-              <Button
-                variant="secondary"
-                href={project.evidence.liveUrl}
-                trailing={
-                  <ArrowUpRight className="h-4 w-4" strokeWidth={2.2} aria-hidden="true" />
-                }
-              >
-                {project.evidence.kind === 'live'
-                  ? 'Visit the live site'
-                  : 'Open the demonstration'}
-              </Button>
-            )}
             <span className="font-mono text-[11px] uppercase tracking-widest text-ink-400">
               {project.sector} · {project.location}
             </span>
           </div>
 
-          {/* The demonstration notice sits above the screenshot, not below it.
-              A visitor who reads the headline, looks at the picture and leaves
-              must still have passed the sentence saying nobody commissioned
-              this — placing it after the fold would make the disclosure
-              technically present and practically invisible. */}
-          {project.evidence.kind === 'demo' && <DemoNotice basis={project.evidence.basis} />}
+          {/* The disclosure sits above the screenshot, not below it: placed after
+              the fold it would be technically present and practically invisible. */}
+          {project.evidence.kind === 'confidential' && (
+            <ConfidentialNotice
+              origin={project.evidence.origin}
+              disclosure={project.evidence.disclosure}
+            />
+          )}
 
-          {project.evidence.kind === 'live' || project.evidence.kind === 'demo' ? (
-            <figure className="mt-14">
-              <div className="rounded-2xl glass overflow-hidden p-0">
-                <Image
-                  src={project.evidence.shot.src}
-                  alt={project.evidence.shot.alt}
-                  width={project.evidence.shot.width}
-                  height={project.evidence.shot.height}
-                  sizes="(min-width: 1280px) 1100px, 94vw"
-                  className="h-auto w-full"
-                  priority
-                />
-              </div>
-              <figcaption className="mt-4 text-[12px] text-ink-400">
-                {project.client}, captured from the{' '}
-                {project.evidence.kind === 'live' ? 'live deployment' : 'demonstration build'} at{' '}
-                <a
-                  href={project.evidence.liveUrl}
-                  className="text-ink-300 underline decoration-white/20 underline-offset-4 transition-colors hover:text-white"
-                  data-cursor="hover"
-                >
-                  {project.evidence.liveUrl.replace('https://', '')}
-                </a>
-                .
-              </figcaption>
-            </figure>
+          {project.evidence.kind === 'confidential' ? (
+            project.evidence.shot && (
+              <figure className="mt-14">
+                <div className="rounded-2xl glass overflow-hidden p-0">
+                  <Image
+                    src={project.evidence.shot.src}
+                    alt={project.evidence.shot.alt}
+                    width={project.evidence.shot.width}
+                    height={project.evidence.shot.height}
+                    sizes="(min-width: 1280px) 1100px, 94vw"
+                    className="h-auto w-full"
+                    priority
+                  />
+                </div>
+                <figcaption className="mt-4 text-[12px] text-ink-400">
+                  {project.client}, captured from the{' '}
+                  {project.evidence.origin === 'demonstration' ? 'demonstration build' : 'production build'}.
+                  Identifying details are redacted and the deployment is not linked.
+                </figcaption>
+              </figure>
+            )
           ) : (
             <Evidence evidence={project.evidence} stages={project.architecture} />
           )}
 
-          {/* RC3: on client and demonstration work the diagram *follows* the
-              photograph rather than replacing it — the capture proves the thing
-              shipped, the pipeline explains what it does. It sits outside the
-              `<figure>` deliberately: `<figcaption>` must be the figure's first
-              or last child, so appending a sibling after the caption would have
-              produced invalid markup. Internal builds get theirs from
+          {/* The diagram follows the photograph (or stands in for it where no
+              frame could be redacted honestly). Internal builds get theirs from
               `Evidence`, which is the only visual those pages have. */}
-          {(project.evidence.kind === 'live' || project.evidence.kind === 'demo') && (
+          {project.evidence.kind === 'confidential' && (
             <SystemPanel stages={project.architecture} className="mt-6" />
-          )}
-
-          {project.evidence.kind === 'live' && project.evidence.companion && (
-            <Companion companion={project.evidence.companion} />
           )}
         </div>
       </section>
@@ -490,7 +433,7 @@ export default async function WorkProjectPage({
               <p className="mt-6 max-w-md text-[15px] leading-relaxed text-ink-300 text-pretty">
                 {project.evidence.kind === 'internal'
                   ? 'Every row was read off the source, not from a project brief. Line counts, versions and limits are the ones in the files listed above.'
-                  : 'Every row was read off the running deployment, not from a project brief. Open the site and view source to check any of it.'}
+                  : 'Every row was read off the deployed build at inspection, not from a project brief; the decisions below give the date each was checked. The deployment is not linked, because the business is not named.'}
               </p>
             </div>
 
