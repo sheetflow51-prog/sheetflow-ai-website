@@ -1,4 +1,3 @@
-// CM6 paste test 1778919664577
 'use client';
 
 import { useEffect, useState } from 'react';
