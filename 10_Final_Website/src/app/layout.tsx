@@ -5,7 +5,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import './globals.css';
 import { THEME_COLOR, themeInitScript } from '@/lib/theme';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sheetflow.ai';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sheetflow.click';
 
 import SmoothScroll from '@/components/providers/SmoothScroll';
 import LoadingScreen from '@/components/providers/LoadingScreen';

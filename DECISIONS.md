@@ -902,3 +902,21 @@ partner programmes, if any owner objects.
 **Verification.** Only `tsc --noEmit` and the webpack production build were run, at the founder's
 instruction (no local browser suite, to save memory and time).
 
+### D41 — Buyer-intent answers for answer engines; the canonical domain is sheetflow.click *(2026-10-25)*
+
+**Decision.** Three questions buyers put to answer engines are answered on the page, in the FAQPage JSON-LD
+and in `llms.txt` from the one `faqs` source: automating WhatsApp lead follow-ups in India, n8n workflows for
+CRM sync, and the WhatsApp Business app versus the API. Answers describe how the work is done and never state
+a speed, price or outcome (D38, D39). `knowsAbout` gains lead qualification automation and CRM data
+synchronisation, both sold services. Each FAQ in `llms.txt` now carries its answer-page anchor so a citation
+can point at the exact answer.
+
+**Canonical domain.** The code fell back to `https://sheetflow.ai`, a domain that was never registered; the
+fallback is now `https://sheetflow.click`. Production is still governed by the Vercel variable
+`NEXT_PUBLIC_SITE_URL`, which on 2026-10-25 made the live canonical tag, `og:url`, every JSON-LD `@id`, the
+sitemap and `llms.txt` point at `sheetflow-ai-website.vercel.app`. The owner changes that variable to
+`https://sheetflow.click` (Production and Preview) and redeploys; until then the code change has no effect live.
+
+**Verification.** `tsc --noEmit`, eslint and the webpack build pass; the built homepage carries 11 FAQPage
+questions and 11 `knowsAbout` entries. No browser suite was run.
+

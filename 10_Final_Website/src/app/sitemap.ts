@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next';
 import { services } from '@/content/services';
 import { projects } from '@/content/work';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sheetflow.ai';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sheetflow.click';
 
 /**
  * Generated from the content modules rather than listed by hand — a sitemap

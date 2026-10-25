@@ -28,7 +28,7 @@ import { projects, type WorkProject } from '@/content/work';
 import { tiers, pricingFaqs } from '@/content/pricing';
 import { BOOKING_URL, WHATSAPP_NUMBER } from '@/lib/contact';
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sheetflow.ai';
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sheetflow.click';
 
 const ORG_ID = `${SITE_URL}/#organization`;
 const SITE_ID = `${SITE_URL}/#website`;
@@ -137,6 +137,8 @@ export const organizationNode: Node = {
     'Automated business reporting',
     'Invoice reminder automation',
     'n8n workflow orchestration',
+    'Lead qualification automation',
+    'CRM data synchronisation',
   ],
   hasOfferCatalog: {
     '@type': 'OfferCatalog',

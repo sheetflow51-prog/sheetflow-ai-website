@@ -3,7 +3,7 @@ import { services } from '@/content/services';
 import { projects, NOT_DISCLOSED_LABEL } from '@/content/work';
 import { tiers, pricingFaqs } from '@/content/pricing';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sheetflow.ai';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sheetflow.click';
 
 export const dynamic = 'force-static';
 
@@ -149,7 +149,7 @@ Book: ${SITE_URL}/book
 
 ## Frequently asked questions
 
-${faqs.map((f) => `### ${f.question}\n\n${f.answer}`).join('\n\n')}
+${faqs.map((f) => `### ${f.question}\n\n${f.answer}\n\nAnswer page: ${SITE_URL}/#${f.id}`).join('\n\n')}
 
 ## Pricing questions
 
