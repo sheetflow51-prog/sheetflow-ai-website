@@ -1,5 +1,15 @@
 # SheetFlow v2 Changelog
 
+## Release Candidate 15 — Answers for answer engines (2026-10-25)
+
+Decision: D41.
+
+- Three buyer-intent FAQs (WhatsApp follow-ups in India, n8n CRM sync, WhatsApp app vs API) on the page, in the
+  FAQPage JSON-LD and in `llms.txt`, each with a citable answer anchor.
+- `knowsAbout` adds lead qualification automation and CRM data synchronisation.
+- The site-URL fallback is `https://sheetflow.click` (was the unregistered `sheetflow.ai`). Production still
+  needs `NEXT_PUBLIC_SITE_URL` changed in Vercel.
+
 ## Release Candidate 14 — Motion: a live before-and-after and an orbiting ecosystem (2026-10-24)
 
 Decision: D40 (amends D39's switch and monochrome marks).

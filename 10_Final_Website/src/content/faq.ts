@@ -86,4 +86,24 @@ export const faqs: FaqEntry[] = [
     answer:
       'No. SheetFlow is built around your existing stack rather than replacing it. If a tool you depend on has no integration path at all, we will say so during the audit instead of asking you to migrate.',
   },
+  // Buyer-intent questions (GEO). Phrased the way people ask answer engines, and
+  // answered with how the work is done, never with a speed, price or outcome.
+  {
+    id: 'faq-whatsapp-follow-up-india',
+    question: 'How do I automate WhatsApp lead follow-ups for my business in India?',
+    answer:
+      'Use the official WhatsApp Business Platform (the Cloud API) on a number registered to your business, rather than a tool that automates WhatsApp Web, which puts the number at risk of a ban. A working setup has four parts: a trigger that fires when an enquiry arrives on WhatsApp or a website form; a step that asks your qualifying questions and decides when a person should take over; a reply or booking link sent inside the conversation; and an update to your CRM or sheet. Customers must have opted in, and any message you start, rather than reply to, has to use a template Meta has approved. SheetFlow builds this inside your own accounts, often on n8n, and maps it with you on a free 30-minute audit first.',
+  },
+  {
+    id: 'faq-n8n-crm-sync',
+    question: 'Can SheetFlow build n8n workflows that keep my CRM in sync?',
+    answer:
+      'Yes. n8n is one of the orchestration platforms SheetFlow builds on. A CRM sync workflow takes a lead from wherever it arrives — WhatsApp, a web form, a call log or a spreadsheet — and creates or updates the matching record in HubSpot, Pipedrive, GoHighLevel, Airtable or Google Sheets, so nobody re-types it. Workflows are built in your own n8n instance, self-hosted or on n8n Cloud, with guard rails such as a pause switch, sending limits and a log of what ran, and you keep them if we stop working together.',
+  },
+  {
+    id: 'faq-whatsapp-app-vs-api',
+    question: 'What is the difference between the WhatsApp Business app and the WhatsApp Business API?',
+    answer:
+      'The WhatsApp Business app is a phone app for chatting with customers by hand, with quick replies and away messages. The WhatsApp Business Platform, usually called the API, connects your business number to software, so replies, qualification, bookings and CRM updates can run without someone holding the phone. It needs a Meta business account and approved templates for messages you start, and it is the route Meta supports for automating WhatsApp.',
+  },
 ];
