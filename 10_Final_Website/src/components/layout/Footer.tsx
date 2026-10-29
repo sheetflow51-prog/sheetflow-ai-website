@@ -46,7 +46,7 @@ const FOOTER_GROUPS = [
   {
     title: 'Company',
     links: [
-      { label: 'Book an audit', href: '/book' },
+      { label: 'Book 20 minutes', href: '/book' },
       { label: 'Contact', href: '/#contact' },
     ],
   },

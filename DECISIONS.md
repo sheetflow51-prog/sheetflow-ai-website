@@ -920,3 +920,45 @@ sitemap and `llms.txt` point at `sheetflow-ai-website.vercel.app`. The owner cha
 **Verification.** `tsc --noEmit`, eslint and the webpack build pass; the built homepage carries 11 FAQPage
 questions and 11 `knowsAbout` entries. No browser suite was run.
 
+### D42 — The free offer becomes the 20-Minute Discovery & Help Session, in an empathetic, partner tone *(2026-10-29)*
+
+**Decision (owner).** The free 30-minute automation audit is replaced everywhere by the free **20-Minute
+Discovery & Help Session**, and the site's voice moves to an empathetic, low-friction partner tone. The
+canonical wording lives in `SheetFlow_Ops/POSITIONING.md` (outside this repository) and this site follows it:
+offer name, primary button "Book your free 20-minute session", short button "Book 20 minutes" where space is
+tight, and the core message "Just connect with us. Don't worry about the complex tech: we're here to help you
+map out and solve your operational bottlenecks, like true partners." The owner's brief said "completely help";
+"completely" is left out, as POSITIONING.md records, because it reads as a guarantee.
+
+**What changed on the site.** Every user-facing mention of the old offer (hero, navigation, footer, final CTA,
+`/book`, `/book/confirmed`, `/pricing`, the homepage pricing beat, services and work CTAs, FAQ answers, metadata,
+the OG card strip, the `/book` JSON-LD `Service` and `llms.txt`) now names the 20-minute session. Supporting
+lines next to the main CTAs carry the core message. `/book` replaces its four "what you walk away with" cards
+with POSITIONING.md's three steps, "What happens in the 20 minutes", in a three-column grid. The first
+engagement step on `/pricing` becomes "Discovery & help session".
+
+**What did not change, on purpose.** The honesty rules of D24, D38 and D39 stand: no guarantee, speed or ROI
+promise, no client names, and the pricing FAQs still refuse a timeline and a return figure (the old line that the
+audit "produces" a projection is gone rather than carried over). The paid **Foundation Audit & Rapid Sprint**
+keeps its name, because its deliverable is an architecture audit, a different thing from the free session.
+The analytics `variant: 'audit'` key is kept so the conversion series is not split. Case-study facts that say
+"30 minutes" (an IMAP reply-check interval) are about the work, not the call, and are unchanged.
+
+**The audience is horizontal.** Per POSITIONING.md, the "who it serves" copy (FAQ, llms.txt, site and share-card
+descriptions, the JSON-LD `BusinessAudience`) now names businesses of any sector, B2B and B2C, leading with
+manufacturers, real estate, education, clinics and D2C brands. The booking form's sector list gains
+"Manufacturing or industrial", "Education or coaching" (replacing "Coaching or training") and "E-commerce or D2C
+brand"; "Clinic or healthcare practice" keeps its exact wording because `commerce.spec.ts` pins it. The share
+cards (`og-card.tsx`, `opengraph-image.tsx`) printed `sheetflow.ai`, which D41 retired; they now print
+`sheetflow.click`. Not changed here, owner's call: the homepage illustration "answered and qualified by AI in 5
+seconds" (`TransformationScene.tsx`, D39) contains a phrase on the content engine's banned list.
+
+**Calendly lags the site, and that is an owner action.** The Calendly event type is still named "Free
+Automation Audit" and set to 30 minutes. Before this ships, the owner renames it and shortens it to 20 minutes
+in Calendly, and checks that the slug `free-automation-audit` survived the rename (`BOOKING_URL` keeps it, so
+shared links keep working). Until then `/book` says 20 minutes and Calendly says 30.
+
+**Verification.** `tsc --noEmit` passes; eslint on the changed files reports no errors. There is no unit test
+runner. `commerce.spec.ts` now asserts the new JSON-LD name and fails if the old offer reappears on the booking
+surfaces or in `llms.txt`, but no browser suite, build or dev server was run (under 2 GB of free memory).
+

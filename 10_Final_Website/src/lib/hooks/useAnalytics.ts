@@ -19,6 +19,9 @@ type EventName =
   // Both hero CTAs, separated by a `variant` property rather than by two event
   // names: 'audit' is the conversion journey, 'work' the proof one, and the
   // question worth asking is their ratio. Two names made that a join.
+  // The value stays 'audit' after the offer became the 20-minute discovery &
+  // help session (D42): it is an analytics key, not copy, and renaming it would
+  // split one conversion series in two.
   //
   // This replaces `hero_demo_click`, which was wrong twice over — the button it
   // named showed no demo, and it had no `href`, so every event it ever recorded

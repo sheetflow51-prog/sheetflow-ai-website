@@ -1,5 +1,22 @@
 # SheetFlow v2 Changelog
 
+## Release Candidate 16 — The 20-Minute Discovery & Help Session (2026-10-29)
+
+Decision: D42 (wording from `SheetFlow_Ops/POSITIONING.md`).
+
+- **New free offer.** "Free 30-minute automation audit" is now the free 20-Minute Discovery & Help Session on
+  every page, in metadata, the OG card, the `/book` JSON-LD `Service` and `llms.txt`. Buttons read "Book your
+  free 20-minute session", or "Book 20 minutes" where space is tight (nav bar, pricing tier cards, footer).
+- **Partner tone.** CTA supporting lines carry the core message: "Just connect with us. Don't worry about the
+  complex tech: we're here to help you map out and solve your operational bottlenecks, like true partners."
+- **`/book`.** Kicker, headline ("Twenty minutes. Then you know."), facts strip (20 minutes) and a new three-step
+  "What happens in the 20 minutes" in place of the four outcome cards. `/book/confirmed` says session.
+- **Unchanged.** No guarantee, speed or ROI wording; the paid Foundation Audit & Rapid Sprint keeps its name;
+  the Calendly URL slug `free-automation-audit` stays.
+- **Owner action before release:** rename the Calendly event and set it to 20 minutes.
+- **Tests:** `commerce.spec.ts` asserts the new `Service` name and fails if the old offer comes back.
+  Checked with `tsc` and eslint only; no browser suite or build was run.
+
 ## Release Candidate 15 — Answers for answer engines (2026-10-25)
 
 Decision: D41.

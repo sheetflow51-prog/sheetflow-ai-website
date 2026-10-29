@@ -48,7 +48,7 @@ export const faqs: FaqEntry[] = [
     id: 'faq-who-is-it-for',
     question: 'Who is SheetFlow built for?',
     answer:
-      'Small and mid-sized service businesses that lose revenue to slow follow-up — clinics, agencies, coaches, real-estate and trades. The common pattern is a business where enquiries arrive faster than a small team can answer them, and where a lead going cold overnight is a direct loss.',
+      'Any business, B2B or B2C, where work gets stuck between people and tools: manufacturers, real-estate developers and brokers, schools and coaching institutes, clinics, D2C brands, agencies, trades and more. The common pattern is demand or operations moving faster than a small team can keep up with, so enquiries go cold and hours go into manual work. Not sure that is you? Just connect with us: the free 20-minute session is for exactly that.',
   },
   {
     id: 'faq-how-it-works',
@@ -72,7 +72,7 @@ export const faqs: FaqEntry[] = [
     id: 'faq-getting-started',
     question: 'How do I start?',
     answer:
-      'Book a free 30-minute audit. We map where enquiries currently arrive, where they stall, and which steps are worth automating first. There is no commitment, and you leave with the map whether or not you work with us.',
+      'Just connect with us: book a free 20-minute discovery & help session. You tell us where work gets stuck, whether that is missed enquiries, manual data entry or slow reports, and we map it out with you in plain language. You do not need to know the tech. There is no commitment, and you leave with a clear next step whether or not you work with us.',
   },
   {
     id: 'faq-own-the-system',
@@ -84,7 +84,7 @@ export const faqs: FaqEntry[] = [
     id: 'faq-existing-tools',
     question: 'Do I have to change the software I already use?',
     answer:
-      'No. SheetFlow is built around your existing stack rather than replacing it. If a tool you depend on has no integration path at all, we will say so during the audit instead of asking you to migrate.',
+      'No. SheetFlow is built around your existing stack rather than replacing it. If a tool you depend on has no integration path at all, we will tell you when we map it out with you, instead of asking you to migrate.',
   },
   // Buyer-intent questions (GEO). Phrased the way people ask answer engines, and
   // answered with how the work is done, never with a speed, price or outcome.
@@ -92,7 +92,7 @@ export const faqs: FaqEntry[] = [
     id: 'faq-whatsapp-follow-up-india',
     question: 'How do I automate WhatsApp lead follow-ups for my business in India?',
     answer:
-      'Use the official WhatsApp Business Platform (the Cloud API) on a number registered to your business, rather than a tool that automates WhatsApp Web, which puts the number at risk of a ban. A working setup has four parts: a trigger that fires when an enquiry arrives on WhatsApp or a website form; a step that asks your qualifying questions and decides when a person should take over; a reply or booking link sent inside the conversation; and an update to your CRM or sheet. Customers must have opted in, and any message you start, rather than reply to, has to use a template Meta has approved. SheetFlow builds this inside your own accounts, often on n8n, and maps it with you on a free 30-minute audit first.',
+      'Use the official WhatsApp Business Platform (the Cloud API) on a number registered to your business, rather than a tool that automates WhatsApp Web, which puts the number at risk of a ban. A working setup has four parts: a trigger that fires when an enquiry arrives on WhatsApp or a website form; a step that asks your qualifying questions and decides when a person should take over; a reply or booking link sent inside the conversation; and an update to your CRM or sheet. Customers must have opted in, and any message you start, rather than reply to, has to use a template Meta has approved. SheetFlow builds this inside your own accounts, often on n8n, and maps it out with you first in a free 20-minute discovery & help session.',
   },
   {
     id: 'faq-n8n-crm-sync',

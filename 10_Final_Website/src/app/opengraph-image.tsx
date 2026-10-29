@@ -95,13 +95,13 @@ export default async function OpengraphImage() {
               display: 'flex',
             }}
           >
-            AI automations for leads, WhatsApp follow-ups, bookings, and CRM — built for clinics, agencies, coaches and service businesses.
+            AI automations for leads, WhatsApp follow-ups, bookings, and CRM — built with businesses of every kind.
           </div>
         </div>
 
         {/* Bottom: bracket + URL */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
-          <div style={{ fontSize: 20, color: '#FFFFFF', display: 'flex' }}>sheetflow.ai</div>
+          <div style={{ fontSize: 20, color: '#FFFFFF', display: 'flex' }}>sheetflow.click</div>
           <div
             style={{
               display: 'flex',

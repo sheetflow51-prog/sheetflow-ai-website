@@ -117,7 +117,7 @@ export default async function ServiceDetailPage({
             </p>
             <div className="mt-10 flex flex-wrap items-center gap-3">
               <Button variant="primary" size="lg" href="/book">
-                Book free audit
+                Book your free 20-minute session
               </Button>
               {/* `/#how-it-works`, matching where the nav's "How we work"
                   goes. Both moved off `/#product` in RC5 when the section that
@@ -300,7 +300,7 @@ export default async function ServiceDetailPage({
 
           <div className="mt-12 flex flex-wrap items-center gap-3">
             <Button variant="primary" size="lg" href="/book">
-              Book free audit
+              Book your free 20-minute session
             </Button>
             <Link
               href="/services"

@@ -274,7 +274,7 @@ export function servicesIndexGraph(): Node[] {
  * Until D38 this graph carried `priceSpecification` nodes for the D25 prices,
  * because a machine-readable price is what gets an agency quoted by assistants.
  * D38 withdrew those prices: every tier is now quoted in writing after the
- * audit. A price node here would advertise a figure the page no longer states,
+ * free first session. A price node here would advertise a figure the page no longer states,
  * so each Offer carries the tier, its summary and how it is quoted, and nothing
  * numeric. `llms.txt` tells assistants the same thing in prose.
  */
@@ -294,7 +294,7 @@ export function pricingGraph(): Node[] {
     };
 
     // No priceSpecification, on purpose (D38): every tier is quoted after the
-    // audit, so any price node would advertise a figure the page does not
+    // free session, so any price node would advertise a figure the page does not
     // state. An Offer without a price is valid schema.org; it is simply not
     // eligible for price-bearing rich results, which is the honest outcome.
     return offer;
@@ -306,7 +306,7 @@ export function pricingGraph(): Node[] {
     url,
     name: 'Pricing',
     description:
-      'SheetFlow engagements — a Foundation Audit & Rapid Sprint, an Autonomous Operations Engine and Enterprise Bespoke Infrastructure, each quoted in writing after a free automation audit.',
+      'SheetFlow engagements — a Foundation Audit & Rapid Sprint, an Autonomous Operations Engine and Enterprise Bespoke Infrastructure, each quoted in writing after a free 20-minute discovery & help session.',
     isPartOf: { '@id': SITE_ID },
     about: { '@id': ORG_ID },
     inLanguage: 'en',
@@ -338,23 +338,25 @@ export function pricingGraph(): Node[] {
 /* ------------------------------------------------------------------ */
 
 /**
- * `/book` — the audit as a `Service` with a zero-price offer, plus a
+ * `/book` — the free session as a `Service` with a zero-price offer, plus a
  * `ReserveAction` naming the booking surface.
  *
- * The free audit is the site's single conversion goal, and "free" is a claim a
- * consumer should be able to read rather than infer from the word. A `price: 0`
- * offer states it unambiguously.
+ * The free 20-Minute Discovery & Help Session (D42, `SheetFlow_Ops/POSITIONING.md`)
+ * is the site's single conversion goal, and "free" is a claim a consumer should
+ * be able to read rather than infer from the word. A `price: 0` offer states it
+ * unambiguously. No duration property is added: neither `Service` nor `Offer`
+ * has one for the length of a meeting, and the name already says 20 minutes.
  */
 export function bookingGraph(): Node[] {
   const url = `${SITE_URL}/book`;
 
-  const auditService: Node = {
+  const sessionService: Node = {
     '@type': 'Service',
-    '@id': `${url}#audit`,
-    name: 'Free automation audit',
+    '@id': `${url}#session`,
+    name: '20-Minute Discovery & Help Session',
     serviceType: 'Business automation consultation',
     description:
-      'A 30-minute call mapping where enquiries arrive, where they stall, and which steps are worth automating first. No commitment.',
+      'A free 20-minute video call. You tell us where work gets stuck, we map it out with you in plain language, and you leave with a clear next step, whether or not you work with us. No tech knowledge needed and no commitment.',
     provider: { '@id': ORG_ID },
     url,
     offers: {
@@ -370,11 +372,11 @@ export function bookingGraph(): Node[] {
     '@type': 'WebPage',
     '@id': `${url}#webpage`,
     url,
-    name: 'Book a free automation audit',
+    name: 'Book a free 20-minute discovery & help session',
     description:
-      'Book a free 30-minute automation audit with SheetFlow. We map where your enquiries arrive, where they stall, and what is worth automating first.',
+      'Book a free 20-minute discovery & help session with SheetFlow. Just connect with us. Don’t worry about the complex tech: we’re here to help you map out and solve your operational bottlenecks, like true partners.',
     isPartOf: { '@id': SITE_ID },
-    about: { '@id': `${url}#audit` },
+    about: { '@id': `${url}#session` },
     inLanguage: 'en',
     potentialAction: {
       '@type': 'ReserveAction',
@@ -386,18 +388,18 @@ export function bookingGraph(): Node[] {
           'https://schema.org/MobileWebPlatform',
         ],
       },
-      result: { '@type': 'Reservation', name: 'Free automation audit' },
+      result: { '@type': 'Reservation', name: '20-Minute Discovery & Help Session' },
     },
   };
 
   return [
     organizationNode,
     websiteNode,
-    auditService,
+    sessionService,
     webPage,
     breadcrumbNode(url, [
       { name: 'Home', url: `${SITE_URL}/` },
-      { name: 'Book an audit', url },
+      { name: 'Book a session', url },
     ]),
   ];
 }
@@ -530,7 +532,7 @@ export function serviceGraph(service: ServicePage): Node[] {
     areaServed: { '@type': 'Country', name: 'Worldwide' },
     audience: {
       '@type': 'BusinessAudience',
-      name: 'Small and mid-sized service businesses',
+      name: 'Businesses of any sector, B2B and B2C',
     },
   };
   const webPage: Node = {

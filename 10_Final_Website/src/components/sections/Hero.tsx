@@ -222,7 +222,7 @@ export function Hero() {
                 href="/book"
                 onClick={() => track('hero_cta_click', { variant: 'audit' })}
               >
-                Book a free automation audit
+                Book your free 20-minute session
               </Button>
               {runMotion && (
                 <span
@@ -291,7 +291,7 @@ export function Hero() {
           custom={4}
         >
           <span className="h-1.5 w-1.5 rounded-full bg-signal-success animate-pulse-live" />
-          Free 30-min audit. No commitment. Built for SMBs, agencies & service businesses.
+          Just connect with us. Don&rsquo;t worry about the tech: we&rsquo;ll map it out together.
         </motion.div>
 
         {/* Trust strip — renders only for logos with granted permission. */}

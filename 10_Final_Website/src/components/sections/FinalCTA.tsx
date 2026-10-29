@@ -156,9 +156,9 @@ export function FinalCTA() {
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.25 }}
           >
-            Book a free 30-minute automation audit. We'll map exactly what we'd automate
-            in your business — leads, follow-ups, bookings, reports — and show you the
-            hours and revenue you'd get back. No commitment.
+            Just connect with us. Don&rsquo;t worry about the complex tech: we&rsquo;re here
+            to help you map out and solve your operational bottlenecks, like true partners.
+            A free 20-minute discovery &amp; help session, no commitment.
           </motion.p>
 
           <motion.div
@@ -176,7 +176,7 @@ export function FinalCTA() {
                   href="/book"
                   onClick={() => track('final_cta_click', { variant: 'audit' })}
                 >
-                  Book a free automation audit
+                  Book your free 20-minute session
                 </Button>
                 {runMotion && (
                   <span
@@ -236,7 +236,7 @@ export function FinalCTA() {
           >
             <span className="inline-flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-signal-success" />
-              30-min free audit
+              Free 20-minute session
             </span>
             <span>·</span>
             <span>No commitment</span>

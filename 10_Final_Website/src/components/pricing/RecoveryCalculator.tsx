@@ -166,7 +166,7 @@ export function RecoveryCalculator() {
             The figures above are your three inputs multiplied together, using 4.33 weeks per
             month. That is arithmetic &mdash; <span className="text-white/80">not a forecast</span>,
             and not a claim about what SheetFlow has achieved for anyone. Weigh it against the
-            written quote you get after the audit.
+            written quote you get after the free 20-minute session.
           </p>
         </div>
       </div>

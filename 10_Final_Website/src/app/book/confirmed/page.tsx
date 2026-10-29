@@ -21,6 +21,10 @@ import { WHATSAPP_URL } from '@/lib/contact';
  *   Calendly → Free Automation Audit → Confirmation page →
  *   "Redirect to an external site" → https://<production-host>/book/confirmed
  *
+ * ("Free Automation Audit" is the event type's name in Calendly. The owner is
+ * renaming it to the 20-Minute Discovery & Help Session — D42 — so look for
+ * either name.)
+ *
  * Until then the page is reachable but unlinked, and Calendly shows its own
  * confirmation. Nothing is broken by leaving it off; the booking, the calendar
  * invite and the confirmation email all come from Calendly either way.
@@ -33,9 +37,9 @@ import { WHATSAPP_URL } from '@/lib/contact';
  */
 
 export const metadata: Metadata = {
-  title: 'Your audit is booked',
+  title: 'Your session is booked',
   description:
-    'Your free automation audit is confirmed. The calendar invite and Google Meet link are in your inbox.',
+    'Your free 20-minute discovery & help session is confirmed. The calendar invite and Google Meet link are in your inbox.',
   alternates: { canonical: '/book/confirmed' },
   robots: { index: false, follow: true },
 };
@@ -51,7 +55,7 @@ const NEXT = [
     icon: Calendar,
     title: 'Nothing to prepare',
     detail:
-      'The answers you gave travel with the booking, so we already have the shape of it. If you want to bring anything, rough numbers on enquiries per week are the most useful.',
+      'The answers you gave travel with the booking, so we already have the shape of it. No tech knowledge needed. If you want to bring anything, rough numbers help most, such as enquiries per week or hours spent on manual work.',
   },
   {
     icon: MessageCircle,
@@ -75,7 +79,8 @@ export default function BookingConfirmedPage() {
               You are booked.
             </h1>
             <p className="mt-7 text-[17px] leading-relaxed text-ink-200 text-pretty md:text-[19px]">
-              The invite is in your inbox with the meeting link. See you then.
+              The invite is in your inbox with the meeting link. We&rsquo;ll work through it
+              together. See you then.
             </p>
           </div>
 

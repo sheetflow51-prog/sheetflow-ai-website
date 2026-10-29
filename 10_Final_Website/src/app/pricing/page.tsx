@@ -25,10 +25,10 @@ import { WHATSAPP_URL } from '@/lib/contact';
  * ## Why there are no numbers on this page
  *
  * D38 (2026-10-23) withdrew the D25 prices on the founder's instruction. Each
- * tier is an engagement shape, quoted in writing after the audit call. So the
- * missing number reads as "scoped" rather than "hidden", the page publishes
- * what the audit measures (`scopeDrivers`) and how an engagement runs
- * (`engagementSteps`).
+ * tier is an engagement shape, quoted in writing after the free first session
+ * (the 20-minute discovery & help session since D42). So the missing number
+ * reads as "scoped" rather than "hidden", the page publishes what we map before
+ * quoting (`scopeDrivers`) and how an engagement runs (`engagementSteps`).
  *
  * ## What this page refuses to do
  *
@@ -38,7 +38,7 @@ import { WHATSAPP_URL } from '@/lib/contact';
  *
  * ## Every tier books directly
  *
- * Each card's primary CTA is a plain link to the Calendly audit event carrying
+ * Each card's primary CTA is a plain link to the Calendly booking event carrying
  * the tier (`tierBookingUrl`), so the call starts knowing what was being
  * considered. The secondary link keeps the qualification form at `/book` for
  * anyone who wants to share details first.
@@ -50,12 +50,12 @@ import { WHATSAPP_URL } from '@/lib/contact';
 export const metadata: Metadata = {
   title: 'Pricing',
   description:
-    'SheetFlow engagements: a Foundation Audit & Rapid Sprint, an Autonomous Operations Engine, and Enterprise Bespoke Infrastructure. Each is scoped and quoted in writing after a free 30-minute automation audit.',
+    'SheetFlow engagements: a Foundation Audit & Rapid Sprint, an Autonomous Operations Engine, and Enterprise Bespoke Infrastructure. Each is scoped with you and quoted in writing after a free 20-minute discovery & help session.',
   alternates: { canonical: '/pricing' },
   openGraph: {
     title: 'Pricing · SheetFlow AI',
     description:
-      'Three engagements, each scoped and quoted in writing after a free 30-minute automation audit. No price list invented before we have seen your systems.',
+      'Three engagements, each scoped with you and quoted in writing after a free 20-minute discovery & help session. No price list invented before we have seen your systems.',
     url: '/pricing',
     type: 'website',
   },
@@ -220,7 +220,7 @@ export default function PricingPage() {
           </div>
 
           <p className="mt-10 max-w-3xl border-l border-white/[0.08] pl-5 text-[13px] leading-relaxed text-ink-300">
-            Every engagement is quoted in writing after the free audit call, in Indian rupees and
+            Every engagement is quoted in writing after the free 20-minute session, in Indian rupees and
             excluding tax, never from a price list. We publish no return figure and no timeline
             for production builds, because neither has been measured across enough projects to
             state honestly. The one fixed time on this page is the sprint&rsquo;s 48&ndash;72 hour
@@ -258,7 +258,7 @@ export default function PricingPage() {
 
           <div className="mt-12 max-w-3xl">
             <h3 className="font-display text-[19px] font-semibold text-white">
-              What the audit measures to set the quote
+              What we map with you to set the quote
             </h3>
             <ul className="mt-5 flex flex-col gap-3">
               {scopeDrivers.map((driver) => (
@@ -398,13 +398,13 @@ export default function PricingPage() {
                   would be a number invented to fill a column.
                 </p>
                 <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-ink-300 text-pretty">
-                  The audit is the same 30 minutes. What changes is that we map every location and
-                  system before quoting, and you get the scope in writing.
+                  You start with the same free 20 minutes. What changes is that we map every
+                  location and system with you before quoting, and you get the scope in writing.
                 </p>
 
                 <div className="mt-10 flex flex-wrap items-center gap-3">
                   <Button variant="primary" size="lg" href={tierBookingUrl(enterpriseTier)}>
-                    Book automation audit
+                    Book your free 20-minute session
                   </Button>
                   <a
                     href={WHATSAPP_URL}
@@ -475,12 +475,13 @@ export default function PricingPage() {
             Find out what yours would take.
           </h2>
           <p className="mt-5 max-w-2xl text-[16px] leading-relaxed text-ink-300 text-pretty">
-            Thirty minutes, no commitment. We map where your enquiries arrive, where they stall,
-            and what is worth automating first — and you leave with the map either way.
+            Just connect with us. Don&rsquo;t worry about the complex tech: we&rsquo;re here to help
+            you map out and solve your operational bottlenecks, like true partners. Twenty
+            minutes, free, no commitment, and you leave with a clear next step either way.
           </p>
           <div className="mt-10 flex flex-wrap items-center gap-3">
             <Button variant="primary" size="lg" href="/book">
-              Book free audit
+              Book your free 20-minute session
             </Button>
             <Link
               href="/work"

@@ -116,7 +116,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'SheetFlow AI — AI automation agency for growing businesses.',
     description:
-      'AI automations for lead capture, WhatsApp follow-ups, appointment booking, CRM updates and daily reports — built for clinics, agencies, coaches and service businesses.',
+      'AI automations for lead capture, WhatsApp follow-ups, appointment booking, CRM updates and daily reports — built with businesses of every kind, from manufacturers and real estate to clinics, schools and D2C brands.',
     url: SITE_URL,
     type: 'website',
     locale: 'en_US',

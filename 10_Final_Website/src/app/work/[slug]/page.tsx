@@ -578,7 +578,7 @@ export default async function WorkProjectPage({
 
             <div className="mt-12 flex flex-wrap items-center gap-3">
               <Button variant="primary" size="lg" href="/book">
-                Book free audit
+                Book your free 20-minute session
               </Button>
               <Link
                 href="/pricing"

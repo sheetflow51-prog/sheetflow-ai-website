@@ -67,7 +67,7 @@ export function Terms() {
           <span className="text-ink-300">and what each one does not cover.</span>
         </>
       }
-      description="From a fixed-scope sprint that proves one workflow, to the operations engine that runs them, to bespoke infrastructure under a service-level agreement. Each is quoted in writing after a free audit call."
+      description="From a fixed-scope sprint that proves one workflow, to the operations engine that runs them, to bespoke infrastructure under a service-level agreement. Each is quoted in writing after a free 20-minute discovery & help session."
     >
       <ul className="chapter-stage terms">
         {tiers.map((t, i) => {
