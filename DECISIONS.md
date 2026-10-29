@@ -985,3 +985,56 @@ answered and qualified by AI in 5 seconds" becomes "Instantly answered and mappe
 and the animated pill "Replied in 5s" becomes "Answered 24/7" (same length, so the card layout is unchanged).
 "In 5 seconds" is on the content engine's banned list and contradicted the D42 tone rules (no speed promises).
 The caption that marks the loop as illustrative, not measured, stays.
+
+### D45 - Calendly webhook relay *(2026-10-29)*
+
+**What.** `POST /api/calendly` (`src/app/api/calendly/route.ts`, logic in `src/lib/calendly-relay.ts`) receives
+Calendly webhook deliveries, verifies them, and forwards new bookings to the n8n intake workflow SF-I1
+(`POST /webhook/sf-discovery-intake`, which writes the pre-call brief and the CRM lead and sends nothing to the
+prospect). Node runtime, never cached, no new dependencies.
+
+**Why.** Calendly webhook subscriptions cannot add custom headers, and SF-I1 only answers requests that carry the
+secret header of its Header Auth credential. n8n also listens on 127.0.0.1 only. The relay is the one server-side
+place that holds the secret: Calendly proves itself to the relay with a signature, and the relay proves itself to
+n8n with the header. The secret never reaches a browser.
+
+**How it decides.**
+- Config missing or invalid: 503, and nothing else happens.
+- Body over 64 KB: 413.
+- `Calendly-Webhook-Signature` missing, malformed, wrong, or older or newer than 3 minutes: 401. The format
+  (`t=<unix seconds>,v1=<hex HMAC-SHA256 of "<t>.<raw body>">`) and the 3-minute tolerance follow Calendly's
+  docs (https://developer.calendly.com/api-docs/overview/webhooks/webhook-signatures, checked 2026-10-29). The HMAC
+  runs over the raw body as received, compared in constant time.
+- Any event other than `invitee.created` (cancellations, no-shows, anything else): 200 `{ ok: true, forwarded: false }`,
+  not forwarded.
+- `invitee.created`: the original body goes to `SF_INTAKE_URL` as `application/json` with the secret header, 8-second
+  timeout, redirects refused (a redirect would carry the secret elsewhere). 200 when n8n answers 2xx, else 502.
+  Calendly retries any 3xx/4xx/5xx with back-off for 24 hours and then disables the subscription, so a short tunnel
+  outage loses nothing, but a long one means recreating the subscription.
+- Logs carry the event type and the outcome only, never the body, a header value or the secret. `GET` answers 405.
+  `robots.ts` already disallows `/api/`, and the sitemap is built from page content, so `/api` is not listed.
+
+**Env vars** (Vercel, Production only; names only, values never in the repo):
+- `CALENDLY_WEBHOOK_SIGNING_KEY`: the signing key given when creating the subscription (16+ characters).
+- `SF_INTAKE_URL`: `https://<tunnel host>/webhook/sf-discovery-intake` (must be https and end with that path).
+- `SF_INTAKE_HEADER_NAME`: optional, default `X-SF-Intake`; must equal the header name in the n8n credential.
+- `SF_INTAKE_SECRET`: the n8n Header Auth value, 32+ printable ASCII characters, no spaces.
+
+**Owner steps, in order.** Nothing is live until all are done; until then the route answers 503.
+1. In n8n, create the **Header Auth** credential `SF intake header` (name `X-SF-Intake`, a long random value) and
+   attach it to SF-I1's `Session booked` node (see `SheetFlow_Ops\intake\README.md`; SF-I1 stays inactive until its
+   own checklist is done).
+2. Expose only n8n's `/webhook/sf-discovery-intake` through a tunnel the owner controls, and note its https URL.
+   Exposing n8n is the owner's decision (`D:\sheetflow_loop\RUNBOOK.md`).
+3. In Vercel, set the four env vars above for **Production**, then redeploy so the function picks them up.
+4. In Calendly (webhooks need a paid plan), create a webhook subscription for `invitee.created` with a signing key,
+   pointing at `https://sheetflow.click/api/calendly`. Use the canonical domain: the vercel.app alias answers 308
+   (D43), and a redirected webhook is not a delivered one.
+5. Make one test booking and check SF-I1's execution log and the Vercel function log (`outcome=forwarded`).
+
+**Verification.** `node scripts/test-calendly-relay.mjs` (also `npm run test:relay`): 25 tests covering header parsing,
+valid and rotated signatures, wrong key, tampered and re-serialised body, stale and future timestamps, malformed
+and missing headers, event filtering, config validation, and the full POST handler driven with real `Request`
+objects and a stubbed n8n (forwarded body and headers, 503/413/401/400/502 paths, timeouts, no secrets in logs).
+`tsc --noEmit` and eslint on the new files pass. Not tested: a real Calendly delivery, the tunnel, or a deployed
+function.

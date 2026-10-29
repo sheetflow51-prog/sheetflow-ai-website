@@ -12,6 +12,7 @@
     "brand": "node scripts/build-brand-assets.mjs",
     "test:e2e": "playwright test",
     "test:a11y": "playwright test a11y",
+    "test:relay": "node scripts/test-calendly-relay.mjs",
     "audit:lh": "node scripts/audit-lighthouse.mjs",
     "audit:bundle": "node scripts/audit-bundle.mjs",
     "build:profile": "cross-env PROFILE_SOURCEMAPS=true next build",
