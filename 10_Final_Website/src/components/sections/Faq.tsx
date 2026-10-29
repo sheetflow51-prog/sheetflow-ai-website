@@ -46,7 +46,7 @@ export function Faq() {
           <span className="text-ink-300">before they book.</span>
         </>
       }
-      description="Straight answers. If something here is unclear, the audit call is the place to dig into it."
+      description="Straight answers. If something here is unclear, just ask us in a free 20-minute session and we will work through it with you."
     >
       {/* Not a <dl>. A definition list requires <dt>/<dd> as direct children
           of the list (or of a <div> inside it), and a disclosure widget puts

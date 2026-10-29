@@ -8,7 +8,12 @@
  * printed before anyone has seen the client's systems was arbitrary, and it
  * mis-sold a bespoke engagement as a price list. Each tier is now an
  * **engagement shape** — what it includes, where it stops, how it is quoted —
- * and every quote is given in writing after the audit call.
+ * and every quote is given in writing after the free first session (since D42,
+ * the 20-Minute Discovery & Help Session; before it, the free audit call).
+ *
+ * "Audit" still appears below on purpose: the Foundation Audit & Rapid Sprint
+ * is a paid tier whose deliverable is an architecture audit. That is a
+ * different thing from the free session and keeps its name.
  *
  * Nothing on this page may state, imply or anchor a number in its place: no
  * "from", no range, no struck-through figure, no "typical cost" borrowed from
@@ -73,7 +78,7 @@ export const tiers: PricingTier[] = [
     audience: 'A business that wants proof on one workflow before committing to a build.',
     engagement: {
       model: 'Fixed-scope sprint',
-      quote: 'Fixed fee, quoted in writing after the audit call',
+      quote: 'Fixed fee, quoted in writing after the free session',
     },
     summary:
       'We audit the tools you already run, map where enquiries arrive, stall and drop, and build a working proof of concept of the workflow that matters most.',
@@ -86,7 +91,7 @@ export const tiers: PricingTier[] = [
     ],
     limit:
       'One workflow, proven end to end. A production rollout across the business is the Operations Engine.',
-    cta: 'Book automation audit',
+    cta: 'Book 20 minutes',
     featured: false,
   },
   {
@@ -95,7 +100,7 @@ export const tiers: PricingTier[] = [
     audience: 'A business losing revenue between the first enquiry and the booked appointment.',
     engagement: {
       model: 'Build + monthly operations',
-      quote: 'Scoped from the audit, operations month to month',
+      quote: 'Scoped with you, operations month to month',
     },
     summary:
       'The systems that answer, qualify, book, record and report across your channels, built to production and kept running without anyone remembering to.',
@@ -110,7 +115,7 @@ export const tiers: PricingTier[] = [
     ],
     limit:
       'Scoped to one business and one core workflow set. Multiple locations, custom agents and contractual service levels sit in Enterprise.',
-    cta: 'Book automation audit',
+    cta: 'Book 20 minutes',
     featured: true,
   },
   {
@@ -132,8 +137,8 @@ export const tiers: PricingTier[] = [
       'Continuous optimisation: scheduled reviews, then changes',
     ],
     limit:
-      'Quoted only after the audit maps every location and system. Service levels are agreed in writing per engagement, not promised from a page.',
-    cta: 'Book automation audit',
+      'Quoted only after we have mapped every location and system with you. Service levels are agreed in writing per engagement, not promised from a page.',
+    cta: 'Book 20 minutes',
     featured: false,
   },
 ];
@@ -158,9 +163,9 @@ export interface EngagementStep {
  */
 export const engagementSteps: EngagementStep[] = [
   {
-    id: 'audit',
-    name: 'Audit call',
-    detail: 'Free, 30 minutes. We map your tools and where enquiries stall. You leave with the map either way.',
+    id: 'session',
+    name: 'Discovery & help session',
+    detail: 'Free, 20 minutes. You tell us where work gets stuck and we map it out with you in plain language. You leave with a clear next step either way.',
   },
   {
     id: 'sprint',
@@ -181,7 +186,7 @@ export const engagementSteps: EngagementStep[] = [
 
 /**
  * What moves a quote. Published so that a page without a number reads as
- * "scoped", not "hidden": the visitor can see exactly what the audit measures.
+ * "scoped", not "hidden": the visitor can see exactly what we map before quoting.
  */
 export const scopeDrivers: string[] = [
   'How many tools and accounts need connecting',
@@ -275,13 +280,13 @@ export const pricingFaqs: PricingFaq[] = [
     id: 'pricing-why-no-price',
     question: 'Why is there no price on this page?',
     answer:
-      'Because the price depends on things we cannot see from here: how many tools need connecting, how many locations and WhatsApp numbers are involved, how much volume runs through them, and how much of your process is unusual. A number printed before seeing those would be invented to fill a column. The audit call maps them, and you get a written quote before any work starts.',
+      'Because the price depends on things we cannot see from here: how many tools need connecting, how many locations and WhatsApp numbers are involved, how much volume runs through them, and how much of your process is unusual. A number printed before seeing those would be invented to fill a column. We map them with you, starting in the free 20-minute session, and you get a written quote before any work starts.',
   },
   {
     id: 'pricing-sprint',
     question: 'What is the Rapid Sprint?',
     answer:
-      'The paid first step after the free audit. We audit the tools you already run, map one workflow end to end, and build a working proof of concept of it, time-boxed to 48–72 hours of build time once the scope is agreed and access to your accounts is granted. It is a demonstration-grade build of that one workflow, not a production rollout. It is a fixed fee, quoted before it starts, and you keep the workflow map, the proof of concept and the written build plan whether or not you go further.',
+      'The paid first step after the free 20-minute session. We audit the tools you already run, map one workflow end to end, and build a working proof of concept of it, time-boxed to 48–72 hours of build time once the scope is agreed and access to your accounts is granted. It is a demonstration-grade build of that one workflow, not a production rollout. It is a fixed fee, quoted before it starts, and you keep the workflow map, the proof of concept and the written build plan whether or not you go further.',
   },
   {
     id: 'pricing-monthly',
@@ -293,13 +298,13 @@ export const pricingFaqs: PricingFaq[] = [
     id: 'pricing-why-no-timeline',
     question: 'How long does a full build take?',
     answer:
-      'We do not publish a delivery timeline for production builds, because we have not measured one across enough projects to state honestly. The one fixed time on this page is the Rapid Sprint’s 48–72 hour time-box, which is a limit we set on our own work rather than an average we have measured. You get a specific build date on the audit call, once the scope is known.',
+      'We do not publish a delivery timeline for production builds, because we have not measured one across enough projects to state honestly. The one fixed time on this page is the Rapid Sprint’s 48–72 hour time-box, which is a limit we set on our own work rather than an average we have measured. You get a specific build date from us once the scope is known.',
   },
   {
     id: 'pricing-results',
     question: 'What return should I expect?',
     answer:
-      'We do not publish a return figure. No outcome has been measured against a stated method and confirmed with a client, so any number we printed here would be invented. The calculator on this page uses your figures and your own estimate of what you would recover — it is your arithmetic, not our claim. If you want a projection grounded in your actual numbers, that is what the audit produces.',
+      'We do not publish a return figure. No outcome has been measured against a stated method and confirmed with a client, so any number we printed here would be invented. The calculator on this page uses your figures and your own estimate of what you would recover — it is your arithmetic, not our claim. If you want to work through your actual numbers, we will do that with you, starting in the free 20-minute session.',
   },
   {
     id: 'pricing-ownership',
@@ -317,12 +322,12 @@ export const pricingFaqs: PricingFaq[] = [
     id: 'pricing-currency',
     question: 'Do you work with businesses outside India?',
     answer:
-      'Yes. Quotes are in Indian rupees by default. For work billed in another currency, the scope and the price are agreed in that currency on the audit call.',
+      'Yes. Quotes are in Indian rupees by default. For work billed in another currency, the scope and the price are agreed in that currency when we scope the work with you.',
   },
   {
     id: 'pricing-usage-costs',
     question: 'Are WhatsApp and AI usage charges included in the quote?',
     answer:
-      'No, and they are never marked up. Usage-based charges — WhatsApp message fees from Meta, AI model usage, hosting — are billed by those providers directly to your own accounts, because that is where everything is built. The audit tells you which ones apply to your setup before you approve anything.',
+      'No, and they are never marked up. Usage-based charges — WhatsApp message fees from Meta, AI model usage, hosting — are billed by those providers directly to your own accounts, because that is where everything is built. We tell you which ones apply to your setup before you approve anything.',
   },
 ];

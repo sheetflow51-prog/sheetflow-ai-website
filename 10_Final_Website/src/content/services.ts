@@ -134,7 +134,7 @@ export const services: ServicePage[] = [
         id: 'faq-lead-capture-channels',
         question: 'Which channels can enquiries be captured from?',
         answer:
-          'Anything that can send a webhook or expose an API. In practice that covers website forms, WhatsApp, email, Slack, Telegram, and the lead forms built into ad platforms. If a channel you depend on has no integration path at all, we will say so during the audit rather than ask you to move off it.',
+          'Anything that can send a webhook or expose an API. In practice that covers website forms, WhatsApp, email, Slack, Telegram, and the lead forms built into ad platforms. If a channel you depend on has no integration path at all, we will say so when we map it out with you, rather than ask you to move off it.',
       },
       {
         id: 'faq-lead-capture-existing-forms',
@@ -323,7 +323,7 @@ export const services: ServicePage[] = [
         id: 'faq-crm-migrate',
         question: 'Do I have to migrate to a different CRM?',
         answer:
-          'No. The automation is built around the CRM you already run rather than replacing it. If the tool you depend on has no integration path at all, we will tell you during the audit instead of asking you to migrate.',
+          'No. The automation is built around the CRM you already run rather than replacing it. If the tool you depend on has no integration path at all, we will tell you when we map it out with you, instead of asking you to migrate.',
       },
       {
         id: 'faq-crm-manual-entry',
@@ -379,7 +379,7 @@ export const services: ServicePage[] = [
         id: 'faq-reports-whats-in-it',
         question: 'What is actually in the daily report?',
         answer:
-          'The figures that change a decision — new enquiries, bookings made, deals moved, payments received — followed by the exceptions that need you: an enquiry with no reply, a booking unconfirmed, an invoice past its date. It is built around what your business tracks, so the exact contents are agreed during the audit rather than fixed in advance.',
+          'The figures that change a decision — new enquiries, bookings made, deals moved, payments received — followed by the exceptions that need you: an enquiry with no reply, a booking unconfirmed, an invoice past its date. It is built around what your business tracks, so the exact contents are agreed with you rather than fixed in advance.',
       },
       {
         id: 'faq-reports-where',

@@ -27,7 +27,7 @@ import { useAnalytics } from '@/lib/hooks/useAnalytics';
  * ## Why so few fields
  *
  * Four questions, one of which is optional. Every additional field on a booking
- * form costs completions, and the audit call exists precisely to ask the rest.
+ * form costs completions, and the 20-minute session exists precisely to ask the rest.
  * The fields that survived are the ones that change how the call opens.
  *
  * ## Validation

@@ -29,27 +29,36 @@ import { WHATSAPP_URL } from '@/lib/contact';
  * popup, no countdown. The page's job is to remove friction from booking, and
  * every one of those adds some.
  *
- * The facts in the strip below — 30 minutes, Google Meet, free, no commitment —
- * are read from the live Calendly event type, not asserted. Verified against
- * the API on 2026-08-07.
+ * The facts in the strip below — Google Meet, free, no commitment — are read
+ * from the live Calendly event type, not asserted. Verified against the API on
+ * 2026-08-07.
+ *
+ * "20 minutes" is the exception, and it is the owner's decision of 2026-10-29
+ * (D42, `SheetFlow_Ops/POSITIONING.md`), not yet a Calendly fact: the event type
+ * is still named "Free Automation Audit" and set to 30 minutes until the owner
+ * renames it and shortens it in Calendly. Do that before this page ships, or the
+ * strip and the booking page will disagree.
+ *
+ * The three steps under "In the session" are POSITIONING.md's "What happens in
+ * the 20 minutes", with a line of detail each.
  */
 
 export const metadata: Metadata = {
-  title: 'Book a free automation audit',
+  title: 'Book a free 20-minute discovery & help session',
   description:
-    'Book a free 30-minute automation audit. We map where your enquiries arrive, where they stall, and which steps are worth automating first — and you leave with the map either way.',
+    'Just connect with us. Don’t worry about the complex tech: in a free 20-minute discovery & help session we map out your operational bottlenecks with you, and you leave with a clear next step either way.',
   alternates: { canonical: '/book' },
   openGraph: {
-    title: 'Book a free automation audit · SheetFlow AI',
+    title: 'Book a free 20-minute discovery & help session · SheetFlow AI',
     description:
-      'A free 30-minute call. We map where your enquiries arrive, where they stall, and what is worth automating first. No commitment.',
+      'A free 20-minute video call. Tell us where work gets stuck and we map it out with you in plain language. No tech knowledge needed, no commitment.',
     url: '/book',
     type: 'website',
   },
 };
 
 const FACTS = [
-  { icon: Clock, label: '30 minutes' },
+  { icon: Clock, label: '20 minutes' },
   { icon: Video, label: 'Google Meet' },
   { icon: IndianRupee, label: 'Free' },
   { icon: ShieldCheck, label: 'No commitment' },
@@ -57,24 +66,19 @@ const FACTS = [
 
 const EXPECT = [
   {
-    title: 'Where your enquiries actually arrive',
+    title: 'You tell us where work gets stuck',
     detail:
-      'Every channel a lead can reach you on, mapped in one place — including the ones nobody is watching.',
+      'Missed enquiries, manual data entry, slow reports, anything. Your own words are fine; you do not need to know what the fix is called.',
   },
   {
-    title: 'Where they stall',
+    title: 'We map it out with you',
     detail:
-      'The specific points where a lead waits: the unread form, the message answered tomorrow, the follow-up that never went.',
+      'In plain language, together, so you can see where the time and the enquiries go. No tech knowledge needed: that part is ours.',
   },
   {
-    title: 'What is worth automating first',
+    title: 'You leave with a clear next step',
     detail:
-      'Ranked by what it costs you now, not by what is most impressive to build. Sometimes the answer is one alert.',
-  },
-  {
-    title: 'The map, whether or not you hire us',
-    detail:
-      'You leave with the same document either way. If automation is not the answer for you, we will say so on the call.',
+      'Whether or not you work with us. Sometimes it is one alert. If automation is not the answer for you, we will say so.',
   },
 ];
 
@@ -88,19 +92,20 @@ export default function BookPage() {
           <ServiceBreadcrumb
             trail={[
               { name: 'Home', href: '/' },
-              { name: 'Book an audit', href: '/book' },
+              { name: 'Book a session', href: '/book' },
             ]}
           />
 
           <div className="max-w-4xl">
-            <span className="kicker">Free automation audit</span>
+            <span className="kicker">Free 20-minute discovery &amp; help session</span>
             <h1 id="book-heading" className="headline-cinematic text-fade text-balance mt-5">
-              Thirty minutes. Then you know.
+              Twenty minutes. Then you know.
             </h1>
             <p className="mt-7 max-w-2xl text-[17px] leading-relaxed text-ink-200 text-pretty md:text-[19px]">
-              We map where enquiries reach you, where they go cold, and what is worth automating
-              first. Answer four questions below and pick a time — the call starts with your
-              situation instead of with introductions.
+              Just connect with us. Don&rsquo;t worry about the complex tech: we&rsquo;re here to
+              help you map out and solve your operational bottlenecks, like true partners. Answer
+              four questions below and pick a time, so the session starts with your situation
+              instead of with introductions.
             </p>
           </div>
 
@@ -139,12 +144,15 @@ export default function BookPage() {
 
       <section className="section" aria-labelledby="expect-heading">
         <div className="container-edge">
-          <span className="kicker">On the call</span>
+          <span className="kicker">In the session</span>
           <h2 id="expect-heading" className="headline-section text-fade text-balance mt-5 max-w-3xl">
-            What you walk away with.
+            What happens in the 20 minutes.
           </h2>
 
-          <ol className="mt-12 grid gap-4 md:grid-cols-2">
+          {/* Three steps, so three columns from `md` — the same grid
+              `/book/confirmed` uses for its three cards. Two columns would
+              leave the third step alone on its own row. */}
+          <ol className="mt-12 grid gap-4 md:grid-cols-3">
             {EXPECT.map((item, i) => (
               <li key={item.title} className="flex flex-col gap-3 rounded-2xl glass p-7">
                 <span
@@ -164,8 +172,8 @@ export default function BookPage() {
           </ol>
 
           <p className="mt-12 max-w-2xl border-l border-white/[0.08] pl-5 text-[13px] leading-relaxed text-ink-300">
-            It is not a sales pitch with a diagram at the end. If your enquiry volume does not
-            justify the work, that is a useful answer and you will get it on the call — see{' '}
+            It is not a sales pitch with a diagram at the end. If the work is not worth it for
+            your business yet, that is a useful answer and you will get it in the session — see{' '}
             <Link
               href="/pricing"
               className="text-white/80 underline decoration-white/20 underline-offset-4 transition-colors hover:decoration-white"

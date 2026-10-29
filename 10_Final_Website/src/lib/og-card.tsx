@@ -143,7 +143,7 @@ export function renderServiceCard({
             position: 'relative',
           }}
         >
-          <div style={{ fontSize: 20, color: '#FFFFFF', display: 'flex' }}>sheetflow.ai{path}</div>
+          <div style={{ fontSize: 20, color: '#FFFFFF', display: 'flex' }}>sheetflow.click{path}</div>
           <div
             style={{
               display: 'flex',
@@ -159,9 +159,9 @@ export function renderServiceCard({
           >
             <span>FREE</span>
             <span>·</span>
-            <span>30-MIN</span>
+            <span>20-MIN</span>
             <span>·</span>
-            <span>AUDIT</span>
+            <span>HELP SESSION</span>
           </div>
         </div>
 

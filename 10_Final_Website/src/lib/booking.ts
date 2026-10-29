@@ -27,7 +27,10 @@
  *
  * Read from the Calendly API on 2026-08-07 for event type
  * `aae20723-98a3-4eaf-b0c6-4dbd99ebb39d` ("Free Automation Audit", 30 min,
- * Google Meet, free):
+ * Google Meet, free). Since 2026-10-29 (D42) the site sells this booking as the
+ * free 20-Minute Discovery & Help Session; the owner is renaming the Calendly
+ * event and shortening it to 20 minutes, and the prefill contract below does
+ * not depend on either:
  *
  *   - `name`  — the invitee name field
  *   - `email` — the invitee email field
@@ -126,16 +129,18 @@ export function tierBookingUrl(tier: { id: string; name: string }): string {
 /**
  * The sectors offered in the qualification step.
  *
- * These mirror the audience the site already names in `content/faq.ts`
- * ("clinics, agencies, coaches, real-estate and trades") plus the two sectors
- * with a published case study. Adding one here without adding it there would
- * make the form advertise an audience the copy does not.
+ * These mirror the audience the site names in `content/faq.ts` (any sector,
+ * B2B or B2C, since D42 / 2026-10-29), listing the sectors we lead with first.
+ * Adding one here without adding it there would make the form advertise an
+ * audience the copy does not.
  */
 export const SECTORS = [
-  'Clinic or healthcare practice',
+  'Manufacturing or industrial',
   'Real estate',
+  'Education or coaching',
+  'Clinic or healthcare practice',
+  'E-commerce or D2C brand',
   'Agency or consultancy',
-  'Coaching or training',
   'Trades or home services',
   'Something else',
 ] as const;
@@ -145,7 +150,7 @@ export const SECTORS = [
  *
  * Each maps to a catalogued service, so the answer routes directly to what we
  * would actually build. "Not sure yet" is deliberately present and first-class:
- * a visitor who does not know is the audit's ideal caller, and forcing them to
+ * a visitor who does not know is the session's ideal caller, and forcing them to
  * pick a wrong answer loses them.
  */
 export const BOTTLENECKS = [

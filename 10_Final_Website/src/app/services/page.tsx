@@ -101,13 +101,13 @@ export default function ServicesIndexPage() {
             Not sure which one you need?
           </h2>
           <p className="mt-5 max-w-2xl text-[16px] leading-relaxed text-ink-300 text-pretty">
-            That is what the audit is for. We map where enquiries currently arrive, where they
-            stall, and which steps are worth automating first. No commitment, and you leave with
-            the map whether or not you work with us.
+            That is what the free 20-minute session is for. Just connect with us: you do not need
+            to know the tech. You tell us where work gets stuck, we map it out together, and you
+            leave with a clear next step whether or not you work with us. No commitment.
           </p>
           <div className="mt-10 flex flex-wrap items-center gap-3">
             <Button variant="primary" size="lg" href="/book">
-              Book free audit
+              Book your free 20-minute session
             </Button>
             <Link
               href="/#faq"

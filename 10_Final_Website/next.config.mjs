@@ -58,13 +58,29 @@ const nextConfig = {
    * engines drop the old URLs.
    */
   async redirects() {
+    /**
+     * The public production alias on vercel.app serves the same site as the
+     * canonical domain (D41). Every path goes to sheetflow.click with a 308, so
+     * the vercel.app address drops out of search results and shared links (D43).
+     * Only this exact host is matched: preview and per-deployment URLs sit behind
+     * Vercel's login and must keep working for pull-request checks.
+     */
+    const vercelAlias = {
+      source: '/:path*',
+      has: [{ type: 'host', value: 'sheetflow-ai-website.vercel.app' }],
+      destination: 'https://sheetflow.click/:path*',
+      permanent: true,
+    };
     return [
-      'saraswati-dental-clinic',
-      'sparc-physiotherapy',
-      'r3s-realty',
-      'ak-dental-diagnostic-centre',
-      'align-dental-system',
-    ].map((slug) => ({ source: `/work/${slug}`, destination: '/work', permanent: true }));
+      vercelAlias,
+      ...[
+        'saraswati-dental-clinic',
+        'sparc-physiotherapy',
+        'r3s-realty',
+        'ak-dental-diagnostic-centre',
+        'align-dental-system',
+      ].map((slug) => ({ source: `/work/${slug}`, destination: '/work', permanent: true })),
+    ];
   },
 
   async headers() {

@@ -125,7 +125,7 @@ export function Navigation() {
             {/* Switches at `lg`, not `md`.
                 At 768–1023px the full bar renders logo + six links + a CTA, and
                 it does not fit: RC1's tablet capture (810px) showed "How we
-                work" wrapping onto three lines and "Book free audit" onto two,
+                work" wrapping onto three lines and the CTA (then "Book free audit") onto two,
                 which pushed the header to roughly double height. Tablets get
                 the sheet menu instead. The trigger and the overlay below use
                 the same breakpoint — all three must move together, or a width
@@ -150,7 +150,7 @@ export function Navigation() {
               href="/book"
               className="hidden sm:inline-flex"
             >
-              Book free audit
+              Book 20 minutes
             </Button>
             <ThemeToggle />
             {/* Mobile menu trigger */}
@@ -224,11 +224,11 @@ export function Navigation() {
                   className="w-full justify-center"
                   onClick={() => setOpen(false)}
                 >
-                  Book free audit
+                  Book your free 20-minute session
                 </Button>
                 <p className="mt-2 inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-ink-400">
                   <span className="h-1.5 w-1.5 rounded-full bg-signal-success animate-pulse-live" />
-                  Free 30-min audit · No commitment
+                  No tech knowledge needed · No commitment
                 </p>
               </motion.div>
             </nav>

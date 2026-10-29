@@ -1,9 +1,19 @@
 /**
- * Single source of truth for where "Book a free automation audit" goes.
+ * Single source of truth for where "Book your free 20-minute session" goes.
  *
  * Calendly's "Free Automation Audit" event type — 30 min, Google Meet, free.
  * Real booking (time slots, calendar invite, confirmation email) rather than an
  * open-ended chat message.
+ *
+ * ## The offer was renamed on 2026-10-29 (D42); the Calendly event lags
+ *
+ * The site now offers the free **20-Minute Discovery & Help Session**
+ * (`SheetFlow_Ops/POSITIONING.md`). The event type above is still named "Free
+ * Automation Audit" and set to 30 minutes in Calendly until the owner renames
+ * it and shortens it to 20 minutes there. The URL below keeps its slug on
+ * purpose (owner instruction): changing it would break every link already
+ * shared. When the event is renamed, check that Calendly kept the slug
+ * `free-automation-audit`; if it did not, this constant must follow it.
  *
  * ## Why this slug changed on 2026-08-12
  *
@@ -42,6 +52,7 @@ export const BOOKING_URL = 'https://calendly.com/sheetflow51/free-automation-aud
  */
 export const WHATSAPP_NUMBER = '919756072538';
 
-const AUDIT_MESSAGE = "Hi! I'd like to book a free automation audit for my business.";
+const SESSION_MESSAGE =
+  "Hi, I'd like to book a free 20-minute discovery & help session for my business.";
 
-export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(AUDIT_MESSAGE)}`;
+export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(SESSION_MESSAGE)}`;

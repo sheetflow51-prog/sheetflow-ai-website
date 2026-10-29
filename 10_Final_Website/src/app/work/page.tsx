@@ -271,12 +271,13 @@ export default function WorkIndexPage() {
               Your business, running the same way.
             </h2>
             <p className="mt-5 max-w-2xl text-[16px] leading-relaxed text-ink-300 text-pretty">
-              The audit maps where your enquiries arrive, where they stall, and which steps are
-              worth automating first. No commitment, and you leave with the map either way.
+              Just connect with us. Don&rsquo;t worry about the complex tech: we&rsquo;re here to
+              help you map out and solve your operational bottlenecks, like true partners. Free,
+              20 minutes, no commitment.
             </p>
             <div className="mt-10 flex flex-wrap items-center gap-3">
               <Button variant="primary" size="lg" href="/book">
-                Book free audit
+                Book your free 20-minute session
               </Button>
               <Link
                 href="/pricing"

@@ -69,7 +69,7 @@ test.describe('pricing', () => {
     expect(pricingSection, 'llms.txt states a price').not.toMatch(money);
   });
 
-  test('every tier CTA books the audit directly, tagged with the tier', async ({ page }) => {
+  test('every tier CTA books the free session directly, tagged with the tier', async ({ page }) => {
     await page.goto('/pricing');
     for (const tier of tiers) {
       const section = page.locator(`#${tier.id}`);
@@ -231,18 +231,41 @@ test.describe('booking', () => {
     expect(thirdParty, `third-party scripts loaded: ${thirdParty.join(', ')}`).toHaveLength(0);
   });
 
-  test('emits a free-audit Service offer and a ReserveAction', async ({ page }) => {
+  test('emits a free 20-minute session Service offer and a ReserveAction', async ({ page }) => {
     await page.goto('/book');
     const nodes = await graph(page);
 
     const service = byType(nodes, 'Service')!;
-    expect(service.name).toBe('Free automation audit');
+    expect(service.name).toBe('20-Minute Discovery & Help Session');
     expect((service.offers as Record<string, unknown>).price).toBe(0);
 
     const webPage = byType(nodes, 'WebPage')!;
     const action = webPage.potentialAction as Record<string, any>;
     expect(action['@type']).toBe('ReserveAction');
     expect(action.target.urlTemplate).toBe(BOOKING_URL);
+  });
+
+  test('the old 30-minute audit offer is gone from the booking surfaces (D42)', async ({
+    page,
+    request,
+  }) => {
+    // The offer became the free 20-Minute Discovery & Help Session on
+    // 2026-10-29. "Audit" alone is not banned: the paid Foundation Audit &
+    // Rapid Sprint keeps its name. What must not come back is the free call
+    // under its old name or length, including the old labels "Book automation
+    // audit" (tier cards) and "Book an audit" (footer, breadcrumb).
+    const oldOffer =
+      /\b30[- ]?min|\bthirty minutes\b|\b(free|automation) audit\b|\b(an|your) audit\b|\baudit call\b/i;
+    for (const path of ['/', '/book', '/book/confirmed', '/pricing', '/services', '/work']) {
+      await page.goto(path);
+      const text = await page.locator('body').innerText();
+      expect(text, `${path} still offers the old audit`).not.toMatch(oldOffer);
+    }
+    const llms = await (await request.get('/llms.txt')).text();
+    expect(llms, 'llms.txt still offers the old audit').not.toMatch(oldOffer);
+
+    await page.goto('/book');
+    await expect(page.getByText('20 minutes', { exact: true })).toBeVisible();
   });
 
   test('the confirmation page is noindex and absent from the sitemap', async ({ page, request }) => {
