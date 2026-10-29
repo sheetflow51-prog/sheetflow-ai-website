@@ -29,9 +29,11 @@ import { beat } from '@/content/narrative';
  *
  * ## What the figures are
  *
- * "5 seconds", "48 hours" and the counter are the founder's illustration of a
- * typical week, not measurements, and the caption under the stage says so in
- * plain text (D39). Nothing here is a SheetFlow outcome claim.
+ * "48 hours" and the counter are the founder's illustration of a typical week,
+ * not measurements, and the caption under the stage says so in plain text (D39).
+ * Nothing here is a SheetFlow outcome claim. The old "answered in 5 seconds" /
+ * "Replied in 5s" lines were a banned speed claim and became "Instantly answered
+ * and mapped out, 24/7" / "Answered 24/7" (D44).
  */
 
 const BEFORE = [
@@ -43,7 +45,7 @@ const BEFORE = [
 ];
 
 const AFTER = [
-  'The enquiry is answered and qualified by AI in 5 seconds',
+  'Instantly answered and mapped out, 24/7',
   'A real-time alert lands in Slack and the CRM',
   'The visit is booked into the calendar automatically',
   'One dashboard that reports itself every morning',
@@ -58,7 +60,7 @@ const STALLED = [
 ];
 
 const OUTCOMES = [
-  { what: 'Price enquiry answered', via: 'WhatsApp', pill: 'Replied in 5s' },
+  { what: 'Price enquiry answered', via: 'WhatsApp', pill: 'Answered 24/7' },
   { what: 'Lead scored and tagged', via: 'AI qualification', pill: 'Qualified' },
   { what: 'Record created, team alerted', via: 'CRM and Slack', pill: 'Synced to CRM' },
   { what: 'Site visit scheduled', via: 'Google Calendar', pill: 'Calendar booked' },
