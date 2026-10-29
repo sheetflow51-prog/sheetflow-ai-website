@@ -977,3 +977,11 @@ unchanged.
 
 **Verification.** The config loads and lists the rule first. After the production deploy, a HEAD on the alias
 must return 308 with `Location: https://sheetflow.click/...`, and sheetflow.click must still return 200.
+
+### D44 — The homepage before/after drops its "5 seconds" speed claim *(2026-10-29)*
+
+**Decision.** In the before/after loop (`TransformationScene.tsx`, D39/D40) the outcome line "The enquiry is
+answered and qualified by AI in 5 seconds" becomes "Instantly answered and mapped out, 24/7" (owner's wording),
+and the animated pill "Replied in 5s" becomes "Answered 24/7" (same length, so the card layout is unchanged).
+"In 5 seconds" is on the content engine's banned list and contradicted the D42 tone rules (no speed promises).
+The caption that marks the loop as illustrative, not measured, stays.
