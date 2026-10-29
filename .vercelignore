@@ -31,3 +31,10 @@ node_modules/
 
 # Config backups.
 *.rc8-backup
+
+# Never upload local secrets as build source (zero-trust audit 2026-10-29).
+.env
+.env.*
+!.env.example
+*.pem
+*.key

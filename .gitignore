@@ -71,3 +71,22 @@ docs/_captures/
 
 # Config backups taken before an edit. Restore from git, not from a sibling file.
 *.rc8-backup
+
+# Credentials and local databases, defence in depth (zero-trust audit 2026-10-29).
+# No such file exists in the repo or its history; these keep it that way.
+*.key
+*.p12
+*.pfx
+id_rsa*
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+*.db
+credentials*.json
+client_secret*.json
+token.json
+token.pickle
+*.pickle
+test-results/
+playwright-report/
