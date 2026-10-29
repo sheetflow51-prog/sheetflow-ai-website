@@ -962,3 +962,18 @@ shared links keep working). Until then `/book` says 20 minutes and Calendly says
 runner. `commerce.spec.ts` now asserts the new JSON-LD name and fails if the old offer reappears on the booking
 surfaces or in `llms.txt`, but no browser suite, build or dev server was run (under 2 GB of free memory).
 
+
+### D43 — The vercel.app production alias redirects to sheetflow.click *(2026-10-29)*
+
+**Decision.** `https://sheetflow-ai-website.vercel.app/*` answers with a 308 to the same path on
+`https://sheetflow.click`, from `redirects()` in `next.config.mjs` (a host-matched rule, first in the list). The
+owner wants the vercel.app address out of public view; canonical tags (D41) already pointed search engines at
+sheetflow.click, and the redirect closes the address itself.
+
+**Scope.** Only that exact host. The other `.vercel.app` aliases and every per-deployment URL are behind Vercel's
+login (checked 2026-10-29: 302 to vercel.com/sso-api), and preview deployments must keep working for pull-request
+checks, so a wildcard on `*.vercel.app` would break review without hiding anything. `www.sheetflow.click` is
+unchanged.
+
+**Verification.** The config loads and lists the rule first. After the production deploy, a HEAD on the alias
+must return 308 with `Location: https://sheetflow.click/...`, and sheetflow.click must still return 200.
