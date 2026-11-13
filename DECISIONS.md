@@ -1038,3 +1038,121 @@ and missing headers, event filtering, config validation, and the full POST handl
 objects and a stubbed n8n (forwarded body and headers, 503/413/401/400/502 paths, timeouts, no secrets in logs).
 `tsc --noEmit` and eslint on the new files pass. Not tested: a real Calendly delivery, the tunnel, or a deployed
 function.
+
+### D46 - Hybrid lead capture: /api/intake before the slot, Cal.com webhooks after it *(2026-11-13)*
+
+**Status.** Built and tested on the local branch `feat/hybrid-intake`. **Not deployed and not merged.** The /book form
+is **not** switched to post to `/api/intake` yet: that is a change to `QualificationForm` (method, honeypot, consent
+line) and waits for the founder's approval. D26 still holds: the booking page is never embedded, the visitor is
+redirected with prefill, and our pages load no third-party JavaScript. D45's Calendly relay (`/api/calendly`) is kept,
+unchanged, until the Cal.com cutover is proven.
+
+**What.** Two Node route handlers send the n8n intake SF-I1 (`POST /webhook/sf-discovery-intake`) one normalised JSON
+envelope, `schema: sf.intake.v1`, specified with examples and n8n join rules in `10_Final_Website/docs/INTAKE_HYBRID.md`:
+- `POST /api/intake` (`src/app/api/intake/route.ts`, logic in `src/lib/intake.ts`) receives the /book qualification
+  form, validates it, forwards a `lead.submitted` envelope, then answers `303 See Other` to the Cal.com booking link
+  with `name`, `email` and `notes` prefilled and the lead id in `metadata[sf_lead_id]`.
+- `POST /api/cal-webhook` (`src/app/api/cal-webhook/route.ts`, logic in `src/lib/cal-webhook.ts`) verifies Cal.com's
+  signature and relays `BOOKING_CREATED`, `BOOKING_RESCHEDULED` and `BOOKING_CANCELLED` as `booking.created`,
+  `booking.rescheduled` and `booking.cancelled`.
+- `src/lib/sf-intake.ts` holds what both share: the SF-I1 target check (D45's rules, plus `user-agent`,
+  `ngrok-skip-browser-warning` and `x-cal-signature-256` as reserved header names), the forwarder, a capped body
+  reader and control-character cleaning. No new dependencies; `tsconfig.json` gains `allowImportingTsExtensions` so the
+  libraries can import each other as `./sf-intake.ts` both under Next and in the plain Node tests.
+
+**Why.** Today a visitor who answers the questions but leaves at the slot picker is lost: nothing reaches the CRM until
+a booking is confirmed (D45), and Calendly webhooks need a paid plan. Capturing the lead on our server first makes every
+qualified visitor a CRM row, and the booking events then complete that row. Cal.com's free plan handles booking; the
+lead id it carries back in the webhook joins the two halves. The SF-I1 secret stays on the server: neither the browser
+nor Cal.com ever sees it.
+
+**How it decides.**
+- `/api/intake`, in order:
+  - Origin gate (abuse, not CSRF; there is no session): `Origin` must exactly match `https://sheetflow.click`,
+    `https://www.sheetflow.click`, the https origin of `NEXT_PUBLIC_SITE_URL` or a Vercel deployment host; localhost
+    only outside production. No Origin: the origin of `Referer`; neither, or the literal `null`: 403, nothing read.
+  - Only urlencoded, multipart or JSON bodies (else 415), at most 16 KB by declared length and by counted bytes.
+  - Two answer modes. FORM mode (today's native form) answers every outcome with `303`, never 302 or 307: a 307 makes
+    the browser re-POST the lead to Cal.com. JSON mode (JSON body, or `Accept` preferring JSON) answers in JSON.
+  - Fields: name (1-120), email (one sane address, max 254), sector and bottleneck (exactly one of `SECTORS` and
+    `BOTTLENECKS` in `lib/booking.ts`), notes (max 1500; read from `notes`, else today's `a1`), optional UTM values and
+    page (dropped when malformed), consent (recorded, not required yet). Invalid: FORM `303 /book?intake=invalid`, JSON
+    400 with the failing field names only, never values. Any uploaded file is invalid.
+  - A filled hidden `website` field (honeypot, part of the pending form change) is answered exactly like a success and
+    forwarded nowhere.
+  - At most 5 forwarded leads per 10 minutes per client address, counted in memory per function instance under a
+    salted SHA-256 of the address (never the address itself): best effort. Over the limit, FORM mode still sends the
+    person to book (the lead is not captured), JSON mode answers 429 with the booking link.
+  - The forward to SF-I1 is awaited with a 6-second timeout (`after()` could not change the response and would hide a
+    lost lead), but the visitor is never blocked by it: a valid submission always gets its booking link, and JSON mode
+    reports `captured: true|false`.
+  - The booking link is `CAL_BOOKING_URL` (validated: https, `cal.com` or `app.cal.com`, a user and an event in the
+    path, no query) with prefill, or, while that is unset or invalid, today's Calendly link from `buildBookingUrl`, so
+    this can ship before the Cal.com switch. The lead id uses the namespaced key `sf_lead_id` because Cal.com spreads
+    link metadata over its own `videoCallUrl`. A very long non-Latin note is shortened in the link only (6000-character
+    budget), never in the envelope.
+  - The envelope carries the answers, consent, attribution and a two-letter country; never the IP address or user
+    agent.
+- `/api/cal-webhook`, in order:
+  - `CAL_WEBHOOK_SECRET` or the SF-I1 target missing: 503, nothing read. Body over 256 KB: 413.
+  - `x-cal-signature-256` must be the hex HMAC-SHA256 of the raw body with the webhook secret, compared in constant
+    time; Cal.com signs no timestamp. Missing, malformed, wrong, or the literal `no-secret-provided` (a webhook saved
+    without a secret): 401. Signed but not JSON: 400.
+  - `PING` (the settings page's test): 200 `{ ok: true, ping: true }`, nothing forwarded. Any other non-booking trigger
+    (for example `BOOKING_REQUESTED`): 200 `{ ok: true, forwarded: false }`. A booking event without a usable `uid`: 422.
+  - Booking events are reduced to an allow-list of fields (no organiser, iCal data, `appsStatus`, ICS content or raw
+    payload), answered 200 `{ ok: true, accepted: true }` at once, and forwarded inside `after()` with an 8-second
+    timeout. Cal.com awaits the delivery inside the booker's own request and never retries a non-2xx, so a slow tunnel
+    must not hold up the booker, and a 502 would buy nothing.
+  - Rescheduling is a new booking: the new `uid` plus `previousUid`. An organiser's "request reschedule" arrives as a
+    cancellation with `requestReschedule: true`. `meetUrl` comes from `metadata.videoCallUrl`, else `location`; when
+    both are https and differ, `location` wins, because the visitor can overwrite `metadata.videoCallUrl` by editing
+    the link and cannot touch `location`.
+- Logs: one line per request. `[intake] outcome=<label> lead=<id|->` and `[cal-webhook] event=<trigger> outcome=<label>`;
+  never a name, email, note, IP, URL, signature or secret, and never the booking uid, which works like a password for
+  the attendee's cancel and reschedule links. ngrok's `ngrok-error-code` header turns an offline tunnel into
+  `ngrok_ERR_NGROK_3200` rather than a bare `upstream_404`. `GET` answers 405 on both routes.
+
+**Env vars** (Vercel, Production; names only, values never in the repo):
+- `CAL_BOOKING_URL`: the public event link, `https://cal.com/<user>/<event>`. Not a secret.
+- `CAL_WEBHOOK_SECRET`: the secret typed into the Cal.com webhook form, 16+ printable ASCII characters, no spaces.
+- `SF_INTAKE_URL`, `SF_INTAKE_HEADER_NAME`, `SF_INTAKE_SECRET`: shared with D45, same rules.
+- Read, never set by hand: Vercel's `VERCEL_URL`, `VERCEL_BRANCH_URL`, `VERCEL_PROJECT_PRODUCTION_URL`, and
+  `NEXT_PUBLIC_SITE_URL`, for the origin gate.
+
+**Owner steps, in order.** Nothing changes for visitors until step 1 is approved and shipped.
+1. Decide on the gated frontend change: the /book form posts to `/api/intake` (`method="post"`), gains the hidden
+   `website` honeypot and a consent line, and its notes field becomes `notes` (the server accepts `a1` too).
+2. In Cal.com (free plan), create the 20-minute discovery event with Google Meet (this needs a connected Google
+   Calendar, or there is no Meet link) and note its public link. Confirm that Settings, Developer, Webhooks is available
+   on the free plan.
+3. Create the webhook: subscriber URL `https://sheetflow.click/api/cal-webhook` (the canonical domain; Cal.com does not
+   follow redirects), triggers booking created, rescheduled and cancelled, a long random secret, no custom payload
+   template. Press Ping: the Vercel log should show `event=PING outcome=ping`.
+4. Extend SF-I1 to switch on `event` and upsert the CRM row by the join rules in `docs/INTAKE_HYBRID.md`, writing
+   cells as raw values. Add a scheduled reconciliation from the Cal.com API v2, since webhooks are at most once.
+5. In Vercel, set `CAL_BOOKING_URL` and `CAL_WEBHOOK_SECRET` (and the `SF_INTAKE_*` values if not already set for D45)
+   for Production, then redeploy.
+6. Make one real booking, then a reschedule and a cancellation; check SF-I1's executions and the Vercel log
+   (`[intake] outcome=forwarded`, `[cal-webhook] event=BOOKING_CREATED outcome=forwarded`).
+7. Once proven, retire D45: delete the Calendly webhook subscription, then remove `/api/calendly` in a later change.
+
+**Verification.** `npm run test:relays` (`node --test` over four files, plain Node 24, no server, no network, stubbed
+n8n, pinned clock and ids, dummy secrets): 120 tests, all passing. D45's 25 relay tests are unchanged and pass;
+`test-sf-intake.mjs` (20) covers target validation case by case against D45's `readConfig`, every forward outcome
+including ngrok's offline code, a real timeout and a refused redirect, the forwarded headers, body release, and the
+capped reader; `test-intake.mjs` (40) covers FORM and JSON modes, the 303 when n8n is down or not configured, invalid
+input, oversize by header and by body, 415, files, the honeypot, every origin case, the rate limit and its hashed keys,
+the Calendly fallback, the metadata key, `+` in emails, the envelope's contents and the logs; `test-cal-webhook.mjs`
+(35) covers signatures (valid, uppercase, wrong key, tampered, re-serialised, `no-secret-provided`, missing), the
+503/413/401/400/422 paths, PING, ignored triggers, the three booking events, data minimisation, caps, defer and
+no-defer modes, and the logs. Type-check: TypeScript 5.6.3 in strict mode (plus unused-locals and unused-parameters)
+over the three libraries and both routes, once with local stubs for `next/server` and `@/lib/booking` and once against
+the real `booking.ts` and `contact.ts`: no errors.
+
+**Not done, not verified.** No deploy, no `next build`, no eslint run (the clone used had no `node_modules`), and
+TypeScript was checked with 5.6.3 rather than the project's locked 5.9.3. That Next 16 resolves the `.ts`-suffixed
+imports is expected but not proven by a build. No real Cal.com delivery, tunnel or n8n change was tested. Not built:
+the form switch and consent UI, a durable record of failed forwards (Vercel Hobby keeps logs for an hour), and the
+Cal.com reconciliation job. Cal.com's free-plan webhook availability and its link-length limit (the 6000-character
+budget is a guess) are unconfirmed.
