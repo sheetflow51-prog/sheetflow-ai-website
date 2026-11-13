@@ -153,9 +153,10 @@ export type IntakeDeps = {
  * In-memory fixed-window limiter, best effort by design.
  *
  * It lives in one function instance, so it resets on a cold start and each
- * concurrent instance counts on its own: it slows a flood from one address, it
- * is not a quota. Memory is bounded by `maxKeys`: when full, expired windows
- * are swept first and then the oldest window is dropped.
+ * concurrent instance counts on its own: it slows a flood from one address (an
+ * IPv6 client counts by its /64, see `rateLimitAddress`), it is not a quota.
+ * Memory is bounded by `maxKeys`: when full, expired windows are swept first
+ * and then the oldest window is dropped.
  */
 export function createRateLimiter(options: { limit: number; windowMs: number; maxKeys: number }): RateLimiter {
   const windows = new Map<string, { start: number; count: number }>();
@@ -193,15 +194,64 @@ export function createRateLimiter(options: { limit: number; windowMs: number; ma
 const KEY_SALT = randomBytes(16);
 
 /**
- * The rate-limit key for a request: a salted SHA-256 of the client address.
- * `x-real-ip` is set by Vercel and cannot be spoofed there; the first
- * `x-forwarded-for` hop is the fallback; without either (local dev) every
- * request shares the 'unknown' bucket. The raw address is never stored.
+ * The eight groups of an IPv6 address, `::` expanded and leading zeros
+ * dropped, or null when it does not parse. A dotted IPv4 tail
+ * (`::ffff:203.0.113.7`) is folded into the last two groups.
+ */
+function ipv6Groups(address: string): string[] | null {
+  let text = address;
+  const dotted = /^(.*:)(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(text);
+  if (dotted) {
+    const [a, b, c, d] = dotted.slice(2, 6).map(Number);
+    if ([a, b, c, d].some((octet) => octet > 255)) return null;
+    text = `${dotted[1]}${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`;
+  }
+  const halves = text.split('::');
+  if (halves.length > 2) return null;
+  const split = (part: string) => (part === '' ? [] : part.split(':'));
+  const head = split(halves[0]);
+  const tail = halves.length === 2 ? split(halves[1]) : [];
+  const missing = 8 - head.length - tail.length;
+  if (halves.length === 2 ? missing < 1 : missing !== 0) return null;
+  const groups = [...head, ...Array<string>(halves.length === 2 ? missing : 0).fill('0'), ...tail];
+  if (!groups.every((group) => /^[0-9a-f]{1,4}$/.test(group))) return null;
+  return groups.map((group) => group.replace(/^0+(?=.)/, ''));
+}
+
+/**
+ * The part of a client address the rate limit counts.
+ *
+ * An IPv4 address counts whole. An IPv6 client normally holds a whole /64 and
+ * can take a fresh address in it for every request, which would give one
+ * machine a fresh allowance each time, so IPv6 counts by its /64 prefix (the
+ * first four groups). An IPv4-mapped address (`::ffff:203.0.113.7`) counts as
+ * the IPv4 address it carries, so IPv4 visitors never share one bucket.
+ * Anything that does not parse counts as given.
+ */
+export function rateLimitAddress(raw: string): string {
+  const address = raw.trim().toLowerCase();
+  if (!address.includes(':')) return address;
+  // Brackets and a zone id (`%eth0`) are not part of the address.
+  const groups = ipv6Groups(address.replace(/^\[|\]$/g, '').split('%')[0]);
+  if (groups === null) return address;
+  if (groups.slice(0, 5).every((group) => group === '0') && groups[5] === 'ffff') {
+    const [high, low] = [parseInt(groups[6], 16), parseInt(groups[7], 16)];
+    return `${high >> 8}.${high & 255}.${low >> 8}.${low & 255}`;
+  }
+  return `${groups.slice(0, 4).join(':')}::/64`;
+}
+
+/**
+ * The rate-limit key for a request: a salted SHA-256 of the client address
+ * (for IPv6, of its /64; see `rateLimitAddress`). `x-real-ip` is set by Vercel
+ * and cannot be spoofed there; the first `x-forwarded-for` hop is the
+ * fallback; without either (local dev) every request shares the 'unknown'
+ * bucket. The raw address is never stored.
  */
 export function clientKey(headers: Headers): string {
   const realIp = headers.get('x-real-ip')?.trim();
   const firstHop = headers.get('x-forwarded-for')?.split(',')[0]?.trim();
-  const address = (realIp || firstHop || 'unknown').slice(0, 100);
+  const address = rateLimitAddress((realIp || firstHop || 'unknown').slice(0, 100));
   return createHash('sha256').update(KEY_SALT).update(address).digest('hex');
 }
 
@@ -409,9 +459,13 @@ export function validateSubmission(
     const value = cleanLine(get(key));
     if (value && value.length <= UTM_MAX && /^[\w.\-~%+ ]*$/.test(value)) attribution[key] = value;
   }
-  // A path on our own site; '//host' is a protocol-relative URL, not a path.
+  // A path on our own site, and only the path: a query or fragment can carry ad
+  // click ids or an email address, which the CRM has no use for. '//host' is a
+  // protocol-relative URL, and browsers read a backslash as a slash, so '/\host'
+  // is one too; any backslash is refused.
   const page = cleanLine(get('page'));
-  if (page && page.length <= PAGE_MAX && /^\/(?!\/)\S*$/.test(page)) attribution.page = page;
+  const path = page.split(/[?#]/, 1)[0];
+  if (page.length <= PAGE_MAX && /^\/(?!\/)[^\s\\]*$/.test(path)) attribution.page = path;
 
   return {
     ok: true,

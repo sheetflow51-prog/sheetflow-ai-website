@@ -16,6 +16,7 @@ import {
   handleIntake,
   createRateLimiter,
   clientKey,
+  rateLimitAddress,
   mediaType,
   prefersJson,
   allowedOrigins,
@@ -395,10 +396,14 @@ test('a body over 16 KB is refused by its declared length and by its actual size
   assert.equal(byHeader.res.headers.get('location'), 'https://sheetflow.click/book?intake=invalid');
   assert.deepEqual(byHeader.lines, ['[intake] outcome=too_large lead=-']);
 
-  // The declared length lies: only counting the bytes catches it.
-  const byBody = await run(formPost(big, { 'content-length': '100' }));
+  // The declared length lies: only counting the bytes catches it. Every field is
+  // valid and the bulk sits in an ignored field, so if the bytes were not counted
+  // this lead would be forwarded, not refused as invalid.
+  const padded = { ...FIELDS, pad: 'x'.repeat(MAX_INTAKE_BODY_BYTES + 1024) };
+  const byBody = await run(formPost(padded, { 'content-length': '100' }));
   assert.equal(byBody.res.status, 303);
   assert.equal(byBody.res.headers.get('location'), 'https://sheetflow.click/book?intake=invalid');
+  assert.deepEqual(byBody.lines, ['[intake] outcome=too_large lead=-']);
   assert.equal(byBody.calls.length, 0);
 
   const jsonHeader = await run(jsonPost(FIELDS, { 'content-length': String(MAX_INTAKE_BODY_BYTES + 1) }));
@@ -664,6 +669,48 @@ test('rate limit: keys are salted SHA-256 hashes, never the raw address', async 
   assert.equal(clientKey(new Headers()), clientKey(new Headers({ 'x-real-ip': ' ' })), "no address shares the 'unknown' bucket");
 });
 
+test('rate limit: an IPv6 client counts by its /64, so rotating addresses inside it does not help', async () => {
+  const rateLimiter = createRateLimiter(INTAKE_RATE_LIMIT);
+  const fetchStub = stubFetch();
+  for (let i = 0; i < 5; i += 1) {
+    await run(formPost(FIELDS, { 'x-real-ip': `2001:db8:1234:5678::${(i + 1).toString(16)}` }), { rateLimiter, fetchStub });
+  }
+  assert.equal(fetchStub.calls.length, 5);
+  const rotated = await run(formPost(FIELDS, { 'x-real-ip': '2001:db8:1234:5678:a:b:c:d' }), { rateLimiter, fetchStub });
+  assert.deepEqual(rotated.lines, ['[intake] outcome=rate_limited lead=-']);
+  assert.equal(rotated.res.status, 303, 'still sent to book');
+  const otherNetwork = await run(formPost(FIELDS, { 'x-real-ip': '2001:db8:1234:5679::1' }), { rateLimiter, fetchStub });
+  assert.equal(otherNetwork.lines[0], `[intake] outcome=forwarded lead=${LEAD}`);
+});
+
+test('rateLimitAddress: IPv4 whole, IPv6 by /64 in any spelling, IPv4-mapped as IPv4', () => {
+  const prefix = '2001:db8:1234:5678::/64';
+  for (const address of [
+    '2001:db8:1234:5678::1',
+    '2001:DB8:1234:5678:ffff:1:2:3',
+    '2001:0db8:1234:5678:0:0:0:9',
+    '[2001:db8:1234:5678::1]',
+    '2001:db8:1234:5678::1%eth0',
+    '2001:db8:1234:5678::203.0.113.7',
+  ]) {
+    assert.equal(rateLimitAddress(address), prefix, address);
+  }
+  assert.equal(rateLimitAddress('2001:db8::1'), '2001:db8:0:0::/64');
+  assert.equal(rateLimitAddress('::1'), '0:0:0:0::/64');
+  assert.equal(rateLimitAddress('203.0.113.7'), '203.0.113.7');
+  assert.equal(rateLimitAddress('::ffff:203.0.113.7'), '203.0.113.7');
+  assert.equal(rateLimitAddress('::FFFF:cb00:7107'), '203.0.113.7');
+  assert.notEqual(rateLimitAddress('::ffff:198.51.100.9'), rateLimitAddress('::ffff:203.0.113.7'), 'mapped IPv4 clients stay apart');
+  for (const odd of ['unknown', '1:2:3', '1::2::3', 'g::1', '::ffff:300.1.1.1']) {
+    assert.equal(rateLimitAddress(odd), odd, odd);
+  }
+  assert.equal(
+    clientKey(new Headers({ 'x-real-ip': '2001:db8:1234:5678::1' })),
+    clientKey(new Headers({ 'x-real-ip': '2001:db8:1234:5678::2' })),
+  );
+  assert.equal(clientKey(new Headers({ 'x-real-ip': '::ffff:203.0.113.7' })), clientKey(new Headers({ 'x-real-ip': IP })));
+});
+
 test('rate limiter: fixed window, bounded memory', () => {
   const limiter = createRateLimiter({ limit: 2, windowMs: 1000, maxKeys: 3 });
   assert.equal(limiter.hit('a', 0), true);
@@ -827,11 +874,36 @@ test('attribution: valid UTM values and page are kept, anything else is dropped'
     utm_source: 'linkedin',
     utm_medium: 'social post',
     utm_campaign: 'nov-2026_launch%20a',
-    page: '/book?from=pricing',
+    page: '/book',
   });
-  for (const page of ['https://evil.example.test/', '//evil.example.test/x', 'book', `/${'p'.repeat(200)}`, '/has space']) {
+  const backslash = String.fromCharCode(92);
+  for (const page of [
+    'https://evil.example.test/',
+    '//evil.example.test/x',
+    `/${backslash}evil.example.test/login`,
+    `/book${backslash}x`,
+    'book',
+    '?from=pricing',
+    `/${'p'.repeat(200)}`,
+    '/has space',
+  ]) {
     const result = await run(formPost({ ...FIELDS, page }));
     assert.equal('attribution' in result.calls[0].envelope, false, page);
+  }
+});
+
+test('attribution: page keeps the path only, never a query or fragment', async () => {
+  for (const [page, expected] of [
+    ['/book?gclid=Cj0-TEST&email=priya%40example.test', '/book'],
+    ['/book#top', '/book'],
+    ['/?fbclid=TEST', '/'],
+    ['/pricing/', '/pricing/'],
+  ]) {
+    const { calls } = await run(formPost({ ...FIELDS, page }));
+    assert.equal(calls[0].envelope.attribution.page, expected, page);
+    assert.equal(new URL(expected, 'https://sheetflow.click/book').origin, 'https://sheetflow.click', page);
+    const raw = JSON.stringify(calls[0].envelope);
+    for (const leak of ['gclid', 'fbclid', 'priya%40', '#top']) assert.equal(raw.includes(leak), false, leak);
   }
 });
 

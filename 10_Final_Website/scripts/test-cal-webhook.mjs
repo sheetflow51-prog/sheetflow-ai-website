@@ -147,9 +147,13 @@ const CANCELLED_PAYLOAD = {
 };
 const CANCELLED = { triggerEvent: 'BOOKING_CANCELLED', createdAt: '2026-11-15T07:00:00.000Z', payload: CANCELLED_PAYLOAD };
 
-/** The organiser's "request reschedule": a BOOKING_CANCELLED with no status. */
-const { status: _dropped, ...REQUEST_RESCHEDULE_PAYLOAD } = {
+/**
+ * The organiser's "request reschedule": a BOOKING_CANCELLED with no status,
+ * built by another factory that names the slug `eventSlug` rather than `type`.
+ */
+const { status: _dropped, type: _renamed, ...REQUEST_RESCHEDULE_PAYLOAD } = {
   ...CANCELLED_PAYLOAD,
+  eventSlug: 'discovery-20',
   requestReschedule: true,
   cancellationReason: 'Please reschedule. A site visit clashes.',
   cancelledBy: 'organiser@example.test',
@@ -314,13 +318,36 @@ test('meetUrl: falls back to an https location, and is absent for integrations:g
   };
   assert.equal('meetUrl' in normalizeCalEvent(scripted, NOW).booking, false);
 
-  // Only metadata has a link (for example the confirmation path): it is used.
+  // Only metadata has a link (for example the confirmation path): a Meet or Cal Video link is used.
   const metadataOnly = { ...CREATED, payload: { ...CREATED_PAYLOAD, location: 'integrations:google:meet' } };
   assert.equal(normalizeCalEvent(metadataOnly, NOW).booking.meetUrl, MEET);
+  const calVideo = 'https://app.cal.com/video/bkgCreatedUid1';
+  const calVideoOnly = { ...CREATED, payload: { ...CREATED_PAYLOAD, location: 'integrations:daily', metadata: { videoCallUrl: calVideo } } };
+  assert.equal(normalizeCalEvent(calVideoOnly, NOW).booking.meetUrl, calVideo);
 
   // A visitor who edits metadata[videoCallUrl] into the link does not beat Cal.com's own location.
   const tampered = { ...CREATED, payload: { ...CREATED_PAYLOAD, metadata: { videoCallUrl: 'https://evil.example.test/' } } };
   assert.equal(normalizeCalEvent(tampered, NOW).booking.meetUrl, MEET);
+});
+
+test('meetUrl: a visitor-written metadata.videoCallUrl is ignored when Cal.com made no link', () => {
+  // Cal.com spreads the link's metadata[...] over its own, so with no Meet link (no
+  // connected calendar, a phone or in-person location) this value is the visitor's alone.
+  const forged = [
+    'https://evil.example.test/join',
+    'https://meet.google.com.evil.example.test/abc-defg-hij',
+    'https://evil.example.test/meet.google.com/abc-defg-hij',
+    'https://app.cal.com/not-video/x',
+    'https://cal.com.evil.example.test/video/x',
+  ];
+  for (const location of ['integrations:google:meet', 'Phone call', 'In person: Office', 'integrations:daily', '', undefined]) {
+    for (const videoCallUrl of forged) {
+      const body = { ...CREATED, payload: { ...CREATED_PAYLOAD, location, metadata: { videoCallUrl, sf_lead_id: LEAD } } };
+      const { booking } = normalizeCalEvent(body, NOW);
+      assert.equal('meetUrl' in booking, false, `${location} / ${videoCallUrl}`);
+      assert.equal(JSON.stringify(booking).includes('evil.example.test'), false);
+    }
+  }
 });
 
 test('BOOKING_RESCHEDULED: the new uid, and the old one as previousUid', () => {
@@ -371,8 +398,10 @@ test('BOOKING_CANCELLED: +00:00 times kept verbatim, no metadata, requestResched
   });
 });
 
-test('BOOKING_CANCELLED from "request reschedule": requestReschedule true, no status', () => {
+test('BOOKING_CANCELLED from "request reschedule": requestReschedule true, no status, slug from eventSlug', () => {
+  assert.equal('type' in REQUEST_RESCHEDULE.payload, false);
   const { booking } = normalizeCalEvent(REQUEST_RESCHEDULE, NOW);
+  assert.equal(booking.eventSlug, 'discovery-20');
   assert.equal(booking.requestReschedule, true);
   assert.equal('status' in booking, false);
   assert.equal(booking.cancellationReason, 'Please reschedule. A site visit clashes.');

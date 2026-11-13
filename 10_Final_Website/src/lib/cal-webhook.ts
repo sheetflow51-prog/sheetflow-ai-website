@@ -231,21 +231,38 @@ function httpsUrl(value: unknown): string | null {
 }
 
 /**
- * The meeting link. `metadata.videoCallUrl` first, then `location`, each only
- * if it is an https URL, so `integrations:google:meet` (no Google Calendar
- * connected, so no link) gives nothing.
+ * True for the links Cal.com itself writes into `metadata.videoCallUrl`:
+ * Google Meet, and Cal Video (`https://app.cal.com/video/<uid>`).
+ */
+function isCalMeetingLink(link: string): boolean {
+  const url = new URL(link);
+  if (url.hostname === 'meet.google.com') return true;
+  return (url.hostname === 'app.cal.com' || url.hostname === 'cal.com') && url.pathname.startsWith('/video/');
+}
+
+/**
+ * The meeting link, https only, so `integrations:google:meet` (no Google
+ * Calendar connected, so no link) gives nothing.
  *
- * One refinement: when both are https URLs and they disagree, `location` wins.
- * Cal.com computes `location` from its own video-call URL before it spreads
- * the booking link's `metadata[...]` parameters over `metadata`, so
- * `metadata.videoCallUrl` is the one a visitor can overwrite by editing the
- * link, and `location` is not.
+ * `location` is read first. Whenever Cal.com made a link it also sets
+ * `location` to it (`metadata?.videoCallUrl || evt.location`), and it does so
+ * before it spreads the booking link's `metadata[...]` parameters over
+ * `metadata`. So in a normal booking the two hold the same link, and
+ * `metadata.videoCallUrl` is the one value a visitor can write, by adding
+ * `metadata[videoCallUrl]=...` to the link. That only matters when Cal.com
+ * made no link and `location` is not a URL (Meet without a connected calendar,
+ * a phone or in-person location), which is exactly when the visitor's value
+ * would otherwise become the CRM's join link. The metadata value is therefore
+ * a fallback only, and only for a Meet or Cal Video link, which keeps the
+ * confirmation path working (its BOOKING_CREATED may carry Cal.com's link in
+ * `metadata` alone). At worst a visitor can name another Meet room, which is
+ * no worse than the call they booked.
  */
 function meetingUrl(metadata: Json | null, location: unknown): string | null {
-  const fromMetadata = httpsUrl(metadata?.videoCallUrl);
   const fromLocation = httpsUrl(location);
-  if (fromMetadata !== null && fromLocation !== null && fromMetadata !== fromLocation) return fromLocation;
-  return fromMetadata ?? fromLocation;
+  if (fromLocation !== null) return fromLocation;
+  const fromMetadata = httpsUrl(metadata?.videoCallUrl);
+  return fromMetadata !== null && isCalMeetingLink(fromMetadata) ? fromMetadata : null;
 }
 
 /** Slugs that are valid identifiers but dangerous as object keys in n8n's own JavaScript. */
@@ -325,7 +342,9 @@ export function normalizeCalEvent(body: unknown, now: Date = new Date()): Bookin
   const booking = compact<BookingDetails>({
     uid: bookingUid,
     bookingId: Number.isSafeInteger(payload.bookingId) ? (payload.bookingId as number) : null,
-    eventSlug: text(payload.type, CAP.slug),
+    // An organiser's "request reschedule" cancellation is built by another
+    // factory, which names the slug `eventSlug` instead of `type`.
+    eventSlug: text(payload.type, CAP.slug) ?? text(payload.eventSlug, CAP.slug),
     title: text(payload.title, CAP.title),
     startTime: isoTimestamp(payload.startTime),
     endTime: isoTimestamp(payload.endTime),

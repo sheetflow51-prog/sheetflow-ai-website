@@ -17,7 +17,9 @@ This file is the contract between the website (`src/lib/intake.ts`, `src/lib/cal
    the signature and sends a `booking.created` envelope to SF-I1.
 3. Later changes arrive the same way: `booking.rescheduled` and `booking.cancelled`.
 
-n8n upserts one Google Sheets CRM row per person from these four events (join rules below).
+n8n upserts the Google Sheets CRM from these four events: one row per person who asked for a call, completed by
+their booking, and a separate row for any further booking they make (join rules below). While the visitor is still
+sent to Calendly, booking events come from D45 instead (see "The Calendly overlap").
 
 ## Transport
 
@@ -86,7 +88,9 @@ Optional keys are **omitted** when they have no value; n8n never has to tell `nu
 - `lead.consent`: recorded, not yet required (the consent line is part of the pending form change). `false` when
   the box was not ticked or is not on the form.
 - `attribution`: any of `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term` (at most 120
-  characters of `[A-Za-z0-9_.~%+ -]`) and `page` (a path on this site); invalid values are dropped. Absent when empty.
+  characters of `[A-Za-z0-9_.~%+ -]`) and `page` (a path on this site, the path only: any `?query` or `#fragment` is
+  removed, since it can carry ad click ids or an email address; a backslash or a leading `//` drops the value);
+  invalid values are dropped. Absent when empty.
 - `geo.country`: Vercel's two-letter country code, only when well-formed. Absent otherwise.
 - Never sent: the IP address, the user agent, or anything else about the request.
 
@@ -204,11 +208,11 @@ When the organiser uses Cal.com's **Request reschedule**, Cal.com sends a cancel
 |---|---|---|
 | `uid` | `uid` | always present; `[A-Za-z0-9_-]{1,128}`, else the delivery is refused (422) |
 | `bookingId` | `bookingId` | integer |
-| `eventSlug` | `type` | the event type's slug |
+| `eventSlug` | `type`, else `eventSlug` | the event type's slug (a request-reschedule cancellation names it `eventSlug`) |
 | `title` | `title` | max 300 |
 | `startTime`, `endTime` | `startTime`, `endTime` | ISO 8601 as given |
 | `timeZone` | `attendees[0].timeZone` | IANA name |
-| `meetUrl` | `metadata.videoCallUrl`, else `location` | https only; when both are https and differ, `location` wins (it cannot be edited by the visitor). Absent without a connected Google Calendar |
+| `meetUrl` | `location`, else `metadata.videoCallUrl` | https only. Cal.com sets `location` to the link whenever it made one, and the visitor cannot edit it. `metadata.videoCallUrl` is used only when `location` is not a URL and it is a Google Meet or Cal Video link, because a visitor can write it by adding `metadata[videoCallUrl]=...` to the booking link. Absent without a connected Google Calendar |
 | `status` | `status` | `ACCEPTED` or `CANCELLED`; absent on a reschedule request |
 | `notes` | `responses.notes.value`, else `additionalNotes` | max 2000, line breaks kept |
 | `answers` | `userFieldsResponses` | custom questions: `slug -> string` or `string[]`, at most 20, each value max 1000 |
@@ -225,11 +229,17 @@ forwarded: the organiser, other attendees and guests, iCal data, `appsStatus`, I
 1. **Deduplicate on `eventId`** before anything else: keep the processed ids (a column or a small sheet) and skip
    one already seen. Cal.com signs no timestamp, so a captured delivery could be replayed; it would carry the same
    `eventId`.
-2. **`lead.submitted` creates the row**, keyed by `leadId` (a Lead ID column). Status: lead, no booking yet.
-3. **`booking.created` joins by `leadId`, then by email.** If `leadId` is not null and a row has it, update that
-   row. Otherwise find the most recent row with the same email (trimmed, compared case-insensitively) and no booking
-   uid yet. Otherwise append a new row: someone booked without a captured lead (the tunnel was down, or they used the
-   link directly). Write the uid, times, `meetUrl` and status booked.
+2. **`lead.submitted` creates the row**, keyed by `leadId` (a Lead IDs column). Status: lead, no booking yet. One
+   exception: if a row with the same email (trimmed, compared case-insensitively) and no booking uid yet was written
+   in the last 24 hours, update that row's answers and add the new `leadId` to its Lead IDs cell instead of appending.
+   A double click or a resubmit after the back button sends a second `lead.submitted` with a new `leadId` and
+   `eventId`, so deduplicating on `eventId` alone would leave a second, never-booked row.
+3. **`booking.created` joins by `leadId`, then by email, and only onto a row with no booking yet.** If `leadId` is
+   not null and a row lists it and has no booking uid yet, update that row. Otherwise find the most recent row with
+   the same email and no booking uid yet. Otherwise append a new row (copying the lead's answers when a row lists the
+   `leadId`): someone booked without a captured lead (the tunnel was down, or they used the link directly), or made a
+   second booking from the same prefilled link, which carries the same `leadId` and must not overwrite the first
+   booking's uid. Write the uid, times, `meetUrl` and status booked.
 4. **`booking.rescheduled` finds the row by `previousUid`** (the row's current booking uid), then replaces the uid
    with the new `uid` and updates the times. Keep the old uid in a history column if useful. If no row matches, fall
    back to rule 3.
@@ -246,6 +256,21 @@ Writing to the Sheet:
   never paste a uid into a message. The website never logs it.
 - Times are UTC (`Z` or `+00:00`); use `timeZone` only for display.
 
+## The Calendly overlap
+
+Until `CAL_BOOKING_URL` holds a valid Cal.com link, `/api/intake` still sends `lead.submitted`, but the visitor is
+sent to Calendly (today's link, which carries no lead id), and D45's `/api/calendly` relay forwards Calendly's
+`invitee.created` delivery to the same SF-I1 URL **unchanged**: Calendly's own JSON, with no `schema` key and a
+top-level `"event": "invitee.created"`. So SF-I1 receives two kinds of body during this period:
+
+1. **Branch on `schema` first.** `schema === "sf.intake.v1"`: apply the rules above. No `schema` key: a raw Calendly
+   body from D45.
+2. **A raw Calendly `invitee.created` joins by email.** Take `payload.email` (trimmed, compared case-insensitively) and
+   update the most recent row with that email and no booking yet, as rule 3 does; otherwise append a row. It carries
+   no lead id to join on and no Cal.com uid, so the `booking.*` rules never match it, and it has no `eventId`:
+   deduplicate it on Calendly's own invitee identifier instead.
+3. Once the Cal.com cutover is done and D45 is retired, the second branch receives nothing and can be removed.
+
 ## Known limits
 
 - **Cal.com delivers at most once.** It does not retry a non-2xx and keeps no delivery log. `/api/cal-webhook`
@@ -261,8 +286,14 @@ Writing to the Sheet:
   `booking.created` still carries the `leadId`, finds no row, falls back to email, and appends a row.
 - **The lead id is a join hint, not identity.** It travels in the booking link, which the visitor can edit; the
   prefilled name and email stay editable on Cal.com too, so the booking's email can differ from the lead's.
-- **Rate limit** (5 forwarded leads per 10 minutes per address) is kept in memory per function instance: best
-  effort, reset by a cold start. A visitor over the limit can still book; their lead is not captured.
+- **Rate limit** (5 forwarded leads per 10 minutes per address; an IPv6 address counts by its /64, since one client
+  can rotate addresses inside it) is kept in memory per function instance: best effort, reset by a cold start. A
+  visitor over the limit can still book; their lead is not captured.
+- **An invalid or oversize submission sends the visitor back to `/book?intake=invalid`** with no booking link. Today's
+  form neither caps its fields nor reads that parameter, and its answers are lost on the redirect, so the visitor
+  would see an empty form and no explanation. The pending form change must therefore add `maxLength={120}` to the
+  name input and `maxLength={1500}` to the notes textarea (the server's limits), and show a visible message when
+  `?intake=invalid` is present.
 - **Not yet confirmed in the account:** that webhooks are available on Cal.com's free plan (the pricing page does not
   say; the FAQ implies it), and that Google Meet links appear (they need a connected Google Calendar).
 - Event types that **require confirmation** send `BOOKING_REQUESTED` first, which is acknowledged and ignored; leave
