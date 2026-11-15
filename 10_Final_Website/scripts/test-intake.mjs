@@ -1,5 +1,5 @@
 /**
- * Tests for the /api/intake lead capture (D46): `src/lib/intake.ts`.
+ * Tests for the /api/intake lead capture (D46, D47): `src/lib/intake.ts`.
  *
  *   node scripts/test-intake.mjs
  *
@@ -9,9 +9,13 @@
  * below is a dummy. The sector and bottleneck lists are short stand-ins for
  * the real ones in `lib/booking.ts`, which cannot be imported here (it uses
  * the `@/` path alias); the handler receives its lists by injection anyway.
+ * The same alias is why the /book form and the route are checked by reading
+ * their source (the last tests in this file), not by importing them.
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { PRIVACY_NOTICE_VERSION } from '../src/content/privacy.ts';
 import {
   handleIntake,
   createRateLimiter,
@@ -31,6 +35,10 @@ import {
   INTAKE_RATE_LIMIT,
   INTAKE_FORWARD_TIMEOUT_MS,
   LEAD_METADATA_KEY,
+  INVALID_REDIRECT_PATH,
+  NAME_MAX,
+  EMAIL_MAX,
+  NOTES_MAX,
 } from '../src/lib/intake.ts';
 
 const ENDPOINT = 'https://sheetflow.click/api/intake';
@@ -42,7 +50,12 @@ const CAL = 'https://cal.com/sheetflow/discovery-20';
 const CALENDLY = 'https://calendly.com/sheetflow51/free-automation-audit';
 const IP = '203.0.113.7';
 const UA = 'Mozilla/5.0 (TestBrowser)';
+/** A dummy notice version, so the tests prove the injected value is the one recorded. */
+const NOTICE = 'test-notice-2099-01-01.9';
+const INVALID_LOCATION = 'https://sheetflow.click/book?intake=invalid#intake-invalid';
+/** A production deployment on Vercel, which sets VERCEL=1 for every function. */
 const ENV = {
+  VERCEL: '1',
   NODE_ENV: 'production',
   SF_INTAKE_URL: 'https://tunnel.example.test/webhook/sf-discovery-intake',
   SF_INTAKE_SECRET: SECRET,
@@ -129,7 +142,7 @@ function stubFetch({ status = 200, headers = {}, error } = {}) {
   return { fn, calls };
 }
 
-async function run(request, { env = ENV, fetchStub = stubFetch(), rateLimiter, now = NOW, ids } = {}) {
+async function run(request, { env = ENV, fetchStub = stubFetch(), rateLimiter, now = NOW, ids, noticeVersion = NOTICE } = {}) {
   const lines = [];
   const fallbackCalls = [];
   const queue = ids ? [...ids] : null;
@@ -141,6 +154,7 @@ async function run(request, { env = ENV, fetchStub = stubFetch(), rateLimiter, n
       fallbackCalls.push(a);
       return calendlyUrl(a);
     },
+    noticeVersion,
     fetch: fetchStub.fn,
     randomId: () => (queue ? queue.shift() : LEAD),
     now: () => now,
@@ -162,7 +176,7 @@ const EXPECTED_ENVELOPE = {
     sector: 'Real estate',
     bottleneck: 'Invoices need chasing',
     notes: 'Leads come in on WhatsApp.',
-    consent: false,
+    consent: { aiTraining: false, noticeVersion: NOTICE },
   },
 };
 
@@ -325,7 +339,7 @@ test('FORM: invalid input redirects 303 back to /book?intake=invalid and forward
   for (const [name, fields] of INVALID_CASES) {
     const { res, calls, lines } = await run(formPost(withoutUndefined(fields)));
     assert.equal(res.status, 303, name);
-    assert.equal(res.headers.get('location'), 'https://sheetflow.click/book?intake=invalid', name);
+    assert.equal(res.headers.get('location'), INVALID_LOCATION, name);
     assert.equal(calls.length, 0, name);
     assert.deepEqual(lines, ['[intake] outcome=invalid lead=-'], name);
   }
@@ -337,7 +351,7 @@ test('FORM: the invalid redirect stays on the origin that was posted to', async 
     formPost({ ...FIELDS, email: 'nope' }, { origin: preview }, `${preview}/api/intake`),
     { env: { ...ENV, VERCEL_BRANCH_URL: 'sheetflow-git-x-team.vercel.app' } },
   );
-  assert.equal(res.headers.get('location'), `${preview}/book?intake=invalid`);
+  assert.equal(res.headers.get('location'), `${preview}/book?intake=invalid#intake-invalid`);
 });
 
 test('JSON: invalid input answers 400 with field names only, never values', async () => {
@@ -393,7 +407,7 @@ test('a body over 16 KB is refused by its declared length and by its actual size
 
   const byHeader = await run(formPost(FIELDS, { 'content-length': String(MAX_INTAKE_BODY_BYTES + 1) }));
   assert.equal(byHeader.res.status, 303);
-  assert.equal(byHeader.res.headers.get('location'), 'https://sheetflow.click/book?intake=invalid');
+  assert.equal(byHeader.res.headers.get('location'), INVALID_LOCATION);
   assert.deepEqual(byHeader.lines, ['[intake] outcome=too_large lead=-']);
 
   // The declared length lies: only counting the bytes catches it. Every field is
@@ -402,7 +416,7 @@ test('a body over 16 KB is refused by its declared length and by its actual size
   const padded = { ...FIELDS, pad: 'x'.repeat(MAX_INTAKE_BODY_BYTES + 1024) };
   const byBody = await run(formPost(padded, { 'content-length': '100' }));
   assert.equal(byBody.res.status, 303);
-  assert.equal(byBody.res.headers.get('location'), 'https://sheetflow.click/book?intake=invalid');
+  assert.equal(byBody.res.headers.get('location'), INVALID_LOCATION);
   assert.deepEqual(byBody.lines, ['[intake] outcome=too_large lead=-']);
   assert.equal(byBody.calls.length, 0);
 
@@ -460,7 +474,7 @@ test('multipart: text fields work; any File value makes the lead invalid', async
   withFile.append('notes', new Blob(['%PDF-1.7']), 'brief.pdf');
   const form = await run(multipartPost(withFile));
   assert.equal(form.res.status, 303);
-  assert.equal(form.res.headers.get('location'), 'https://sheetflow.click/book?intake=invalid');
+  assert.equal(form.res.headers.get('location'), INVALID_LOCATION);
   assert.equal(form.calls.length, 0);
 
   const json = await run(multipartPost(withFile, { accept: 'application/json' }));
@@ -532,6 +546,7 @@ test('honeypot: an empty or whitespace-only value is not a bot', async () => {
 
 test('origin: the production, preview and site origins are allowed', () => {
   const origins = allowedOrigins({
+    VERCEL: '1',
     NODE_ENV: 'production',
     NEXT_PUBLIC_SITE_URL: 'https://preview.sheetflow.example/',
     VERCEL_URL: 'sheetflow-abc123-team.vercel.app',
@@ -547,21 +562,42 @@ test('origin: the production, preview and site origins are allowed', () => {
     'https://www.sheetflow.click',
   ]);
   const ignored = allowedOrigins({
+    VERCEL: '1',
     NODE_ENV: 'production',
     NEXT_PUBLIC_SITE_URL: 'http://sheetflow.click',
     VERCEL_URL: 'evil.example.test/path',
     VERCEL_BRANCH_URL: 'user@evil.example.test',
   });
   assert.deepEqual([...ignored].sort(), ['https://sheetflow.click', 'https://www.sheetflow.click']);
+  // Off Vercel, the two local origins join the production ones and nothing else does.
+  assert.deepEqual([...allowedOrigins({ NODE_ENV: 'production' })].sort(), [
+    'http://127.0.0.1:3000',
+    'http://localhost:3000',
+    'https://sheetflow.click',
+    'https://www.sheetflow.click',
+  ]);
 });
 
-test('origin: localhost only outside production', () => {
-  const dev = { ...ENV, NODE_ENV: 'development' };
-  assert.equal(isOriginAllowed(new Headers({ origin: 'http://localhost:3000' }), dev), true);
-  assert.equal(isOriginAllowed(new Headers({ origin: 'http://127.0.0.1:3000' }), dev), true);
-  assert.equal(isOriginAllowed(new Headers({ origin: 'http://localhost:3000' }), { ...ENV, NODE_ENV: undefined }), true);
-  assert.equal(isOriginAllowed(new Headers({ origin: 'http://localhost:3000' }), ENV), false);
-  assert.equal(isOriginAllowed(new Headers({ origin: 'http://localhost:4000' }), dev), false);
+test('origin: localhost whenever the code is not running on Vercel, never on Vercel', () => {
+  const localhost = new Headers({ origin: 'http://localhost:3000' });
+  const loopback = new Headers({ origin: 'http://127.0.0.1:3000' });
+  // `next start` on this machine runs with NODE_ENV=production and no VERCEL;
+  // the end-to-end suite posts the real form from exactly there.
+  const localStart = { NODE_ENV: 'production', CAL_BOOKING_URL: CAL };
+  const localDev = { NODE_ENV: 'development' };
+  for (const env of [localStart, localDev, {}, { VERCEL: '0' }, { VERCEL: '' }]) {
+    assert.equal(isOriginAllowed(localhost, env), true, JSON.stringify(env));
+    assert.equal(isOriginAllowed(loopback, env), true, JSON.stringify(env));
+  }
+  // On Vercel a localhost Origin can only be forged, whatever NODE_ENV says.
+  for (const env of [ENV, { ...ENV, NODE_ENV: 'development' }, { VERCEL: '1' }]) {
+    assert.equal(isOriginAllowed(localhost, env), false, JSON.stringify(env));
+    assert.equal(isOriginAllowed(loopback, env), false, JSON.stringify(env));
+  }
+  // Only port 3000 on plain http, and only those two host names.
+  for (const origin of ['http://localhost:4000', 'https://localhost:3000', 'http://localhost', 'http://0.0.0.0:3000']) {
+    assert.equal(isOriginAllowed(new Headers({ origin }), localStart), false, origin);
+  }
 });
 
 test('origin: blocked requests get 403 and nothing is read or forwarded', async () => {
@@ -605,8 +641,13 @@ test('origin: a preview deployment and local dev are accepted where configured',
     env: { ...ENV, VERCEL_URL: 'sheetflow-abc123-team.vercel.app' },
   });
   assert.equal(preview.res.status, 303);
-  const local = await run(formPost(FIELDS, { origin: 'http://localhost:3000' }), { env: { ...ENV, NODE_ENV: 'development' } });
+  // A local `next start` (NODE_ENV=production, no VERCEL) accepts the form posted from localhost.
+  const local = await run(formPost(FIELDS, { origin: 'http://localhost:3000' }), { env: { ...ENV, VERCEL: undefined } });
   assert.equal(local.res.status, 303);
+  assert.equal(local.calls.length, 1);
+  const onVercel = await run(formPost(FIELDS, { origin: 'http://localhost:3000' }), { env: ENV });
+  assert.equal(onVercel.res.status, 403);
+  assert.equal(onVercel.calls.length, 0);
 });
 
 // --- Rate limit --------------------------------------------------------------
@@ -829,20 +870,20 @@ test('the envelope carries no IP address or user agent; country only when well-f
   assert.equal('geo' in none.calls[0].envelope, false, 'no header, no geo');
 });
 
-test('normalisation: control characters, whitespace, a1 fallback, consent', async () => {
+test('normalisation: control characters, whitespace, a1 fallback, the ai_training checkbox', async () => {
   const { calls } = await run(
     formPost({
       ...FIELDS,
       name: '  Priya \t  Sharma\u0007 ',
       notes: undefined,
       a1: 'Line one\r\nLine two\u0000\r\n\tindented',
-      consent: 'on',
+      ai_training: 'yes',
     }),
   );
   const { envelope } = calls[0];
   assert.equal(envelope.contact.name, 'Priya Sharma');
   assert.equal(envelope.lead.notes, 'Line one\nLine two\n indented');
-  assert.equal(envelope.lead.consent, true);
+  assert.deepEqual(envelope.lead.consent, { aiTraining: true, noticeVersion: NOTICE });
 
   const precedence = await run(formPost({ ...FIELDS, notes: 'from notes', a1: 'from a1' }));
   assert.equal(precedence.calls[0].envelope.lead.notes, 'from notes');
@@ -851,11 +892,59 @@ test('normalisation: control characters, whitespace, a1 fallback, consent', asyn
   const noNotes = await run(formPost({ ...FIELDS, notes: undefined }));
   assert.equal(noNotes.calls[0].envelope.lead.notes, '');
 
-  for (const [value, expected] of [['on', true], ['true', true], ['YES', true], ['1', true], ['no', false], ['0', false], ['', false], ['off', false]]) {
-    const result = validateSubmission(new Map(Object.entries({ ...FIELDS, consent: value })), ALLOWED);
-    assert.equal(result.submission.consent, expected, value);
+  for (const [value, expected] of [
+    ['yes', true], ['on', true], ['true', true], ['YES', true], [' 1 ', true],
+    ['no', false], ['0', false], ['', false], ['off', false], ['false', false], ['yes please', false],
+  ]) {
+    const result = validateSubmission(new Map(Object.entries({ ...FIELDS, ai_training: value })), ALLOWED);
+    assert.equal(result.submission.aiTraining, expected, value);
   }
-  assert.equal(validateSubmission(new Map(Object.entries(FIELDS)), ALLOWED).submission.consent, false);
+  // An unticked checkbox sends nothing at all.
+  assert.equal(validateSubmission(new Map(Object.entries(FIELDS)), ALLOWED).submission.aiTraining, false);
+  // D46's `consent` field is no longer read: a leftover or forged one is not AI-training consent.
+  const legacy = await run(formPost({ ...FIELDS, consent: 'on' }));
+  assert.deepEqual(legacy.calls[0].envelope.lead.consent, { aiTraining: false, noticeVersion: NOTICE });
+  assert.equal('consent' in validateSubmission(new Map(Object.entries({ ...FIELDS, consent: 'on' })), ALLOWED).submission, false);
+});
+
+test('ai_training never changes the outcome: same status, same booking link, same forward, ticked or not', async () => {
+  const modes = [
+    ['FORM', (fields) => formPost(fields)],
+    ['JSON', (fields) => jsonPost(fields)],
+    ['multipart', (fields) => multipartPost(formDataOf(fields))],
+  ];
+  for (const [mode, make] of modes) {
+    const unticked = await run(make(FIELDS));
+    const ticked = await run(make({ ...FIELDS, ai_training: 'yes' }));
+    assert.equal(ticked.res.status, unticked.res.status, mode);
+    assert.equal(ticked.res.headers.get('location'), unticked.res.headers.get('location'), mode);
+    assert.equal(await ticked.res.text(), await unticked.res.text(), mode);
+    assert.deepEqual(ticked.lines, unticked.lines, mode);
+    assert.equal(ticked.calls.length, 1, mode);
+    // The only difference anywhere is the recorded choice itself.
+    assert.deepEqual(
+      ticked.calls[0].envelope,
+      { ...unticked.calls[0].envelope, lead: { ...unticked.calls[0].envelope.lead, consent: { aiTraining: true, noticeVersion: NOTICE } } },
+      mode,
+    );
+    assert.equal(unticked.calls[0].envelope.lead.consent.aiTraining, false, mode);
+  }
+  // Nor on the refusal paths: invalid, honeypot and rate-limited submissions answer the same.
+  const invalidTicked = await run(formPost({ ...FIELDS, email: 'nope', ai_training: 'yes' }));
+  assert.equal(invalidTicked.res.headers.get('location'), INVALID_LOCATION);
+  const trapTicked = await run(formPost({ ...FIELDS, website: 'x', ai_training: 'yes' }), { ids: [DECOY] });
+  assert.equal(trapTicked.res.headers.get('location'), expectedCalUrl(DECOY));
+  assert.equal(trapTicked.calls.length, 0);
+  const rateLimiter = createRateLimiter({ limit: 0, windowMs: 600_000, maxKeys: 10 });
+  const limitedTicked = await run(formPost({ ...FIELDS, ai_training: 'yes' }), { rateLimiter });
+  assert.equal(limitedTicked.res.headers.get('location'), expectedCalUrl(null));
+});
+
+test('the notice version is the injected one, recorded on every lead whatever the checkbox says', async () => {
+  const other = await run(formPost(FIELDS), { noticeVersion: '2027-01-01.2' });
+  assert.deepEqual(other.calls[0].envelope.lead.consent, { aiTraining: false, noticeVersion: '2027-01-01.2' });
+  // The shipped version has the documented shape: the effective date, then a counter.
+  assert.match(PRIVACY_NOTICE_VERSION, /^\d{4}-\d{2}-\d{2}\.\d+$/);
 });
 
 test('attribution: valid UTM values and page are kept, anything else is dropped', async () => {
@@ -909,8 +998,9 @@ test('attribution: page keeps the path only, never a query or fragment', async (
 
 test('buildLeadEnvelope is pure and omits empty extras', () => {
   const submission = validateSubmission(new Map(Object.entries(FIELDS)), ALLOWED).submission;
-  const envelope = buildLeadEnvelope(submission, { leadId: LEAD, occurredAt: NOW, country: null });
+  const envelope = buildLeadEnvelope(submission, { leadId: LEAD, occurredAt: NOW, country: null, noticeVersion: NOTICE });
   assert.deepEqual(envelope, EXPECTED_ENVELOPE);
+  assert.deepEqual(Object.keys(envelope.lead), ['sector', 'bottleneck', 'notes', 'consent']);
   assert.deepEqual(Object.keys(envelope), ['schema', 'event', 'eventId', 'occurredAt', 'source', 'leadId', 'contact', 'lead']);
 });
 
@@ -959,8 +1049,7 @@ test('an injected id that is not a plain id is not printed', async () => {
 
 // --- Route module ------------------------------------------------------------------
 
-test('the route file wires the handler: nodejs, force-dynamic, 15 s, the form lists, one limiter, GET 405', async () => {
-  const { readFile } = await import('node:fs/promises');
+test('the route file wires the handler: nodejs, force-dynamic, 15 s, the form lists, the notice version, one limiter, GET 405', async () => {
   const src = await readFile(new URL('../src/app/api/intake/route.ts', import.meta.url), 'utf8');
   assert.match(src, /export const runtime = 'nodejs';/);
   assert.match(src, /export const dynamic = 'force-dynamic';/);
@@ -968,8 +1057,53 @@ test('the route file wires the handler: nodejs, force-dynamic, 15 s, the form li
   assert.match(src, /from '@\/lib\/booking'/);
   assert.match(src, /allowed: \{ sectors: SECTORS, bottlenecks: BOTTLENECKS \}/);
   assert.match(src, /fallbackBookingUrl: \(answers\) => buildBookingUrl\(answers\)/);
+  assert.match(src, /import \{ PRIVACY_NOTICE_VERSION \} from '@\/content\/privacy';/);
+  assert.match(src, /noticeVersion: PRIVACY_NOTICE_VERSION,/);
   assert.match(src, /^const rateLimiter = createRateLimiter\(INTAKE_RATE_LIMIT\);$/m, 'one module-level limiter');
   assert.match(src, /env: process\.env/);
   assert.match(src, /export function POST\(request: Request\)/);
   assert.match(src, /export function GET\(\)[\s\S]*status: 405[\s\S]*allow: 'POST'/);
+});
+
+// --- The /book form and this server agree (read as source; see the header) -----------
+
+test('the /book form posts here natively, with the field names and limits this server reads', async () => {
+  const form = await readFile(new URL('../src/components/booking/QualificationForm.tsx', import.meta.url), 'utf8');
+  const booking = await readFile(new URL('../src/lib/booking.ts', import.meta.url), 'utf8');
+
+  assert.match(booking, /export const INTAKE_ACTION = '\/api\/intake';/);
+  assert.match(form, /action=\{INTAKE_ACTION\}/);
+  assert.match(form, /method="post"/);
+  for (const name of ['name', 'email', 'sector', 'bottleneck', 'notes', 'ai_training', 'website']) {
+    assert.match(form, new RegExp(`name="${name}"`), `the form has no field named ${name}`);
+  }
+  assert.doesNotMatch(form, /name=\{NOTES_PARAM\}|name="a1"/, 'the textarea is `notes` now, not Calendly’s `a1`');
+  assert.doesNotMatch(form, /buildBookingUrl|composeNotes/, 'notes are composed on the server, not in the browser');
+
+  // The client's limits are copies of the server's (it cannot import this module).
+  const limit = (constant) => Number(new RegExp(`const ${constant} = (\\d+);`).exec(form)?.[1]);
+  assert.equal(limit('NAME_MAX'), NAME_MAX);
+  assert.equal(limit('EMAIL_MAX'), EMAIL_MAX);
+  assert.equal(limit('NOTES_MAX'), NOTES_MAX);
+  for (const constant of ['NAME_MAX', 'EMAIL_MAX', 'NOTES_MAX']) {
+    assert.match(form, new RegExp(`maxLength=\\{${constant}\\}`), `${constant} is not applied to a field`);
+  }
+
+  // The no-JS message is the :target of the fragment this server redirects to.
+  const anchor = /const INVALID_ANCHOR = '([^']+)';/.exec(form)?.[1];
+  assert.equal(`#${anchor}`, new URL(INVALID_REDIRECT_PATH, 'https://sheetflow.click').hash);
+  assert.match(form, /id=\{INVALID_ANCHOR\}/);
+  assert.match(form, /target:block/);
+
+  // The AI-training box is optional and unticked, and ticked sends a value this server reads as yes.
+  const checkbox = /<input[^>]*name="ai_training"[^>]*\/>/s.exec(form)?.[0] ?? '';
+  assert.match(checkbox, /type="checkbox"/);
+  assert.match(checkbox, /value="yes"/);
+  assert.doesNotMatch(checkbox, /\b(required|checked|defaultChecked)\b/);
+
+  // The honeypot: out of the tab order, no autofill, hidden from assistive technology.
+  const trap = /<div\s+aria-hidden="true"[\s\S]*?name="website"[\s\S]*?\/>/.exec(form)?.[0] ?? '';
+  assert.match(trap, /tabIndex=\{-1\}/);
+  assert.match(trap, /autoComplete="off"/);
+  assert.match(trap, /Leave this field empty/);
 });

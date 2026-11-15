@@ -1,9 +1,15 @@
 /**
- * Single source of truth for where "Book your free 20-minute session" goes.
+ * The fallback scheduler: Calendly's "Free Automation Audit" event type.
  *
- * Calendly's "Free Automation Audit" event type — 30 min, Google Meet, free.
- * Real booking (time slots, calendar invite, confirmation email) rather than an
- * open-ended chat message.
+ * ## Only `/api/intake` uses this, and only as a fallback (D47)
+ *
+ * Every "Book your free 20-minute session" CTA goes to /book, whose form posts
+ * to `/api/intake`. That route captures the lead and then redirects to the
+ * Cal.com event in `CAL_BOOKING_URL`; only while that variable is unset or
+ * invalid does it build a prefilled link to this URL instead
+ * (`buildBookingUrl` in `lib/booking.ts`). No page, link or structured data
+ * points here directly any more, so no booking can skip the lead capture.
+ * Remove this constant, and the fallback, once the Cal.com switch is proven.
  *
  * ## The offer was renamed on 2026-10-29 (D42); the Calendly event lags
  *
@@ -30,23 +36,24 @@
  *
  * ## What this URL is checked against, and what it is not
  *
- * `booking.spec.ts` pins the *prefill parameter names* — it asserts the form
- * emits `name`, `email` and `a1`. It passed on every run while this constant
- * pointed at a dead page, because a parameter name is not a destination. No
- * test in this repository can see that the far end exists; the far end lives in
+ * `commerce.spec.ts` pins the *prefill parameter names* `buildBookingUrl`
+ * emits (`name`, `email`, `a1`), and `scripts/test-intake.mjs` pins the
+ * fallback redirect. Neither can see that the far end exists; it lives in
  * someone's Calendly account and can be deleted without touching this code.
  *
- * So if the booking page stops converting, **check the event still exists
- * before checking anything here.** The recreated event's own facts, read back
- * from the API on creation: duration 30, `locations: [google_conference]`, and
- * one custom question at position 0 — "Please share anything that will help
- * prepare for our meeting." — which is exactly the `a1` field `booking.ts`
- * composes into. Availability is Mon–Fri 09:00–17:00, **Asia/Calcutta**.
+ * So while the fallback is in use, if bookings stop arriving, **check the event
+ * still exists before checking anything here.** The recreated event's own
+ * facts, read back from the API on creation: duration 30,
+ * `locations: [google_conference]`, and one custom question at position 0 —
+ * "Please share anything that will help prepare for our meeting." — which is
+ * exactly the `a1` field `booking.ts` composes into. Availability is Mon–Fri
+ * 09:00–17:00, **Asia/Calcutta**.
  */
 export const BOOKING_URL = 'https://calendly.com/sheetflow51/free-automation-audit';
 
 /**
- * WhatsApp click-to-chat — kept as the fallback contact channel.
+ * WhatsApp click-to-chat — kept as the fallback contact channel, and offered
+ * on /privacy as one way to make a privacy request (D47).
  * Matches the same pattern already proven on SheetFlow's own client work
  * (see Demo Website/n8n-dental-booking-workflow.json).
  */

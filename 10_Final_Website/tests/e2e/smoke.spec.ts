@@ -87,7 +87,7 @@ test.describe('homepage', () => {
     }
   });
 
-  test('external links are safe and the booking path reaches Calendly', async ({ page }) => {
+  test('external links are safe and the booking path reaches our intake', async ({ page }) => {
     await page.goto('/');
 
     // target=_blank without rel=noopener leaks window.opener to the target.
@@ -100,20 +100,23 @@ test.describe('homepage', () => {
 
     /**
      * This used to assert a `calendly.com` link on the homepage. Every CTA now
-     * routes through `/book`, which qualifies the visitor and *then* hands off
-     * to Calendly with the answers prefilled — so a direct Calendly link on the
-     * homepage would be the regression, not the requirement.
+     * routes through `/book`, whose form posts to our own `/api/intake`; the
+     * server captures the lead and *then* redirects to the booking page with
+     * the answers prefilled (D47). A direct scheduler link on the homepage
+     * would be the regression, not the requirement.
      *
      * The check therefore walks the real path rather than pattern-matching one
-     * href: homepage CTA → /book → a form whose action is Calendly. That is
+     * href: homepage CTA → /book → a form that POSTs to /api/intake. That is
      * what "booking works" means now, and it fails if any link in the chain
-     * breaks.
+     * breaks. The submission itself is driven in `booking-intake.spec.ts`.
      */
     const cta = page.locator('a[href="/book"]').first();
     await expect(cta, 'no CTA routing to /book').toBeAttached();
+    await expect(page.locator('a[href*="calendly.com"], a[href*="cal.com"]')).toHaveCount(0);
 
     await page.goto('/book');
-    await expect(page.locator('form')).toHaveAttribute('action', /calendly\.com/);
+    await expect(page.locator('form')).toHaveAttribute('action', '/api/intake');
+    await expect(page.locator('form')).toHaveAttribute('method', 'post');
   });
 });
 

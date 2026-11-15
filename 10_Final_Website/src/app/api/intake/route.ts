@@ -1,9 +1,10 @@
 import { handleIntake, createRateLimiter, INTAKE_RATE_LIMIT } from '@/lib/intake';
 import { BOTTLENECKS, SECTORS, buildBookingUrl, composeNotes } from '@/lib/booking';
+import { PRIVACY_NOTICE_VERSION } from '@/content/privacy';
 
 /**
  * `POST /api/intake`: captures a /book lead for the n8n intake SF-I1, then
- * sends the visitor on to the booking page (D46).
+ * sends the visitor on to the booking page (D46, D47).
  *
  * Node runtime, because the rate limiter hashes addresses with `node:crypto`;
  * never cached, because every submission is a distinct lead. 15 seconds is
@@ -12,8 +13,9 @@ import { BOTTLENECKS, SECTORS, buildBookingUrl, composeNotes } from '@/lib/booki
  *
  * The lists and the notes composer are the ones the form itself uses, so the
  * server accepts exactly what the form offers. Until CAL_BOOKING_URL is set,
- * visitors are sent to today's Calendly link, built by the same function the
- * form uses now.
+ * visitors are sent to the Calendly link `buildBookingUrl` makes. The notice
+ * version is the one the /book notice and the privacy page are written to, so
+ * every lead records which notice its visitor was shown.
  */
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -28,6 +30,7 @@ export function POST(request: Request) {
     allowed: { sectors: SECTORS, bottlenecks: BOTTLENECKS },
     composeNotes,
     fallbackBookingUrl: (answers) => buildBookingUrl(answers),
+    noticeVersion: PRIVACY_NOTICE_VERSION,
     rateLimiter,
   });
 }

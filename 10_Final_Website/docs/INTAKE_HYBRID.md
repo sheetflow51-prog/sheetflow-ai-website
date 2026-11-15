@@ -1,9 +1,10 @@
 # SF-I1 hybrid intake: the `sf.intake.v1` envelope
 
-Status (2026-11-13, D46): built and tested on the branch `feat/hybrid-intake`. **Not deployed.** The /book form
-does not post to `/api/intake` yet: that frontend change waits for the founder's approval. D26 still holds (the
-booking page is never embedded; the visitor is redirected with prefill), and D45's Calendly relay stays until the
-Cal.com cutover.
+Status (2026-11-15, D46 and D47): built and tested on the branch `feat/hybrid-intake`. **Not deployed.** Since D47
+the /book form posts to `/api/intake` (native `<form method="post">`, with or without JavaScript), every lead carries
+a consent record (`lead.consent`, below), and the pricing tiers and structured data link to /book, so no booking
+skips the capture. D26 still holds (the booking page is never embedded; the visitor is redirected with prefill), and
+D45's Calendly relay stays until the Cal.com cutover.
 
 This file is the contract between the website (`src/lib/intake.ts`, `src/lib/cal-webhook.ts`,
 `src/lib/sf-intake.ts`) and the n8n intake workflow SF-I1. Every example below uses dummy data.
@@ -68,7 +69,10 @@ Optional keys are **omitted** when they have no value; n8n never has to tell `nu
     "sector": "Real estate",
     "bottleneck": "Invoices need chasing",
     "notes": "Leads come in on WhatsApp and get lost.",
-    "consent": true
+    "consent": {
+      "aiTraining": true,
+      "noticeVersion": "2026-11-15.1"
+    }
   },
   "attribution": {
     "utm_source": "linkedin",
@@ -85,14 +89,53 @@ Optional keys are **omitted** when they have no value; n8n never has to tell `nu
   characters, as typed (trimmed).
 - `lead.sector` and `lead.bottleneck`: exactly one of the options the form offers (`SECTORS` and `BOTTLENECKS` in
   `src/lib/booking.ts`). `lead.notes`: up to 1500 characters, line breaks as `\n`, possibly empty.
-- `lead.consent`: recorded, not yet required (the consent line is part of the pending form change). `false` when
-  the box was not ticked or is not on the form.
+- `lead.consent`: always present, an object (D47; it was a boolean in D46).
+  - `aiTraining`: `true` only when the visitor ticked the optional, unticked-by-default checkbox "let SheetFlow use
+    my answers (business type, biggest gap and notes), with my name and email removed, to improve its AI
+    assistants" (`ai_training=yes`). Otherwise `false`. It never affects the booking, so a lead with `false` is a
+    normal lead.
+  - `noticeVersion`: the version of the privacy notice the form showed (`PRIVACY_NOTICE_VERSION` in
+    `src/content/privacy.ts`, for example `2026-11-15.1`). Store it with the row: it is the proof of what the visitor
+    was told when they gave (or did not give) the AI consent.
+  - Booking itself needs no consent flag: the visitor sends the form to get the session, and the notice above the
+    button says what is used and why (DPDP Act s.7(a)). There is no marketing consent; the row must not be used for
+    newsletters or marketing.
 - `attribution`: any of `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term` (at most 120
   characters of `[A-Za-z0-9_.~%+ -]`) and `page` (a path on this site, the path only: any `?query` or `#fragment` is
   removed, since it can carry ad click ids or an email address; a backslash or a leading `//` drops the value);
-  invalid values are dropped. Absent when empty.
+  invalid values are dropped. Absent when empty, and always absent when the visitor's browser runs no JavaScript
+  (the form copies these from its own address after loading). A pricing-tier CTA arrives as
+  `utm_source=sheetflow-site`, `utm_medium=pricing`, `utm_content=tier-<tier id>` (D47).
 - `geo.country`: Vercel's two-letter country code, only when well-formed. Absent otherwise.
 - Never sent: the IP address, the user agent, or anything else about the request.
+
+## Using a lead for AI improvement (D47)
+
+The privacy notice (`/privacy#ai-training`) promises the following, so SF-I1 and anything downstream must hold to it:
+
+1. **Only when `lead.consent.aiTraining` is `true`.** A row with `false`, or written before D47 (no consent object),
+   is never used for AI improvement, and nothing may turn it on except a new tick on the form.
+2. **Only three fields:** `lead.sector`, `lead.bottleneck` and `lead.notes`. Never `contact.name`, `contact.email`,
+   attribution, geo, booking details or the lead id.
+3. **Scrub the notes first.** Remove anything that could identify the person or their business: personal names,
+   phone numbers, email addresses, company or shop names, street addresses, URLs and handles. When in doubt, drop
+   the note and keep the two answers.
+4. **Keep the way back out of the training data.** To honour a withdrawal the de-identified record must be
+   findable, so store the link from `leadId` to the training record in the private CRM row, never in the training
+   data itself.
+5. **Name the provider first.** Before de-identified answers go to any outside AI provider for this purpose, the
+   provider must be named on `/privacy` (the notice says so).
+
+Withdrawal (the visitor writes to the privacy contact by email or WhatsApp, identified by the email used on the
+form; one message is enough):
+
+- Set the row's AI flag to withdrawn with the date, keep the original `noticeVersion` and tick date (the record of
+  what was agreed and when stays), and stop using the answers for AI improvement at once.
+- Remove the derived training records within the number of days `/privacy` states (`aiTrainingRemovalDays`, a founder
+  decision still open). The booking and the rest of the row are not affected.
+- Use before the withdrawal stays lawful, and the notice does not promise that an already-trained assistant forgets
+  what it learned; do not tell the visitor otherwise.
+- Reply within 30 days, the period `/privacy` publishes, and repeat the privacy contact in the reply.
 
 ## `booking.created`
 
@@ -289,11 +332,11 @@ top-level `"event": "invitee.created"`. So SF-I1 receives two kinds of body duri
 - **Rate limit** (5 forwarded leads per 10 minutes per address; an IPv6 address counts by its /64, since one client
   can rotate addresses inside it) is kept in memory per function instance: best effort, reset by a cold start. A
   visitor over the limit can still book; their lead is not captured.
-- **An invalid or oversize submission sends the visitor back to `/book?intake=invalid`** with no booking link. Today's
-  form neither caps its fields nor reads that parameter, and its answers are lost on the redirect, so the visitor
-  would see an empty form and no explanation. The pending form change must therefore add `maxLength={120}` to the
-  name input and `maxLength={1500}` to the notes textarea (the server's limits), and show a visible message when
-  `?intake=invalid` is present.
+- **An invalid or oversize submission sends the visitor back to `/book?intake=invalid#intake-invalid`** with no
+  booking link, and their answers are not kept. Since D47 the form caps its fields at the server's limits (name 120,
+  email 254, notes 1500), so this is rare, and /book shows "Something in the form didn't go through. Please check your
+  answers and try again, or message us on WhatsApp.": from the query with JavaScript, and through the fragment (CSS
+  `:target`) without it, because the static page cannot read its query on the server.
 - **Not yet confirmed in the account:** that webhooks are available on Cal.com's free plan (the pricing page does not
   say; the FAQ implies it), and that Google Meet links appear (they need a connected Google Calendar).
 - Event types that **require confirmation** send `BOOKING_REQUESTED` first, which is acknowledged and ignored; leave

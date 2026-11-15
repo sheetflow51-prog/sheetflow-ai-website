@@ -94,7 +94,9 @@ test.describe('structured data', () => {
     const contactPoints = org.contactPoint as Array<Record<string, unknown>>;
     expect(Array.isArray(contactPoints)).toBe(true);
     expect(contactPoints[0].telephone).toMatch(/^\+\d{10,15}$/);
-    expect(String(contactPoints[0].url)).toContain('calendly.com');
+    // The booking page on our own domain, which captures the lead before the
+    // slot; a scheduler link here would be a way to book that skips it (D47).
+    expect(contactPoints[0].url).toBe(`${org.url}/book`);
 
     const knowsAbout = org.knowsAbout as string[];
     expect(knowsAbout.length).toBeGreaterThanOrEqual(6);
@@ -157,8 +159,13 @@ test.describe('FAQ section', () => {
     await page.goto('/');
     // Crawlers and LLM retrievers do not click. Native <details> keeps the
     // text present whether or not the panel is open.
-    const html = await page.locator('#faq').innerHTML();
-    for (const f of faqs) expect(html).toContain(f.answer.slice(0, 60));
+    //
+    // textContent, not innerHTML: innerHTML serialises "&" as "&amp;", so an
+    // answer containing an ampersand ("discovery & help", D42) could never
+    // match and this failed on every run. textContent still includes the
+    // collapsed panels, which is the point of the test.
+    const text = await page.locator('#faq').evaluate((el) => el.textContent ?? '');
+    for (const f of faqs) expect(text).toContain(f.answer.slice(0, 60));
   });
 
   test('each answer is individually linkable', async ({ page }) => {

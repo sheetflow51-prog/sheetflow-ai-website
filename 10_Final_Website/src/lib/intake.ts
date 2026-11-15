@@ -10,15 +10,26 @@ import {
 } from './sf-intake.ts';
 
 /**
- * `POST /api/intake`: lead capture before the slot is picked (D46).
+ * `POST /api/intake`: lead capture before the slot is picked (D46, D47).
  *
- * Once the /book form is switched to post here (a frontend change still
- * waiting for the founder's approval; until then nothing calls this route),
- * the lead is validated, sent to the n8n intake SF-I1 in an `sf.intake.v1`
- * envelope, and the visitor is then redirected to the Cal.com booking page
- * with their answers prefilled. Capturing first means a visitor who leaves at
- * the slot picker is still a lead; redirecting (never embedding) keeps D26
- * true: zero third-party JavaScript on our pages.
+ * The /book form posts here (D47). The lead is validated, sent to the n8n
+ * intake SF-I1 in an `sf.intake.v1` envelope, and the visitor is then
+ * redirected to the Cal.com booking page with their answers prefilled.
+ * Capturing first means a visitor who leaves at the slot picker is still a
+ * lead; redirecting (never embedding) keeps D26 true: zero third-party
+ * JavaScript on our pages.
+ *
+ * ## Consent
+ *
+ * Booking needs no tick-box: the visitor gives these details so that we can
+ * arrange the session they asked for, and the notice above the submit button
+ * says so (a voluntary provision for a specified purpose, DPDP Act s.7(a)).
+ * The one separate purpose, using de-identified answers to improve our AI
+ * assistants, needs its own optional checkbox, `ai_training`. Its value is
+ * recorded in the envelope as `lead.consent.aiTraining`, together with the
+ * version of the privacy notice the form showed, because the Act puts the
+ * burden of proving consent on us (s.6(10)). It never changes whether or where
+ * the visitor is redirected: consent that changes the service is not free.
  *
  * ## The visitor is never blocked by our side
  *
@@ -31,22 +42,25 @@ import {
  *
  * ## Two response modes
  *
- * - FORM mode, for today's native `<form method="post">`: every answer is a
- *   303 See Other. Never 302 or 307: a 307 makes the browser re-POST the whole
- *   lead form to Cal.com, and 302 only "may" switch to GET.
+ * - FORM mode, for the /book form's native `<form method="post">`, which is
+ *   what runs with or without JavaScript: every answer is a 303 See Other.
+ *   Never 302 or 307: a 307 makes the browser re-POST the whole lead form to
+ *   Cal.com, and 302 only "may" switch to GET.
  * - JSON mode, when the body is JSON or `Accept` prefers JSON, for a future
- *   enhanced form that wants to show its own messages.
+ *   enhanced form that wants to show its own messages. Nothing uses it today.
  *
  * ## What leaves this server
  *
- * Name, email, the two answers, notes, the consent flag, UTM attribution, the
- * page, and a two-letter country from Vercel's geo header. Never the IP
- * address or the user agent. Logs carry one outcome label and the lead id,
- * never a name, email, note, IP, URL or secret.
+ * Name, email, the two answers, notes, the consent record (the AI-training
+ * choice and the notice version), UTM attribution, the page, and a two-letter
+ * country from Vercel's geo header. Never the IP address or the user agent.
+ * Logs carry one outcome label and the lead id, never a name, email, note, IP,
+ * URL or secret.
  *
  * Everything is injected (env, lists, notes composer, fallback link builder,
- * fetch, clock, ids, logger, rate limiter), so `scripts/test-intake.mjs` drives
- * it with real `Request` objects and no server. The route only wires it up.
+ * notice version, fetch, clock, ids, logger, rate limiter), so
+ * `scripts/test-intake.mjs` drives it with real `Request` objects and no
+ * server. The route only wires it up.
  */
 
 export const MAX_INTAKE_BODY_BYTES = 16 * 1024;
@@ -73,7 +87,13 @@ export const PAGE_MAX = 200;
 const SUPPORTED_TYPES = new Set(['application/x-www-form-urlencoded', 'multipart/form-data', 'application/json']);
 const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as const;
 const HONEYPOT_FIELD = 'website';
-/** Fields this endpoint reads. Anything else in a submission is ignored. */
+/** The optional, unticked checkbox on /book (D47). */
+const AI_TRAINING_FIELD = 'ai_training';
+/**
+ * Fields this endpoint reads. Anything else in a submission is ignored,
+ * including the `consent` field D46 accepted before the form existed: a
+ * leftover or forged `consent=on` must never be read as AI-training consent.
+ */
 const KNOWN_FIELDS = new Set<string>([
   'name',
   'email',
@@ -82,14 +102,15 @@ const KNOWN_FIELDS = new Set<string>([
   'notes',
   'a1',
   'page',
-  'consent',
+  AI_TRAINING_FIELD,
   HONEYPOT_FIELD,
   ...UTM_KEYS,
 ]);
-const CONSENT_YES = new Set(['on', 'true', 'yes', '1']);
+/** What a ticked checkbox can send: `on` without a value attribute, `yes` with ours. */
+const CHECKBOX_YES = new Set(['on', 'true', 'yes', '1']);
 
 const PRODUCTION_ORIGINS = ['https://sheetflow.click', 'https://www.sheetflow.click'];
-const DEV_ORIGINS = ['http://localhost:3000', 'http://127.0.0.1:3000'];
+const LOCAL_ORIGINS = ['http://localhost:3000', 'http://127.0.0.1:3000'];
 const VERCEL_HOST_VARS = ['VERCEL_URL', 'VERCEL_BRANCH_URL', 'VERCEL_PROJECT_PRODUCTION_URL'] as const;
 
 type Env = Record<string, string | undefined>;
@@ -106,7 +127,8 @@ export type IntakeAnswers = {
 
 export type Submission = {
   answers: IntakeAnswers;
-  consent: boolean;
+  /** True only when the optional `ai_training` checkbox was ticked. */
+  aiTraining: boolean;
   attribution: Partial<Record<AttributionKey, string>>;
   /** True when the hidden honeypot field came back filled in. */
   honeypot: boolean;
@@ -114,11 +136,18 @@ export type Submission = {
 
 export type ValidationResult = { ok: true; submission: Submission } | { ok: false; fields: string[] };
 
+/**
+ * The consent record kept with every lead. Always present, so n8n never has to
+ * tell "not ticked" from "not recorded": `aiTraining` is the checkbox, and
+ * `noticeVersion` names the privacy notice the visitor was shown.
+ */
+export type LeadConsent = { aiTraining: boolean; noticeVersion: string };
+
 export type LeadEnvelope = EnvelopeHeader & {
   event: 'lead.submitted';
   leadId: string;
   contact: { name: string; email: string };
-  lead: { sector: string; bottleneck: string; notes: string; consent: boolean };
+  lead: { sector: string; bottleneck: string; notes: string; consent: LeadConsent };
   attribution?: Partial<Record<AttributionKey, string>>;
   geo?: { country: string };
 };
@@ -137,6 +166,12 @@ export type IntakeDeps = {
   composeNotes: (answers: IntakeAnswers) => string;
   /** Today's Calendly link builder, used until CAL_BOOKING_URL holds a valid Cal.com link. */
   fallbackBookingUrl: (answers: IntakeAnswers) => string;
+  /**
+   * The version of the privacy notice the form shows (`PRIVACY_NOTICE_VERSION`
+   * in `content/privacy.ts`), recorded with each lead as proof of what the
+   * visitor was told.
+   */
+  noticeVersion: string;
   /** Injected so tests can stub n8n; defaults to the global fetch. */
   fetch?: typeof fetch;
   randomId?: () => string;
@@ -292,7 +327,13 @@ export function prefersJson(accept: string | null): boolean {
  * This is an abuse gate, not CSRF protection: there is no session or cookie to
  * protect. It stops other sites and scripts that forge no Origin from feeding
  * the CRM. Preview deployments are covered through Vercel's system env vars
- * (bare hostnames), and localhost only outside production.
+ * (bare hostnames).
+ *
+ * Localhost is allowed whenever the code is not running on Vercel, which sets
+ * `VERCEL=1` for every build and function. The test is not `NODE_ENV`: a local
+ * `next start` runs with `NODE_ENV=production`, and the end-to-end suite posts
+ * the real form from `http://localhost:3000` against exactly that server. On
+ * Vercel a localhost Origin can only be forged, so it stays blocked there.
  */
 export function allowedOrigins(env: Env): Set<string> {
   const origins = new Set(PRODUCTION_ORIGINS);
@@ -309,7 +350,7 @@ export function allowedOrigins(env: Env): Set<string> {
     const host = env[name]?.trim();
     if (host && /^[A-Za-z0-9.-]{1,253}$/.test(host)) origins.add(`https://${host.toLowerCase()}`);
   }
-  if (env.NODE_ENV !== 'production') for (const origin of DEV_ORIGINS) origins.add(origin);
+  if (env.VERCEL !== '1') for (const origin of LOCAL_ORIGINS) origins.add(origin);
   return origins;
 }
 
@@ -447,7 +488,9 @@ export function validateSubmission(
   const bottleneck = cleanLine(get('bottleneck'));
   if (!allowed.bottlenecks.includes(bottleneck)) failed.push('bottleneck');
 
-  // Today's textarea is named `a1` (Calendly's prefill parameter); the new form will send `notes`.
+  // The form sends `notes` (D47). `a1`, the textarea's name while the form
+  // posted straight to Calendly, is still read so a page cached from before
+  // the switch keeps working.
   const notesRaw = cleanText(get('notes'));
   const notes = notesRaw || cleanText(get('a1'));
   if (notes.length > NOTES_MAX) failed.push('notes');
@@ -471,7 +514,8 @@ export function validateSubmission(
     ok: true,
     submission: {
       answers: { name, email, sector, bottleneck, notes },
-      consent: CONSENT_YES.has(cleanLine(get('consent')).toLowerCase()),
+      // An unticked checkbox sends nothing at all, so absent means no.
+      aiTraining: CHECKBOX_YES.has(cleanLine(get(AI_TRAINING_FIELD)).toLowerCase()),
       attribution,
       honeypot: cleanLine(get(HONEYPOT_FIELD)).length > 0,
     },
@@ -483,11 +527,12 @@ export function validateSubmission(
 /**
  * The `lead.submitted` envelope. Attribution keys are present only when they
  * carry a value, and the country only when Vercel's header holds a plain
- * ISO 3166-1 alpha-2 code. Nothing else about the request travels.
+ * ISO 3166-1 alpha-2 code. Nothing else about the request travels. The consent
+ * record is always present (see `LeadConsent`).
  */
 export function buildLeadEnvelope(
   submission: Submission,
-  context: { leadId: string; occurredAt: Date; country: string | null },
+  context: { leadId: string; occurredAt: Date; country: string | null; noticeVersion: string },
 ): LeadEnvelope {
   const { answers } = submission;
   const envelope: LeadEnvelope = {
@@ -502,7 +547,7 @@ export function buildLeadEnvelope(
       sector: answers.sector,
       bottleneck: answers.bottleneck,
       notes: answers.notes,
-      consent: submission.consent,
+      consent: { aiTraining: submission.aiTraining, noticeVersion: context.noticeVersion },
     },
   };
   if (Object.keys(submission.attribution).length > 0) envelope.attribution = { ...submission.attribution };
@@ -601,6 +646,18 @@ function leadLabel(leadId: string | null): string {
 // --- The POST flow ---------------------------------------------------------
 
 /**
+ * Where FORM mode sends a submission it cannot accept.
+ *
+ * The query tells the /book form (with JavaScript) to show its "didn't go
+ * through" message. The fragment is for a browser without JavaScript: /book is
+ * a static page and cannot read its query on the server, but the message's
+ * element has this id and CSS shows it when it is the `:target`. The id is
+ * repeated in `QualificationForm.tsx`, which cannot import this module (it uses
+ * `node:crypto`); `scripts/test-intake.mjs` checks that the two match.
+ */
+export const INVALID_REDIRECT_PATH = '/book?intake=invalid#intake-invalid';
+
+/**
  * The whole POST flow, independent of Next:
  *
  *   Origin/Referer not ours       -> 403, nothing read
@@ -612,6 +669,9 @@ function leadLabel(leadId: string | null): string {
  *   over the rate limit           -> FORM 303 to the booking page, JSON 429; nothing forwarded
  *   valid                         -> forwarded to SF-I1 (awaited), then
  *                                    FORM 303 to the booking page, JSON 200
+ *
+ * The optional AI-training choice is recorded in the envelope and plays no
+ * part in any of these outcomes.
  */
 export async function handleIntake(request: Request, deps: IntakeDeps): Promise<Response> {
   const log = deps.log ?? ((line: string) => console.info(line));
@@ -623,7 +683,7 @@ export async function handleIntake(request: Request, deps: IntakeDeps): Promise<
   const rawContentType = request.headers.get('content-type') ?? '';
   const type = mediaType(rawContentType);
   const jsonMode = type === 'application/json' || prefersJson(request.headers.get('accept'));
-  const invalidUrl = () => new URL('/book?intake=invalid', request.url).toString();
+  const invalidUrl = () => new URL(INVALID_REDIRECT_PATH, request.url).toString();
 
   if (!isOriginAllowed(request.headers, deps.env)) {
     say('blocked_origin');
@@ -686,6 +746,7 @@ export async function handleIntake(request: Request, deps: IntakeDeps): Promise<
     leadId,
     occurredAt: now(),
     country: request.headers.get('x-vercel-ip-country'),
+    noticeVersion: deps.noticeVersion,
   });
   const target = readIntakeTarget(deps.env);
   const forward = target

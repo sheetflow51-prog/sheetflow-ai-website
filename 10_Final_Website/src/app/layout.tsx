@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, Fraunces, JetBrains_Mono } from 'next/font/google';
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/next';
 import './globals.css';
 import { THEME_COLOR, themeInitScript } from '@/lib/theme';
 
@@ -17,6 +15,7 @@ import MotionProvider from '@/components/providers/MotionProvider';
 import DeferredAtmosphere from '@/components/providers/DeferredAtmosphere';
 import { Navigation } from '@/components/layout/Navigation';
 import { Footer } from '@/components/layout/Footer';
+import SiteAnalytics from '@/components/analytics/SiteAnalytics';
 
 /**
  * Three weights, not six.
@@ -170,10 +169,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </SmoothScroll>
           <DeferredAtmosphere />
         </MotionProvider>
-        {/* Vercel Analytics — zero-config Web Vitals + pageview tracking */}
-        <Analytics />
-        {/* Vercel Speed Insights — CWV monitoring in production */}
-        <SpeedInsights />
+        {/* Vercel Web Analytics (page views) and Speed Insights (Core Web Vitals), with every
+            event URL cut to its path first: query strings here can carry campaign tags and, on
+            /book/confirmed, a booker's name and email. See SiteAnalytics for why it is a client
+            component of its own. */}
+        <SiteAnalytics />
       </body>
     </html>
   );
