@@ -94,9 +94,11 @@ Optional keys are **omitted** when they have no value; n8n never has to tell `nu
     my answers (business type, biggest gap and notes), with my name and email removed, to improve its AI
     assistants" (`ai_training=yes`). Otherwise `false`. It never affects the booking, so a lead with `false` is a
     normal lead.
-  - `noticeVersion`: the version of the privacy notice the form showed (`PRIVACY_NOTICE_VERSION` in
-    `src/content/privacy.ts`, for example `2026-11-15.1`). Store it with the row: it is the proof of what the visitor
-    was told when they gave (or did not give) the AI consent.
+  - `noticeVersion`: the version of the privacy notice the form showed, for example `2026-11-15.1`. The form sends
+    the version it was rendered with as the hidden field `notice_version`; the server records it when it is one of
+    the published versions (`PRIVACY_NOTICE_VERSIONS` in `src/content/privacy.ts`), and otherwise the current
+    `PRIVACY_NOTICE_VERSION`, so a tab left open across a notice change still records what its visitor read. Store
+    it with the row: it is the proof of what the visitor was told when they gave (or did not give) the AI consent.
   - Booking itself needs no consent flag: the visitor sends the form to get the session, and the notice above the
     button says what is used and why (DPDP Act s.7(a)). There is no marketing consent; the row must not be used for
     newsletters or marketing.
@@ -123,7 +125,12 @@ The privacy notice (`/privacy#ai-training`) promises the following, so SF-I1 and
 4. **Keep the way back out of the training data.** To honour a withdrawal the de-identified record must be
    findable, so store the link from `leadId` to the training record in the private CRM row, never in the training
    data itself.
-5. **Name the provider first.** Before de-identified answers go to any outside AI provider for this purpose, the
+5. **The training record never outlives the row.** When the row is deleted, at the end of the retention period
+   `/privacy` states (`retentionMonths`) or on the visitor's request to delete their details, delete the derived
+   training record with it. `/privacy` promises exactly that, and it is what keeps "withdraw at any time" true: while
+   the row exists the record can be found and removed, and once the row is gone there is no record left. A deletion
+   request removes the training record even if the visitor did not also say "withdraw".
+6. **Name the provider first.** Before de-identified answers go to any outside AI provider for this purpose, the
    provider must be named on `/privacy` (the notice says so).
 
 Withdrawal (the visitor writes to the privacy contact by email or WhatsApp, identified by the email used on the

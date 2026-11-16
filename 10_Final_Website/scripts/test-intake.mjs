@@ -15,7 +15,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { PRIVACY_NOTICE_VERSION } from '../src/content/privacy.ts';
+import { PRIVACY_NOTICE_VERSION, PRIVACY_NOTICE_VERSIONS } from '../src/content/privacy.ts';
 import {
   handleIntake,
   createRateLimiter,
@@ -25,6 +25,10 @@ import {
   prefersJson,
   allowedOrigins,
   isOriginAllowed,
+  isLocalOrigin,
+  recordedNoticeVersion,
+  invalidRedirectUrl,
+  readCampaignTags,
   isSaneEmail,
   validateSubmission,
   buildLeadEnvelope,
@@ -354,6 +358,42 @@ test('FORM: the invalid redirect stays on the origin that was posted to', async 
   assert.equal(res.headers.get('location'), `${preview}/book?intake=invalid#intake-invalid`);
 });
 
+test('FORM: the invalid redirect hands back the valid campaign tags, so a corrected resubmission keeps them', async () => {
+  // A review finding: a pricing-tier visitor whose email the server refused
+  // came back without utm_content, the only record of the tier.
+  const { res, calls } = await run(
+    formPost({
+      ...FIELDS,
+      email: 'asha..verma@example.test',
+      utm_source: 'sheetflow-site',
+      utm_medium: 'pricing',
+      utm_content: 'tier-growth',
+      utm_campaign: '<script>',
+      page: '/book',
+      ai_training: 'yes',
+    }),
+  );
+  assert.equal(res.status, 303);
+  assert.equal(calls.length, 0);
+  const location = new URL(res.headers.get('location'));
+  assert.equal(location.origin + location.pathname, 'https://sheetflow.click/book');
+  assert.equal(location.hash, '#intake-invalid', 'the fragment stays last, for the no-JS :target');
+  assert.deepEqual(Object.fromEntries(location.searchParams), {
+    intake: 'invalid',
+    utm_source: 'sheetflow-site',
+    utm_medium: 'pricing',
+    utm_content: 'tier-growth',
+  });
+  // Nothing personal and nothing invalid travels back: not the email, the page, the checkbox or a bad tag.
+  for (const leak of ['asha', 'example', 'script', 'page=', 'ai_training']) {
+    assert.equal(res.headers.get('location').includes(leak), false, leak);
+  }
+  // No tags, no change: the plain path.
+  assert.equal(invalidRedirectUrl(ENDPOINT, new Map()), INVALID_LOCATION);
+  assert.equal(invalidRedirectUrl(ENDPOINT, null), INVALID_LOCATION);
+  assert.deepEqual(readCampaignTags(new Map([['utm_term', 'a b'], ['utm_source', 't'.repeat(121)]])), { utm_term: 'a b' });
+});
+
 test('JSON: invalid input answers 400 with field names only, never values', async () => {
   for (const [name, fields, expected] of INVALID_CASES) {
     const { res, calls } = await run(jsonPost(withoutUndefined(fields)));
@@ -569,10 +609,8 @@ test('origin: the production, preview and site origins are allowed', () => {
     VERCEL_BRANCH_URL: 'user@evil.example.test',
   });
   assert.deepEqual([...ignored].sort(), ['https://sheetflow.click', 'https://www.sheetflow.click']);
-  // Off Vercel, the two local origins join the production ones and nothing else does.
+  // The exact set holds deployed origins only; localhost is `isLocalOrigin`'s job (next test).
   assert.deepEqual([...allowedOrigins({ NODE_ENV: 'production' })].sort(), [
-    'http://127.0.0.1:3000',
-    'http://localhost:3000',
     'https://sheetflow.click',
     'https://www.sheetflow.click',
   ]);
@@ -594,9 +632,25 @@ test('origin: localhost whenever the code is not running on Vercel, never on Ver
     assert.equal(isOriginAllowed(localhost, env), false, JSON.stringify(env));
     assert.equal(isOriginAllowed(loopback, env), false, JSON.stringify(env));
   }
-  // Only port 3000 on plain http, and only those two host names.
-  for (const origin of ['http://localhost:4000', 'https://localhost:3000', 'http://localhost', 'http://0.0.0.0:3000']) {
+  // Any port, because `next start -p <port>` and PLAYWRIGHT_BASE_URL run the
+  // suite elsewhere (a review finding: the e2e spec failed on :3100); still
+  // plain http on those two host names only, and never on Vercel.
+  for (const origin of ['http://localhost:3100', 'http://127.0.0.1:4000', 'http://localhost']) {
+    assert.equal(isOriginAllowed(new Headers({ origin }), localStart), true, origin);
+    assert.equal(isOriginAllowed(new Headers({ origin }), ENV), false, `${origin} on Vercel`);
+    assert.equal(isOriginAllowed(new Headers({ referer: `${origin}/book?x=1` }), localStart), true, `${origin} as Referer`);
+  }
+  for (const origin of [
+    'https://localhost:3000',
+    'http://0.0.0.0:3000',
+    'http://localhost.evil.example.test:3000',
+    'http://user@localhost:3000',
+    'http://localhost:3000/',
+    'http://[::1]:3000',
+    'localhost:3000',
+  ]) {
     assert.equal(isOriginAllowed(new Headers({ origin }), localStart), false, origin);
+    assert.equal(isLocalOrigin(origin, {}), false, origin);
   }
 });
 
@@ -648,6 +702,10 @@ test('origin: a preview deployment and local dev are accepted where configured',
   const onVercel = await run(formPost(FIELDS, { origin: 'http://localhost:3000' }), { env: ENV });
   assert.equal(onVercel.res.status, 403);
   assert.equal(onVercel.calls.length, 0);
+  // Another local port, as under PLAYWRIGHT_BASE_URL=http://localhost:3100.
+  const otherPort = await run(formPost(FIELDS, { origin: 'http://localhost:3100' }), { env: { ...ENV, VERCEL: undefined } });
+  assert.equal(otherPort.res.status, 303);
+  assert.equal(otherPort.calls.length, 1);
 });
 
 // --- Rate limit --------------------------------------------------------------
@@ -947,6 +1005,49 @@ test('the notice version is the injected one, recorded on every lead whatever th
   assert.match(PRIVACY_NOTICE_VERSION, /^\d{4}-\d{2}-\d{2}\.\d+$/);
 });
 
+test('the recorded notice version is the one the form showed, when it was published; otherwise the current one', async () => {
+  // A review finding: a tab opened before a notice change recorded its
+  // visitor's consent under the new wording they never saw.
+  const published = ['2026-01-01.1', '2026-06-01.1', NOTICE];
+  const runWith = (extra) =>
+    handleIntake(formPost({ ...FIELDS, ai_training: 'yes', ...extra }), {
+      env: ENV,
+      allowed: ALLOWED,
+      composeNotes,
+      fallbackBookingUrl: calendlyUrl,
+      noticeVersion: NOTICE,
+      publishedNoticeVersions: published,
+      fetch: stub.fn,
+      randomId: () => LEAD,
+      now: () => NOW,
+      log: () => {},
+    });
+  const stub = stubFetch();
+  for (const [shown, expected] of [
+    ['2026-01-01.1', '2026-01-01.1'],
+    [' 2026-06-01.1 ', '2026-06-01.1'],
+    [NOTICE, NOTICE],
+    ['2020-01-01.1', NOTICE],
+    ['not a version at all <script>', NOTICE],
+    ['x'.repeat(41), NOTICE],
+    ['', NOTICE],
+    [undefined, NOTICE],
+  ]) {
+    const before = stub.calls.length;
+    const res = await runWith(shown === undefined ? {} : { notice_version: shown });
+    assert.equal(res.status, 303, String(shown));
+    assert.deepEqual(stub.calls[before].envelope.lead.consent, { aiTraining: true, noticeVersion: expected }, String(shown));
+  }
+  // Without a published list only the current version is accepted.
+  assert.equal(recordedNoticeVersion('2026-01-01.1', { noticeVersion: NOTICE }), NOTICE);
+  assert.equal(recordedNoticeVersion(NOTICE, { noticeVersion: NOTICE }), NOTICE);
+  assert.equal(recordedNoticeVersion(null, { noticeVersion: NOTICE, publishedNoticeVersions: published }), NOTICE);
+  // The version never changes where the visitor goes.
+  const a = await runWith({ notice_version: '2026-01-01.1' });
+  const b = await runWith({ notice_version: 'bogus' });
+  assert.equal(a.headers.get('location'), b.headers.get('location'));
+});
+
 test('attribution: valid UTM values and page are kept, anything else is dropped', async () => {
   const { calls } = await run(
     formPost({
@@ -1057,8 +1158,9 @@ test('the route file wires the handler: nodejs, force-dynamic, 15 s, the form li
   assert.match(src, /from '@\/lib\/booking'/);
   assert.match(src, /allowed: \{ sectors: SECTORS, bottlenecks: BOTTLENECKS \}/);
   assert.match(src, /fallbackBookingUrl: \(answers\) => buildBookingUrl\(answers\)/);
-  assert.match(src, /import \{ PRIVACY_NOTICE_VERSION \} from '@\/content\/privacy';/);
+  assert.match(src, /import \{ PRIVACY_NOTICE_VERSION, PRIVACY_NOTICE_VERSIONS \} from '@\/content\/privacy';/);
   assert.match(src, /noticeVersion: PRIVACY_NOTICE_VERSION,/);
+  assert.match(src, /publishedNoticeVersions: PRIVACY_NOTICE_VERSIONS,/);
   assert.match(src, /^const rateLimiter = createRateLimiter\(INTAKE_RATE_LIMIT\);$/m, 'one module-level limiter');
   assert.match(src, /env: process\.env/);
   assert.match(src, /export function POST\(request: Request\)/);
@@ -1066,6 +1168,31 @@ test('the route file wires the handler: nodejs, force-dynamic, 15 s, the form li
 });
 
 // --- The /book form and this server agree (read as source; see the header) -----------
+
+test('the /book email pattern refuses what the server refuses for its domain, and never blocks what the server accepts', async () => {
+  // A review finding: `type="email"` accepts `name@gmail`, the server does not,
+  // and the visitor came back to an emptied form. The pattern closes that gap.
+  const form = await readFile(new URL('../src/components/booking/QualificationForm.tsx', import.meta.url), 'utf8');
+  const source = /const EMAIL_PATTERN = String\.raw`([^`]+)`;/.exec(form)?.[1];
+  assert.ok(source, 'EMAIL_PATTERN not found');
+  assert.match(form, /pattern=\{EMAIL_PATTERN\}/);
+  // Browsers compile `pattern` anchored and with the `v` flag (older ones with `u`); check both.
+  for (const flags of ['v', 'u']) {
+    const pattern = new RegExp(`^(?:${source})$`, flags);
+    const accepted = [
+      'priya@example.test', 'priya+leads@example.test', 'a@b.co', 'a@b.c1', 'a@sub.example.co.in',
+      'x@xn--h2brj9c.xn--h2brj9c', 'x@भारत.भारत', "o'neil@example.com",
+    ];
+    for (const email of accepted) {
+      assert.equal(isSaneEmail(email), true, `fixture: the server should accept ${email}`);
+      assert.equal(pattern.test(email), true, `${flags}: the pattern blocks ${email}, which the server accepts`);
+    }
+    for (const email of ['probe.person@gmail', 'priya@localhost', 'a@1.2', 'a@b.c1.23', 'a@.com', 'a@b.']) {
+      assert.equal(isSaneEmail(email), false, `fixture: the server should refuse ${email}`);
+      assert.equal(pattern.test(email), false, `${flags}: the pattern lets ${email} through to a server refusal`);
+    }
+  }
+});
 
 test('the /book form posts here natively, with the field names and limits this server reads', async () => {
   const form = await readFile(new URL('../src/components/booking/QualificationForm.tsx', import.meta.url), 'utf8');
@@ -1100,6 +1227,14 @@ test('the /book form posts here natively, with the field names and limits this s
   assert.match(checkbox, /type="checkbox"/);
   assert.match(checkbox, /value="yes"/);
   assert.doesNotMatch(checkbox, /\b(required|checked|defaultChecked)\b/);
+
+  // The form sends the notice version it was rendered with, as static HTML (so also without JavaScript).
+  assert.match(form, /<input type="hidden" name="notice_version" value=\{PRIVACY_NOTICE_VERSION\} \/>/);
+  assert.ok(PRIVACY_NOTICE_VERSIONS.includes(PRIVACY_NOTICE_VERSION));
+
+  // The no-JS alert clears the fixed header when the browser scrolls to it (a review finding).
+  const alert = /<p\s+id=\{INVALID_ANCHOR\}[\s\S]*?>/.exec(form)?.[0] ?? '';
+  assert.match(alert, /scroll-mt-28/);
 
   // The honeypot: out of the tab order, no autofill, hidden from assistive technology.
   const trap = /<div\s+aria-hidden="true"[\s\S]*?name="website"[\s\S]*?\/>/.exec(form)?.[0] ?? '';

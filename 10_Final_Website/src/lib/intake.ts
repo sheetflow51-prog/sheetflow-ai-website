@@ -8,6 +8,11 @@ import {
   stripControls,
   type EnvelopeHeader,
 } from './sf-intake.ts';
+import { readCalBookingUrl } from './cal-booking-url.ts';
+
+// Re-exported so callers and tests keep one import site for the intake flow;
+// the check itself lives on its own so the privacy guard can share it.
+export { readCalBookingUrl };
 
 /**
  * `POST /api/intake`: lead capture before the slot is picked (D46, D47).
@@ -27,7 +32,8 @@ import {
  * The one separate purpose, using de-identified answers to improve our AI
  * assistants, needs its own optional checkbox, `ai_training`. Its value is
  * recorded in the envelope as `lead.consent.aiTraining`, together with the
- * version of the privacy notice the form showed, because the Act puts the
+ * version of the privacy notice the form showed (the form sends it as
+ * `notice_version`; see `recordedNoticeVersion`), because the Act puts the
  * burden of proving consent on us (s.6(10)). It never changes whether or where
  * the visitor is redirected: consent that changes the service is not free.
  *
@@ -89,6 +95,8 @@ const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'ut
 const HONEYPOT_FIELD = 'website';
 /** The optional, unticked checkbox on /book (D47). */
 const AI_TRAINING_FIELD = 'ai_training';
+/** The hidden field carrying the version of the privacy notice the form was rendered with. */
+const NOTICE_VERSION_FIELD = 'notice_version';
 /**
  * Fields this endpoint reads. Anything else in a submission is ignored,
  * including the `consent` field D46 accepted before the form existed: a
@@ -103,6 +111,7 @@ const KNOWN_FIELDS = new Set<string>([
   'a1',
   'page',
   AI_TRAINING_FIELD,
+  NOTICE_VERSION_FIELD,
   HONEYPOT_FIELD,
   ...UTM_KEYS,
 ]);
@@ -110,7 +119,8 @@ const KNOWN_FIELDS = new Set<string>([
 const CHECKBOX_YES = new Set(['on', 'true', 'yes', '1']);
 
 const PRODUCTION_ORIGINS = ['https://sheetflow.click', 'https://www.sheetflow.click'];
-const LOCAL_ORIGINS = ['http://localhost:3000', 'http://127.0.0.1:3000'];
+/** Host names a local server answers on; any port, plain http only, and only off Vercel. */
+const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1']);
 const VERCEL_HOST_VARS = ['VERCEL_URL', 'VERCEL_BRANCH_URL', 'VERCEL_PROJECT_PRODUCTION_URL'] as const;
 
 type Env = Record<string, string | undefined>;
@@ -130,6 +140,12 @@ export type Submission = {
   /** True only when the optional `ai_training` checkbox was ticked. */
   aiTraining: boolean;
   attribution: Partial<Record<AttributionKey, string>>;
+  /**
+   * The notice version the form says it showed, as sent (cleaned), or null.
+   * Not trusted on its own: `recordedNoticeVersion` accepts it only when it is
+   * a version that was really published.
+   */
+  shownNoticeVersion: string | null;
   /** True when the hidden honeypot field came back filled in. */
   honeypot: boolean;
 };
@@ -167,11 +183,18 @@ export type IntakeDeps = {
   /** Today's Calendly link builder, used until CAL_BOOKING_URL holds a valid Cal.com link. */
   fallbackBookingUrl: (answers: IntakeAnswers) => string;
   /**
-   * The version of the privacy notice the form shows (`PRIVACY_NOTICE_VERSION`
-   * in `content/privacy.ts`), recorded with each lead as proof of what the
-   * visitor was told.
+   * The current version of the privacy notice (`PRIVACY_NOTICE_VERSION` in
+   * `content/privacy.ts`), recorded with a lead whose form did not say which
+   * version it showed.
    */
   noticeVersion: string;
+  /**
+   * Every version a /book form may have been rendered with
+   * (`PRIVACY_NOTICE_VERSIONS`). A form's own `notice_version` is recorded only
+   * when it is one of these, so a page left open across a notice change
+   * records the notice its visitor actually read. Absent: only `noticeVersion`.
+   */
+  publishedNoticeVersions?: readonly string[];
   /** Injected so tests can stub n8n; defaults to the global fetch. */
   fetch?: typeof fetch;
   randomId?: () => string;
@@ -330,10 +353,11 @@ export function prefersJson(accept: string | null): boolean {
  * (bare hostnames).
  *
  * Localhost is allowed whenever the code is not running on Vercel, which sets
- * `VERCEL=1` for every build and function. The test is not `NODE_ENV`: a local
- * `next start` runs with `NODE_ENV=production`, and the end-to-end suite posts
- * the real form from `http://localhost:3000` against exactly that server. On
- * Vercel a localhost Origin can only be forged, so it stays blocked there.
+ * `VERCEL=1` for every build and function (see `isLocalOrigin`). The test is
+ * not `NODE_ENV`: a local `next start` runs with `NODE_ENV=production`, and the
+ * end-to-end suite posts the real form from localhost against exactly that
+ * server. On Vercel a localhost Origin can only be forged, so it stays blocked
+ * there. This set holds the exact deployed origins only.
  */
 export function allowedOrigins(env: Env): Set<string> {
   const origins = new Set(PRODUCTION_ORIGINS);
@@ -350,8 +374,25 @@ export function allowedOrigins(env: Env): Set<string> {
     const host = env[name]?.trim();
     if (host && /^[A-Za-z0-9.-]{1,253}$/.test(host)) origins.add(`https://${host.toLowerCase()}`);
   }
-  if (env.VERCEL !== '1') for (const origin of LOCAL_ORIGINS) origins.add(origin);
   return origins;
+}
+
+/**
+ * True for a local server's origin, on any port, when the code is not running
+ * on Vercel. Any port, not just 3000, because `next start -p <port>` and the
+ * Playwright config's `PLAYWRIGHT_BASE_URL` both run the suite elsewhere, and
+ * off Vercel the server is the developer's own machine. Plain http only, and
+ * the value must be a bare origin, so `http://localhost.evil.example` or an
+ * origin with credentials never passes.
+ */
+export function isLocalOrigin(origin: string, env: Env): boolean {
+  if (env.VERCEL === '1') return false;
+  try {
+    const url = new URL(origin);
+    return url.protocol === 'http:' && LOCAL_HOSTNAMES.has(url.hostname) && url.origin === origin;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -361,12 +402,13 @@ export function allowedOrigins(env: Env): Set<string> {
  */
 export function isOriginAllowed(headers: Headers, env: Env): boolean {
   const allowed = allowedOrigins(env);
+  const accepts = (value: string) => allowed.has(value) || isLocalOrigin(value, env);
   const origin = headers.get('origin');
-  if (origin) return origin !== 'null' && allowed.has(origin);
+  if (origin) return origin !== 'null' && accepts(origin);
   const referer = headers.get('referer');
   if (!referer) return false;
   try {
-    return allowed.has(new URL(referer).origin);
+    return accepts(new URL(referer).origin);
   } catch {
     return false;
   }
@@ -464,6 +506,23 @@ export function isSaneEmail(email: string): boolean {
 }
 
 /**
+ * The campaign tags in a submission that pass their pattern; the rest are
+ * dropped. Shared by a valid lead's attribution and the invalid redirect, which
+ * hands them back to /book so a corrected resubmission still carries them.
+ */
+export function readCampaignTags(values: ReadonlyMap<string, string>): Partial<Record<(typeof UTM_KEYS)[number], string>> {
+  const tags: Partial<Record<(typeof UTM_KEYS)[number], string>> = {};
+  for (const key of UTM_KEYS) {
+    const value = cleanLine(values.get(key) ?? '');
+    if (value && value.length <= UTM_MAX && /^[\w.\-~%+ ]*$/.test(value)) tags[key] = value;
+  }
+  return tags;
+}
+
+/** Long enough for the documented `YYYY-MM-DD.N` shape, short enough that a forged value goes nowhere. */
+const NOTICE_VERSION_SHAPE = /^[\w.-]{1,40}$/;
+
+/**
  * Validates and normalises one submission. Returns the names of the fields
  * that failed (names only: values are never echoed). Optional attribution that
  * fails its pattern is dropped rather than failing the lead, because the
@@ -497,11 +556,7 @@ export function validateSubmission(
 
   if (failed.length > 0) return { ok: false, fields: failed };
 
-  const attribution: Partial<Record<AttributionKey, string>> = {};
-  for (const key of UTM_KEYS) {
-    const value = cleanLine(get(key));
-    if (value && value.length <= UTM_MAX && /^[\w.\-~%+ ]*$/.test(value)) attribution[key] = value;
-  }
+  const attribution: Partial<Record<AttributionKey, string>> = readCampaignTags(values);
   // A path on our own site, and only the path: a query or fragment can carry ad
   // click ids or an email address, which the CRM has no use for. '//host' is a
   // protocol-relative URL, and browsers read a backslash as a slash, so '/\host'
@@ -510,6 +565,8 @@ export function validateSubmission(
   const path = page.split(/[?#]/, 1)[0];
   if (page.length <= PAGE_MAX && /^\/(?!\/)[^\s\\]*$/.test(path)) attribution.page = path;
 
+  const shownNoticeVersion = cleanLine(get(NOTICE_VERSION_FIELD));
+
   return {
     ok: true,
     submission: {
@@ -517,9 +574,30 @@ export function validateSubmission(
       // An unticked checkbox sends nothing at all, so absent means no.
       aiTraining: CHECKBOX_YES.has(cleanLine(get(AI_TRAINING_FIELD)).toLowerCase()),
       attribution,
+      shownNoticeVersion: NOTICE_VERSION_SHAPE.test(shownNoticeVersion) ? shownNoticeVersion : null,
       honeypot: cleanLine(get(HONEYPOT_FIELD)).length > 0,
     },
   };
+}
+
+/**
+ * The notice version to record with a lead: the one the form says it showed
+ * when that is a published version, otherwise the server's current one.
+ *
+ * Why the form's own value: a visitor can load /book, leave the tab open (or
+ * come back to it from the back/forward cache) while a new notice is deployed,
+ * and then send the form. Recording the server's version would then claim they
+ * agreed under wording they never saw, at exactly the moment the wording
+ * changed, which is when the proof matters (DPDP s.6(10)). Why the allowlist:
+ * the field is just form data, so a value that was never published is not
+ * evidence of anything and is replaced by the current version.
+ */
+export function recordedNoticeVersion(
+  shown: string | null,
+  deps: Pick<IntakeDeps, 'noticeVersion' | 'publishedNoticeVersions'>,
+): string {
+  const published = deps.publishedNoticeVersions ?? [deps.noticeVersion];
+  return shown !== null && published.includes(shown) ? shown : deps.noticeVersion;
 }
 
 // --- Envelope and booking link ---------------------------------------------
@@ -556,29 +634,7 @@ export function buildLeadEnvelope(
 }
 
 /**
- * Validates CAL_BOOKING_URL: the public link of one Cal.com event type,
- * `https://cal.com/<user>/<event>`. Anything else (another host, http,
- * credentials, a query or fragment, fewer than two path segments) returns null
- * and the Calendly fallback is used, so this can ship before the switch.
- */
-export function readCalBookingUrl(env: Env): string | null {
-  const raw = env.CAL_BOOKING_URL?.trim() ?? '';
-  let url: URL;
-  try {
-    url = new URL(raw);
-  } catch {
-    return null;
-  }
-  if (url.protocol !== 'https:' || url.port || url.username || url.password) return null;
-  if (url.hostname !== 'cal.com' && url.hostname !== 'app.cal.com') return null;
-  if (url.search || url.hash || raw.includes('?') || raw.includes('#')) return null;
-  const segments = url.pathname.replace(/\/$/, '').slice(1).split('/');
-  if (segments.length < 2 || segments.some((segment) => segment.length === 0)) return null;
-  return url.toString();
-}
-
-/**
- * The prefilled Cal.com link. `URL.searchParams` encodes every value, so a
+ * The prefilled Cal.com link (the base comes from `readCalBookingUrl`). `URL.searchParams` encodes every value, so a
  * `+` in an email arrives as `%2B` and survives (a raw `+` would decode to a
  * space).
  *
@@ -654,8 +710,20 @@ function leadLabel(leadId: string | null): string {
  * element has this id and CSS shows it when it is the `:target`. The id is
  * repeated in `QualificationForm.tsx`, which cannot import this module (it uses
  * `node:crypto`); `scripts/test-intake.mjs` checks that the two match.
+ *
+ * The campaign tags that passed validation are added to the query (see
+ * `invalidRedirectUrl`): the form copies `utm_*` from its own address, so
+ * without them a corrected resubmission would lose its attribution, and for a
+ * pricing-tier booking `utm_content` is the only record of the tier.
  */
 export const INVALID_REDIRECT_PATH = '/book?intake=invalid#intake-invalid';
+
+/** `INVALID_REDIRECT_PATH` on the posted origin, with any valid campaign tags before the fragment. */
+export function invalidRedirectUrl(requestUrl: string, values: ReadonlyMap<string, string> | null): string {
+  const url = new URL(INVALID_REDIRECT_PATH, requestUrl);
+  if (values) for (const [key, value] of Object.entries(readCampaignTags(values))) url.searchParams.set(key, value);
+  return url.toString();
+}
 
 /**
  * The whole POST flow, independent of Next:
@@ -664,7 +732,8 @@ export const INVALID_REDIRECT_PATH = '/book?intake=invalid#intake-invalid';
  *   not urlencoded/multipart/json -> 415
  *   body over 16 KB               -> FORM 303 /book?intake=invalid, JSON 413
  *   malformed body                -> 400
- *   invalid fields                -> FORM 303 /book?intake=invalid, JSON 400 + field names
+ *   invalid fields                -> FORM 303 /book?intake=invalid (+ valid utm_* tags),
+ *                                    JSON 400 + field names
  *   honeypot filled               -> looks like success, nothing forwarded
  *   over the rate limit           -> FORM 303 to the booking page, JSON 429; nothing forwarded
  *   valid                         -> forwarded to SF-I1 (awaited), then
@@ -683,7 +752,7 @@ export async function handleIntake(request: Request, deps: IntakeDeps): Promise<
   const rawContentType = request.headers.get('content-type') ?? '';
   const type = mediaType(rawContentType);
   const jsonMode = type === 'application/json' || prefersJson(request.headers.get('accept'));
-  const invalidUrl = () => new URL(INVALID_REDIRECT_PATH, request.url).toString();
+  const invalidUrl = (values: ReadonlyMap<string, string> | null = null) => invalidRedirectUrl(request.url, values);
 
   if (!isOriginAllowed(request.headers, deps.env)) {
     say('blocked_origin');
@@ -716,7 +785,7 @@ export async function handleIntake(request: Request, deps: IntakeDeps): Promise<
   if (!result.ok || parsed.badFields.length > 0) {
     const fields = [...new Set([...parsed.badFields, ...(result.ok ? [] : result.fields)])];
     say('invalid');
-    return jsonMode ? json(400, { ok: false, error: 'invalid', fields }) : seeOther(invalidUrl());
+    return jsonMode ? json(400, { ok: false, error: 'invalid', fields }) : seeOther(invalidUrl(parsed.values));
   }
   const { submission } = result;
 
@@ -746,7 +815,7 @@ export async function handleIntake(request: Request, deps: IntakeDeps): Promise<
     leadId,
     occurredAt: now(),
     country: request.headers.get('x-vercel-ip-country'),
-    noticeVersion: deps.noticeVersion,
+    noticeVersion: recordedNoticeVersion(submission.shownNoticeVersion, deps),
   });
   const target = readIntakeTarget(deps.env);
   const forward = target

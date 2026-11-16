@@ -1,6 +1,6 @@
 import { handleIntake, createRateLimiter, INTAKE_RATE_LIMIT } from '@/lib/intake';
 import { BOTTLENECKS, SECTORS, buildBookingUrl, composeNotes } from '@/lib/booking';
-import { PRIVACY_NOTICE_VERSION } from '@/content/privacy';
+import { PRIVACY_NOTICE_VERSION, PRIVACY_NOTICE_VERSIONS } from '@/content/privacy';
 
 /**
  * `POST /api/intake`: captures a /book lead for the n8n intake SF-I1, then
@@ -13,9 +13,9 @@ import { PRIVACY_NOTICE_VERSION } from '@/content/privacy';
  *
  * The lists and the notes composer are the ones the form itself uses, so the
  * server accepts exactly what the form offers. Until CAL_BOOKING_URL is set,
- * visitors are sent to the Calendly link `buildBookingUrl` makes. The notice
- * version is the one the /book notice and the privacy page are written to, so
- * every lead records which notice its visitor was shown.
+ * visitors are sent to the Calendly link `buildBookingUrl` makes. Every lead
+ * records which notice its visitor was shown: the version the form sends, when
+ * it is one of the published versions, otherwise the current one.
  */
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -31,6 +31,7 @@ export function POST(request: Request) {
     composeNotes,
     fallbackBookingUrl: (answers) => buildBookingUrl(answers),
     noticeVersion: PRIVACY_NOTICE_VERSION,
+    publishedNoticeVersions: PRIVACY_NOTICE_VERSIONS,
     rateLimiter,
   });
 }

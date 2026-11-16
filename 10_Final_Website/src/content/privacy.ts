@@ -23,25 +23,43 @@
  * decision is unfilled, which fails the build before a placeholder can be
  * published.
  *
- * ## Before filling these in
+ * ## Why the guard also checks CAL_BOOKING_URL
  *
- * The notice names Cal.com as the booking page. While `CAL_BOOKING_URL` is
- * unset, `/api/intake` still sends visitors to the Calendly fallback, and the
- * notice would then be untrue, so set and test `CAL_BOOKING_URL` first (D46
- * owner steps). The vendor facts the page states (retention periods, where data
- * is processed) were read from each provider's documentation on 13 November
- * 2026; re-check them before publishing.
+ * The notice names Cal.com, Inc. as the booking page and the company that
+ * receives each booking. While `CAL_BOOKING_URL` is unset or invalid,
+ * `/api/intake` sends every visitor, with their name, email and answers in the
+ * link, to the Calendly fallback instead, and the notice would name the wrong
+ * company. A comment asking for the order "Cal.com first, then the decisions"
+ * is not enough when the build is the only gate, so the guard runs the same
+ * `readCalBookingUrl` check `/api/intake` uses and fails the production build
+ * until it passes. Vercel exposes the project's environment variables to the
+ * build, so setting it for Production is enough.
+ *
+ * The vendor facts the page states (retention periods, where data is
+ * processed) were read from each provider's documentation on 13 November 2026;
+ * re-check them before publishing.
  *
  * The drafting follows the DPDP Act 2023 and Rules 2025, and the SPDI Rules
  * 2011, as researched for D47. That research is not legal advice, and neither
  * is this file; a lawyer's review is the founder's call.
  *
- * No imports, on purpose: `scripts/test-privacy-guard.mjs` loads this module
- * in plain Node, which cannot resolve the `@/` alias.
+ * Its one import is relative and itself import-free, on purpose:
+ * `scripts/test-privacy-guard.mjs` loads this module in plain Node, which
+ * cannot resolve the `@/` alias, and the client /book form imports it too.
  */
+import { readCalBookingUrl } from '../lib/cal-booking-url.ts';
 
-/** Recorded with every lead. Format: the effective date, then a counter for that day. */
-export const PRIVACY_NOTICE_VERSION = '2026-11-15.1';
+/**
+ * Every version of the notice a /book form has been rendered with, oldest
+ * first; the last one is current. To change the notice, append a new version:
+ * never edit or remove an old one, because `/api/intake` records a form's own
+ * version only when it is in this list (a tab left open across a deploy still
+ * proves what its visitor read). Format: the effective date, then a counter
+ * for that day.
+ */
+export const PRIVACY_NOTICE_VERSIONS: readonly string[] = ['2026-11-15.1'];
+/** The current version: what the form shows and the page states. */
+export const PRIVACY_NOTICE_VERSION = PRIVACY_NOTICE_VERSIONS[PRIVACY_NOTICE_VERSIONS.length - 1];
 export const PRIVACY_EFFECTIVE_DATE = '15 November 2026';
 /** When the provider facts on /privacy were last read from the providers' own documentation. */
 export const PROVIDER_FACTS_CHECKED = '13 November 2026';
@@ -99,13 +117,24 @@ export const DECISION_LABELS: Record<RequiredDecision, string> = {
 const REQUIRED_DECISIONS = Object.keys(DECISION_LABELS) as RequiredDecision[];
 
 /**
- * True when a decision has no usable answer: the placeholder itself, a blank
- * string, or a count that is not a whole number above zero. A value blanked by
+ * Text that still reads as a stand-in: the sentinel in any case or padding, or
+ * the wording of the page marker ("[To be confirmed by SheetFlow: ...]"), which
+ * is what someone copying from a preview build would paste.
+ */
+const STAND_IN_TEXT = /to[\s_-]*be[\s_-]*confirmed/i;
+
+/**
+ * True when a decision has no usable answer: the placeholder itself (also
+ * padded, re-cased or pasted from the page marker), a blank string, or a count
+ * that is not a whole number above zero. A value blanked or half-filled by
  * mistake must stop the production build just as the placeholder does.
  */
 export function isUnfilled(value: unknown): boolean {
   if (value === PLACEHOLDER || value === undefined || value === null) return true;
-  if (typeof value === 'string') return value.trim().length === 0;
+  if (typeof value === 'string') {
+    const text = value.trim();
+    return text.length === 0 || text.toUpperCase() === PLACEHOLDER || STAND_IN_TEXT.test(text);
+  }
   if (typeof value === 'number') return !(Number.isInteger(value) && value > 0);
   return true;
 }
@@ -129,24 +158,35 @@ export function unfilledDecisions(decisions: FounderDecisions = FOUNDER_DECISION
 }
 
 /**
- * Stops a production build while any decision is unfilled; does nothing
- * anywhere else. `VERCEL_ENV` is set by Vercel to `production`, `preview` or
- * `development`, and is absent locally, so preview and local builds still
- * render the page with visible markers for review.
+ * Stops a production build while the notice would be untrue: any decision
+ * unfilled, or `CAL_BOOKING_URL` not a valid Cal.com link (see the header).
+ * Does nothing anywhere else. `VERCEL_ENV` is set by Vercel to `production`,
+ * `preview` or `development`, and is absent locally, so preview and local
+ * builds still render the page with visible markers for review.
  */
 export function assertPrivacyDecisionsComplete(
   env: Record<string, string | undefined>,
   decisions: FounderDecisions = FOUNDER_DECISIONS,
 ): void {
   if (env.VERCEL_ENV !== 'production') return;
+  const problems: string[] = [];
   const missing = unfilledDecisions(decisions);
-  if (missing.length === 0) return;
-  const list = missing.map((key) => `${key} (${DECISION_LABELS[key]})`).join('; ');
-  throw new Error(
-    `[privacy] Production build stopped: the privacy notice still has founder decisions to fill in ` +
-      `src/content/privacy.ts (FOUNDER_DECISIONS): ${list}. Preview and local builds show ` +
-      `"[To be confirmed by SheetFlow: ...]" in their place; a production page must not.`,
-  );
+  if (missing.length > 0) {
+    const list = missing.map((key) => `${key} (${DECISION_LABELS[key]})`).join('; ');
+    problems.push(
+      `It still has founder decisions to fill in src/content/privacy.ts (FOUNDER_DECISIONS): ${list}. ` +
+        `Preview and local builds show "[To be confirmed by SheetFlow: ...]" in their place; a production page must not.`,
+    );
+  }
+  if (readCalBookingUrl(env) === null) {
+    problems.push(
+      `CAL_BOOKING_URL is not set to a valid Cal.com event link (https://cal.com/<user>/<event>) for Production. ` +
+        `The /book notice and /privacy name Cal.com as the booking page, but without that link /api/intake ` +
+        `sends every visitor to the Calendly fallback.`,
+    );
+  }
+  if (problems.length === 0) return;
+  throw new Error(`[privacy] Production build stopped: the privacy notice is not ready to publish. ${problems.join(' Also, ')}`);
 }
 
 /** The visible stand-in for an unfilled decision on preview and local builds. */
@@ -169,14 +209,23 @@ export const PRIVACY_SECTION_IDS = {
  * correction and deletion are available. The link to the full notice follows it.
  * Booking needs no tick-box: the visitor gives these details to get the
  * session, and this says what they are used for (DPDP s.7(a)).
+ *
+ * Each item sits with its real purpose, the same one /privacy gives it: the
+ * typed details arrange the session; the page, campaign tags and country show
+ * where enquiries come from and do nothing for the booking itself. The
+ * analytics sentence is there because the form's `booking_qualified` event
+ * sends the two multiple-choice answers to Vercel Web Analytics (never the
+ * name, email or notes); a notice that listed only our records and Cal.com
+ * would leave that recipient out.
  */
 export const BOOK_NOTICE =
-  'We use your name, email, answers and notes, plus which page or link brought you here and your ' +
-  'approximate country (our website host works it out from your IP address; we don’t save the IP), ' +
-  'to arrange and hold your free 20-minute session and follow up about it. These details go to our ' +
-  'own booking records and automation, and to Cal.com, which runs the booking page. Please don’t ' +
-  'include health, financial or password details in your notes. Tell us any time if you want your ' +
-  'details corrected or deleted.';
+  'We use your name, email, answers and notes to arrange and hold your free 20-minute session and ' +
+  'follow up about it. We also note which page or link brought you here and your approximate country, ' +
+  'to see where enquiries come from. Our website host works out the country from your IP address; we ' +
+  'don’t save the IP. These details go to our own booking records and automation, and to Cal.com, ' +
+  'which runs the booking page. Our site analytics also count your two multiple-choice answers, never ' +
+  'your name, email or notes. Please don’t include health, financial or password details in your ' +
+  'notes. Tell us any time if you want your details corrected or deleted.';
 
 /**
  * The optional AI-training checkbox's label. It names exactly what is used

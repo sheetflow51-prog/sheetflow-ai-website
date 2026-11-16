@@ -5,7 +5,13 @@ import { ArrowRight } from 'lucide-react';
 
 import { INTAKE_ACTION, SECTORS, BOTTLENECKS } from '@/lib/booking';
 import { WHATSAPP_URL } from '@/lib/contact';
-import { AI_TRAINING_HELP, AI_TRAINING_LABEL, BOOK_NOTICE, PRIVACY_SECTION_IDS } from '@/content/privacy';
+import {
+  AI_TRAINING_HELP,
+  AI_TRAINING_LABEL,
+  BOOK_NOTICE,
+  PRIVACY_NOTICE_VERSION,
+  PRIVACY_SECTION_IDS,
+} from '@/content/privacy';
 import { useAnalytics } from '@/lib/hooks/useAnalytics';
 
 /**
@@ -50,6 +56,13 @@ import { useAnalytics } from '@/lib/hooks/useAnalytics';
  * address is not flagged as wrong while it is being typed. An invalid form
  * never fires `submit` (the browser reports it instead), so the attempt is
  * noticed through each control's `invalid` event.
+ *
+ * The email field also carries `EMAIL_PATTERN`, because `type="email"` accepts
+ * a domain with no dot (`name@gmail`), the commonest typo, while the server's
+ * `isSaneEmail` refuses it. Refused on the server, the visitor would come back
+ * through a full page load to an emptied form; refused here, nothing they typed
+ * is lost. `scripts/test-intake.mjs` checks that the pattern never blocks an
+ * address the server accepts.
  */
 
 const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as const;
@@ -58,6 +71,14 @@ const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'ut
 const NAME_MAX = 120;
 const EMAIL_MAX = 254;
 const NOTES_MAX = 1500;
+
+/**
+ * A dotted domain whose last label has a letter, as `isSaneEmail` requires.
+ * Browsers compile `pattern` with the `v` (or older `u`) flag, so `\p{L}`
+ * accepts the Unicode domains the server accepts; a browser that cannot compile
+ * it ignores it, and the server still checks.
+ */
+const EMAIL_PATTERN = String.raw`[^@\s]+@[^@\s]+\.[^@\s.]*\p{L}[^@\s.]*`;
 
 /**
  * The id of the "didn't go through" message. `/api/intake` redirects a
@@ -176,11 +197,13 @@ export function QualificationForm() {
     <div>
       {/* Shown when /api/intake refused the last submission. With JavaScript the
           query decides; without it, the `#intake-invalid` fragment makes this
-          the :target. */}
+          the :target. The browser scrolls the fragment's target to the top of
+          the window, where the fixed 64px header would cover it, so the scroll
+          margin keeps it below the header, as /privacy does for its headings. */}
       <p
         id={INVALID_ANCHOR}
         role="alert"
-        className={`${invalid ? 'block' : 'hidden target:block'} mb-6 rounded-xl border border-signal-danger/40 bg-signal-danger/[0.06] px-5 py-4 text-[14px] leading-relaxed text-white`}
+        className={`${invalid ? 'block' : 'hidden target:block'} mb-6 scroll-mt-28 rounded-xl border border-signal-danger/40 bg-signal-danger/[0.06] px-5 py-4 text-[14px] leading-relaxed text-white`}
       >
         Something in the form didn&rsquo;t go through. Please check your answers and try again, or
         message us on{' '}
@@ -224,6 +247,8 @@ export function QualificationForm() {
               type="email"
               required
               maxLength={EMAIL_MAX}
+              pattern={EMAIL_PATTERN}
+              title="Please include the full address, like name@gmail.com"
               autoComplete="email"
               onInvalid={markAttempted}
               className={`${field} ${border}`}
@@ -343,6 +368,11 @@ export function QualificationForm() {
             defaultValue=""
           />
         </div>
+
+        {/* The version of the notice this page was rendered with. Static HTML,
+            so it is sent with or without JavaScript; the server records it with
+            the AI-training choice when it is a published version. */}
+        <input type="hidden" name="notice_version" value={PRIVACY_NOTICE_VERSION} />
 
         {/* Attribution, filled in after hydration from this page's own address.
             Without JavaScript these are simply absent. */}

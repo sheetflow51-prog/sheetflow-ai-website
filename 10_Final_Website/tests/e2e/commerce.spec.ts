@@ -10,6 +10,7 @@ import {
   tierBookingUrl,
 } from '../../src/lib/booking';
 import { BOOKING_URL } from '../../src/lib/contact';
+import { PRIVACY_NOTICE_VERSION } from '../../src/content/privacy';
 
 /**
  * The two commercial surfaces: `/pricing` and `/book`.
@@ -229,7 +230,10 @@ test.describe('booking', () => {
     // Calendly's `a1` is composed on the server now; the form no longer emits it.
     await expect(form.locator(`[name="${NOTES_PARAM}"]`)).toHaveCount(0);
     // Without JavaScript there is no attribution to copy: those inputs are absent.
-    await expect(form.locator('input[type="hidden"]')).toHaveCount(0);
+    // The one hidden input is the notice version, which is static HTML so the
+    // server can record which notice this visitor was shown.
+    await expect(form.locator('input[type="hidden"]')).toHaveCount(1);
+    await expect(form.locator('input[type="hidden"][name="notice_version"]')).toHaveValue(PRIVACY_NOTICE_VERSION);
 
     await context.close();
   });

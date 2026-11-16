@@ -1,6 +1,6 @@
 import { test, expect, type BrowserContext, type Page, type Route } from '@playwright/test';
 
-import { AI_TRAINING_LABEL } from '../../src/content/privacy';
+import { AI_TRAINING_LABEL, PRIVACY_NOTICE_VERSION } from '../../src/content/privacy';
 import { tiers } from '../../src/content/pricing';
 import { BOTTLENECKS, SECTORS, tierBookingUrl } from '../../src/lib/booking';
 
@@ -134,6 +134,8 @@ test.describe('booking submission', () => {
     expect(body.get('notes')).toBe(FIELDS.notes);
     expect(body.get('website'), 'the honeypot is sent empty').toBe('');
     expect(body.has('ai_training'), 'an unticked checkbox sends nothing').toBe(false);
+    // The notice version is static HTML, so it is sent without JavaScript too.
+    expect(body.get('notice_version')).toBe(PRIVACY_NOTICE_VERSION);
     // No JavaScript, so no attribution inputs exist to send.
     expect(body.has('page')).toBe(false);
 
@@ -185,7 +187,8 @@ test.describe('booking submission', () => {
     expect(states).toContainEqual({ busy: 'true', label: 'Taking you to the calendar…' });
     const events = lines.filter((l) => l.startsWith('va-event:')).map((l) => JSON.parse(l.slice(9)));
     expect(events.filter((e) => e.name === 'booking_qualified')).toHaveLength(1);
-    // The two select answers only: never the name, email or notes.
+    // The two select answers only: never the name, email or notes. This is
+    // exactly what the /book notice and /privacy disclose for site analytics.
     expect(events[0].data).toEqual({ sector: FIELDS.sector, bottleneck: FIELDS.bottleneck, has_notes: true });
     expect(JSON.stringify(events)).not.toMatch(/Asha|example\.com|WhatsApp/);
 
@@ -233,24 +236,72 @@ test.describe('booking submission', () => {
     await context.close();
   });
 
-  test('an answer the server refuses comes back to /book with a message, even without JavaScript', async ({ browser }) => {
-    // `priya@localhost` passes the browser's own email check but not the
-    // server's (no dot in the domain), so this exercises the real 303 back.
-    const context = await browser.newContext({ javaScriptEnabled: false });
-    const capture = await guard(context);
-    const page = await context.newPage();
-    await page.goto('/book');
-    await fill(page, { ...FIELDS, email: 'priya@localhost' });
-    await page.getByRole('button', { name: 'Choose a time' }).click();
+  for (const javaScriptEnabled of [false, true]) {
+    const mode = javaScriptEnabled ? 'with JavaScript' : 'without JavaScript';
 
-    await expect(page).toHaveURL(/\/book\?intake=invalid#intake-invalid$/);
-    const alert = page.getByRole('alert').filter({ hasText: 'Something in the form' });
-    await expect(alert).toBeVisible();
-    await expect(alert).toContainText('Something in the form didn’t go through.');
-    expect(capture.posts).toHaveLength(1);
-    expect(capture.external).toEqual([]);
-    await context.close();
-  });
+    test(`an answer the server refuses comes back to /book with a message clear of the header (${mode})`, async ({ browser }) => {
+      // `asha..verma@example.com` passes the browser's own email check and the
+      // form's pattern, but not the server's (two dots in a row), so this
+      // exercises the real 303 back. It starts from a pricing-tier link, whose
+      // tag must survive the round trip (with JavaScript, the only way it is sent).
+      const context = await browser.newContext({ javaScriptEnabled });
+      const capture = await guard(context);
+      const page = await context.newPage();
+      await page.goto('/book?utm_source=sheetflow-site&utm_medium=pricing&utm_content=tier-growth');
+      await fill(page, { ...FIELDS, email: 'asha..verma@example.com' });
+      await page.getByRole('button', { name: 'Choose a time' }).click();
+
+      await expect(page).toHaveURL(/\/book\?intake=invalid(&[^#]*)?#intake-invalid$/);
+      const alert = page.getByRole('alert').filter({ hasText: 'Something in the form' });
+      await expect(alert).toBeVisible();
+      await expect(alert).toContainText('Something in the form didn’t go through.');
+
+      // The browser scrolls the fragment's target to the top of the window; the
+      // fixed header must not cover it (toBeVisible ignores occlusion).
+      const placement = () =>
+        page.evaluate(() => {
+          const box = document.getElementById('intake-invalid')!.getBoundingClientRect();
+          const header = [...document.querySelectorAll('header')].find((el) => getComputedStyle(el).position === 'fixed');
+          const hit = document.elementFromPoint(box.left + box.width / 2, box.top + Math.min(box.height / 2, 12));
+          return {
+            clear: box.top >= (header?.getBoundingClientRect().bottom ?? 0),
+            onTop: !!hit && document.getElementById('intake-invalid')!.contains(hit),
+          };
+        });
+      await expect.poll(placement).toEqual({ clear: true, onTop: true });
+
+      if (javaScriptEnabled) {
+        expect(new URL(page.url()).searchParams.get('utm_content')).toBe('tier-growth');
+        await expect(page.locator('form input[type="hidden"][name="utm_content"]')).toHaveValue('tier-growth');
+      }
+      expect(capture.posts).toHaveLength(1);
+      expect(capture.external).toEqual([]);
+      await context.close();
+    });
+
+    test(`an address with no dot in its domain is stopped in the browser and nothing typed is lost (${mode})`, async ({ browser }) => {
+      // `type="email"` alone accepts `name@gmail`; the server does not, and a
+      // refusal there comes back to an emptied form. The pattern stops it first.
+      const context = await browser.newContext({ javaScriptEnabled });
+      const capture = await guard(context);
+      const page = await context.newPage();
+      await page.goto('/book');
+      await fill(page, { ...FIELDS, email: 'probe.person@gmail' });
+      await page.getByRole('button', { name: 'Choose a time' }).click();
+
+      const email = page.locator('input[name="email"]');
+      await expect.poll(() => email.evaluate((el) => (el as HTMLInputElement).validity.patternMismatch)).toBe(true);
+      // Give a submission that should not happen the time to start.
+      await page.waitForTimeout(750);
+      expect(capture.posts, 'the form must not reach the server').toEqual([]);
+      expect(new URL(page.url()).pathname).toBe('/book');
+      await expect(email).toHaveValue('probe.person@gmail');
+      await expect(page.locator('input[name="name"]')).toHaveValue(FIELDS.name);
+      await expect(page.locator('textarea[name="notes"]')).toHaveValue(FIELDS.notes);
+      expect(capture.external).toEqual([]);
+      await context.close();
+    });
+  }
 });
 
 test.describe('the /book form', () => {
@@ -307,7 +358,9 @@ test.describe('the /book form', () => {
       'name, email, answers and notes',
       'which page or link brought you here',
       'approximate country',
+      'to see where enquiries come from',
       'we don’t save the IP',
+      'site analytics also count your two multiple-choice answers, never your name, email or notes',
       'Cal.com, which runs the booking page',
       'don’t include health, financial or password details',
       'corrected or deleted',

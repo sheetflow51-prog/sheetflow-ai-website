@@ -24,7 +24,10 @@ import { WHATSAPP_NUMBER } from '@/lib/contact';
  * during `next build`. On a Vercel production build (`VERCEL_ENV=production`)
  * it throws while any founder decision in `content/privacy.ts` is still a
  * placeholder, so the build fails instead of publishing "[To be confirmed by
- * SheetFlow: ...]" as the site's legal notice. Preview and local builds render
+ * SheetFlow: ...]" as the site's legal notice. It also throws while
+ * `CAL_BOOKING_URL` is not a valid Cal.com link, because this page names
+ * Cal.com, Inc. as the booking provider and without that link `/api/intake`
+ * sends visitors to Calendly instead. Preview and local builds render
  * the markers, so the page can be reviewed before the decisions are made. The
  * site has no CI; this is the only check between a merge and the live notice.
  *
@@ -39,8 +42,19 @@ import { WHATSAPP_NUMBER } from '@/lib/contact';
  * grievance route, and the Board. It claims no certification or compliance
  * status, and the contact is titled "Grievance Officer / privacy contact",
  * never "Data Protection Officer", which is a statutory role this business
- * does not have. The query-string sentence under Vercel Web Analytics is true
- * only because `SiteAnalytics` strips it; keep the two together.
+ * does not have. Three sentences are true only because of code elsewhere; keep
+ * each pair together:
+ * - the query-string sentence under Vercel Web Analytics: `SiteAnalytics`
+ *   strips the query and fragment;
+ * - the booking-form sentence under Vercel Web Analytics: the
+ *   `booking_qualified` event in `QualificationForm` sends the two select
+ *   answers and `has_notes`, nothing else;
+ * - "the booking form records which version you were shown": the form's hidden
+ *   `notice_version` field, recorded by `/api/intake`.
+ *
+ * The AI-training copy lives exactly as long as the enquiry records (or less),
+ * so the promise "withdraw at any time" can always be kept: once the records
+ * are deleted there is no copy left to withdraw, and no link to a person.
  */
 assertPrivacyDecisionsComplete(process.env);
 
@@ -245,7 +259,9 @@ export default function PrivacyPage() {
                 </li>
                 <li>
                   <strong className="font-semibold text-white">How the website is used:</strong> page
-                  views and loading-speed measurements, described under Vercel below.
+                  views, loading-speed measurements, and a count of booking-form submissions with the
+                  two multiple-choice answers (never your name, email or notes), described under
+                  Vercel below.
                 </li>
               </ul>
               <p className={body}>
@@ -266,12 +282,13 @@ export default function PrivacyPage() {
               </p>
 
               <h3 id="purpose-attribution" className={h3}>
-                To see which pages and links bring enquiries
+                To see where enquiries come from
               </h3>
               <p className={body}>
-                The page and campaign tags show us which pages, posts and links lead people to book,
-                so we know what is useful. They are stored with your enquiry and used for nothing
-                else.
+                The page, the campaign tags and your approximate country are stored with your enquiry.
+                They show us which pages, posts and links lead people to book, and from which
+                countries, so we know what is useful. Our site analytics count page views and
+                booking-form submissions for the same reason. None of this is used for anything else.
               </p>
 
               <h3 id={PRIVACY_SECTION_IDS.aiTraining} className={h3}>
@@ -308,6 +325,16 @@ export default function PrivacyPage() {
                   records of your enquiry are not affected.
                 </li>
                 <li>
+                  <strong className="font-semibold text-white">How long we keep them:</strong> only
+                  as long as your enquiry records (see{' '}
+                  <a href="#retention" className={link} data-cursor="hover">
+                    How long we keep it
+                  </a>
+                  ). We delete the de-identified copy when we delete those records, or sooner if you
+                  withdraw or ask us to delete your details. So you can withdraw for as long as we
+                  hold it.
+                </li>
+                <li>
                   <strong className="font-semibold text-white">What it cannot undo:</strong> use
                   before you withdrew stays lawful, and an assistant that has already learned from
                   de-identified answers cannot always unlearn them. That is one reason we only ever
@@ -336,7 +363,9 @@ export default function PrivacyPage() {
                   visits. Vercel states that it uses no cookies and tells visits apart with a code
                   made from the request, which resets every day. It records the page you viewed, the
                   site that sent you, your approximate location (country, region and city), and your
-                  device type, operating system and browser. We remove anything after a
+                  device type, operating system and browser. When you send the booking form, it also
+                  records that a form was sent, with your two multiple-choice answers and whether you
+                  added notes, never your name, email or notes. We remove anything after a
                   &ldquo;?&rdquo; or &ldquo;#&rdquo; from page addresses before anything is sent.
                 </li>
                 <li>
@@ -391,8 +420,9 @@ export default function PrivacyPage() {
                 We keep your enquiry and booking records for{' '}
                 <Count decision="retentionMonths" unit="month" /> after our last contact with you,
                 and then delete them. If you ask us to delete them sooner, we will, unless the law
-                requires us to keep something. If you allowed AI improvement, the de-identified
-                answers stay in our training data until you withdraw.
+                requires us to keep something. If you allowed AI improvement, the de-identified copy
+                of your answers in our training data is deleted at the same time, or sooner if you
+                withdraw.
               </p>
               <p className={body}>
                 Our providers keep their own records for their own periods. As they described them
@@ -425,7 +455,7 @@ export default function PrivacyPage() {
                   have shared it with;
                 </li>
                 <li>to correct, complete or update it;</li>
-                <li>to delete it;</li>
+                <li>to delete it, which also deletes any de-identified copy of your answers in our training data;</li>
                 <li>
                   to withdraw your consent to{' '}
                   <a href={`#${PRIVACY_SECTION_IDS.aiTraining}`} className={link} data-cursor="hover">
@@ -451,7 +481,8 @@ export default function PrivacyPage() {
               </p>
               <p className={body}>
                 <strong className="font-semibold text-white">If you are not satisfied:</strong> once
-                you have raised it with us, you can complain to the Data Protection Board of India.
+                you have raised it with us, you will be able to complain to the Data Protection Board
+                of India when it starts taking complaints, which the law provides for from May 2027.
               </p>
             </Section>
 

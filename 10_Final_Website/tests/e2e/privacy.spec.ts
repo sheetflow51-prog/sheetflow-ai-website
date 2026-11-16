@@ -101,6 +101,42 @@ test.describe('privacy notice', () => {
     expect(text).toContain('We do not sell your personal data.');
     expect(text).toContain('We reply within 30 days.');
     expect(text).toContain('Data Protection Board of India');
+    // The Board's complaint route starts with the DPDP provisions in May 2027,
+    // so it is not offered as available today (a review finding).
+    expect(text).toMatch(/you will be able to complain to the Data Protection Board of India when it starts taking complaints, which the law provides for from May 2027\./);
+    expect(text).not.toMatch(/you can complain to the Data Protection Board/);
+  });
+
+  test('discloses every recipient and purpose of the form answers, including site analytics', async ({ page }) => {
+    await page.goto('/privacy');
+    // The form's `booking_qualified` event sends the two select answers to Vercel Web Analytics.
+    const analytics = await page.locator('section[aria-labelledby="providers"] li', { hasText: 'Vercel Web Analytics' }).innerText();
+    expect(analytics).toContain(
+      'When you send the booking form, it also records that a form was sent, with your two multiple-choice answers and whether you added notes, never your name, email or notes.',
+    );
+    const collected = await page.locator('section[aria-labelledby="what-we-collect"]').innerText();
+    expect(collected).toContain('a count of booking-form submissions with the two multiple-choice answers');
+    // The country has a stated purpose, the same one the /book notice gives it.
+    const attribution = await page.locator('h3#purpose-attribution + p').innerText();
+    expect(attribution).toContain('your approximate country are stored with your enquiry');
+    expect(attribution).toContain('booking-form submissions');
+  });
+
+  test('the AI-training copy lives no longer than the enquiry records, so withdrawal can always be honoured', async ({ page }) => {
+    await page.goto('/privacy');
+    const text = await page.locator('main').innerText();
+    // A review finding: "kept until you withdraw" and "records deleted after N
+    // months" could not both be kept once the link to the copy was deleted.
+    expect(text).not.toContain('stay in our training data until you withdraw');
+    const retention = await page.locator('section[aria-labelledby="retention"]').innerText();
+    expect(retention).toContain('the de-identified copy of your answers in our training data is deleted at the same time, or sooner if you withdraw.');
+    const ai = await page.locator('h3#ai-training ~ ul').first().innerText();
+    expect(ai).toContain('How long we keep them: only as long as your enquiry records');
+    expect(ai).toContain('So you can withdraw for as long as we hold it.');
+    await expect(page.locator('h3#ai-training ~ ul a[href="#retention"]')).toHaveCount(1);
+    const rights = await page.locator('section[aria-labelledby="your-rights"]').innerText();
+    expect(rights).toContain('to delete it, which also deletes any de-identified copy of your answers in our training data;');
+    expect(text).toContain('The booking form records which version you were shown.');
   });
 
   test('makes no claim the research ruled out', async ({ page }) => {
