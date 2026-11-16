@@ -1290,7 +1290,10 @@ other purpose without asking, and deleting a child's details; each has to be hon
 2. Finish D46 steps 2 to 6 (the Cal.com event with Google Meet, the webhook, `CAL_BOOKING_URL`) before or together
    with merging this, for the reason above. The production build now fails until `CAL_BOOKING_URL` holds a valid
    Cal.com event link for Production.
-3. In Cal.com, set Redirect on booking to `https://sheetflow.click/book/confirmed` with "Forward parameters" off.
+3. ~~In Cal.com, set Redirect on booking~~ Not available: the founder reports (2026-11-16) that Cal.com's free plan has
+   no custom redirect after booking, so bookers see Cal.com's own confirmation screen and `/book/confirmed` stays
+   unused for Cal.com (it is harmless; if a paid plan ever adds the redirect, keep "Forward parameters" off).
+   Done 2026-11-16: `FOUNDER_DECISIONS` filled with the founder's answers of 2026-11-15.
 4. Update SF-I1 for the `lead.consent` object and the AI-use rules in `docs/INTAKE_HYBRID.md`, then make one real
    booking with the box ticked and one without.
 

@@ -94,11 +94,12 @@ export type FounderDecisions = {
 };
 
 export const FOUNDER_DECISIONS: FounderDecisions = {
-  grievanceOfficerName: PLACEHOLDER,
-  privacyEmail: PLACEHOLDER,
-  postalAddress: PLACEHOLDER,
-  retentionMonths: PLACEHOLDER,
-  aiTrainingRemovalDays: PLACEHOLDER,
+  // Decided by the founder on 2026-11-15.
+  grievanceOfficerName: 'Yashu Sharma',
+  privacyEmail: 'sheetflow51@gmail.com',
+  postalAddress: 'S.R. Super Market, NH-19, Etmadpur, Agra, Uttar Pradesh 283202',
+  retentionMonths: 24,
+  aiTrainingRemovalDays: 30,
   otherLanguagesOnRequest: false,
 };
 

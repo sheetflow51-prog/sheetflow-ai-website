@@ -12,6 +12,10 @@ import { WHATSAPP_URL } from '@/lib/contact';
  *
  * ## This page is not wired up yet, and that is a founder action
  *
+ * Note (2026-11-16): Cal.com's free plan has no custom redirect after booking
+ * (founder-reported), so today Cal.com bookers see Cal.com's own confirmation
+ * and do not reach this page. The text below applies if that changes.
+ *
  * The booking page can redirect a booker here, but the redirect is configured
  * **in the scheduler's dashboard**, not from this codebase, and setting it
  * before this branch is deployed would send real bookers to a page that does
