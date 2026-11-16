@@ -1,36 +1,35 @@
 /**
  * The booking hand-off.
  *
- * ## Why we redirect to Calendly instead of embedding it
+ * ## The lead is captured before the slot (D46, D47)
  *
- * Calendly's inline widget loads a third-party script and an iframe that runs
- * its own React tree. On the one metric this site is measured against — a
- * homepage that fails its mobile budget at 1.6 Mbps (D23) — adding a
+ * The /book form is a native `<form method="post">` aimed at our own
+ * `/api/intake` (`INTAKE_ACTION`). The server validates the answers, records
+ * the lead in our booking records through the n8n intake, and only then
+ * answers `303 See Other` to the booking page with the visitor's name, email
+ * and notes prefilled. A visitor who leaves at the slot picker is therefore
+ * still a lead we can follow up, and every way into a booking goes through
+ * that capture: the pricing tiers link to /book (`tierBookingUrl`), and so does
+ * the structured data. With JavaScript disabled the browser's own POST and the
+ * server's 303 do the whole job.
+ *
+ * ## Why we redirect to the booking page instead of embedding it (D26)
+ *
+ * A scheduler's inline widget loads a third-party script and an iframe that
+ * runs its own React tree. On the one metric this site is measured against, a
+ * homepage that fails its mobile budget at 1.6 Mbps (D23), adding a
  * third-party bundle to the conversion page is the wrong trade twice over: it
  * costs bytes on the page a visitor reaches with the highest intent, and it
  * hands a tracking surface to a third party before anyone has agreed to
- * anything.
+ * anything. Prefilling by URL gets the same outcome for zero third-party
+ * JavaScript.
  *
- * Prefilling by URL gets the same outcome for **zero** third-party JavaScript.
- * The visitor answers our questions on our page, and arrives at Calendly with
- * every field already filled.
+ * ## The Calendly fallback
  *
- * ## Why the form still works with JavaScript disabled
- *
- * `QualificationForm` is a real `<form method="get">` pointed at
- * `BOOKING_URL`, with inputs named exactly as Calendly's prefill parameters.
- * With no JavaScript at all, the browser's native GET submission produces a
- * valid prefilled booking URL. JavaScript only *enriches* it — folding the
- * structured answers into the notes field and attaching attribution.
- *
- * ## The parameter names are Calendly's, verified against the live event type
- *
- * Read from the Calendly API on 2026-08-07 for event type
- * `aae20723-98a3-4eaf-b0c6-4dbd99ebb39d` ("Free Automation Audit", 30 min,
- * Google Meet, free). Since 2026-10-29 (D42) the site sells this booking as the
- * free 20-Minute Discovery & Help Session; the owner is renaming the Calendly
- * event and shortening it to 20 minutes, and the prefill contract below does
- * not depend on either:
+ * The booking page is Cal.com once `CAL_BOOKING_URL` is set (D46). Until then
+ * `/api/intake` redirects to the Calendly link `buildBookingUrl` makes, whose
+ * prefill names are Calendly's, read from its API on 2026-08-07 for the event
+ * behind `BOOKING_URL`:
  *
  *   - `name`  — the invitee name field
  *   - `email` — the invitee email field
@@ -38,16 +37,17 @@
  *               *"Please share anything that will help prepare for our
  *               meeting."* — type `text`, optional.
  *
- * If that event type gains a second custom question, `a1` stays correct and a
- * new `a2` becomes available. If the question at position 0 is **removed**,
- * `a1` is silently dropped by Calendly — the booking still works, the context
- * is lost. `booking.spec.ts` pins the parameter names so a rename here is
- * caught; it cannot detect a change made in the Calendly dashboard.
+ * If the question at position 0 is **removed** in Calendly, `a1` is silently
+ * dropped: the booking still works, the context is lost. No test here can see
+ * a change made in the Calendly dashboard.
  */
 
 import { BOOKING_URL } from '@/lib/contact';
 
-/** Calendly's prefill parameter for the event's first custom question. */
+/** Where the /book form posts. The route lives at `src/app/api/intake/route.ts`. */
+export const INTAKE_ACTION = '/api/intake';
+
+/** Calendly's prefill parameter for the event's first custom question (fallback only). */
 export const NOTES_PARAM = 'a1';
 
 export interface QualificationAnswers {
@@ -62,8 +62,10 @@ export interface QualificationAnswers {
 }
 
 /**
- * Composes the structured answers into the single notes field Calendly gives
- * us, so the call starts with context rather than with discovery questions.
+ * Composes the structured answers into the single notes field the booking page
+ * gives us, so the call starts with context rather than with discovery
+ * questions. Used on the server by `/api/intake`, for both Cal.com and the
+ * Calendly fallback; the form itself no longer composes anything.
  *
  * Kept as prose rather than `key=value` lines: this text is read by a human in
  * a calendar invite, not parsed.
@@ -77,7 +79,8 @@ export function composeNotes(answers: QualificationAnswers): string {
 }
 
 /**
- * Builds the prefilled Calendly URL.
+ * Builds the prefilled Calendly URL: the fallback `/api/intake` redirects to
+ * while `CAL_BOOKING_URL` is unset or invalid. No page links to it directly.
  *
  * Empty values are omitted rather than sent blank — Calendly treats an empty
  * prefill as "prefilled with nothing", which disables the field's own
@@ -109,21 +112,23 @@ export function buildBookingUrl(
 }
 
 /**
- * The direct Calendly link behind each pricing tier's CTA (D38).
+ * The link behind each pricing tier's CTA: /book, tagged with the tier (D47).
  *
- * A plain link, not an embed, so D26 still holds: zero third-party JavaScript
- * on our pages. The tier travels two ways, because each is read by someone
- * different — `utm_content` lands in Calendly's booking reports, and the notes
- * field (`a1`) is what the founder reads in the calendar invite before the call.
- * Neither carries anything about who the visitor is.
+ * D38 pointed these straight at Calendly. That link skipped the form, so a
+ * tier booking reached the calendar with no lead captured and none of the
+ * qualification answers. Now the tier goes through /book like every other CTA:
+ * the form copies the `utm_*` tags from its own address into the lead, so the
+ * CRM row says which tier the visitor was looking at. Relative on purpose, so
+ * it works on preview deployments and never names an external host. The tags
+ * say where the click came from, never who made it.
  */
-export function tierBookingUrl(tier: { id: string; name: string }): string {
-  const url = new URL(BOOKING_URL);
-  url.searchParams.set(NOTES_PARAM, `Interested in: ${tier.name}.`);
-  url.searchParams.set('utm_source', 'sheetflow-site');
-  url.searchParams.set('utm_medium', 'pricing');
-  url.searchParams.set('utm_content', `tier-${tier.id}`);
-  return url.toString();
+export function tierBookingUrl(tier: { id: string }): string {
+  const params = new URLSearchParams({
+    utm_source: 'sheetflow-site',
+    utm_medium: 'pricing',
+    utm_content: `tier-${tier.id}`,
+  });
+  return `/book?${params.toString()}`;
 }
 
 /**

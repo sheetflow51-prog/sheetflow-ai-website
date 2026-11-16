@@ -1038,3 +1038,354 @@ and missing headers, event filtering, config validation, and the full POST handl
 objects and a stubbed n8n (forwarded body and headers, 503/413/401/400/502 paths, timeouts, no secrets in logs).
 `tsc --noEmit` and eslint on the new files pass. Not tested: a real Calendly delivery, the tunnel, or a deployed
 function.
+
+### D46 - Hybrid lead capture: /api/intake before the slot, Cal.com webhooks after it *(2026-11-13)*
+
+**Status.** Built and tested on the local branch `feat/hybrid-intake`. **Not deployed and not merged.** The /book form
+is **not** switched to post to `/api/intake` yet: that is a change to `QualificationForm` (method, honeypot, consent
+line) and waits for the founder's approval. D26 still holds: the booking page is never embedded, the visitor is
+redirected with prefill, and our pages load no third-party JavaScript. D45's Calendly relay (`/api/calendly`) is kept,
+unchanged, until the Cal.com cutover is proven.
+
+**What.** Two Node route handlers send the n8n intake SF-I1 (`POST /webhook/sf-discovery-intake`) one normalised JSON
+envelope, `schema: sf.intake.v1`, specified with examples and n8n join rules in `10_Final_Website/docs/INTAKE_HYBRID.md`:
+- `POST /api/intake` (`src/app/api/intake/route.ts`, logic in `src/lib/intake.ts`) receives the /book qualification
+  form, validates it, forwards a `lead.submitted` envelope, then answers `303 See Other` to the Cal.com booking link
+  with `name`, `email` and `notes` prefilled and the lead id in `metadata[sf_lead_id]`.
+- `POST /api/cal-webhook` (`src/app/api/cal-webhook/route.ts`, logic in `src/lib/cal-webhook.ts`) verifies Cal.com's
+  signature and relays `BOOKING_CREATED`, `BOOKING_RESCHEDULED` and `BOOKING_CANCELLED` as `booking.created`,
+  `booking.rescheduled` and `booking.cancelled`.
+- `src/lib/sf-intake.ts` holds what both share: the SF-I1 target check (D45's rules, plus `user-agent`,
+  `ngrok-skip-browser-warning` and `x-cal-signature-256` as reserved header names), the forwarder, a capped body
+  reader and control-character cleaning. No new dependencies; `tsconfig.json` gains `allowImportingTsExtensions` so the
+  libraries can import each other as `./sf-intake.ts` both under Next and in the plain Node tests.
+
+**Why.** Today a visitor who answers the questions but leaves at the slot picker is lost: nothing reaches the CRM until
+a booking is confirmed (D45), and Calendly webhooks need a paid plan. Capturing the lead on our server first makes every
+qualified visitor a CRM row, and the booking events then complete that row. Cal.com's free plan handles booking; the
+lead id it carries back in the webhook joins the two halves. The SF-I1 secret stays on the server: neither the browser
+nor Cal.com ever sees it.
+
+**How it decides.**
+- `/api/intake`, in order:
+  - Origin gate (abuse, not CSRF; there is no session): `Origin` must exactly match `https://sheetflow.click`,
+    `https://www.sheetflow.click`, the https origin of `NEXT_PUBLIC_SITE_URL` or a Vercel deployment host; localhost
+    only outside production. No Origin: the origin of `Referer`; neither, or the literal `null`: 403, nothing read.
+  - Only urlencoded, multipart or JSON bodies (else 415), at most 16 KB by declared length and by counted bytes.
+  - Two answer modes. FORM mode (today's native form) answers every outcome with `303`, never 302 or 307: a 307 makes
+    the browser re-POST the lead to Cal.com. JSON mode (JSON body, or `Accept` preferring JSON) answers in JSON.
+  - Fields: name (1-120), email (one sane address, max 254), sector and bottleneck (exactly one of `SECTORS` and
+    `BOTTLENECKS` in `lib/booking.ts`), notes (max 1500; read from `notes`, else today's `a1`), optional UTM values and
+    page (the path only, without its query or fragment; dropped when malformed, including a backslash or a leading
+    `//`), consent (recorded, not required yet). Invalid: FORM `303 /book?intake=invalid`, JSON
+    400 with the failing field names only, never values. Any uploaded file is invalid.
+  - A filled hidden `website` field (honeypot, part of the pending form change) is answered exactly like a success and
+    forwarded nowhere.
+  - At most 5 forwarded leads per 10 minutes per client address (an IPv6 address counts by its /64, which one client
+    can rotate through), counted in memory per function instance under a salted SHA-256 of the address (never the
+    address itself): best effort. Over the limit, FORM mode still sends the
+    person to book (the lead is not captured), JSON mode answers 429 with the booking link.
+  - The forward to SF-I1 is awaited with a 6-second timeout (`after()` could not change the response and would hide a
+    lost lead), but the visitor is never blocked by it: a valid submission always gets its booking link, and JSON mode
+    reports `captured: true|false`.
+  - The booking link is `CAL_BOOKING_URL` (validated: https, `cal.com` or `app.cal.com`, a user and an event in the
+    path, no query) with prefill, or, while that is unset or invalid, today's Calendly link from `buildBookingUrl`, so
+    this can ship before the Cal.com switch. The lead id uses the namespaced key `sf_lead_id` because Cal.com spreads
+    link metadata over its own `videoCallUrl`. A very long non-Latin note is shortened in the link only (6000-character
+    budget), never in the envelope.
+  - The envelope carries the answers, consent, attribution and a two-letter country; never the IP address or user
+    agent.
+- `/api/cal-webhook`, in order:
+  - `CAL_WEBHOOK_SECRET` or the SF-I1 target missing: 503, nothing read. Body over 256 KB: 413.
+  - `x-cal-signature-256` must be the hex HMAC-SHA256 of the raw body with the webhook secret, compared in constant
+    time; Cal.com signs no timestamp. Missing, malformed, wrong, or the literal `no-secret-provided` (a webhook saved
+    without a secret): 401. Signed but not JSON: 400.
+  - `PING` (the settings page's test): 200 `{ ok: true, ping: true }`, nothing forwarded. Any other non-booking trigger
+    (for example `BOOKING_REQUESTED`): 200 `{ ok: true, forwarded: false }`. A booking event without a usable `uid`: 422.
+  - Booking events are reduced to an allow-list of fields (no organiser, iCal data, `appsStatus`, ICS content or raw
+    payload), answered 200 `{ ok: true, accepted: true }` at once, and forwarded inside `after()` with an 8-second
+    timeout. Cal.com awaits the delivery inside the booker's own request and never retries a non-2xx, so a slow tunnel
+    must not hold up the booker, and a 502 would buy nothing.
+  - Rescheduling is a new booking: the new `uid` plus `previousUid`. An organiser's "request reschedule" arrives as a
+    cancellation with `requestReschedule: true` (its slug arrives as `eventSlug` rather than `type`). `meetUrl` comes
+    from `location` when it is an https URL: Cal.com sets it to the link whenever it made one, and the visitor cannot
+    touch it. `metadata.videoCallUrl` is only a fallback, used when `location` is not a URL and only for a Google Meet
+    or Cal Video link, because a visitor can write that key by adding `metadata[videoCallUrl]=...` to the booking
+    link, and with no Meet link (no connected calendar, a phone or in-person location) it would otherwise become the
+    CRM's join link.
+- Logs: one line per request. `[intake] outcome=<label> lead=<id|->` and `[cal-webhook] event=<trigger> outcome=<label>`;
+  never a name, email, note, IP, URL, signature or secret, and never the booking uid, which works like a password for
+  the attendee's cancel and reschedule links. ngrok's `ngrok-error-code` header turns an offline tunnel into
+  `ngrok_ERR_NGROK_3200` rather than a bare `upstream_404`. `GET` answers 405 on both routes.
+
+**Env vars** (Vercel, Production; names only, values never in the repo):
+- `CAL_BOOKING_URL`: the public event link, `https://cal.com/<user>/<event>`. Not a secret.
+- `CAL_WEBHOOK_SECRET`: the secret typed into the Cal.com webhook form, 16+ printable ASCII characters, no spaces.
+- `SF_INTAKE_URL`, `SF_INTAKE_HEADER_NAME`, `SF_INTAKE_SECRET`: shared with D45, same rules.
+- Read, never set by hand: Vercel's `VERCEL_URL`, `VERCEL_BRANCH_URL`, `VERCEL_PROJECT_PRODUCTION_URL`, and
+  `NEXT_PUBLIC_SITE_URL`, for the origin gate.
+
+**Owner steps, in order.** Nothing changes for visitors until step 1 is approved and shipped.
+1. Decide on the gated frontend change: the /book form posts to `/api/intake` (`method="post"`), gains the hidden
+   `website` honeypot and a consent line, and its notes field becomes `notes` (the server accepts `a1` too). The same
+   change must add `maxLength={120}` to the name input and `maxLength={1500}` to the notes textarea, and show a visible
+   message on `/book?intake=invalid`: an over-long field is otherwise sent back to an empty form with no explanation
+   and no booking link.
+2. In Cal.com (free plan), create the 20-minute discovery event with Google Meet (this needs a connected Google
+   Calendar, or there is no Meet link) and note its public link. Confirm that Settings, Developer, Webhooks is available
+   on the free plan.
+3. Merge and deploy this branch. In Vercel, set `CAL_WEBHOOK_SECRET` (a long random value, generated now; the same
+   value goes into Cal.com in step 4) and the `SF_INTAKE_*` values if not already set for D45, for Production, then
+   redeploy. Leave `CAL_BOOKING_URL` unset for now: visitors keep going to Calendly until step 6.
+4. Create the webhook: subscriber URL `https://sheetflow.click/api/cal-webhook` (the canonical domain; Cal.com does not
+   follow redirects), triggers booking created, rescheduled and cancelled, the secret from step 3, no custom payload
+   template. Press Ping: the Vercel log should show `event=PING outcome=ping`. Before step 3 is live, Ping gets a 404
+   (route not deployed) or a 503 (`outcome=not_configured`, secret not set), which says nothing about Cal.com's plan.
+5. Extend SF-I1 to branch on `schema` first (bodies without it are D45's raw Calendly deliveries, joined by email; see
+   "The Calendly overlap" in `docs/INTAKE_HYBRID.md`), then switch on `event` and upsert the CRM row by the join rules
+   there, writing cells as raw values. Add a scheduled reconciliation from the Cal.com API v2, since webhooks are at
+   most once.
+6. In Vercel, set `CAL_BOOKING_URL` for Production and redeploy: from now on visitors are sent to Cal.com.
+7. Make one real booking, then a reschedule and a cancellation; check SF-I1's executions and the Vercel log
+   (`[intake] outcome=forwarded`, `[cal-webhook] event=BOOKING_CREATED outcome=forwarded`).
+8. Once proven, retire D45: delete the Calendly webhook subscription, then remove `/api/calendly` in a later change.
+
+**Verification.** `npm run test:relays` (`node --test` over four files, plain Node 24, no server, no network, stubbed
+n8n, pinned clock and ids, dummy secrets): 124 tests, all passing. D45's 25 relay tests are unchanged and pass;
+`test-sf-intake.mjs` (20) covers target validation case by case against D45's `readConfig`, every forward outcome
+including ngrok's offline code, a real timeout and a refused redirect, the forwarded headers, body release, and the
+capped reader; `test-intake.mjs` (43) covers FORM and JSON modes, the 303 when n8n is down or not configured, invalid
+input, oversize by header and by body, 415, files, the honeypot, every origin case, the rate limit, its hashed keys
+and IPv6 /64 counting, the Calendly fallback, the metadata key, `+` in emails, the page path filter, the envelope's
+contents and the logs; `test-cal-webhook.mjs` (36) covers signatures (valid, uppercase, wrong key, tampered,
+re-serialised, `no-secret-provided`, missing), the 503/413/401/400/422 paths, PING, ignored triggers, the three booking
+events, a visitor-written `metadata.videoCallUrl`, data minimisation, caps, defer and no-defer modes, and the logs. A
+review pass (2026-11-13) fixed the meeting-link fallback, IPv6 rate-limit keys, the page filter, the
+request-reschedule slug, the owner-step order and the n8n join rules, and each new test was checked to fail against
+the code it replaced. Type-check: TypeScript 5.6.3 in strict mode (plus unused-locals and unused-parameters)
+over the three libraries and both routes, once with local stubs for `next/server` and `@/lib/booking` and once against
+the real `booking.ts` and `contact.ts`: no errors.
+
+**Not done, not verified.** No deploy, no `next build`, no eslint run (the clone used had no `node_modules`), and
+TypeScript was checked with 5.6.3 rather than the project's locked 5.9.3. That Next 16 resolves the `.ts`-suffixed
+imports is expected but not proven by a build. No real Cal.com delivery, tunnel or n8n change was tested. Not built:
+the form switch and consent UI, a durable record of failed forwards (Vercel Hobby keeps logs for an hour), and the
+Cal.com reconciliation job. Cal.com's free-plan webhook availability and its link-length limit (the 6000-character
+budget is a guess) are unconfirmed.
+
+### D47 - /book captures the lead before the slot; consent notice and privacy page *(2026-11-15)*
+
+**Status.** Approved by the founder on 2026-11-15: switch /book to the D46 hybrid capture, keep the Cal.com redirect
+(no embed), draft a consent notice and a privacy page. Built and tested on the local branch `feat/hybrid-intake`.
+**Not deployed and not merged.** A Vercel production build is blocked on purpose until the founder decisions below
+are filled in.
+
+**What changed.**
+- **The /book form** (`src/components/booking/QualificationForm.tsx`) is `<form method="post" action="/api/intake">`
+  (`INTAKE_ACTION` in `lib/booking.ts`). Fields: `name`, `email`, `sector`, `bottleneck` (required, unchanged) and
+  `notes` (was `a1`; the server still reads `a1`), capped at the server's limits (120, 254, 1500). A hidden honeypot
+  `website` (off-screen, `tabIndex=-1`, `autoComplete="off"`, `aria-hidden` wrapper, label "Leave this field
+  empty"). After hydration, hidden `utm_*` inputs copied from the page address (only those present) and `page`
+  (`location.pathname`, never the query); without JavaScript they are absent. An optional, unticked checkbox
+  `ai_training` (value `yes`). A standalone notice directly above the submit button, linking `/privacy`. A
+  `role="alert"` message when the address has `?intake=invalid`. The two privacy links inside the form open in a new
+  tab (announced as such), because following one in the same tab would lose the answers typed so far.
+- **Submitting.** With JavaScript the form fires `booking_qualified` once (the two select answers only) and lets the
+  native POST proceed; a second submit while navigating is cancelled, the button reads "Taking you to the calendar…"
+  and the form is `aria-busy` (reset on a back/forward-cache restore and after 20 seconds). Without JavaScript the
+  browser's POST and the server's 303 are the whole flow. The browser no longer builds the Calendly link or composes
+  the notes; the server does. The invalid-state styling now really appears: an invalid form never fires `submit`, so
+  the attempt is noticed through each control's `invalid` event (before, it was only recorded on valid submits).
+- **`/api/intake`** (`lib/intake.ts`): the boolean `consent` field is replaced by the checkbox `ai_training`
+  (`on`, `yes`, `true`, `1` mean yes; anything else, or absent, means no; a stray `consent=on` is ignored). The
+  envelope's `lead.consent` is always `{ aiTraining, noticeVersion }`, with `noticeVersion` from a new required
+  dependency that the route wires to `PRIVACY_NOTICE_VERSION`. The choice never changes the status, the redirect or
+  the forward. A refused submission now goes to `/book?intake=invalid#intake-invalid`, so the static page can show its
+  message through CSS `:target` without JavaScript. Localhost origins are allowed when `VERCEL !== '1'` instead of
+  when `NODE_ENV !== 'production'`: a local `next start` runs with `NODE_ENV=production`, and the end-to-end suite
+  posts the real form from `http://localhost:3000`. On Vercel localhost stays blocked.
+- **Every route into a booking goes through /book.** `tierBookingUrl(tier)` returns
+  `/book?utm_source=sheetflow-site&utm_medium=pricing&utm_content=tier-<id>` (relative), which supersedes D38's direct
+  Calendly link; `pricing/page.tsx` and `Terms.tsx` needed no edit (their header comments still describe D38's direct
+  link and should be refreshed with the next change to those files). In the JSON-LD, the Organization `contactPoint`
+  url, the `ReserveAction` `urlTemplate` and the free session offer's `url` are `${SITE_URL}/book`. `BOOKING_URL`
+  stays only as the fallback `/api/intake` uses while `CAL_BOOKING_URL` is unset.
+- **`/book/confirmed`**: provider-neutral copy ("The confirmation email and calendar invite, with the Google Meet
+  link, are in your inbox."), and `StripQueryString`, which removes the query with `history.replaceState` on mount.
+  The founder action in its header now reads: Cal.com, the event, Redirect on booking,
+  `https://sheetflow.click/book/confirmed`, with "Forward parameters" off.
+- **Analytics**: `src/components/analytics/SiteAnalytics.tsx` (client) renders `<Analytics beforeSend>` and
+  `<SpeedInsights beforeSend>` with one function that cuts every event URL to origin and path
+  (`lib/url-privacy.ts`); `layout.tsx` uses it in place of the two components (a Server Component cannot pass a
+  function prop to a Client Component).
+- **`/privacy`** (`src/app/privacy/page.tsx`): static, indexable, canonical `/privacy`, title "Privacy notice",
+  linked from the footer (Company, "Privacy") and in the sitemap. Its facts and the /book texts live in
+  `src/content/privacy.ts` (version `2026-11-15.1`, effective 15 November 2026). Sections: who we are and the
+  "Grievance Officer / privacy contact" (never "Data Protection Officer"); what we collect, itemised; why (booking,
+  attribution, and the optional AI improvement at `#ai-training`, with how to withdraw and what withdrawal does and
+  does not do); who else handles it, by legal entity (Vercel Inc. hosting, Web Analytics, Speed Insights; our own n8n
+  reached through ngrok, Inc.; Google LLC under its own terms, not called our processor; Cal.com, Inc.; WhatsApp),
+  one combined US-processing line and "we do not sell your personal data"; retention (ours a placeholder, the
+  providers' as read on 13 November 2026); rights, a 30-day answer, and the Data Protection Board of India (no URL:
+  none verified); security (real measures only); breaches; children; languages (only if offered); a status line
+  "written to the standard of" the DPDP Act 2023 and the IT Act 2000 rules, with no compliance or certification
+  claim; changes. It is drafted from the D47 research (DPDP Act and Rules 2025, SPDI Rules 2011, the vendors' own
+  documentation); neither that research nor the page is legal advice.
+
+**Why.** To own every lead: a visitor who answers the questions but leaves at the slot picker must still be a CRM
+row (D46). The pricing tiers and the JSON-LD were the ways around that capture (D38's direct link, and D26's GET form
+aimed at Calendly), so both now land on /book. This amends D38's direct link and D26's GET-form detail; D26's no-embed
+rule holds: the booking page is a redirect, and /book still loads no third-party script.
+
+**The consent model.**
+- **Booking: no tick-box.** The visitor gives these details to get the session they asked for, and the notice above
+  the button says which data, for what, where it goes, what not to share, and that correction and deletion are
+  available (DPDP Act s.7(a), voluntary provision for a specified purpose; a notice understandable on its own,
+  Rules r.3(a)).
+- **AI improvement: a separate, optional, unticked checkbox** whose label names the data (business type, biggest gap
+  and notes, with name and email removed), the purpose and the right to withdraw, and which links
+  `/privacy#ai-training`. The server records it and never acts on it for the booking.
+- **The notice version is recorded with every lead** (`lead.consent.noticeVersion`), because the Act puts the burden
+  of proving notice and consent on us (s.6(10)). Bump `PRIVACY_NOTICE_VERSION` and the effective date whenever the
+  meaning of the notice, the checkbox or /privacy changes. n8n may use a row for AI improvement only when
+  `lead.consent.aiTraining` is true, and then only the three answers, scrubbed; the rules and the withdrawal steps
+  are in `docs/INTAKE_HYBRID.md`.
+
+**Query strings.** Campaign tags and, on `/book/confirmed`, Cal.com's forwarded name, email and booking uid (the uid
+can cancel or reschedule the booking) must not reach analytics or stay in the address bar. `SiteAnalytics` strips the
+query and the fragment from every Web Analytics and Speed Insights event; the privacy page's sentence "We remove
+anything after a ? or # from page addresses before anything is sent" is true only because of it. `StripQueryString`
+cleans the confirmed page's address. Neither reaches the request log of the page load itself, so turning Cal.com's
+"Forward parameters" off is the real fix.
+
+**The production guard.** `assertPrivacyDecisionsComplete(process.env)` runs when the /privacy page module loads,
+which for a static page is during `next build`. With `VERCEL_ENV=production` it throws while any founder decision is
+unfilled (or blank, or of the wrong kind, or a placeholder look-alike), or while `CAL_BOOKING_URL` is not a valid
+Cal.com event link (see Review fixes), and the build fails with "[privacy] Production build stopped: ..." naming
+each problem; preview and local builds render "[To be confirmed by SheetFlow: ...]" markers instead. The site has no CI,
+so the Vercel production build is the only gate between a merge and the live notice.
+
+**Founder decisions still open** (`FOUNDER_DECISIONS` in `src/content/privacy.ts`; nothing is guessed, no name or
+address is filled in):
+1. `grievanceOfficerName`: the person published as Grievance Officer / privacy contact (SPDI r.5(9) requires a name
+   and contact details on the website).
+2. `privacyEmail`: where privacy requests and grievances go.
+3. `postalAddress`: the address to publish for the business (SPDI r.5(3)(d)); not a home address unless he decides so.
+4. `retentionMonths`: how long enquiry and booking records are kept after the last contact.
+5. `aiTrainingRemovalDays`: how soon withdrawn answers leave the training set.
+6. `otherLanguagesOnRequest` (default `false`): only if true does /privacy offer Hindi or another Indian language.
+
+Also his, outside the code: set and test `CAL_BOOKING_URL` before this reaches production, because the notice and
+/privacy name Cal.com as the booking page and would be untrue while the Calendly fallback is in use; keep ngrok's Full
+Capture off and confirm the account's retention (the page says metadata only, kept 24 hours, the Free plan's period);
+"on our current plan" (Vercel logs 1 hour, analytics window 1 month) is true for Hobby, but Vercel's Terms limit
+Hobby to personal or non-commercial use, its DPA names only Pro and Enterprise, and a free Google account has no
+processor terms: all three bear on DPDP s.8(2) and are spend decisions. The page also commits SheetFlow to answering
+within 30 days, naming any outside AI provider before it receives de-identified answers, using the details for no
+other purpose without asking, and deleting a child's details; each has to be honoured in practice.
+
+**Owner steps** (after D46's):
+1. Fill in `FOUNDER_DECISIONS`, re-check the provider facts dated 13 November 2026, and review /privacy on a preview
+   deployment.
+2. Finish D46 steps 2 to 6 (the Cal.com event with Google Meet, the webhook, `CAL_BOOKING_URL`) before or together
+   with merging this, for the reason above. The production build now fails until `CAL_BOOKING_URL` holds a valid
+   Cal.com event link for Production.
+3. ~~In Cal.com, set Redirect on booking~~ Not available: the founder reports (2026-11-16) that Cal.com's free plan has
+   no custom redirect after booking, so bookers see Cal.com's own confirmation screen and `/book/confirmed` stays
+   unused for Cal.com (it is harmless; if a paid plan ever adds the redirect, keep "Forward parameters" off).
+   Done 2026-11-16: `FOUNDER_DECISIONS` filled with the founder's answers of 2026-11-15.
+4. Update SF-I1 for the `lead.consent` object and the AI-use rules in `docs/INTAKE_HYBRID.md`, then make one real
+   booking with the box ticked and one without.
+
+**Verification** (2026-11-15, on this branch, `SF_INTAKE_*` and `CAL_BOOKING_URL` unset, no network calls to Vercel,
+Cal.com, Calendly, ngrok or n8n):
+- `npm run test:relays`: 138 tests, 138 pass (D46's 124 plus `test-privacy-guard.mjs`, 11, and three new intake
+  tests: the AI choice never changes any outcome, the notice version is the injected one, and the /book form's field
+  names, limits and fragment id match the server). Four deliberate mutations (the old `NODE_ENV` origin rule, an AI
+  choice that changes the flow, a guard that fires outside production, a count accepted as text) each failed tests.
+- `npx tsc --noEmit` (whole project, TypeScript 5.9.3): 0 errors, as at HEAD.
+- `npx eslint` on every changed or new file: 0 problems in `src`; in the specs and scripts, 2 errors that predate this
+  change (`no-explicit-any` casts in `commerce.spec.ts`, present at HEAD; `npm run lint` covers `src` only).
+- `npx next build --webpack`: passes; 31 static pages, `/book` and `/privacy` static.
+- `VERCEL_ENV=production npx next build --webpack`: fails, exit 1, "Failed to collect configuration for /privacy ...
+  [privacy] Production build stopped: the privacy notice still has founder decisions to fill in ..." naming all five
+  decisions. Rebuilt normally afterwards.
+- /book's first-load JS (Next 16 prints no sizes, so measured from the script tags of the prerendered `book.html`):
+  before 889.0 kB raw / 290.6 kB gzip, route chunk 6.2 / 2.5 kB; after 892.6 / 292.1 kB, route chunk 9.4 / 3.6 kB.
+  It grew by about 1.5 kB gzip: the notice, checkbox, honeypot, alert and submit guard outweigh the removed client-side
+  link builder. No privacy-decision or Calendly code reaches the chunk.
+- Playwright (production build, one `next start`, desktop and mobile projects, one worker): `commerce`, `smoke`,
+  `seo`, `a11y` (now with `/privacy` in Light and Dark, and `/book?intake=invalid`) and the new `booking-intake` and
+  `privacy` specs, 302 tests. On the final build: 301 passed, 1 failed, the homepage axe audit under reduced motion on
+  desktop (color-contrast on the Hero paragraph, a file this change does not touch). Repeated, the homepage audits
+  failed 2 of 6 times on this branch and 1 of 10 at HEAD (built and run the same way, on another homepage element):
+  the animation-timing flakiness `a11y.spec.ts` already documents, not a regression. One pre-existing failure was
+  fixed: `seo.spec.ts` "answers are in the DOM without interaction" compared `innerHTML`, where `&` is `&amp;`, with
+  an answer containing "&" (D42), so it failed on every run at HEAD; it now reads `textContent`. The new specs drive
+  the no-JS POST and 303, the JS submit with a double click (one POST, one analytics event, the second submit
+  cancelled), the honeypot (not focusable, not in the accessibility tree), the AI box ticked and unticked (identical
+  redirect), the notice's position and link, the refused-submission message with and without JavaScript, the tier CTA
+  attribution, `/book/confirmed` query stripping and the analytics `beforeSend` hooks. Every booking redirect was
+  caught at `/api/intake` and replaced by a local stub, and each test asserts that no request left this machine.
+
+**Review fixes** (2026-11-16, three reviewers: privacy honesty, browser behaviour, security; every finding was
+reproduced before it was fixed, and each fix has a test that fails without it):
+- **The production guard also requires `CAL_BOOKING_URL`.** With the five decisions filled and no Cal.com link, a
+  production build passed while `/api/intake` sent every visitor's name, email and answers to Calendly under a notice
+  that names only Cal.com, Inc. `assertPrivacyDecisionsComplete` now runs the same `readCalBookingUrl` check
+  `/api/intake` uses (moved to the import-free `src/lib/cal-booking-url.ts`, re-exported from `lib/intake.ts`) and
+  fails the build until it passes, naming it in the error. Owner step 2 below is therefore enforced, not just advised.
+- **Placeholder look-alikes count as unfilled**: the sentinel padded or re-cased, and the "[To be confirmed by
+  SheetFlow: ...]" marker text pasted back in, used to pass the guard.
+- **The /book notice gives each item its real purpose**: the typed details arrange the session; the page, campaign
+  tags and approximate country show where enquiries come from (as /privacy now says, the country included; it had
+  no purpose there before). The 48-word first sentence is split into short ones.
+- **Site analytics are disclosed.** The `booking_qualified` event sends the two select answers and `has_notes` to
+  Vercel Web Analytics; the notice now says "Our site analytics also count your two multiple-choice answers, never
+  your name, email or notes", and /privacy says so under Vercel Web Analytics, under what we collect, and under the
+  attribution purpose. The event is unchanged.
+- **Retention and withdrawal agree.** The de-identified training copy now lives only as long as the enquiry records
+  (deleted with them, sooner on withdrawal or a deletion request), so "withdraw at any time" can always be honoured;
+  a deletion request also removes it. `docs/INTAKE_HYBRID.md` gains the matching rule for SF-I1.
+- **The recorded notice version is the one the form showed.** The form renders a hidden `notice_version` (static, so
+  also without JavaScript); `/api/intake` records it when it is in `PRIVACY_NOTICE_VERSIONS` (append-only, the current
+  one last) and otherwise the current version. Before, a tab left open across a notice change recorded consent under
+  wording its visitor never saw.
+- **The Board line is no longer in the present tense**: "you will be able to complain to the Data Protection Board of
+  India when it starts taking complaints, which the law provides for from May 2027" (its complaint provisions start
+  with the 18-month group, and secondary reporting, unverified, says no member had been appointed as of 1 November
+  2026).
+- **The refused-submission message is visible**: the browser scrolled `#intake-invalid` under the fixed 64px header
+  (desktop: entirely hidden); it now has `scroll-mt-28`, and the test checks it is clear of the header and on top.
+- **`name@gmail` is stopped in the browser**: `type="email"` accepted it, the server refused it, and the visitor came
+  back to an emptied form. The email field has a pattern for a dotted domain whose last label has a letter, checked in
+  `test-intake.mjs` never to block an address the server accepts. The refused path also hands the valid `utm_*` tags
+  back in its redirect, so a corrected resubmission keeps its pricing-tier tag.
+- **Local origins on any port** (off Vercel only, plain http, `localhost` or `127.0.0.1`), so the suite also runs under
+  `PLAYWRIGHT_BASE_URL` or `next start -p <port>`; on Vercel localhost stays blocked.
+The notice version stays `2026-11-15.1`: these wording changes come before anything was published, so no visitor
+has seen another version.
+
+Review-fix verification (2026-11-16, same conditions as below: `SF_INTAKE_*`, `CAL_BOOKING_URL`, `VERCEL` and
+`VERCEL_ENV` unset, no request to Vercel, Cal.com, Calendly, ngrok or n8n):
+- `npm run test:relays`: 144 tests, 144 pass (privacy guard 14, intake 49). Five mutations (the guard without the
+  Cal.com check, exact-match placeholders, the server's version always recorded, the invalid redirect without tags,
+  localhost pinned to port 3000) each failed tests.
+- `npx tsc --noEmit`: 0 errors. `npx eslint` on every file changed since D46: only the 2 `no-explicit-any` casts in
+  `commerce.spec.ts` that predate D47.
+- `VERCEL_ENV=production npx next build --webpack`: fails, exit 1, naming the five decisions and `CAL_BOOKING_URL`.
+  `npx next build --webpack`: passes, 31 static pages, `/book` and `/privacy` static; /book first-load JS 893.0 kB raw /
+  292.3 kB gzip (was 892.6 / 292.1), route chunk 9.8 / 3.8 kB (was 9.4 / 3.6). Neither the guard nor the Cal.com check
+  reaches the /book chunks.
+- Playwright (production build, one `next start`, installed Chrome, desktop and mobile, one worker, the booking,
+  Vercel and ngrok hosts unresolvable): `commerce`, `smoke`, `seo`, `a11y`, `booking-intake`, `privacy`: 312 passed.
+  A probe that served /book without `scroll-mt-28` put the alert at y=0 under the 64px header (the new check fails);
+  with it, at y=112.
+
+**Not done, not verified.** Not deployed or merged. The Cal.com account, event and webhook are not created, and SF-I1
+is not updated for `lead.consent`. No real booking, tunnel or n8n run was tested; every booking redirect in the tests
+was caught before the browser could reach the booking host. The AI-improvement pipeline itself (scrubbing, a training
+set, withdrawal handling) does not exist yet; the notice describes what it must do. The `beforeSend` hooks were
+checked by calling the functions the page registered, not by watching a real Vercel delivery (the two scripts are
+served only on Vercel). Playwright ran on the installed Google Chrome through a temporary config outside the repo,
+because the bundled Chromium is not downloaded on this machine. No lawyer has reviewed the notice.

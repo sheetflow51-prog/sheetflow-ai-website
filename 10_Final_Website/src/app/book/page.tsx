@@ -12,32 +12,35 @@ import { WHATSAPP_URL } from '@/lib/contact';
 /**
  * `/book` — the conversion page.
  *
- * ## Why a page, when a Calendly link already existed
+ * ## Why a page, when a booking link would do
  *
- * Every CTA on the site used to jump straight to Calendly. That works, and it
- * throws away two things: the visitor arrives cold, so the call opens with
- * discovery questions they could have answered in ten seconds; and the funnel
- * has no observable step on our side, so "how many people who intended to book
- * actually did" was unmeasurable.
+ * Every CTA on the site used to jump straight to the scheduler. That works,
+ * and it throws away three things: the visitor arrives cold, so the call opens
+ * with discovery questions they could have answered in ten seconds; the funnel
+ * has no observable step on our side; and anyone who leaves at the slot picker
+ * is gone without a trace.
  *
- * This page adds one qualification step and keeps the hand-off. It costs a
- * click and buys context on every call plus a measurable conversion point.
+ * This page adds one qualification step. Its form posts to our own
+ * `/api/intake`, which records the lead first and then sends the visitor to the
+ * booking page with their answers prefilled (D46, D47). Every route into a
+ * booking comes through here, pricing tiers and structured data included, so no
+ * booking skips that capture. The notice above the submit button says what is
+ * collected and why, and links the full notice at /privacy.
  *
  * ## What it deliberately does not do
  *
- * No Calendly embed script (see `lib/booking.ts`), no chat widget, no exit
- * popup, no countdown. The page's job is to remove friction from booking, and
- * every one of those adds some.
+ * No booking-page embed and no third-party script of any kind (D26, see
+ * `lib/booking.ts`), no chat widget, no exit popup, no countdown. The page's
+ * job is to remove friction from booking, and every one of those adds some. It
+ * stays a static page: the only thing that varies per visit, the
+ * `?intake=invalid` message and the campaign tags, is read in the browser.
  *
- * The facts in the strip below — Google Meet, free, no commitment — are read
- * from the live Calendly event type, not asserted. Verified against the API on
- * 2026-08-07.
- *
- * "20 minutes" is the exception, and it is the owner's decision of 2026-10-29
- * (D42, `SheetFlow_Ops/POSITIONING.md`), not yet a Calendly fact: the event type
- * is still named "Free Automation Audit" and set to 30 minutes until the owner
- * renames it and shortens it in Calendly. Do that before this page ships, or the
- * strip and the booking page will disagree.
+ * The facts in the strip below (20 minutes, Google Meet, free, no commitment)
+ * must match the booking event itself. The Cal.com event the founder creates
+ * (D46 owner steps) has to be 20 minutes with Google Meet, and until
+ * `CAL_BOOKING_URL` points at it the Calendly fallback is still named "Free
+ * Automation Audit" and set to 30 minutes, so the strip and the booking page
+ * disagree on length while the fallback is in use.
  *
  * The three steps under "In the session" are POSITIONING.md's "What happens in
  * the 20 minutes", with a line of detail each.

@@ -48,6 +48,9 @@ const FOOTER_GROUPS = [
     links: [
       { label: 'Book 20 minutes', href: '/book' },
       { label: 'Contact', href: '/#contact' },
+      // On every page, because the notice must be easy to reach wherever a
+      // visitor is, not only from the form that links it (D47).
+      { label: 'Privacy', href: '/privacy' },
     ],
   },
 ];

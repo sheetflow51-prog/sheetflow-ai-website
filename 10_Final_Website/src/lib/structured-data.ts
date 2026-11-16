@@ -26,12 +26,20 @@ import { faqs } from '@/content/faq';
 import { services, type ServicePage } from '@/content/services';
 import { projects, type WorkProject } from '@/content/work';
 import { tiers, pricingFaqs } from '@/content/pricing';
-import { BOOKING_URL, WHATSAPP_NUMBER } from '@/lib/contact';
+import { WHATSAPP_NUMBER } from '@/lib/contact';
 
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sheetflow.click';
 
 const ORG_ID = `${SITE_URL}/#organization`;
 const SITE_ID = `${SITE_URL}/#website`;
+
+/**
+ * Where every booking surface in the graph points (D47): our /book page, never
+ * the scheduler itself. An assistant or search result that offers "book" from
+ * this graph must land on the form that captures the lead first; a direct
+ * scheduler link would be the one way to book that skips it.
+ */
+const BOOK_URL = `${SITE_URL}/book`;
 
 type Node = Record<string, unknown>;
 
@@ -116,7 +124,7 @@ export const organizationNode: Node = {
       '@type': 'ContactPoint',
       contactType: 'sales',
       telephone: `+${WHATSAPP_NUMBER}`,
-      url: BOOKING_URL,
+      url: BOOK_URL,
       availableLanguage: ['en', 'hi'],
     },
   ],
@@ -346,9 +354,12 @@ export function pricingGraph(): Node[] {
  * be able to read rather than infer from the word. A `price: 0` offer states it
  * unambiguously. No duration property is added: neither `Service` nor `Offer`
  * has one for the length of a meeting, and the name already says 20 minutes.
+ *
+ * The offer's `url` and the `ReserveAction` target are this page itself, not
+ * the scheduler (D47; see `BOOK_URL`).
  */
 export function bookingGraph(): Node[] {
-  const url = `${SITE_URL}/book`;
+  const url = BOOK_URL;
 
   const sessionService: Node = {
     '@type': 'Service',
@@ -364,7 +375,7 @@ export function bookingGraph(): Node[] {
       price: 0,
       priceCurrency: 'INR',
       availability: 'https://schema.org/InStock',
-      url: BOOKING_URL,
+      url: BOOK_URL,
     },
   };
 
@@ -382,7 +393,7 @@ export function bookingGraph(): Node[] {
       '@type': 'ReserveAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: BOOKING_URL,
+        urlTemplate: BOOK_URL,
         actionPlatform: [
           'https://schema.org/DesktopWebPlatform',
           'https://schema.org/MobileWebPlatform',

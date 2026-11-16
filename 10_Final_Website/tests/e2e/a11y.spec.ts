@@ -101,10 +101,12 @@ function summarise(violations: Awaited<ReturnType<AxeBuilder['analyze']>>['viola
 /**
  * Dark is a first-class theme, not a leftover. The default scans below run in Light (the default);
  * this block runs the same WCAG 2.1 AA audit with Dark selected, on the three routes whose layouts
- * differ most, so a token change that fixes one theme cannot quietly break the other.
+ * differ most, so a token change that fixes one theme cannot quietly break the other. `/privacy`
+ * joins them (D47): it is long-form text with its own markers, lists and definition list, and a
+ * legal notice nobody can read in one theme is not a notice.
  */
 test.describe('accessibility, Dark theme', () => {
-  for (const path of ['/', '/work', '/pricing']) {
+  for (const path of ['/', '/work', '/pricing', '/privacy']) {
     test(`${path} has no WCAG 2.1 AA violations in Dark`, async ({ page }) => {
       await page.goto(`${path}?theme=dark`);
       await settle(page);
@@ -251,6 +253,10 @@ test.describe('accessibility', () => {
     '/work/whatsapp-accounting-os',
     '/pricing',
     '/book',
+    // The refused-submission message is a tinted surface carrying text, only
+    // rendered on this URL, so it is audited where it appears.
+    '/book?intake=invalid',
+    '/privacy',
   ]) {
     test(`${path} has no WCAG 2.1 AA violations`, async ({ page }) => {
       await page.goto(path);
@@ -277,18 +283,26 @@ test.describe('accessibility', () => {
     // asserts the association rather than the existence.
     await page.goto('/book');
 
-    const named = [
-      'Your name',
-      'Email',
-      'What kind of business?',
-      'Where are you losing the most?',
+    // [label, exact]. "Email" is matched exactly because the checkbox label
+    // below also contains the word ("with my name and email removed").
+    const named: Array<[string, boolean]> = [
+      ['Your name', true],
+      ['Email', true],
+      ['What kind of business?', false],
+      ['Where are you losing the most?', false],
+      ['Anything else worth knowing?', false],
+      // The optional AI-training checkbox (D47): its label is what makes the
+      // consent specific, so it must be the control's accessible name.
+      ['Optional: let SheetFlow use my answers', false],
     ];
-    for (const label of named) {
+    for (const [label, exact] of named) {
       await expect(
-        page.getByLabel(label, { exact: false }),
+        page.getByLabel(label, { exact }),
         `no control resolves from the label "${label}"`,
       ).toHaveCount(1);
     }
+    // The honeypot's label must not surface as a control anyone is asked to fill.
+    await expect(page.getByRole('textbox', { name: 'Leave this field empty' })).toHaveCount(0);
   });
 
   test('the calculator announces its result', async ({ page }) => {

@@ -2,8 +2,15 @@ import { test, expect } from '@playwright/test';
 import { tiers, comparison, pricingFaqs, engagementSteps } from '../../src/content/pricing';
 import { projects } from '../../src/content/work';
 import { services } from '../../src/content/services';
-import { buildBookingUrl, composeNotes, NOTES_PARAM, tierBookingUrl } from '../../src/lib/booking';
+import {
+  buildBookingUrl,
+  composeNotes,
+  INTAKE_ACTION,
+  NOTES_PARAM,
+  tierBookingUrl,
+} from '../../src/lib/booking';
 import { BOOKING_URL } from '../../src/lib/contact';
+import { PRIVACY_NOTICE_VERSION } from '../../src/content/privacy';
 
 /**
  * The two commercial surfaces: `/pricing` and `/book`.
@@ -13,6 +20,9 @@ import { BOOKING_URL } from '../../src/lib/contact';
  * commercial fault rather than a cosmetic one: a price reappearing is a quote
  * nobody authorised (D38), and a broken hand-off loses the conversion the
  * whole site exists to produce.
+ *
+ * The submission itself (the POST to /api/intake, its 303 and what the
+ * browser does with it) is driven end to end in `booking-intake.spec.ts`.
  */
 
 async function graph(page: import('@playwright/test').Page) {
@@ -69,20 +79,28 @@ test.describe('pricing', () => {
     expect(pricingSection, 'llms.txt states a price').not.toMatch(money);
   });
 
-  test('every tier CTA books the free session directly, tagged with the tier', async ({ page }) => {
+  test('every tier CTA goes through /book, tagged with the tier (D47)', async ({ page }) => {
+    // D38 linked these straight to the scheduler, which skipped the lead
+    // capture. Now each one lands on /book, and the tier travels as utm_content.
     await page.goto('/pricing');
     for (const tier of tiers) {
       const section = page.locator(`#${tier.id}`);
       const book = section.getByRole('link', { name: tier.cta });
       await expect(book).toHaveAttribute('href', tierBookingUrl(tier));
+      const href = (await book.getAttribute('href'))!;
+      expect(href.startsWith('/book?'), `${tier.id} CTA leaves the site: ${href}`).toBe(true);
+      expect(new URL(href, 'http://x.test').searchParams.get('utm_content')).toBe(`tier-${tier.id}`);
       // The secondary path keeps the qualification form reachable.
       await expect(section.locator('a[href="/book"]')).toHaveCount(1);
     }
+    // No link on the page reaches a scheduler directly.
+    await expect(page.locator('a[href*="calendly.com"], a[href*="cal.com"]')).toHaveCount(0);
     // The homepage beat books through the same links, so the two cannot drift.
     await page.goto('/');
     for (const tier of tiers) {
       await expect(page.locator(`#pricing-beat a[href="${tierBookingUrl(tier)}"]`)).toHaveCount(1);
     }
+    await expect(page.locator('a[href*="calendly.com"], a[href*="cal.com"]')).toHaveCount(0);
   });
 
   test('shows how an engagement runs', async ({ page }) => {
@@ -184,23 +202,38 @@ test.describe('recovery calculator', () => {
 });
 
 test.describe('booking', () => {
-  test('the form works with no JavaScript', async ({ browser }) => {
-    // The conversion path must not depend on our JS executing. With scripting
-    // off the browser's native GET submission still produces a prefilled
-    // Calendly URL, because the inputs are named as Calendly's own parameters.
+  test('the form posts to our own intake, with no JavaScript needed (D47)', async ({ browser }) => {
+    // The conversion path must not depend on our JS executing. The form is a
+    // native POST to /api/intake, which captures the lead and answers 303 to
+    // the booking page; the server reads exactly these field names.
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
     await page.goto('/book');
 
     const form = page.locator('form');
-    await expect(form).toHaveAttribute('action', BOOKING_URL);
-    await expect(form).toHaveAttribute('method', 'get');
+    await expect(form).toHaveCount(1);
+    await expect(form).toHaveAttribute('action', INTAKE_ACTION);
+    await expect(form).toHaveAttribute('method', 'post');
+    expect(INTAKE_ACTION).toBe('/api/intake');
 
-    // These names are Calendly's prefill contract, verified against the live
-    // event type. Renaming any of them silently breaks the no-JS path.
-    await expect(form.locator('input[name="name"]')).toHaveCount(1);
-    await expect(form.locator('input[name="email"]')).toHaveCount(1);
-    await expect(form.locator(`textarea[name="${NOTES_PARAM}"]`)).toHaveCount(1);
+    for (const selector of [
+      'input[name="name"]',
+      'input[name="email"]',
+      'select[name="sector"]',
+      'select[name="bottleneck"]',
+      'textarea[name="notes"]',
+      'input[type="checkbox"][name="ai_training"]',
+      'input[name="website"]',
+    ]) {
+      await expect(form.locator(selector), `missing ${selector}`).toHaveCount(1);
+    }
+    // Calendly's `a1` is composed on the server now; the form no longer emits it.
+    await expect(form.locator(`[name="${NOTES_PARAM}"]`)).toHaveCount(0);
+    // Without JavaScript there is no attribution to copy: those inputs are absent.
+    // The one hidden input is the notice version, which is static HTML so the
+    // server can record which notice this visitor was shown.
+    await expect(form.locator('input[type="hidden"]')).toHaveCount(1);
+    await expect(form.locator('input[type="hidden"][name="notice_version"]')).toHaveValue(PRIVACY_NOTICE_VERSION);
 
     await context.close();
   });
@@ -231,18 +264,27 @@ test.describe('booking', () => {
     expect(thirdParty, `third-party scripts loaded: ${thirdParty.join(', ')}`).toHaveLength(0);
   });
 
-  test('emits a free 20-minute session Service offer and a ReserveAction', async ({ page }) => {
+  test('emits a free 20-minute session Service offer and a ReserveAction aimed at /book', async ({ page }) => {
     await page.goto('/book');
     const nodes = await graph(page);
+    const org = byType(nodes, 'Organization')!;
+    const bookUrl = `${org.url}/book`;
 
     const service = byType(nodes, 'Service')!;
     expect(service.name).toBe('20-Minute Discovery & Help Session');
-    expect((service.offers as Record<string, unknown>).price).toBe(0);
+    const offer = service.offers as Record<string, unknown>;
+    expect(offer.price).toBe(0);
 
+    // Every booking surface in the graph points at /book, never at the
+    // scheduler, so a booking started from search or an assistant still goes
+    // through the lead capture (D47).
     const webPage = byType(nodes, 'WebPage')!;
     const action = webPage.potentialAction as Record<string, any>;
     expect(action['@type']).toBe('ReserveAction');
-    expect(action.target.urlTemplate).toBe(BOOKING_URL);
+    expect(action.target.urlTemplate).toBe(bookUrl);
+    expect(offer.url).toBe(bookUrl);
+    expect(bookUrl).toMatch(/^https:\/\/[^/]+\/book$/);
+    expect(JSON.stringify(nodes)).not.toContain(BOOKING_URL);
   });
 
   test('the old 30-minute audit offer is gone from the booking surfaces (D42)', async ({
@@ -279,9 +321,10 @@ test.describe('booking', () => {
 });
 
 test.describe('booking URL construction', () => {
-  // Pure-function coverage. The URL is the entire hand-off contract, and a
-  // malformed one loses the lead silently — Calendly renders its normal page
-  // with nothing filled in, so there is no error to observe.
+  // Pure-function coverage. `buildBookingUrl` is the Calendly fallback
+  // /api/intake redirects to while CAL_BOOKING_URL is unset, and a malformed
+  // link loses the context silently — Calendly renders its normal page with
+  // nothing filled in, so there is no error to observe.
   const answers = {
     name: 'Asha Verma',
     email: 'asha@example.com',
@@ -319,15 +362,19 @@ test.describe('booking URL construction', () => {
     }
   });
 
-  test('tierBookingUrl names the tier but never the visitor', () => {
-    const tier = tiers[0];
-    const url = new URL(tierBookingUrl(tier));
-    expect(url.origin + url.pathname).toBe(BOOKING_URL);
-    expect(url.searchParams.get(NOTES_PARAM)).toBe(`Interested in: ${tier.name}.`);
-    expect(url.searchParams.get('utm_medium')).toBe('pricing');
-    expect(url.searchParams.get('utm_content')).toBe(`tier-${tier.id}`);
-    expect(url.searchParams.has('name')).toBe(false);
-    expect(url.searchParams.has('email')).toBe(false);
+  test('tierBookingUrl is a relative /book link that names the tier but never the visitor', () => {
+    for (const tier of tiers) {
+      const href = tierBookingUrl(tier);
+      expect(href.startsWith('/book?'), href).toBe(true);
+      const url = new URL(href, 'https://sheetflow.click');
+      expect(url.pathname).toBe('/book');
+      expect([...url.searchParams.keys()]).toEqual(['utm_source', 'utm_medium', 'utm_content']);
+      expect(url.searchParams.get('utm_source')).toBe('sheetflow-site');
+      expect(url.searchParams.get('utm_medium')).toBe('pricing');
+      expect(url.searchParams.get('utm_content')).toBe(`tier-${tier.id}`);
+      // The server keeps a utm value only if it matches its pattern.
+      expect(url.searchParams.get('utm_content')).toMatch(/^[\w.\-~%+ ]{1,120}$/);
+    }
   });
 
   test('composeNotes omits sections it has no answer for', () => {
@@ -345,6 +392,7 @@ test.describe('discovery', () => {
       '/pricing',
       '/services',
       '/work',
+      '/privacy',
       ...services.map((s) => `/services/${s.slug}`),
       ...projects.map((p) => `/work/${p.slug}`),
     ];
@@ -379,7 +427,7 @@ test.describe('discovery', () => {
 
   test('the nav and footer reach the new routes', async ({ page }) => {
     await page.goto('/');
-    for (const href of ['/work', '/pricing', '/book']) {
+    for (const href of ['/work', '/pricing', '/book', '/privacy']) {
       await expect(
         page.locator(`a[href="${href}"]`).first(),
         `no link to ${href} from the homepage`,

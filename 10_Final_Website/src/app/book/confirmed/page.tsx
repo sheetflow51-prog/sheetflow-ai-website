@@ -4,6 +4,7 @@ import { Check, Calendar, Mail, MessageCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import { SectionHandoff } from '@/components/signature/SectionHandoff';
+import { StripQueryString } from '@/components/booking/StripQueryString';
 import { WHATSAPP_URL } from '@/lib/contact';
 
 /**
@@ -11,23 +12,32 @@ import { WHATSAPP_URL } from '@/lib/contact';
  *
  * ## This page is not wired up yet, and that is a founder action
  *
- * Calendly can redirect an invitee here after they book, but the redirect is
- * configured **in the Calendly dashboard**, not from this codebase. The API
- * can set it, and this session deliberately did not: changing the redirect on
- * a live scheduling link would send real bookers to a URL that does not exist
- * until this branch is deployed.
+ * Note (2026-11-16): Cal.com's free plan has no custom redirect after booking
+ * (founder-reported), so today Cal.com bookers see Cal.com's own confirmation
+ * and do not reach this page. The text below applies if that changes.
  *
- * To turn it on, after deploy:
- *   Calendly → Free Automation Audit → Confirmation page →
- *   "Redirect to an external site" → https://<production-host>/book/confirmed
+ * The booking page can redirect a booker here, but the redirect is configured
+ * **in the scheduler's dashboard**, not from this codebase, and setting it
+ * before this branch is deployed would send real bookers to a page that does
+ * not exist yet. To turn it on, after deploy and once `CAL_BOOKING_URL` points
+ * at the Cal.com event:
  *
- * ("Free Automation Audit" is the event type's name in Calendly. The owner is
- * renaming it to the 20-Minute Discovery & Help Session — D42 — so look for
- * either name.)
+ *   Cal.com → the 20-minute event → Redirect on booking →
+ *   https://sheetflow.click/book/confirmed, with "Forward parameters" OFF
  *
- * Until then the page is reachable but unlinked, and Calendly shows its own
- * confirmation. Nothing is broken by leaving it off; the booking, the calendar
- * invite and the confirmation email all come from Calendly either way.
+ * Forwarding must stay off because it appends the booker's name, email and the
+ * booking uid to this URL. The uid is enough to cancel or reschedule the
+ * booking, and anything in a query string ends up in browser history, request
+ * logs and analytics. `StripQueryString` below removes it from the address bar
+ * in case the setting is ever turned back on, and our analytics drops query
+ * strings before sending anything (`SiteAnalytics`), but neither can reach the
+ * request log of the page load itself, so turning it off is the real fix.
+ *
+ * Until then the page is reachable but unlinked, and the scheduler shows its
+ * own confirmation. Nothing is broken by leaving it off. The copy names no
+ * scheduler, because the booking, the calendar invite and the confirmation
+ * email come from whichever one the visitor used (Cal.com, or Calendly while
+ * the D46 fallback is in use).
  *
  * ## Why it is noindex
  *
@@ -49,7 +59,7 @@ const NEXT = [
     icon: Mail,
     title: 'Check your inbox',
     detail:
-      'Calendly has sent the confirmation and the calendar invite, with the Google Meet link inside it. If it has not arrived in a few minutes, look in spam before rebooking.',
+      'The confirmation email and calendar invite, with the Google Meet link, are in your inbox. If they have not arrived in a few minutes, look in spam before rebooking.',
   },
   {
     icon: Calendar,
@@ -68,6 +78,7 @@ const NEXT = [
 export default function BookingConfirmedPage() {
   return (
     <>
+      <StripQueryString />
       <section className="section pt-28 md:pt-36" aria-labelledby="confirmed-heading">
         <div className="container-edge">
           <div className="max-w-3xl">
